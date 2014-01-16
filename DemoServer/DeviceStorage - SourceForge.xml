@@ -1,0 +1,4634 @@
+<?xml version="1.0"?>
+<DeviceStorage xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Objects>
+    <Object Type="OBJECT_DEVICE" Instance="260001">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_DEVICE: 260001</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>SimpleServer</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>8</Value>
+        </Property>
+        <Property Id="PROP_SYSTEM_STATUS" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_VENDOR_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>BACnet Stack at SourceForge</Value>
+        </Property>
+        <Property Id="PROP_VENDOR_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>260</Value>
+        </Property>
+        <Property Id="PROP_MODEL_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>GNU</Value>
+        </Property>
+        <Property Id="PROP_FIRMWARE_REVISION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>0.9.0</Value>
+        </Property>
+        <Property Id="PROP_APPLICATION_SOFTWARE_VERSION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>1.0</Value>
+        </Property>
+        <Property Id="PROP_PROTOCOL_VERSION" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>1</Value>
+        </Property>
+        <Property Id="PROP_PROTOCOL_REVISION" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>14</Value>
+        </Property>
+        <Property Id="PROP_PROTOCOL_SERVICES_SUPPORTED" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>01111111101111000011101110000000011010101</Value>
+        </Property>
+        <Property Id="PROP_PROTOCOL_OBJECT_TYPES_SUPPORTED" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000000010101010000000000000000100000000111110111111111</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_LIST" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_DEVICE: 260001</Value>
+          <Value>OBJECT_ANALOG_INPUT: 0</Value>
+          <Value>OBJECT_ANALOG_INPUT: 1</Value>
+          <Value>OBJECT_ANALOG_INPUT: 2</Value>
+          <Value>OBJECT_ANALOG_INPUT: 3</Value>
+          <Value>OBJECT_ANALOG_OUTPUT: 0</Value>
+          <Value>OBJECT_ANALOG_OUTPUT: 1</Value>
+          <Value>OBJECT_ANALOG_OUTPUT: 2</Value>
+          <Value>OBJECT_ANALOG_OUTPUT: 3</Value>
+          <Value>OBJECT_ANALOG_VALUE: 0</Value>
+          <Value>OBJECT_ANALOG_VALUE: 1</Value>
+          <Value>OBJECT_ANALOG_VALUE: 2</Value>
+          <Value>OBJECT_ANALOG_VALUE: 3</Value>
+          <Value>OBJECT_BINARY_INPUT: 0</Value>
+          <Value>OBJECT_BINARY_INPUT: 1</Value>
+          <Value>OBJECT_BINARY_INPUT: 2</Value>
+          <Value>OBJECT_BINARY_INPUT: 3</Value>
+          <Value>OBJECT_BINARY_INPUT: 4</Value>
+          <Value>OBJECT_BINARY_OUTPUT: 0</Value>
+          <Value>OBJECT_BINARY_OUTPUT: 1</Value>
+          <Value>OBJECT_BINARY_OUTPUT: 2</Value>
+          <Value>OBJECT_BINARY_OUTPUT: 3</Value>
+          <Value>OBJECT_BINARY_VALUE: 0</Value>
+          <Value>OBJECT_BINARY_VALUE: 1</Value>
+          <Value>OBJECT_BINARY_VALUE: 2</Value>
+          <Value>OBJECT_BINARY_VALUE: 3</Value>
+          <Value>OBJECT_BINARY_VALUE: 4</Value>
+          <Value>OBJECT_BINARY_VALUE: 5</Value>
+          <Value>OBJECT_BINARY_VALUE: 6</Value>
+          <Value>OBJECT_BINARY_VALUE: 7</Value>
+          <Value>OBJECT_BINARY_VALUE: 8</Value>
+          <Value>OBJECT_BINARY_VALUE: 9</Value>
+          <Value>OBJECT_CHARACTERSTRING_VALUE: 0</Value>
+          <Value>OBJECT_NOTIFICATION_CLASS: 0</Value>
+          <Value>OBJECT_NOTIFICATION_CLASS: 1</Value>
+          <Value>OBJECT_LIFE_SAFETY_POINT: 0</Value>
+          <Value>OBJECT_LIFE_SAFETY_POINT: 1</Value>
+          <Value>OBJECT_LIFE_SAFETY_POINT: 2</Value>
+          <Value>OBJECT_LIFE_SAFETY_POINT: 3</Value>
+          <Value>OBJECT_LIFE_SAFETY_POINT: 4</Value>
+          <Value>OBJECT_LIFE_SAFETY_POINT: 5</Value>
+          <Value>OBJECT_LIFE_SAFETY_POINT: 6</Value>
+          <Value>OBJECT_LOAD_CONTROL: 0</Value>
+          <Value>OBJECT_LOAD_CONTROL: 1</Value>
+          <Value>OBJECT_LOAD_CONTROL: 2</Value>
+          <Value>OBJECT_LOAD_CONTROL: 3</Value>
+          <Value>OBJECT_MULTI_STATE_INPUT: 0</Value>
+          <Value>OBJECT_MULTI_STATE_OUTPUT: 0</Value>
+          <Value>OBJECT_MULTI_STATE_OUTPUT: 1</Value>
+          <Value>OBJECT_MULTI_STATE_OUTPUT: 2</Value>
+          <Value>OBJECT_MULTI_STATE_OUTPUT: 3</Value>
+          <Value>OBJECT_MULTI_STATE_VALUE: 0</Value>
+          <Value>OBJECT_TRENDLOG: 0</Value>
+          <Value>OBJECT_TRENDLOG: 1</Value>
+          <Value>OBJECT_TRENDLOG: 2</Value>
+          <Value>OBJECT_TRENDLOG: 3</Value>
+          <Value>OBJECT_TRENDLOG: 4</Value>
+          <Value>OBJECT_TRENDLOG: 5</Value>
+          <Value>OBJECT_TRENDLOG: 6</Value>
+          <Value>OBJECT_TRENDLOG: 7</Value>
+          <Value>OBJECT_LIGHTING_OUTPUT: 1</Value>
+          <Value>OBJECT_LIGHTING_OUTPUT: 2</Value>
+          <Value>OBJECT_LIGHTING_OUTPUT: 3</Value>
+          <Value>OBJECT_LIGHTING_OUTPUT: 4</Value>
+          <Value>OBJECT_LIGHTING_OUTPUT: 5</Value>
+          <Value>OBJECT_LIGHTING_OUTPUT: 6</Value>
+          <Value>OBJECT_LIGHTING_OUTPUT: 7</Value>
+          <Value>OBJECT_LIGHTING_OUTPUT: 8</Value>
+          <Value>OBJECT_CHANNEL: 1</Value>
+          <Value>OBJECT_FILE: 0</Value>
+          <Value>OBJECT_FILE: 1</Value>
+          <Value>OBJECT_FILE: 2</Value>
+        </Property>
+        <Property Id="PROP_MAX_APDU_LENGTH_ACCEPTED" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>1476</Value>
+        </Property>
+        <Property Id="PROP_SEGMENTATION_SUPPORTED" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>3</Value>
+        </Property>
+        <Property Id="PROP_APDU_TIMEOUT" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>3000</Value>
+        </Property>
+        <Property Id="PROP_NUMBER_OF_APDU_RETRIES" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>3</Value>
+        </Property>
+        <Property Id="PROP_DEVICE_ADDRESS_BINDING" Tag="BACNET_APPLICATION_TAG_NULL" />
+        <Property Id="PROP_DATABASE_REVISION" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>server</Value>
+        </Property>
+        <Property Id="PROP_LOCAL_TIME" Tag="BACNET_APPLICATION_TAG_TIME">
+          <Value>01-01-0001 00:00:00</Value>
+        </Property>
+        <Property Id="PROP_UTC_OFFSET" Tag="BACNET_APPLICATION_TAG_SIGNED_INT">
+          <Value>300</Value>
+        </Property>
+        <Property Id="PROP_LOCAL_DATE" Tag="BACNET_APPLICATION_TAG_DATE">
+          <Value>01-01-0001 00:00:00</Value>
+        </Property>
+        <Property Id="PROP_DAYLIGHT_SAVINGS_STATUS" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_LOCATION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>USA</Value>
+        </Property>
+        <Property Id="PROP_ACTIVE_COV_SUBSCRIPTIONS" Tag="BACNET_APPLICATION_TAG_NULL" />
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_ANALOG_INPUT" Instance="0">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_ANALOG_INPUT: 0</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>ANALOG INPUT 0</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_UNITS" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>98</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>ANALOG INPUT 0</Value>
+        </Property>
+        <Property Id="PROP_RELIABILITY" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_TIME_DELAY" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_NOTIFICATION_CLASS" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>4194303</Value>
+        </Property>
+        <Property Id="PROP_HIGH_LIMIT" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_LOW_LIMIT" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_DEADBAND" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_LIMIT_ENABLE" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>00</Value>
+        </Property>
+        <Property Id="PROP_EVENT_ENABLE" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>000</Value>
+        </Property>
+        <Property Id="PROP_ACKED_TRANSITIONS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>111</Value>
+        </Property>
+        <Property Id="PROP_NOTIFY_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_EVENT_TIME_STAMPS" Tag="BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC">
+          <Value>01-01-0001 00:00:00;01-01-0001 00:00:00</Value>
+          <Value>01-01-0001 00:00:00;01-01-0001 00:00:00</Value>
+          <Value>01-01-0001 00:00:00;01-01-0001 00:00:00</Value>
+        </Property>
+        <Property Id="9997" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>2.831378E-20</Value>
+        </Property>
+        <Property Id="9998" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>90</Value>
+        </Property>
+        <Property Id="9999" Tag="BACNET_APPLICATION_TAG_SIGNED_INT">
+          <Value>-200</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_ANALOG_INPUT" Instance="1">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_ANALOG_INPUT: 1</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>ANALOG INPUT 1</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_UNITS" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>98</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>ANALOG INPUT 1</Value>
+        </Property>
+        <Property Id="PROP_RELIABILITY" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_TIME_DELAY" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_NOTIFICATION_CLASS" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>4194303</Value>
+        </Property>
+        <Property Id="PROP_HIGH_LIMIT" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_LOW_LIMIT" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_DEADBAND" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_LIMIT_ENABLE" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>00</Value>
+        </Property>
+        <Property Id="PROP_EVENT_ENABLE" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>000</Value>
+        </Property>
+        <Property Id="PROP_ACKED_TRANSITIONS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>111</Value>
+        </Property>
+        <Property Id="PROP_NOTIFY_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_EVENT_TIME_STAMPS" Tag="BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC">
+          <Value>01-01-0001 00:00:00;01-01-0001 00:00:00</Value>
+          <Value>01-01-0001 00:00:00;01-01-0001 00:00:00</Value>
+          <Value>01-01-0001 00:00:00;01-01-0001 00:00:00</Value>
+        </Property>
+        <Property Id="9997" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>2.831378E-20</Value>
+        </Property>
+        <Property Id="9998" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>90</Value>
+        </Property>
+        <Property Id="9999" Tag="BACNET_APPLICATION_TAG_SIGNED_INT">
+          <Value>-200</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_ANALOG_INPUT" Instance="2">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_ANALOG_INPUT: 2</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>ANALOG INPUT 2</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_UNITS" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>98</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>ANALOG INPUT 2</Value>
+        </Property>
+        <Property Id="PROP_RELIABILITY" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_TIME_DELAY" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_NOTIFICATION_CLASS" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>4194303</Value>
+        </Property>
+        <Property Id="PROP_HIGH_LIMIT" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_LOW_LIMIT" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_DEADBAND" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_LIMIT_ENABLE" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>00</Value>
+        </Property>
+        <Property Id="PROP_EVENT_ENABLE" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>000</Value>
+        </Property>
+        <Property Id="PROP_ACKED_TRANSITIONS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>111</Value>
+        </Property>
+        <Property Id="PROP_NOTIFY_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_EVENT_TIME_STAMPS" Tag="BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC">
+          <Value>01-01-0001 00:00:00;01-01-0001 00:00:00</Value>
+          <Value>01-01-0001 00:00:00;01-01-0001 00:00:00</Value>
+          <Value>01-01-0001 00:00:00;01-01-0001 00:00:00</Value>
+        </Property>
+        <Property Id="9997" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>2.831378E-20</Value>
+        </Property>
+        <Property Id="9998" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>90</Value>
+        </Property>
+        <Property Id="9999" Tag="BACNET_APPLICATION_TAG_SIGNED_INT">
+          <Value>-200</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_ANALOG_INPUT" Instance="3">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_ANALOG_INPUT: 3</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>ANALOG INPUT 3</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_UNITS" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>98</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>ANALOG INPUT 3</Value>
+        </Property>
+        <Property Id="PROP_RELIABILITY" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_TIME_DELAY" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_NOTIFICATION_CLASS" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>4194303</Value>
+        </Property>
+        <Property Id="PROP_HIGH_LIMIT" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_LOW_LIMIT" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_DEADBAND" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_LIMIT_ENABLE" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>00</Value>
+        </Property>
+        <Property Id="PROP_EVENT_ENABLE" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>000</Value>
+        </Property>
+        <Property Id="PROP_ACKED_TRANSITIONS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>111</Value>
+        </Property>
+        <Property Id="PROP_NOTIFY_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_EVENT_TIME_STAMPS" Tag="BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC">
+          <Value>01-01-0001 00:00:00;01-01-0001 00:00:00</Value>
+          <Value>01-01-0001 00:00:00;01-01-0001 00:00:00</Value>
+          <Value>01-01-0001 00:00:00;01-01-0001 00:00:00</Value>
+        </Property>
+        <Property Id="9997" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>2.831378E-20</Value>
+        </Property>
+        <Property Id="9998" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>90</Value>
+        </Property>
+        <Property Id="9999" Tag="BACNET_APPLICATION_TAG_SIGNED_INT">
+          <Value>-200</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_ANALOG_OUTPUT" Instance="0">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_ANALOG_OUTPUT: 0</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>ANALOG OUTPUT 0</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>1</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_UNITS" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>98</Value>
+        </Property>
+        <Property Id="PROP_PRIORITY_ARRAY" Tag="BACNET_APPLICATION_TAG_NULL">
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+        </Property>
+        <Property Id="PROP_RELINQUISH_DEFAULT" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_ANALOG_OUTPUT" Instance="1">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_ANALOG_OUTPUT: 1</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>ANALOG OUTPUT 1</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>1</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_UNITS" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>98</Value>
+        </Property>
+        <Property Id="PROP_PRIORITY_ARRAY" Tag="BACNET_APPLICATION_TAG_NULL">
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+        </Property>
+        <Property Id="PROP_RELINQUISH_DEFAULT" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_ANALOG_OUTPUT" Instance="2">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_ANALOG_OUTPUT: 2</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>ANALOG OUTPUT 2</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>1</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_UNITS" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>98</Value>
+        </Property>
+        <Property Id="PROP_PRIORITY_ARRAY" Tag="BACNET_APPLICATION_TAG_NULL">
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+        </Property>
+        <Property Id="PROP_RELINQUISH_DEFAULT" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_ANALOG_OUTPUT" Instance="3">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_ANALOG_OUTPUT: 3</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>ANALOG OUTPUT 3</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>1</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_UNITS" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>98</Value>
+        </Property>
+        <Property Id="PROP_PRIORITY_ARRAY" Tag="BACNET_APPLICATION_TAG_NULL">
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+        </Property>
+        <Property Id="PROP_RELINQUISH_DEFAULT" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_ANALOG_VALUE" Instance="0">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_ANALOG_VALUE: 0</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>ANALOG VALUE 0</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>2</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_UNITS" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>98</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>ANALOG VALUE 0</Value>
+        </Property>
+        <Property Id="PROP_PRIORITY_ARRAY" Tag="BACNET_APPLICATION_TAG_NULL">
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+        </Property>
+        <Property Id="PROP_RELINQUISH_DEFAULT" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_TIME_DELAY" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_NOTIFICATION_CLASS" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>4194303</Value>
+        </Property>
+        <Property Id="PROP_HIGH_LIMIT" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_LOW_LIMIT" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_DEADBAND" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_LIMIT_ENABLE" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>00</Value>
+        </Property>
+        <Property Id="PROP_EVENT_ENABLE" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>000</Value>
+        </Property>
+        <Property Id="PROP_ACKED_TRANSITIONS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>111</Value>
+        </Property>
+        <Property Id="PROP_NOTIFY_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_EVENT_TIME_STAMPS" Tag="BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC">
+          <Value>01-01-0001 00:00:00;01-01-0001 00:00:00</Value>
+          <Value>01-01-0001 00:00:00;01-01-0001 00:00:00</Value>
+          <Value>01-01-0001 00:00:00;01-01-0001 00:00:00</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_ANALOG_VALUE" Instance="1">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_ANALOG_VALUE: 1</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>ANALOG VALUE 1</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>2</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_UNITS" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>98</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>ANALOG VALUE 1</Value>
+        </Property>
+        <Property Id="PROP_PRIORITY_ARRAY" Tag="BACNET_APPLICATION_TAG_NULL">
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+        </Property>
+        <Property Id="PROP_RELINQUISH_DEFAULT" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_TIME_DELAY" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_NOTIFICATION_CLASS" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>4194303</Value>
+        </Property>
+        <Property Id="PROP_HIGH_LIMIT" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_LOW_LIMIT" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_DEADBAND" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_LIMIT_ENABLE" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>00</Value>
+        </Property>
+        <Property Id="PROP_EVENT_ENABLE" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>000</Value>
+        </Property>
+        <Property Id="PROP_ACKED_TRANSITIONS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>111</Value>
+        </Property>
+        <Property Id="PROP_NOTIFY_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_EVENT_TIME_STAMPS" Tag="BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC">
+          <Value>01-01-0001 00:00:00;01-01-0001 00:00:00</Value>
+          <Value>01-01-0001 00:00:00;01-01-0001 00:00:00</Value>
+          <Value>01-01-0001 00:00:00;01-01-0001 00:00:00</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_ANALOG_VALUE" Instance="2">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_ANALOG_VALUE: 2</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>ANALOG VALUE 2</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>2</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_UNITS" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>98</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>ANALOG VALUE 2</Value>
+        </Property>
+        <Property Id="PROP_PRIORITY_ARRAY" Tag="BACNET_APPLICATION_TAG_NULL">
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+        </Property>
+        <Property Id="PROP_RELINQUISH_DEFAULT" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_TIME_DELAY" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_NOTIFICATION_CLASS" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>4194303</Value>
+        </Property>
+        <Property Id="PROP_HIGH_LIMIT" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_LOW_LIMIT" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_DEADBAND" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_LIMIT_ENABLE" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>00</Value>
+        </Property>
+        <Property Id="PROP_EVENT_ENABLE" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>000</Value>
+        </Property>
+        <Property Id="PROP_ACKED_TRANSITIONS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>111</Value>
+        </Property>
+        <Property Id="PROP_NOTIFY_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_EVENT_TIME_STAMPS" Tag="BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC">
+          <Value>01-01-0001 00:00:00;01-01-0001 00:00:00</Value>
+          <Value>01-01-0001 00:00:00;01-01-0001 00:00:00</Value>
+          <Value>01-01-0001 00:00:00;01-01-0001 00:00:00</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_ANALOG_VALUE" Instance="3">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_ANALOG_VALUE: 3</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>ANALOG VALUE 3</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>2</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_UNITS" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>98</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>ANALOG VALUE 3</Value>
+        </Property>
+        <Property Id="PROP_PRIORITY_ARRAY" Tag="BACNET_APPLICATION_TAG_NULL">
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+        </Property>
+        <Property Id="PROP_RELINQUISH_DEFAULT" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_TIME_DELAY" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_NOTIFICATION_CLASS" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>4194303</Value>
+        </Property>
+        <Property Id="PROP_HIGH_LIMIT" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_LOW_LIMIT" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_DEADBAND" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_LIMIT_ENABLE" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>00</Value>
+        </Property>
+        <Property Id="PROP_EVENT_ENABLE" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>000</Value>
+        </Property>
+        <Property Id="PROP_ACKED_TRANSITIONS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>111</Value>
+        </Property>
+        <Property Id="PROP_NOTIFY_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_EVENT_TIME_STAMPS" Tag="BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC">
+          <Value>01-01-0001 00:00:00;01-01-0001 00:00:00</Value>
+          <Value>01-01-0001 00:00:00;01-01-0001 00:00:00</Value>
+          <Value>01-01-0001 00:00:00;01-01-0001 00:00:00</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_BINARY_INPUT" Instance="0">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_BINARY_INPUT: 0</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>BINARY INPUT 0</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>3</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_POLARITY" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>BINARY INPUT 0</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_BINARY_INPUT" Instance="1">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_BINARY_INPUT: 1</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>BINARY INPUT 1</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>3</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_POLARITY" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>BINARY INPUT 1</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_BINARY_INPUT" Instance="2">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_BINARY_INPUT: 2</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>BINARY INPUT 2</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>3</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_POLARITY" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>BINARY INPUT 2</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_BINARY_INPUT" Instance="3">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_BINARY_INPUT: 3</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>BINARY INPUT 3</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>3</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_POLARITY" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>BINARY INPUT 3</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_BINARY_INPUT" Instance="4">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_BINARY_INPUT: 4</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>BINARY INPUT 4</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>3</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_POLARITY" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>BINARY INPUT 4</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_BINARY_OUTPUT" Instance="0">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_BINARY_OUTPUT: 0</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>BINARY OUTPUT 0</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>4</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_POLARITY" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_PRIORITY_ARRAY" Tag="BACNET_APPLICATION_TAG_NULL">
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+        </Property>
+        <Property Id="PROP_RELINQUISH_DEFAULT" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>BINARY OUTPUT 0</Value>
+        </Property>
+        <Property Id="PROP_ACTIVE_TEXT" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>on</Value>
+        </Property>
+        <Property Id="PROP_INACTIVE_TEXT" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>off</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_BINARY_OUTPUT" Instance="1">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_BINARY_OUTPUT: 1</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>BINARY OUTPUT 1</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>4</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_POLARITY" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_PRIORITY_ARRAY" Tag="BACNET_APPLICATION_TAG_NULL">
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+        </Property>
+        <Property Id="PROP_RELINQUISH_DEFAULT" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>BINARY OUTPUT 1</Value>
+        </Property>
+        <Property Id="PROP_ACTIVE_TEXT" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>on</Value>
+        </Property>
+        <Property Id="PROP_INACTIVE_TEXT" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>off</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_BINARY_OUTPUT" Instance="2">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_BINARY_OUTPUT: 2</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>BINARY OUTPUT 2</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>4</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_POLARITY" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_PRIORITY_ARRAY" Tag="BACNET_APPLICATION_TAG_NULL">
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+        </Property>
+        <Property Id="PROP_RELINQUISH_DEFAULT" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>BINARY OUTPUT 2</Value>
+        </Property>
+        <Property Id="PROP_ACTIVE_TEXT" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>on</Value>
+        </Property>
+        <Property Id="PROP_INACTIVE_TEXT" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>off</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_BINARY_OUTPUT" Instance="3">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_BINARY_OUTPUT: 3</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>BINARY OUTPUT 3</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>4</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_POLARITY" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_PRIORITY_ARRAY" Tag="BACNET_APPLICATION_TAG_NULL">
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+        </Property>
+        <Property Id="PROP_RELINQUISH_DEFAULT" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>BINARY OUTPUT 3</Value>
+        </Property>
+        <Property Id="PROP_ACTIVE_TEXT" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>on</Value>
+        </Property>
+        <Property Id="PROP_INACTIVE_TEXT" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>off</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_BINARY_VALUE" Instance="0">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_BINARY_VALUE: 0</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>BINARY VALUE 0</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>5</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>BINARY VALUE 0</Value>
+        </Property>
+        <Property Id="PROP_PRIORITY_ARRAY" Tag="BACNET_APPLICATION_TAG_NULL">
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+        </Property>
+        <Property Id="PROP_RELINQUISH_DEFAULT" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_BINARY_VALUE" Instance="1">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_BINARY_VALUE: 1</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>BINARY VALUE 1</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>5</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>BINARY VALUE 1</Value>
+        </Property>
+        <Property Id="PROP_PRIORITY_ARRAY" Tag="BACNET_APPLICATION_TAG_NULL">
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+        </Property>
+        <Property Id="PROP_RELINQUISH_DEFAULT" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_BINARY_VALUE" Instance="2">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_BINARY_VALUE: 2</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>BINARY VALUE 2</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>5</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>BINARY VALUE 2</Value>
+        </Property>
+        <Property Id="PROP_PRIORITY_ARRAY" Tag="BACNET_APPLICATION_TAG_NULL">
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+        </Property>
+        <Property Id="PROP_RELINQUISH_DEFAULT" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_BINARY_VALUE" Instance="3">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_BINARY_VALUE: 3</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>BINARY VALUE 3</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>5</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>BINARY VALUE 3</Value>
+        </Property>
+        <Property Id="PROP_PRIORITY_ARRAY" Tag="BACNET_APPLICATION_TAG_NULL">
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+        </Property>
+        <Property Id="PROP_RELINQUISH_DEFAULT" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_BINARY_VALUE" Instance="4">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_BINARY_VALUE: 4</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>BINARY VALUE 4</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>5</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>BINARY VALUE 4</Value>
+        </Property>
+        <Property Id="PROP_PRIORITY_ARRAY" Tag="BACNET_APPLICATION_TAG_NULL">
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+        </Property>
+        <Property Id="PROP_RELINQUISH_DEFAULT" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_BINARY_VALUE" Instance="5">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_BINARY_VALUE: 5</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>BINARY VALUE 5</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>5</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>BINARY VALUE 5</Value>
+        </Property>
+        <Property Id="PROP_PRIORITY_ARRAY" Tag="BACNET_APPLICATION_TAG_NULL">
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+        </Property>
+        <Property Id="PROP_RELINQUISH_DEFAULT" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_BINARY_VALUE" Instance="6">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_BINARY_VALUE: 6</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>BINARY VALUE 6</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>5</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>BINARY VALUE 6</Value>
+        </Property>
+        <Property Id="PROP_PRIORITY_ARRAY" Tag="BACNET_APPLICATION_TAG_NULL">
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+        </Property>
+        <Property Id="PROP_RELINQUISH_DEFAULT" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_BINARY_VALUE" Instance="7">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_BINARY_VALUE: 7</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>BINARY VALUE 7</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>5</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>BINARY VALUE 7</Value>
+        </Property>
+        <Property Id="PROP_PRIORITY_ARRAY" Tag="BACNET_APPLICATION_TAG_NULL">
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+        </Property>
+        <Property Id="PROP_RELINQUISH_DEFAULT" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_BINARY_VALUE" Instance="8">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_BINARY_VALUE: 8</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>BINARY VALUE 8</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>5</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>BINARY VALUE 8</Value>
+        </Property>
+        <Property Id="PROP_PRIORITY_ARRAY" Tag="BACNET_APPLICATION_TAG_NULL">
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+        </Property>
+        <Property Id="PROP_RELINQUISH_DEFAULT" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_BINARY_VALUE" Instance="9">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_BINARY_VALUE: 9</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>BINARY VALUE 9</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>5</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>BINARY VALUE 9</Value>
+        </Property>
+        <Property Id="PROP_PRIORITY_ARRAY" Tag="BACNET_APPLICATION_TAG_NULL">
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+        </Property>
+        <Property Id="PROP_RELINQUISH_DEFAULT" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_CHARACTERSTRING_VALUE" Instance="0">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_CHARACTERSTRING_VALUE: 0</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value />
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>40</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value />
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_NOTIFICATION_CLASS" Instance="0">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_NOTIFICATION_CLASS: 0</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>NOTIFICATION CLASS 0</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>15</Value>
+        </Property>
+        <Property Id="PROP_NOTIFICATION_CLASS" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_PRIORITY" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>255</Value>
+          <Value>255</Value>
+          <Value>255</Value>
+        </Property>
+        <Property Id="PROP_ACK_REQUIRED" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>000</Value>
+        </Property>
+        <Property Id="PROP_RECIPIENT_LIST" Tag="BACNET_APPLICATION_TAG_NULL" />
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>NOTIFICATION CLASS 0</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_NOTIFICATION_CLASS" Instance="1">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_NOTIFICATION_CLASS: 1</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>NOTIFICATION CLASS 1</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>15</Value>
+        </Property>
+        <Property Id="PROP_NOTIFICATION_CLASS" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>1</Value>
+        </Property>
+        <Property Id="PROP_PRIORITY" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>255</Value>
+          <Value>255</Value>
+          <Value>255</Value>
+        </Property>
+        <Property Id="PROP_ACK_REQUIRED" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>000</Value>
+        </Property>
+        <Property Id="PROP_RECIPIENT_LIST" Tag="BACNET_APPLICATION_TAG_NULL" />
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>NOTIFICATION CLASS 1</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_LIFE_SAFETY_POINT" Instance="0">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_LIFE_SAFETY_POINT: 0</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>LS POINT 0</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>21</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_TRACKING_VALUE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_RELIABILITY" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_MODE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>14</Value>
+        </Property>
+        <Property Id="PROP_ACCEPTED_MODES" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+          <Value>1</Value>
+          <Value>2</Value>
+          <Value>3</Value>
+          <Value>4</Value>
+          <Value>5</Value>
+          <Value>6</Value>
+          <Value>7</Value>
+          <Value>8</Value>
+          <Value>9</Value>
+          <Value>10</Value>
+          <Value>11</Value>
+          <Value>12</Value>
+          <Value>13</Value>
+          <Value>14</Value>
+        </Property>
+        <Property Id="PROP_SILENCED" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OPERATION_EXPECTED" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>LS POINT 0</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_LIFE_SAFETY_POINT" Instance="1">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_LIFE_SAFETY_POINT: 1</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>LS POINT 1</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>21</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_TRACKING_VALUE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_RELIABILITY" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_MODE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>14</Value>
+        </Property>
+        <Property Id="PROP_ACCEPTED_MODES" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+          <Value>1</Value>
+          <Value>2</Value>
+          <Value>3</Value>
+          <Value>4</Value>
+          <Value>5</Value>
+          <Value>6</Value>
+          <Value>7</Value>
+          <Value>8</Value>
+          <Value>9</Value>
+          <Value>10</Value>
+          <Value>11</Value>
+          <Value>12</Value>
+          <Value>13</Value>
+          <Value>14</Value>
+        </Property>
+        <Property Id="PROP_SILENCED" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OPERATION_EXPECTED" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>LS POINT 1</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_LIFE_SAFETY_POINT" Instance="2">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_LIFE_SAFETY_POINT: 2</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>LS POINT 2</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>21</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_TRACKING_VALUE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_RELIABILITY" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_MODE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>14</Value>
+        </Property>
+        <Property Id="PROP_ACCEPTED_MODES" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+          <Value>1</Value>
+          <Value>2</Value>
+          <Value>3</Value>
+          <Value>4</Value>
+          <Value>5</Value>
+          <Value>6</Value>
+          <Value>7</Value>
+          <Value>8</Value>
+          <Value>9</Value>
+          <Value>10</Value>
+          <Value>11</Value>
+          <Value>12</Value>
+          <Value>13</Value>
+          <Value>14</Value>
+        </Property>
+        <Property Id="PROP_SILENCED" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OPERATION_EXPECTED" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>LS POINT 2</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_LIFE_SAFETY_POINT" Instance="3">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_LIFE_SAFETY_POINT: 3</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>LS POINT 3</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>21</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_TRACKING_VALUE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_RELIABILITY" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_MODE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>14</Value>
+        </Property>
+        <Property Id="PROP_ACCEPTED_MODES" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+          <Value>1</Value>
+          <Value>2</Value>
+          <Value>3</Value>
+          <Value>4</Value>
+          <Value>5</Value>
+          <Value>6</Value>
+          <Value>7</Value>
+          <Value>8</Value>
+          <Value>9</Value>
+          <Value>10</Value>
+          <Value>11</Value>
+          <Value>12</Value>
+          <Value>13</Value>
+          <Value>14</Value>
+        </Property>
+        <Property Id="PROP_SILENCED" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OPERATION_EXPECTED" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>LS POINT 3</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_LIFE_SAFETY_POINT" Instance="4">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_LIFE_SAFETY_POINT: 4</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>LS POINT 4</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>21</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_TRACKING_VALUE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_RELIABILITY" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_MODE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>14</Value>
+        </Property>
+        <Property Id="PROP_ACCEPTED_MODES" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+          <Value>1</Value>
+          <Value>2</Value>
+          <Value>3</Value>
+          <Value>4</Value>
+          <Value>5</Value>
+          <Value>6</Value>
+          <Value>7</Value>
+          <Value>8</Value>
+          <Value>9</Value>
+          <Value>10</Value>
+          <Value>11</Value>
+          <Value>12</Value>
+          <Value>13</Value>
+          <Value>14</Value>
+        </Property>
+        <Property Id="PROP_SILENCED" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OPERATION_EXPECTED" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>LS POINT 4</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_LIFE_SAFETY_POINT" Instance="5">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_LIFE_SAFETY_POINT: 5</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>LS POINT 5</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>21</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_TRACKING_VALUE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_RELIABILITY" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_MODE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>14</Value>
+        </Property>
+        <Property Id="PROP_ACCEPTED_MODES" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+          <Value>1</Value>
+          <Value>2</Value>
+          <Value>3</Value>
+          <Value>4</Value>
+          <Value>5</Value>
+          <Value>6</Value>
+          <Value>7</Value>
+          <Value>8</Value>
+          <Value>9</Value>
+          <Value>10</Value>
+          <Value>11</Value>
+          <Value>12</Value>
+          <Value>13</Value>
+          <Value>14</Value>
+        </Property>
+        <Property Id="PROP_SILENCED" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OPERATION_EXPECTED" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>LS POINT 5</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_LIFE_SAFETY_POINT" Instance="6">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_LIFE_SAFETY_POINT: 6</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>LS POINT 6</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>21</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_TRACKING_VALUE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_RELIABILITY" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_MODE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>14</Value>
+        </Property>
+        <Property Id="PROP_ACCEPTED_MODES" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+          <Value>1</Value>
+          <Value>2</Value>
+          <Value>3</Value>
+          <Value>4</Value>
+          <Value>5</Value>
+          <Value>6</Value>
+          <Value>7</Value>
+          <Value>8</Value>
+          <Value>9</Value>
+          <Value>10</Value>
+          <Value>11</Value>
+          <Value>12</Value>
+          <Value>13</Value>
+          <Value>14</Value>
+        </Property>
+        <Property Id="PROP_SILENCED" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OPERATION_EXPECTED" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>LS POINT 6</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_LOAD_CONTROL" Instance="0">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_LOAD_CONTROL: 0</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>LOAD CONTROL 0</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>28</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_REQUESTED_SHED_LEVEL" Tag="BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_START_TIME" Tag="BACNET_APPLICATION_TAG_DATE">
+          <Value>01-01-0001 00:00:00</Value>
+          <Value>01-01-0001 00:00:00</Value>
+        </Property>
+        <Property Id="PROP_SHED_DURATION" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_DUTY_WINDOW" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_ENABLE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>True</Value>
+        </Property>
+        <Property Id="PROP_EXPECTED_SHED_LEVEL" Tag="BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_ACTUAL_SHED_LEVEL" Tag="BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_SHED_LEVELS" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>1</Value>
+          <Value>2</Value>
+          <Value>3</Value>
+        </Property>
+        <Property Id="PROP_SHED_LEVEL_DESCRIPTIONS" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>dim lights 10%</Value>
+          <Value>dim lights 20%</Value>
+          <Value>dim lights 30%</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>LOAD CONTROL 0</Value>
+        </Property>
+        <Property Id="PROP_FULL_DUTY_BASELINE" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>6.89649E-41</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_LOAD_CONTROL" Instance="1">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_LOAD_CONTROL: 1</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>LOAD CONTROL 1</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>28</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_REQUESTED_SHED_LEVEL" Tag="BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_START_TIME" Tag="BACNET_APPLICATION_TAG_DATE">
+          <Value>01-01-0001 00:00:00</Value>
+          <Value>01-01-0001 00:00:00</Value>
+        </Property>
+        <Property Id="PROP_SHED_DURATION" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_DUTY_WINDOW" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_ENABLE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>True</Value>
+        </Property>
+        <Property Id="PROP_EXPECTED_SHED_LEVEL" Tag="BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_ACTUAL_SHED_LEVEL" Tag="BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_SHED_LEVELS" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>1</Value>
+          <Value>2</Value>
+          <Value>3</Value>
+        </Property>
+        <Property Id="PROP_SHED_LEVEL_DESCRIPTIONS" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>dim lights 10%</Value>
+          <Value>dim lights 20%</Value>
+          <Value>dim lights 30%</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>LOAD CONTROL 1</Value>
+        </Property>
+        <Property Id="PROP_FULL_DUTY_BASELINE" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>6.89649E-41</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_LOAD_CONTROL" Instance="2">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_LOAD_CONTROL: 2</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>LOAD CONTROL 2</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>28</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_REQUESTED_SHED_LEVEL" Tag="BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_START_TIME" Tag="BACNET_APPLICATION_TAG_DATE">
+          <Value>01-01-0001 00:00:00</Value>
+          <Value>01-01-0001 00:00:00</Value>
+        </Property>
+        <Property Id="PROP_SHED_DURATION" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_DUTY_WINDOW" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_ENABLE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>True</Value>
+        </Property>
+        <Property Id="PROP_EXPECTED_SHED_LEVEL" Tag="BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_ACTUAL_SHED_LEVEL" Tag="BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_SHED_LEVELS" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>1</Value>
+          <Value>2</Value>
+          <Value>3</Value>
+        </Property>
+        <Property Id="PROP_SHED_LEVEL_DESCRIPTIONS" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>dim lights 10%</Value>
+          <Value>dim lights 20%</Value>
+          <Value>dim lights 30%</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>LOAD CONTROL 2</Value>
+        </Property>
+        <Property Id="PROP_FULL_DUTY_BASELINE" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>6.89649E-41</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_LOAD_CONTROL" Instance="3">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_LOAD_CONTROL: 3</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>LOAD CONTROL 3</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>28</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_REQUESTED_SHED_LEVEL" Tag="BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_START_TIME" Tag="BACNET_APPLICATION_TAG_DATE">
+          <Value>01-01-0001 00:00:00</Value>
+          <Value>01-01-0001 00:00:00</Value>
+        </Property>
+        <Property Id="PROP_SHED_DURATION" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_DUTY_WINDOW" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_ENABLE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>True</Value>
+        </Property>
+        <Property Id="PROP_EXPECTED_SHED_LEVEL" Tag="BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_ACTUAL_SHED_LEVEL" Tag="BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_SHED_LEVELS" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>1</Value>
+          <Value>2</Value>
+          <Value>3</Value>
+        </Property>
+        <Property Id="PROP_SHED_LEVEL_DESCRIPTIONS" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>dim lights 10%</Value>
+          <Value>dim lights 20%</Value>
+          <Value>dim lights 30%</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>LOAD CONTROL 3</Value>
+        </Property>
+        <Property Id="PROP_FULL_DUTY_BASELINE" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>6.89649E-41</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_MULTI_STATE_INPUT" Instance="0">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_MULTI_STATE_INPUT: 0</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value />
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>13</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>1</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_NUMBER_OF_STATES" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>254</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value />
+        </Property>
+        <Property Id="PROP_STATE_TEXT" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_MULTI_STATE_OUTPUT" Instance="0">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_MULTI_STATE_OUTPUT: 0</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>MULTISTATE OUTPUT 0</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>14</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_NUMBER_OF_STATES" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>254</Value>
+        </Property>
+        <Property Id="PROP_PRIORITY_ARRAY" Tag="BACNET_APPLICATION_TAG_NULL">
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+        </Property>
+        <Property Id="PROP_RELINQUISH_DEFAULT" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>MULTISTATE OUTPUT 0</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_MULTI_STATE_OUTPUT" Instance="1">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_MULTI_STATE_OUTPUT: 1</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>MULTISTATE OUTPUT 1</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>14</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_NUMBER_OF_STATES" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>254</Value>
+        </Property>
+        <Property Id="PROP_PRIORITY_ARRAY" Tag="BACNET_APPLICATION_TAG_NULL">
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+        </Property>
+        <Property Id="PROP_RELINQUISH_DEFAULT" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>MULTISTATE OUTPUT 1</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_MULTI_STATE_OUTPUT" Instance="2">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_MULTI_STATE_OUTPUT: 2</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>MULTISTATE OUTPUT 2</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>14</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_NUMBER_OF_STATES" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>254</Value>
+        </Property>
+        <Property Id="PROP_PRIORITY_ARRAY" Tag="BACNET_APPLICATION_TAG_NULL">
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+        </Property>
+        <Property Id="PROP_RELINQUISH_DEFAULT" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>MULTISTATE OUTPUT 2</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_MULTI_STATE_OUTPUT" Instance="3">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_MULTI_STATE_OUTPUT: 3</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>MULTISTATE OUTPUT 3</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>14</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_NUMBER_OF_STATES" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>254</Value>
+        </Property>
+        <Property Id="PROP_PRIORITY_ARRAY" Tag="BACNET_APPLICATION_TAG_NULL">
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+        </Property>
+        <Property Id="PROP_RELINQUISH_DEFAULT" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>MULTISTATE OUTPUT 3</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_MULTI_STATE_VALUE" Instance="0">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_MULTI_STATE_VALUE: 0</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value />
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>19</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>1</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_NUMBER_OF_STATES" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>254</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value />
+        </Property>
+        <Property Id="PROP_STATE_TEXT" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_TRENDLOG" Instance="0">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_TRENDLOG: 0</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>Trend Log 0</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>20</Value>
+        </Property>
+        <Property Id="PROP_ENABLE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>True</Value>
+        </Property>
+        <Property Id="PROP_STOP_WHEN_FULL" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_BUFFER_SIZE" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>1000</Value>
+        </Property>
+        <Property Id="PROP_LOG_BUFFER" Tag="BACNET_APPLICATION_TAG_NULL" />
+        <Property Id="PROP_RECORD_COUNT" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>1000</Value>
+        </Property>
+        <Property Id="PROP_TOTAL_RECORD_COUNT" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>10021</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_LOGGING_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>Trend Log 0</Value>
+        </Property>
+        <Property Id="PROP_START_TIME" Tag="BACNET_APPLICATION_TAG_DATE">
+          <Value>01-01-2009 00:00:00</Value>
+          <Value>01-01-0001 00:00:00</Value>
+        </Property>
+        <Property Id="PROP_STOP_TIME" Tag="BACNET_APPLICATION_TAG_DATE">
+          <Value>22-12-2020 00:00:00</Value>
+          <Value>01-01-0001 23:59:59</Value>
+        </Property>
+        <Property Id="PROP_LOG_DEVICE_OBJECT_PROPERTY" Tag="BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC">
+          <Value>OBJECT_ANALOG_INPUT: 0;85;OBJECT_DEVICE: 260001</Value>
+        </Property>
+        <Property Id="PROP_LOG_INTERVAL" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>90000</Value>
+        </Property>
+        <Property Id="PROP_ALIGN_INTERVALS" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>True</Value>
+        </Property>
+        <Property Id="PROP_INTERVAL_OFFSET" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_TRIGGER" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_TRENDLOG" Instance="1">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_TRENDLOG: 1</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>Trend Log 1</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>20</Value>
+        </Property>
+        <Property Id="PROP_ENABLE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>True</Value>
+        </Property>
+        <Property Id="PROP_STOP_WHEN_FULL" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_BUFFER_SIZE" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>1000</Value>
+        </Property>
+        <Property Id="PROP_LOG_BUFFER" Tag="BACNET_APPLICATION_TAG_NULL" />
+        <Property Id="PROP_RECORD_COUNT" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>1000</Value>
+        </Property>
+        <Property Id="PROP_TOTAL_RECORD_COUNT" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>10021</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_LOGGING_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>Trend Log 1</Value>
+        </Property>
+        <Property Id="PROP_START_TIME" Tag="BACNET_APPLICATION_TAG_DATE">
+          <Value>01-01-2009 00:00:00</Value>
+          <Value>01-01-0001 00:00:00</Value>
+        </Property>
+        <Property Id="PROP_STOP_TIME" Tag="BACNET_APPLICATION_TAG_DATE">
+          <Value>22-12-2020 00:00:00</Value>
+          <Value>01-01-0001 23:59:59</Value>
+        </Property>
+        <Property Id="PROP_LOG_DEVICE_OBJECT_PROPERTY" Tag="BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC">
+          <Value>OBJECT_ANALOG_INPUT: 1;85;OBJECT_DEVICE: 260001</Value>
+        </Property>
+        <Property Id="PROP_LOG_INTERVAL" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>90000</Value>
+        </Property>
+        <Property Id="PROP_ALIGN_INTERVALS" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>True</Value>
+        </Property>
+        <Property Id="PROP_INTERVAL_OFFSET" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_TRIGGER" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_TRENDLOG" Instance="2">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_TRENDLOG: 2</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>Trend Log 2</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>20</Value>
+        </Property>
+        <Property Id="PROP_ENABLE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>True</Value>
+        </Property>
+        <Property Id="PROP_STOP_WHEN_FULL" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_BUFFER_SIZE" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>1000</Value>
+        </Property>
+        <Property Id="PROP_LOG_BUFFER" Tag="BACNET_APPLICATION_TAG_NULL" />
+        <Property Id="PROP_RECORD_COUNT" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>1000</Value>
+        </Property>
+        <Property Id="PROP_TOTAL_RECORD_COUNT" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>10021</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_LOGGING_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>Trend Log 2</Value>
+        </Property>
+        <Property Id="PROP_START_TIME" Tag="BACNET_APPLICATION_TAG_DATE">
+          <Value>01-01-2009 00:00:00</Value>
+          <Value>01-01-0001 00:00:00</Value>
+        </Property>
+        <Property Id="PROP_STOP_TIME" Tag="BACNET_APPLICATION_TAG_DATE">
+          <Value>22-12-2020 00:00:00</Value>
+          <Value>01-01-0001 23:59:59</Value>
+        </Property>
+        <Property Id="PROP_LOG_DEVICE_OBJECT_PROPERTY" Tag="BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC">
+          <Value>OBJECT_ANALOG_INPUT: 2;85;OBJECT_DEVICE: 260001</Value>
+        </Property>
+        <Property Id="PROP_LOG_INTERVAL" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>90000</Value>
+        </Property>
+        <Property Id="PROP_ALIGN_INTERVALS" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>True</Value>
+        </Property>
+        <Property Id="PROP_INTERVAL_OFFSET" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_TRIGGER" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_TRENDLOG" Instance="3">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_TRENDLOG: 3</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>Trend Log 3</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>20</Value>
+        </Property>
+        <Property Id="PROP_ENABLE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>True</Value>
+        </Property>
+        <Property Id="PROP_STOP_WHEN_FULL" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_BUFFER_SIZE" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>1000</Value>
+        </Property>
+        <Property Id="PROP_LOG_BUFFER" Tag="BACNET_APPLICATION_TAG_NULL" />
+        <Property Id="PROP_RECORD_COUNT" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>1000</Value>
+        </Property>
+        <Property Id="PROP_TOTAL_RECORD_COUNT" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>10021</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_LOGGING_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>Trend Log 3</Value>
+        </Property>
+        <Property Id="PROP_START_TIME" Tag="BACNET_APPLICATION_TAG_DATE">
+          <Value>01-01-2009 00:00:00</Value>
+          <Value>01-01-0001 00:00:00</Value>
+        </Property>
+        <Property Id="PROP_STOP_TIME" Tag="BACNET_APPLICATION_TAG_DATE">
+          <Value>22-12-2020 00:00:00</Value>
+          <Value>01-01-0001 23:59:59</Value>
+        </Property>
+        <Property Id="PROP_LOG_DEVICE_OBJECT_PROPERTY" Tag="BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC">
+          <Value>OBJECT_ANALOG_INPUT: 3;85;OBJECT_DEVICE: 260001</Value>
+        </Property>
+        <Property Id="PROP_LOG_INTERVAL" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>90000</Value>
+        </Property>
+        <Property Id="PROP_ALIGN_INTERVALS" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>True</Value>
+        </Property>
+        <Property Id="PROP_INTERVAL_OFFSET" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_TRIGGER" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_TRENDLOG" Instance="4">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_TRENDLOG: 4</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>Trend Log 4</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>20</Value>
+        </Property>
+        <Property Id="PROP_ENABLE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>True</Value>
+        </Property>
+        <Property Id="PROP_STOP_WHEN_FULL" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_BUFFER_SIZE" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>1000</Value>
+        </Property>
+        <Property Id="PROP_LOG_BUFFER" Tag="BACNET_APPLICATION_TAG_NULL" />
+        <Property Id="PROP_RECORD_COUNT" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>1000</Value>
+        </Property>
+        <Property Id="PROP_TOTAL_RECORD_COUNT" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>10021</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_LOGGING_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>Trend Log 4</Value>
+        </Property>
+        <Property Id="PROP_START_TIME" Tag="BACNET_APPLICATION_TAG_DATE">
+          <Value>01-01-2009 00:00:00</Value>
+          <Value>01-01-0001 00:00:00</Value>
+        </Property>
+        <Property Id="PROP_STOP_TIME" Tag="BACNET_APPLICATION_TAG_DATE">
+          <Value>22-12-2020 00:00:00</Value>
+          <Value>01-01-0001 23:59:59</Value>
+        </Property>
+        <Property Id="PROP_LOG_DEVICE_OBJECT_PROPERTY" Tag="BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC">
+          <Value>OBJECT_ANALOG_INPUT: 4;85;OBJECT_DEVICE: 260001</Value>
+        </Property>
+        <Property Id="PROP_LOG_INTERVAL" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>90000</Value>
+        </Property>
+        <Property Id="PROP_ALIGN_INTERVALS" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>True</Value>
+        </Property>
+        <Property Id="PROP_INTERVAL_OFFSET" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_TRIGGER" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_TRENDLOG" Instance="5">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_TRENDLOG: 5</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>Trend Log 5</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>20</Value>
+        </Property>
+        <Property Id="PROP_ENABLE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>True</Value>
+        </Property>
+        <Property Id="PROP_STOP_WHEN_FULL" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_BUFFER_SIZE" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>1000</Value>
+        </Property>
+        <Property Id="PROP_LOG_BUFFER" Tag="BACNET_APPLICATION_TAG_NULL" />
+        <Property Id="PROP_RECORD_COUNT" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>1000</Value>
+        </Property>
+        <Property Id="PROP_TOTAL_RECORD_COUNT" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>10021</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_LOGGING_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>Trend Log 5</Value>
+        </Property>
+        <Property Id="PROP_START_TIME" Tag="BACNET_APPLICATION_TAG_DATE">
+          <Value>01-01-2009 00:00:00</Value>
+          <Value>01-01-0001 00:00:00</Value>
+        </Property>
+        <Property Id="PROP_STOP_TIME" Tag="BACNET_APPLICATION_TAG_DATE">
+          <Value>22-12-2020 00:00:00</Value>
+          <Value>01-01-0001 23:59:59</Value>
+        </Property>
+        <Property Id="PROP_LOG_DEVICE_OBJECT_PROPERTY" Tag="BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC">
+          <Value>OBJECT_ANALOG_INPUT: 5;85;OBJECT_DEVICE: 260001</Value>
+        </Property>
+        <Property Id="PROP_LOG_INTERVAL" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>90000</Value>
+        </Property>
+        <Property Id="PROP_ALIGN_INTERVALS" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>True</Value>
+        </Property>
+        <Property Id="PROP_INTERVAL_OFFSET" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_TRIGGER" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_TRENDLOG" Instance="6">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_TRENDLOG: 6</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>Trend Log 6</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>20</Value>
+        </Property>
+        <Property Id="PROP_ENABLE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>True</Value>
+        </Property>
+        <Property Id="PROP_STOP_WHEN_FULL" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_BUFFER_SIZE" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>1000</Value>
+        </Property>
+        <Property Id="PROP_LOG_BUFFER" Tag="BACNET_APPLICATION_TAG_NULL" />
+        <Property Id="PROP_RECORD_COUNT" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>1000</Value>
+        </Property>
+        <Property Id="PROP_TOTAL_RECORD_COUNT" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>10021</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_LOGGING_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>Trend Log 6</Value>
+        </Property>
+        <Property Id="PROP_START_TIME" Tag="BACNET_APPLICATION_TAG_DATE">
+          <Value>01-01-2009 00:00:00</Value>
+          <Value>01-01-0001 00:00:00</Value>
+        </Property>
+        <Property Id="PROP_STOP_TIME" Tag="BACNET_APPLICATION_TAG_DATE">
+          <Value>22-12-2020 00:00:00</Value>
+          <Value>01-01-0001 23:59:59</Value>
+        </Property>
+        <Property Id="PROP_LOG_DEVICE_OBJECT_PROPERTY" Tag="BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC">
+          <Value>OBJECT_ANALOG_INPUT: 6;85;OBJECT_DEVICE: 260001</Value>
+        </Property>
+        <Property Id="PROP_LOG_INTERVAL" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>90000</Value>
+        </Property>
+        <Property Id="PROP_ALIGN_INTERVALS" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>True</Value>
+        </Property>
+        <Property Id="PROP_INTERVAL_OFFSET" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_TRIGGER" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_TRENDLOG" Instance="7">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_TRENDLOG: 7</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>Trend Log 7</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>20</Value>
+        </Property>
+        <Property Id="PROP_ENABLE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>True</Value>
+        </Property>
+        <Property Id="PROP_STOP_WHEN_FULL" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_BUFFER_SIZE" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>1000</Value>
+        </Property>
+        <Property Id="PROP_LOG_BUFFER" Tag="BACNET_APPLICATION_TAG_NULL" />
+        <Property Id="PROP_RECORD_COUNT" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>1000</Value>
+        </Property>
+        <Property Id="PROP_TOTAL_RECORD_COUNT" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>10021</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_LOGGING_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>Trend Log 7</Value>
+        </Property>
+        <Property Id="PROP_START_TIME" Tag="BACNET_APPLICATION_TAG_DATE">
+          <Value>01-01-2009 00:00:00</Value>
+          <Value>01-01-0001 00:00:00</Value>
+        </Property>
+        <Property Id="PROP_STOP_TIME" Tag="BACNET_APPLICATION_TAG_DATE">
+          <Value>22-12-2020 00:00:00</Value>
+          <Value>01-01-0001 23:59:59</Value>
+        </Property>
+        <Property Id="PROP_LOG_DEVICE_OBJECT_PROPERTY" Tag="BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC">
+          <Value>OBJECT_ANALOG_INPUT: 7;85;OBJECT_DEVICE: 260001</Value>
+        </Property>
+        <Property Id="PROP_LOG_INTERVAL" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>90000</Value>
+        </Property>
+        <Property Id="PROP_ALIGN_INTERVALS" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>True</Value>
+        </Property>
+        <Property Id="PROP_INTERVAL_OFFSET" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_TRIGGER" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_LIGHTING_OUTPUT" Instance="1">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_LIGHTING_OUTPUT: 1</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>LIGHTING OUTPUT 1</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>54</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_TRACKING_VALUE" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_LIGHTING_COMMAND" Tag="BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC">
+          <Value>AA==</Value>
+        </Property>
+        <Property Id="PROP_IN_PROGRESS" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_BLINK_WARN_ENABLE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_EGRESS_TIME" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_EGRESS_ACTIVE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_DEFAULT_FADE_TIME" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>100</Value>
+        </Property>
+        <Property Id="PROP_DEFAULT_RAMP_RATE" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>7.183897E-41</Value>
+        </Property>
+        <Property Id="PROP_DEFAULT_STEP_INCREMENT" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>4.600603E-41</Value>
+        </Property>
+        <Property Id="PROP_PRIORITY_ARRAY" Tag="BACNET_APPLICATION_TAG_NULL">
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+        </Property>
+        <Property Id="PROP_RELINQUISH_DEFAULT" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_LIGHTING_COMMAND_DEFAULT_PRIORITY" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>16</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_LIGHTING_OUTPUT" Instance="2">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_LIGHTING_OUTPUT: 2</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>LIGHTING OUTPUT 2</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>54</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_TRACKING_VALUE" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_LIGHTING_COMMAND" Tag="BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC">
+          <Value>AA==</Value>
+        </Property>
+        <Property Id="PROP_IN_PROGRESS" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_BLINK_WARN_ENABLE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_EGRESS_TIME" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_EGRESS_ACTIVE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_DEFAULT_FADE_TIME" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>100</Value>
+        </Property>
+        <Property Id="PROP_DEFAULT_RAMP_RATE" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>7.183897E-41</Value>
+        </Property>
+        <Property Id="PROP_DEFAULT_STEP_INCREMENT" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>4.600603E-41</Value>
+        </Property>
+        <Property Id="PROP_PRIORITY_ARRAY" Tag="BACNET_APPLICATION_TAG_NULL">
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+        </Property>
+        <Property Id="PROP_RELINQUISH_DEFAULT" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_LIGHTING_COMMAND_DEFAULT_PRIORITY" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>16</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_LIGHTING_OUTPUT" Instance="3">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_LIGHTING_OUTPUT: 3</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>LIGHTING OUTPUT 3</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>54</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_TRACKING_VALUE" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_LIGHTING_COMMAND" Tag="BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC">
+          <Value>AA==</Value>
+        </Property>
+        <Property Id="PROP_IN_PROGRESS" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_BLINK_WARN_ENABLE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_EGRESS_TIME" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_EGRESS_ACTIVE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_DEFAULT_FADE_TIME" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>100</Value>
+        </Property>
+        <Property Id="PROP_DEFAULT_RAMP_RATE" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>7.183897E-41</Value>
+        </Property>
+        <Property Id="PROP_DEFAULT_STEP_INCREMENT" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>4.600603E-41</Value>
+        </Property>
+        <Property Id="PROP_PRIORITY_ARRAY" Tag="BACNET_APPLICATION_TAG_NULL">
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+        </Property>
+        <Property Id="PROP_RELINQUISH_DEFAULT" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_LIGHTING_COMMAND_DEFAULT_PRIORITY" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>16</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_LIGHTING_OUTPUT" Instance="4">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_LIGHTING_OUTPUT: 4</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>LIGHTING OUTPUT 4</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>54</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_TRACKING_VALUE" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_LIGHTING_COMMAND" Tag="BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC">
+          <Value>AA==</Value>
+        </Property>
+        <Property Id="PROP_IN_PROGRESS" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_BLINK_WARN_ENABLE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_EGRESS_TIME" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_EGRESS_ACTIVE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_DEFAULT_FADE_TIME" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>100</Value>
+        </Property>
+        <Property Id="PROP_DEFAULT_RAMP_RATE" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>7.183897E-41</Value>
+        </Property>
+        <Property Id="PROP_DEFAULT_STEP_INCREMENT" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>4.600603E-41</Value>
+        </Property>
+        <Property Id="PROP_PRIORITY_ARRAY" Tag="BACNET_APPLICATION_TAG_NULL">
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+        </Property>
+        <Property Id="PROP_RELINQUISH_DEFAULT" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_LIGHTING_COMMAND_DEFAULT_PRIORITY" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>16</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_LIGHTING_OUTPUT" Instance="5">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_LIGHTING_OUTPUT: 5</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>LIGHTING OUTPUT 5</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>54</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_TRACKING_VALUE" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_LIGHTING_COMMAND" Tag="BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC">
+          <Value>AA==</Value>
+        </Property>
+        <Property Id="PROP_IN_PROGRESS" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_BLINK_WARN_ENABLE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_EGRESS_TIME" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_EGRESS_ACTIVE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_DEFAULT_FADE_TIME" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>100</Value>
+        </Property>
+        <Property Id="PROP_DEFAULT_RAMP_RATE" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>7.183897E-41</Value>
+        </Property>
+        <Property Id="PROP_DEFAULT_STEP_INCREMENT" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>4.600603E-41</Value>
+        </Property>
+        <Property Id="PROP_PRIORITY_ARRAY" Tag="BACNET_APPLICATION_TAG_NULL">
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+        </Property>
+        <Property Id="PROP_RELINQUISH_DEFAULT" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_LIGHTING_COMMAND_DEFAULT_PRIORITY" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>16</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_LIGHTING_OUTPUT" Instance="6">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_LIGHTING_OUTPUT: 6</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>LIGHTING OUTPUT 6</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>54</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_TRACKING_VALUE" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_LIGHTING_COMMAND" Tag="BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC">
+          <Value>AA==</Value>
+        </Property>
+        <Property Id="PROP_IN_PROGRESS" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_BLINK_WARN_ENABLE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_EGRESS_TIME" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_EGRESS_ACTIVE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_DEFAULT_FADE_TIME" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>100</Value>
+        </Property>
+        <Property Id="PROP_DEFAULT_RAMP_RATE" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>7.183897E-41</Value>
+        </Property>
+        <Property Id="PROP_DEFAULT_STEP_INCREMENT" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>4.600603E-41</Value>
+        </Property>
+        <Property Id="PROP_PRIORITY_ARRAY" Tag="BACNET_APPLICATION_TAG_NULL">
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+        </Property>
+        <Property Id="PROP_RELINQUISH_DEFAULT" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_LIGHTING_COMMAND_DEFAULT_PRIORITY" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>16</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_LIGHTING_OUTPUT" Instance="7">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_LIGHTING_OUTPUT: 7</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>LIGHTING OUTPUT 7</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>54</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_TRACKING_VALUE" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_LIGHTING_COMMAND" Tag="BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC">
+          <Value>AA==</Value>
+        </Property>
+        <Property Id="PROP_IN_PROGRESS" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_BLINK_WARN_ENABLE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_EGRESS_TIME" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_EGRESS_ACTIVE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_DEFAULT_FADE_TIME" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>100</Value>
+        </Property>
+        <Property Id="PROP_DEFAULT_RAMP_RATE" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>7.183897E-41</Value>
+        </Property>
+        <Property Id="PROP_DEFAULT_STEP_INCREMENT" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>4.600603E-41</Value>
+        </Property>
+        <Property Id="PROP_PRIORITY_ARRAY" Tag="BACNET_APPLICATION_TAG_NULL">
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+        </Property>
+        <Property Id="PROP_RELINQUISH_DEFAULT" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_LIGHTING_COMMAND_DEFAULT_PRIORITY" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>16</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_LIGHTING_OUTPUT" Instance="8">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_LIGHTING_OUTPUT: 8</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>LIGHTING OUTPUT 8</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>54</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_TRACKING_VALUE" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_LIGHTING_COMMAND" Tag="BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC">
+          <Value>AA==</Value>
+        </Property>
+        <Property Id="PROP_IN_PROGRESS" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_BLINK_WARN_ENABLE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_EGRESS_TIME" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_EGRESS_ACTIVE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_DEFAULT_FADE_TIME" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>100</Value>
+        </Property>
+        <Property Id="PROP_DEFAULT_RAMP_RATE" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>7.183897E-41</Value>
+        </Property>
+        <Property Id="PROP_DEFAULT_STEP_INCREMENT" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>4.600603E-41</Value>
+        </Property>
+        <Property Id="PROP_PRIORITY_ARRAY" Tag="BACNET_APPLICATION_TAG_NULL">
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+          <Value />
+        </Property>
+        <Property Id="PROP_RELINQUISH_DEFAULT" Tag="BACNET_APPLICATION_TAG_REAL">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_LIGHTING_COMMAND_DEFAULT_PRIORITY" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>16</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_CHANNEL" Instance="1">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_CHANNEL: 1</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>CHANNEL 1</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>53</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_NULL">
+          <Value />
+        </Property>
+        <Property Id="PROP_LAST_PRIORITY" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_WRITE_STATUS" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES" Tag="BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC">
+          <Value>DYAAAQ==;AXw=;33554432;DYAAAQ==;AXw=;33554432;;;;;;;;AAEaAXw8AgAAAHEAcQBxAHEAcQBxAHEAcQBxAHEAcQBxAHEADA2AAAEaAXw8AgAAAABxAHEAcQBxAHEAcQBxAHEAcQBxAHEAcQBxAHEAcQBxAHEAcQBxAAwNgAABGgF8PAIAAAAAcQBxAHEAcQBxAHEAcQBxAHEAcQBxAHEAcQA=;;;;;;;;;;;;;;AAEaAXw8AgAAAHEAcQBxAHEAcQBxAHEAcQBxAHEAcQBxAHEAcQBxAHEAcQBxAHEAcQBxAHEAcQBxAHEAcQBxAHEAcQBxAHEAcQBxDA2AAAEaAXw8AgAAAHEAcQBxAHEAcQBxAHEAcQBxAHEAcQBxAHEAcQBxAHEAcQBxAHEAcQA=;;;;;;;;;;;;;;;;;;;;DYAAAQ==;AXw=;33554432;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;</Value>
+        </Property>
+        <Property Id="PROP_CHANNEL_NUMBER" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_CONTROL_GROUPS" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+          <Value>0</Value>
+          <Value>0</Value>
+          <Value>0</Value>
+          <Value>0</Value>
+          <Value>0</Value>
+          <Value>0</Value>
+          <Value>0</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_FILE" Instance="0">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_FILE: 0</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>FILE 0</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>10</Value>
+        </Property>
+        <Property Id="PROP_FILE_TYPE" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>TEXT</Value>
+        </Property>
+        <Property Id="PROP_FILE_SIZE" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_MODIFICATION_DATE" Tag="BACNET_APPLICATION_TAG_DATE">
+          <Value>01-04-2006 00:00:00</Value>
+          <Value>01-01-0001 07:00:03</Value>
+        </Property>
+        <Property Id="PROP_ARCHIVE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>True</Value>
+        </Property>
+        <Property Id="PROP_READ_ONLY" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>True</Value>
+        </Property>
+        <Property Id="PROP_FILE_ACCESS_METHOD" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>2</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>temp_0.txt</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_FILE" Instance="1">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_FILE: 1</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>FILE 1</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>10</Value>
+        </Property>
+        <Property Id="PROP_FILE_TYPE" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>TEXT</Value>
+        </Property>
+        <Property Id="PROP_FILE_SIZE" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_MODIFICATION_DATE" Tag="BACNET_APPLICATION_TAG_DATE">
+          <Value>01-04-2006 00:00:00</Value>
+          <Value>01-01-0001 07:00:03</Value>
+        </Property>
+        <Property Id="PROP_ARCHIVE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>True</Value>
+        </Property>
+        <Property Id="PROP_READ_ONLY" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>True</Value>
+        </Property>
+        <Property Id="PROP_FILE_ACCESS_METHOD" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>2</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>temp_1.txt</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_FILE" Instance="2">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_FILE: 2</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>FILE 2</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>10</Value>
+        </Property>
+        <Property Id="PROP_FILE_TYPE" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>TEXT</Value>
+        </Property>
+        <Property Id="PROP_FILE_SIZE" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_MODIFICATION_DATE" Tag="BACNET_APPLICATION_TAG_DATE">
+          <Value>01-04-2006 00:00:00</Value>
+          <Value>01-01-0001 07:00:03</Value>
+        </Property>
+        <Property Id="PROP_ARCHIVE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>True</Value>
+        </Property>
+        <Property Id="PROP_READ_ONLY" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>True</Value>
+        </Property>
+        <Property Id="PROP_FILE_ACCESS_METHOD" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>2</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>temp_2.txt</Value>
+        </Property>
+      </Properties>
+    </Object>
+  </Objects>
+</DeviceStorage>

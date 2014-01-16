@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Yabe", "Yabe.csproj", "{EE493B17-8185-406C-881F-1144092F01CB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EE493B17-8185-406C-881F-1144092F01CB}.Debug|x86.ActiveCfg = Debug|x86
+		{EE493B17-8185-406C-881F-1144092F01CB}.Debug|x86.Build.0 = Debug|x86
+		{EE493B17-8185-406C-881F-1144092F01CB}.Release|x86.ActiveCfg = Release|x86
+		{EE493B17-8185-406C-881F-1144092F01CB}.Release|x86.Build.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
