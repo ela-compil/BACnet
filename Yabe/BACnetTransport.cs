@@ -396,15 +396,26 @@ namespace System.IO.BACnet
                 m_conn.Write(buffer, offset, length);
                 m_conn.Flush();
             }
-            catch (System.IO.IOException ex)
+            catch (System.IO.IOException)
             {
-                if (m_conn is System.IO.Pipes.NamedPipeServerStream)
+                Disconnect();
+            }
+        }
+
+        private void Disconnect()
+        {
+            if (m_conn is System.IO.Pipes.NamedPipeServerStream)
+            {
+                try
                 {
                     ((System.IO.Pipes.NamedPipeServerStream)m_conn).Disconnect();
-                    m_current_read = null;
-                    m_current_connect = null;
                 }
+                catch
+                {
+                }
+                m_current_connect = null;
             }
+            m_current_read = null;
         }
 
         private bool WaitForConnection(int timeout_ms)
@@ -421,16 +432,21 @@ namespace System.IO.BACnet
                     }
                     catch (System.IO.IOException)
                     {
-                        server.Disconnect();
-                        m_current_read = null;
-                        m_current_connect = null;
+                        Disconnect();
                         m_current_connect = server.BeginWaitForConnection(null, null);
                     }
                 }
 
                 if (m_current_connect.IsCompleted || m_current_connect.AsyncWaitHandle.WaitOne(timeout_ms))
                 {
-                    server.EndWaitForConnection(m_current_connect);
+                    try
+                    {
+                        server.EndWaitForConnection(m_current_connect);
+                    }
+                    catch (System.IO.IOException)
+                    {
+                        Disconnect();
+                    }
                     m_current_connect = null;
                 }
                 return m_conn.IsConnected;
@@ -451,7 +467,7 @@ namespace System.IO.BACnet
                 }
                 catch (Exception)
                 {
-                    m_current_read = null;
+                    Disconnect();
                     return -1;
                 }
             }
@@ -466,7 +482,7 @@ namespace System.IO.BACnet
                 }
                 catch (Exception)
                 {
-                    m_current_read = null;
+                    Disconnect();
                     return -1;
                 }
             }
@@ -604,6 +620,7 @@ namespace System.IO.BACnet
         public short SourceAddress { get { return m_TS; } set { m_TS = value; } }
         public byte MaxMaster { get { return m_max_master; } set { m_max_master = value; } }
         public byte MaxInfoFrames { get { return m_max_info_frames; } set { m_max_info_frames = value; } }
+        public bool StateLogging { get; set; }
 
         public delegate void FrameRecievedHandler(BacnetMstpProtocolTransport sender, MSTP_FRAME_TYPE frame_type, byte destination_address, byte source_address, int msg_length);
         public event MessageRecievedHandler MessageRecieved;
@@ -698,7 +715,7 @@ namespace System.IO.BACnet
             frame.send_mutex.Set();
 
             //debug
-            Trace.WriteLine("         " + frame.frame_type + " " + frame.destination_address.ToString("X2") + " ");
+            if (StateLogging) Trace.WriteLine("         " + frame.frame_type + " " + frame.destination_address.ToString("X2") + " ");
         }
 
         private void RemoveCurrentMessage(int msg_length)
@@ -997,7 +1014,7 @@ namespace System.IO.BACnet
             byte source_address;
             int msg_length;
 
-            while (true)
+            while (m_port != null)
             {
                 //get message
                 GetMessageStatus status = GetNextMessage(no_token_timeout, out frame_type, out destination_address, out source_address, out msg_length);
@@ -1087,6 +1104,8 @@ namespace System.IO.BACnet
                     Trace.WriteLine("Garbage", null);
                 }
             }
+
+            return StateChanges.Reset;
         }
 
         private StateChanges AnswerDataRequest()
@@ -1116,57 +1135,65 @@ namespace System.IO.BACnet
 
         private void mstp_thread()
         {
-            StateChanges state_change = StateChanges.Reset;
-
-            while (m_port != null)
+            try
             {
-                Trace.WriteLine(state_change.ToString(), null);
-                switch (state_change)
+                StateChanges state_change = StateChanges.Reset;
+
+                while (m_port != null)
                 {
-                    case StateChanges.Reset:
-                        state_change = Initialize();
-                        break;
-                    case StateChanges.DoneInitializing:
-                    case StateChanges.ReceivedUnexpectedFrame:
-                    case StateChanges.Reply:
-                    case StateChanges.DeferredReply:
-                    case StateChanges.SawTokenUser:
-                        state_change = Idle();
-                        break;
-                    case StateChanges.GenerateToken:
-                    case StateChanges.FindNewSuccessor:
-                    case StateChanges.SendMaintenancePFM:
-                    case StateChanges.SoleMasterRestartMaintenancePFM:
-                    case StateChanges.NextStationUnknown:
-                        state_change = PollForMaster();
-                        break;
-                    case StateChanges.DoneWithPFM:
-                    case StateChanges.ResetMaintenancePFM:
-                    case StateChanges.ReceivedReplyToPFM:
-                    case StateChanges.SendToken:
-                        state_change = PassToken();
-                        break;
-                    case StateChanges.ReceivedDataNeedingReply:
-                        state_change = AnswerDataRequest();
-                        break;
-                    case StateChanges.ReceivedToken:
-                    case StateChanges.SoleMaster:
-                    case StateChanges.DeclareSoleMaster:
-                    case StateChanges.SendAnotherFrame:
-                        state_change = UseToken();
-                        break;
-                    case StateChanges.NothingToSend:
-                    case StateChanges.SendNoWait:
-                    case StateChanges.ReplyTimeOut:
-                    case StateChanges.InvalidFrame:
-                    case StateChanges.ReceivedReply:
-                    case StateChanges.ReceivedPostpone:
-                        state_change = DoneWithToken();
-                        break;
-                    case StateChanges.SendAndWait:
-                        state_change = WaitForReply();
-                        break;
+                    if (StateLogging) Trace.WriteLine(state_change.ToString(), null);
+                    switch (state_change)
+                    {
+                        case StateChanges.Reset:
+                            state_change = Initialize();
+                            break;
+                        case StateChanges.DoneInitializing:
+                        case StateChanges.ReceivedUnexpectedFrame:
+                        case StateChanges.Reply:
+                        case StateChanges.DeferredReply:
+                        case StateChanges.SawTokenUser:
+                            state_change = Idle();
+                            break;
+                        case StateChanges.GenerateToken:
+                        case StateChanges.FindNewSuccessor:
+                        case StateChanges.SendMaintenancePFM:
+                        case StateChanges.SoleMasterRestartMaintenancePFM:
+                        case StateChanges.NextStationUnknown:
+                            state_change = PollForMaster();
+                            break;
+                        case StateChanges.DoneWithPFM:
+                        case StateChanges.ResetMaintenancePFM:
+                        case StateChanges.ReceivedReplyToPFM:
+                        case StateChanges.SendToken:
+                            state_change = PassToken();
+                            break;
+                        case StateChanges.ReceivedDataNeedingReply:
+                            state_change = AnswerDataRequest();
+                            break;
+                        case StateChanges.ReceivedToken:
+                        case StateChanges.SoleMaster:
+                        case StateChanges.DeclareSoleMaster:
+                        case StateChanges.SendAnotherFrame:
+                            state_change = UseToken();
+                            break;
+                        case StateChanges.NothingToSend:
+                        case StateChanges.SendNoWait:
+                        case StateChanges.ReplyTimeOut:
+                        case StateChanges.InvalidFrame:
+                        case StateChanges.ReceivedReply:
+                        case StateChanges.ReceivedPostpone:
+                            state_change = DoneWithToken();
+                            break;
+                        case StateChanges.SendAndWait:
+                            state_change = WaitForReply();
+                            break;
+                    }
                 }
+                Trace.WriteLine("MSTP thread is closing down", null);
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError("Exception in MSTP thread: " + ex.Message);
             }
         }
 
@@ -1330,7 +1357,7 @@ namespace System.IO.BACnet
                 System.Threading.ThreadPool.QueueUserWorkItem((o) => { FrameRecieved(this, _frame_type, _destination_address, _source_address, _msg_length); }, null);
             }
 
-            Trace.WriteLine("" + frame_type + " " + destination_address.ToString("X2") + " ");
+            if(StateLogging) Trace.WriteLine("" + frame_type + " " + destination_address.ToString("X2") + " ");
 
             //done
             return GetMessageStatus.Good;

@@ -34,7 +34,7 @@ using System.Windows.Forms;
 using System.Diagnostics;
 using System.IO.BACnet;
 
-namespace BACNetExplorer
+namespace Yabe
 {
     public partial class MainDialog : Form
     {
@@ -63,17 +63,17 @@ namespace BACNetExplorer
             //load splitter setup
             try
             {
-                if (Properties.Settings.Default.FormSize != new Size(0, 0))
-                    this.Size = Properties.Settings.Default.FormSize;
-                FormWindowState state = (FormWindowState)Enum.Parse(typeof(FormWindowState), Properties.Settings.Default.FormState);
+                if (Properties.Settings.Default.GUI_FormSize != new Size(0, 0))
+                    this.Size = Properties.Settings.Default.GUI_FormSize;
+                FormWindowState state = (FormWindowState)Enum.Parse(typeof(FormWindowState), Properties.Settings.Default.GUI_FormState);
                 if (state != FormWindowState.Minimized)
                     this.WindowState = state;
-                if (Properties.Settings.Default.SplitterButtom != -1)
-                    m_SplitContainerButtom.SplitterDistance = Properties.Settings.Default.SplitterButtom;
-                if (Properties.Settings.Default.SplitterLeft != -1)
-                    m_SplitContainerLeft.SplitterDistance = Properties.Settings.Default.SplitterLeft;
-                if (Properties.Settings.Default.SplitterRight != -1)
-                    m_SplitContainerRight.SplitterDistance = Properties.Settings.Default.SplitterRight;
+                if (Properties.Settings.Default.GUI_SplitterButtom != -1)
+                    m_SplitContainerButtom.SplitterDistance = Properties.Settings.Default.GUI_SplitterButtom;
+                if (Properties.Settings.Default.GUI_SplitterLeft != -1)
+                    m_SplitContainerLeft.SplitterDistance = Properties.Settings.Default.GUI_SplitterLeft;
+                if (Properties.Settings.Default.GUI_SplitterRight != -1)
+                    m_SplitContainerRight.SplitterDistance = Properties.Settings.Default.GUI_SplitterRight;
             }
             catch
             {
@@ -372,61 +372,70 @@ namespace BACNetExplorer
 
         private void MSTP_FrameRecieved(BacnetMstpProtocolTransport sender, MSTP_FRAME_TYPE frame_type, byte destination_address, byte source_address, int msg_length)
         {
-            BacnetLine device_line = null;
-            foreach (BacnetLine l in m_devices.Values)
+            try
             {
-                if (l.Line.Transport == sender)
+                if (this.IsDisposed) return;
+                BacnetLine device_line = null;
+                foreach (BacnetLine l in m_devices.Values)
                 {
-                    device_line = l;
-                    break;
-                }
-            }
-            if (device_line == null) return;
-            lock (device_line.mstp_sources_seen)
-            {
-                if (!device_line.mstp_sources_seen.Contains(source_address))
-                {
-                    device_line.mstp_sources_seen.Add(source_address);
-
-                    //find parent node
-                    TreeNode parent = FindCommTreeNode(sender);
-
-                    //find "free" node. The "free" node might have been added
-                    TreeNode free_node = null;
-                    foreach (TreeNode n in parent.Nodes)
+                    if (l.Line.Transport == sender)
                     {
-                        if (n.Text == "free" + source_address)
-                        {
-                            free_node = n;
-                            break;
-                        }
+                        device_line = l;
+                        break;
                     }
-
-                    this.Invoke((MethodInvoker)delegate
-                    {
-                        TreeNode node = parent.Nodes.Add("device" + source_address);
-                        node.ImageIndex = 2;
-                        node.SelectedImageIndex = node.ImageIndex;
-                        node.Tag = new KeyValuePair<BACNET_ADDRESS, uint>(new BACNET_ADDRESS(AddressTypes.MSTP, 0, new byte[]{source_address}), 0xFFFFFFFF);
-                        if (free_node != null) free_node.Remove();
-                        m_DeviceTree.ExpandAll();
-                    });
                 }
-                if (frame_type == MSTP_FRAME_TYPE.FRAME_TYPE_POLL_FOR_MASTER && !device_line.mstp_pfm_destinations_seen.Contains(destination_address) && sender.SourceAddress != destination_address)
+                if (device_line == null) return;
+                lock (device_line.mstp_sources_seen)
                 {
-                    device_line.mstp_pfm_destinations_seen.Add(destination_address);
-                    if (!device_line.mstp_sources_seen.Contains(destination_address))
+                    if (!device_line.mstp_sources_seen.Contains(source_address))
                     {
+                        device_line.mstp_sources_seen.Add(source_address);
+
+                        //find parent node
                         TreeNode parent = FindCommTreeNode(sender);
+
+                        //find "free" node. The "free" node might have been added
+                        TreeNode free_node = null;
+                        foreach (TreeNode n in parent.Nodes)
+                        {
+                            if (n.Text == "free" + source_address)
+                            {
+                                free_node = n;
+                                break;
+                            }
+                        }
+
                         this.Invoke((MethodInvoker)delegate
                         {
-                            TreeNode node = parent.Nodes.Add("free" + destination_address);
-                            node.ImageIndex = 9;
+                            TreeNode node = parent.Nodes.Add("device" + source_address);
+                            node.ImageIndex = 2;
                             node.SelectedImageIndex = node.ImageIndex;
+                            node.Tag = new KeyValuePair<BACNET_ADDRESS, uint>(new BACNET_ADDRESS(AddressTypes.MSTP, 0, new byte[] { source_address }), 0xFFFFFFFF);
+                            if (free_node != null) free_node.Remove();
                             m_DeviceTree.ExpandAll();
                         });
                     }
+                    if (frame_type == MSTP_FRAME_TYPE.FRAME_TYPE_POLL_FOR_MASTER && !device_line.mstp_pfm_destinations_seen.Contains(destination_address) && sender.SourceAddress != destination_address)
+                    {
+                        device_line.mstp_pfm_destinations_seen.Add(destination_address);
+                        if (!device_line.mstp_sources_seen.Contains(destination_address) && Properties.Settings.Default.MSTP_DisplayFreeAddresses)
+                        {
+                            TreeNode parent = FindCommTreeNode(sender);
+                            if (this.IsDisposed) return;
+                            this.Invoke((MethodInvoker)delegate
+                            {
+                                TreeNode node = parent.Nodes.Add("free" + destination_address);
+                                node.ImageIndex = 9;
+                                node.SelectedImageIndex = node.ImageIndex;
+                                m_DeviceTree.ExpandAll();
+                            });
+                        }
+                    }
                 }
+            }
+            catch (ObjectDisposedException)
+            {
+                //we're closing down ... ignore
             }
         }
 
@@ -519,75 +528,82 @@ namespace BACNetExplorer
                     if (MessageBox.Show("The MSTP transport is not yet configured. Would you like to set source_address now?", "Set Source Address", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == System.Windows.Forms.DialogResult.No) return;
 
                     //find suggested address
-                    byte address = 0;
+                    byte address = 0xFF;
                     BacnetLine line = m_devices[comm];
                     lock (line.mstp_sources_seen)
                     {
                         foreach (byte s in line.mstp_pfm_destinations_seen)
                         {
-                            if (!line.mstp_sources_seen.Contains(s))
-                            {
+                            if (s < address && !line.mstp_sources_seen.Contains(s))
                                 address = s;
-                                break;
-                            }
                         }
                     }
 
                     //display choice
                     SourceAddressDialog dlg = new SourceAddressDialog();
                     dlg.SourceAddress = address;
-                    if( dlg.ShowDialog() == System.Windows.Forms.DialogResult.Cancel) return;
+                    if( dlg.ShowDialog(this) == System.Windows.Forms.DialogResult.Cancel) return;
                     ((BacnetMstpProtocolTransport)comm.Transport).SourceAddress = dlg.SourceAddress;
+                    Application.DoEvents();     //let the interface relax
                 }
 
                 //update "address space"?
+                this.Cursor = Cursors.WaitCursor;
+                Application.DoEvents();
                 try
                 {
-                    if (!comm.ReadPropertyRequest(adr, new BACNET_OBJECT_ID(BACNET_OBJECT_TYPE.OBJECT_DEVICE, device_id), BACNET_PROPERTY_ID.PROP_OBJECT_LIST, out value_list))
+                    try
                     {
-                        MessageBox.Show(this, "Couldn't fetch objects", "Communication Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        return;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(this, "Error during read: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
-
-                foreach (BACNET_VALUE value in value_list)
-                {
-                    TreeNode node = m_AddressSpaceTree.Nodes.Add(((BACNET_OBJECT_ID)value.Value).type + ": " + ((BACNET_OBJECT_ID)value.Value).instance);
-                    node.Tag = value;
-                    BACNET_OBJECT_ID? id = value.Value as BACNET_OBJECT_ID?;
-                    if (id != null)
-                    {
-                        switch (id.Value.type)
+                        if (!comm.ReadPropertyRequest(adr, new BACNET_OBJECT_ID(BACNET_OBJECT_TYPE.OBJECT_DEVICE, device_id), BACNET_PROPERTY_ID.PROP_OBJECT_LIST, out value_list))
                         {
-                            case BACNET_OBJECT_TYPE.OBJECT_DEVICE:
-                                node.ImageIndex = 2;
-                                break;
-                            case BACNET_OBJECT_TYPE.OBJECT_FILE:
-                                node.ImageIndex = 5;
-                                break;
-                            case BACNET_OBJECT_TYPE.OBJECT_ANALOG_INPUT:
-                            case BACNET_OBJECT_TYPE.OBJECT_ANALOG_OUTPUT:
-                            case BACNET_OBJECT_TYPE.OBJECT_ANALOG_VALUE:
-                                node.ImageIndex = 6;
-                                break;
-                            case BACNET_OBJECT_TYPE.OBJECT_BINARY_INPUT:
-                            case BACNET_OBJECT_TYPE.OBJECT_BINARY_OUTPUT:
-                            case BACNET_OBJECT_TYPE.OBJECT_BINARY_VALUE:
-                                node.ImageIndex = 7;
-                                break;
-                            default:
-                                node.ImageIndex = 4;
-                                break;
+                            MessageBox.Show(this, "Couldn't fetch objects", "Communication Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            return;
                         }
                     }
-                    else
-                        node.ImageIndex = 4;
-                    node.SelectedImageIndex = node.ImageIndex;
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(this, "Error during read: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
+                    }
+
+                    foreach (BACNET_VALUE value in value_list)
+                    {
+                        TreeNode node = m_AddressSpaceTree.Nodes.Add(((BACNET_OBJECT_ID)value.Value).type + ": " + ((BACNET_OBJECT_ID)value.Value).instance);
+                        node.Tag = value;
+                        BACNET_OBJECT_ID? id = value.Value as BACNET_OBJECT_ID?;
+                        if (id != null)
+                        {
+                            switch (id.Value.type)
+                            {
+                                case BACNET_OBJECT_TYPE.OBJECT_DEVICE:
+                                    node.ImageIndex = 2;
+                                    break;
+                                case BACNET_OBJECT_TYPE.OBJECT_FILE:
+                                    node.ImageIndex = 5;
+                                    break;
+                                case BACNET_OBJECT_TYPE.OBJECT_ANALOG_INPUT:
+                                case BACNET_OBJECT_TYPE.OBJECT_ANALOG_OUTPUT:
+                                case BACNET_OBJECT_TYPE.OBJECT_ANALOG_VALUE:
+                                    node.ImageIndex = 6;
+                                    break;
+                                case BACNET_OBJECT_TYPE.OBJECT_BINARY_INPUT:
+                                case BACNET_OBJECT_TYPE.OBJECT_BINARY_OUTPUT:
+                                case BACNET_OBJECT_TYPE.OBJECT_BINARY_VALUE:
+                                    node.ImageIndex = 7;
+                                    break;
+                                default:
+                                    node.ImageIndex = 4;
+                                    break;
+                            }
+                        }
+                        else
+                            node.ImageIndex = 4;
+                        node.SelectedImageIndex = node.ImageIndex;
+                    }
+                }
+                finally
+                {
+                    this.Cursor = Cursors.Default;
                 }
             }
         }
@@ -600,6 +616,15 @@ namespace BACNetExplorer
         private void removeDeviceToolStripMenuItem1_Click(object sender, EventArgs e)
         {
             removeDeviceToolStripMenuItem_Click(this, null);
+        }
+
+        private static string GetNiceName(BACNET_PROPERTY_ID property)
+        {
+            string name = property.ToString();
+            if(name.StartsWith("PROP_")) name = name.Substring(5);
+            name = name.Replace('_', ' ');
+            name = System.Threading.Thread.CurrentThread.CurrentCulture.TextInfo.ToTitleCase(name.ToLower());
+            return name;
         }
 
         private void UpdateGrid(TreeNode selected_node)
@@ -653,7 +678,7 @@ namespace BACNetExplorer
                         }
                         else if (b_values.Length == 1)
                             value = b_values[0].Value;
-                        bag.Add(new Utilities.CustomProperty(((BACNET_PROPERTY_ID)p_value.property.propertyIdentifier).ToString(), value, value != null ? value.GetType() : typeof(string), false, "", b_values.Length > 0 ? b_values[0].Tag.ToString() : "", null, p_value.property));
+                        bag.Add(new Utilities.CustomProperty(GetNiceName((BACNET_PROPERTY_ID)p_value.property.propertyIdentifier), value, value != null ? value.GetType() : typeof(string), false, "", b_values.Length > 0 ? b_values[0].Tag.ToString() : "", null, p_value.property));
                     }
                     m_DataGrid.SelectedObject = bag;
                 }
@@ -1001,11 +1026,11 @@ namespace BACNetExplorer
             try
             {
                 //commit setup
-                Properties.Settings.Default.SplitterButtom = m_SplitContainerButtom.SplitterDistance;
-                Properties.Settings.Default.SplitterLeft = m_SplitContainerLeft.SplitterDistance;
-                Properties.Settings.Default.SplitterRight = m_SplitContainerRight.SplitterDistance;
-                Properties.Settings.Default.FormSize = this.Size;
-                Properties.Settings.Default.FormState = this.WindowState.ToString();
+                Properties.Settings.Default.GUI_SplitterButtom = m_SplitContainerButtom.SplitterDistance;
+                Properties.Settings.Default.GUI_SplitterLeft = m_SplitContainerLeft.SplitterDistance;
+                Properties.Settings.Default.GUI_SplitterRight = m_SplitContainerRight.SplitterDistance;
+                Properties.Settings.Default.GUI_FormSize = this.Size;
+                Properties.Settings.Default.GUI_FormState = this.WindowState.ToString();
 
                 //save
                 Properties.Settings.Default.Save();
@@ -1049,13 +1074,34 @@ namespace BACNetExplorer
         private void sendWhoIsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             //fetch end point
-            if (m_DeviceTree.SelectedNode == null) return;
-            else if (m_DeviceTree.SelectedNode.Tag == null) return;
-            else if (!(m_DeviceTree.SelectedNode.Tag is BacnetClient)) return;
-            BacnetClient comm = (BacnetClient)m_DeviceTree.SelectedNode.Tag;
+            BacnetClient comm = null;
+            try
+            {
+                if (m_DeviceTree.SelectedNode == null) return;
+                else if (m_DeviceTree.SelectedNode.Tag == null) return;
+                else if (!(m_DeviceTree.SelectedNode.Tag is BacnetClient)) return;
+                comm = (BacnetClient)m_DeviceTree.SelectedNode.Tag;
+            }
+            finally
+            {
+                if (comm == null) MessageBox.Show(this, "Please select a \"transport\" node first", "Wrong node", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
 
             //send
             comm.WhoIs();
+        }
+
+        private void helpToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            string readme_path = System.IO.Path.Combine( System.IO.Path.GetDirectoryName( typeof(MainDialog).Assembly.Location), "README.txt");
+            System.Diagnostics.Process.Start(readme_path);
+        }
+
+        private void settingsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SettingsDialog dlg = new SettingsDialog();
+            dlg.SelectedObject = Properties.Settings.Default;
+            dlg.ShowDialog(this);
         }
     }
 }

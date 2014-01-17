@@ -1,4 +1,4 @@
-﻿namespace BACNetExplorer
+﻿namespace Yabe
 {
     partial class SearchDialog
     {
@@ -38,28 +38,28 @@
             this.m_RetriesValue = new System.Windows.Forms.NumericUpDown();
             this.label2 = new System.Windows.Forms.Label();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
+            this.m_MaxInfoFramesValue = new System.Windows.Forms.NumericUpDown();
+            this.label8 = new System.Windows.Forms.Label();
+            this.m_MaxMasterValue = new System.Windows.Forms.NumericUpDown();
+            this.label7 = new System.Windows.Forms.Label();
+            this.m_SourceAddressValue = new System.Windows.Forms.NumericUpDown();
+            this.label6 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
             this.m_BaudValue = new System.Windows.Forms.NumericUpDown();
             this.m_AddSerialButton = new System.Windows.Forms.Button();
             this.label4 = new System.Windows.Forms.Label();
             this.m_SerialPortCombo = new System.Windows.Forms.ComboBox();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
-            this.label6 = new System.Windows.Forms.Label();
-            this.m_SourceAddressValue = new System.Windows.Forms.NumericUpDown();
-            this.m_MaxMasterValue = new System.Windows.Forms.NumericUpDown();
-            this.label7 = new System.Windows.Forms.Label();
-            this.m_MaxInfoFramesValue = new System.Windows.Forms.NumericUpDown();
-            this.label8 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.m_PortValue)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.m_TimeoutValue)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.m_RetriesValue)).BeginInit();
             this.groupBox2.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.m_MaxInfoFramesValue)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.m_MaxMasterValue)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.m_SourceAddressValue)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.m_BaudValue)).BeginInit();
             this.groupBox3.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.m_SourceAddressValue)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.m_MaxMasterValue)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.m_MaxInfoFramesValue)).BeginInit();
             this.SuspendLayout();
             // 
             // groupBox1
@@ -74,7 +74,7 @@
             this.groupBox1.Size = new System.Drawing.Size(274, 59);
             this.groupBox1.TabIndex = 0;
             this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Udp (BACNet IP)";
+            this.groupBox1.Text = "BACnet/IP over Udp";
             // 
             // m_AddUdpButton
             // 
@@ -181,7 +181,95 @@
             this.groupBox2.Size = new System.Drawing.Size(274, 160);
             this.groupBox2.TabIndex = 1;
             this.groupBox2.TabStop = false;
-            this.groupBox2.Text = "Serial (BACNet MS/TP)";
+            this.groupBox2.Text = "BACnet/MSTP over serial";
+            // 
+            // m_MaxInfoFramesValue
+            // 
+            this.m_MaxInfoFramesValue.Location = new System.Drawing.Point(98, 122);
+            this.m_MaxInfoFramesValue.Maximum = new decimal(new int[] {
+            255,
+            0,
+            0,
+            0});
+            this.m_MaxInfoFramesValue.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.m_MaxInfoFramesValue.Name = "m_MaxInfoFramesValue";
+            this.m_MaxInfoFramesValue.Size = new System.Drawing.Size(47, 20);
+            this.m_MaxInfoFramesValue.TabIndex = 15;
+            this.m_MaxInfoFramesValue.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.Location = new System.Drawing.Point(10, 124);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(64, 13);
+            this.label8.TabIndex = 14;
+            this.label8.Text = "Max Frames";
+            // 
+            // m_MaxMasterValue
+            // 
+            this.m_MaxMasterValue.Location = new System.Drawing.Point(98, 96);
+            this.m_MaxMasterValue.Maximum = new decimal(new int[] {
+            127,
+            0,
+            0,
+            0});
+            this.m_MaxMasterValue.Name = "m_MaxMasterValue";
+            this.m_MaxMasterValue.Size = new System.Drawing.Size(47, 20);
+            this.m_MaxMasterValue.TabIndex = 13;
+            this.m_MaxMasterValue.Value = new decimal(new int[] {
+            127,
+            0,
+            0,
+            0});
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(10, 98);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(62, 13);
+            this.label7.TabIndex = 12;
+            this.label7.Text = "Max Master";
+            // 
+            // m_SourceAddressValue
+            // 
+            this.m_SourceAddressValue.Location = new System.Drawing.Point(98, 70);
+            this.m_SourceAddressValue.Maximum = new decimal(new int[] {
+            127,
+            0,
+            0,
+            0});
+            this.m_SourceAddressValue.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            -2147483648});
+            this.m_SourceAddressValue.Name = "m_SourceAddressValue";
+            this.m_SourceAddressValue.Size = new System.Drawing.Size(47, 20);
+            this.m_SourceAddressValue.TabIndex = 11;
+            this.m_SourceAddressValue.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            -2147483648});
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(10, 72);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(82, 13);
+            this.label6.TabIndex = 10;
+            this.label6.Text = "Source Address";
             // 
             // label5
             // 
@@ -252,94 +340,6 @@
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "General";
             // 
-            // label6
-            // 
-            this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(10, 72);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(82, 13);
-            this.label6.TabIndex = 10;
-            this.label6.Text = "Source Address";
-            // 
-            // m_SourceAddressValue
-            // 
-            this.m_SourceAddressValue.Location = new System.Drawing.Point(98, 70);
-            this.m_SourceAddressValue.Maximum = new decimal(new int[] {
-            127,
-            0,
-            0,
-            0});
-            this.m_SourceAddressValue.Minimum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            -2147483648});
-            this.m_SourceAddressValue.Name = "m_SourceAddressValue";
-            this.m_SourceAddressValue.Size = new System.Drawing.Size(47, 20);
-            this.m_SourceAddressValue.TabIndex = 11;
-            this.m_SourceAddressValue.Value = new decimal(new int[] {
-            1,
-            0,
-            0,
-            -2147483648});
-            // 
-            // m_MaxMasterValue
-            // 
-            this.m_MaxMasterValue.Location = new System.Drawing.Point(98, 96);
-            this.m_MaxMasterValue.Maximum = new decimal(new int[] {
-            127,
-            0,
-            0,
-            0});
-            this.m_MaxMasterValue.Name = "m_MaxMasterValue";
-            this.m_MaxMasterValue.Size = new System.Drawing.Size(47, 20);
-            this.m_MaxMasterValue.TabIndex = 13;
-            this.m_MaxMasterValue.Value = new decimal(new int[] {
-            127,
-            0,
-            0,
-            0});
-            // 
-            // label7
-            // 
-            this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(10, 98);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(62, 13);
-            this.label7.TabIndex = 12;
-            this.label7.Text = "Max Master";
-            // 
-            // m_MaxInfoFramesValue
-            // 
-            this.m_MaxInfoFramesValue.Location = new System.Drawing.Point(98, 122);
-            this.m_MaxInfoFramesValue.Maximum = new decimal(new int[] {
-            255,
-            0,
-            0,
-            0});
-            this.m_MaxInfoFramesValue.Minimum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-            this.m_MaxInfoFramesValue.Name = "m_MaxInfoFramesValue";
-            this.m_MaxInfoFramesValue.Size = new System.Drawing.Size(47, 20);
-            this.m_MaxInfoFramesValue.TabIndex = 15;
-            this.m_MaxInfoFramesValue.Value = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-            // 
-            // label8
-            // 
-            this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(10, 124);
-            this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(64, 13);
-            this.label8.TabIndex = 14;
-            this.label8.Text = "Max Frames";
-            // 
             // SearchDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -361,12 +361,12 @@
             ((System.ComponentModel.ISupportInitialize)(this.m_RetriesValue)).EndInit();
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.m_MaxInfoFramesValue)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.m_MaxMasterValue)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.m_SourceAddressValue)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.m_BaudValue)).EndInit();
             this.groupBox3.ResumeLayout(false);
             this.groupBox3.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.m_SourceAddressValue)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.m_MaxMasterValue)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.m_MaxInfoFramesValue)).EndInit();
             this.ResumeLayout(false);
 
         }

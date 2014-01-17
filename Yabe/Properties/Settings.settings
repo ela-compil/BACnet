@@ -1,21 +1,30 @@
 ﻿<?xml version='1.0' encoding='utf-8'?>
-<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="BACNetExplorer.Properties" GeneratedClassName="Settings">
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="Yabe.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
-    <Setting Name="SplitterLeft" Type="System.Int32" Scope="User">
+    <Setting Name="GUI_SplitterLeft" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">-1</Value>
     </Setting>
-    <Setting Name="SplitterRight" Type="System.Int32" Scope="User">
+    <Setting Name="GUI_SplitterRight" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">-1</Value>
     </Setting>
-    <Setting Name="SplitterButtom" Type="System.Int32" Scope="User">
+    <Setting Name="GUI_SplitterButtom" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">-1</Value>
     </Setting>
-    <Setting Name="FormSize" Type="System.Drawing.Size" Scope="User">
+    <Setting Name="GUI_FormSize" Type="System.Drawing.Size" Scope="User">
       <Value Profile="(Default)">0, 0</Value>
     </Setting>
-    <Setting Name="FormState" Type="System.String" Scope="User">
+    <Setting Name="GUI_FormState" Type="System.String" Scope="User">
       <Value Profile="(Default)">Normal</Value>
+    </Setting>
+    <Setting Name="Udp_ExclusiveUseOfSocket" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="MSTP_DisplayFreeAddresses" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="MSTP_LogStateMachine" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
     </Setting>
   </Settings>
 </SettingsFile>

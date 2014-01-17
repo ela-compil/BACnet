@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <DeviceStorage xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <Objects>
-    <Object Type="OBJECT_DEVICE" Instance="389002">
+    <Object Type="OBJECT_DEVICE" Instance="400001">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
           <Value>OBJECT_DEVICE: 400001</Value>

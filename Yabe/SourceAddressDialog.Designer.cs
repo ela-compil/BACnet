@@ -1,4 +1,4 @@
-﻿namespace BACNetExplorer
+﻿namespace Yabe
 {
     partial class SourceAddressDialog
     {
@@ -100,6 +100,7 @@
             this.Name = "SourceAddressDialog";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Set Source Address";
             ((System.ComponentModel.ISupportInitialize)(this.m_SourceAddressValue)).EndInit();
             this.ResumeLayout(false);

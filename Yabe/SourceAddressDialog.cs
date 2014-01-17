@@ -32,7 +32,7 @@ using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
 
-namespace BACNetExplorer
+namespace Yabe
 {
     public partial class SourceAddressDialog : Form
     {

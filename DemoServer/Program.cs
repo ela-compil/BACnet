@@ -31,7 +31,7 @@ using System.IO.BACnet;
 using System.IO.BACnet.Storage;
 using System.Diagnostics;
 
-namespace BACnetServer
+namespace DemoServer
 {
     class Program
     {
@@ -60,6 +60,7 @@ namespace BACnetServer
                 //create pipe (MSTP) service point
                 BacnetPipeTransport pipe_transport = new BacnetPipeTransport("COM1003", true);
                 BacnetMstpProtocolTransport mstp_transport = new BacnetMstpProtocolTransport(pipe_transport, 0);
+                mstp_transport.StateLogging = false;        //if you enable this, it will display a lot of information about the StateMachine
                 m_pipe_server = new BacnetClient(mstp_transport);
                 m_pipe_server.OnWhoIs += new BacnetClient.WhoIsHandler(OnWhoIs);
                 m_pipe_server.OnReadPropertyRequest += new BacnetClient.ReadPropertyRequestHandler(OnReadPropertyRequest);

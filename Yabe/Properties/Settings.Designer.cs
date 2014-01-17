@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace BACNetExplorer.Properties {
+namespace Yabe.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
@@ -26,60 +26,96 @@ namespace BACNetExplorer.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("-1")]
-        public int SplitterLeft {
+        public int GUI_SplitterLeft {
             get {
-                return ((int)(this["SplitterLeft"]));
+                return ((int)(this["GUI_SplitterLeft"]));
             }
             set {
-                this["SplitterLeft"] = value;
+                this["GUI_SplitterLeft"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("-1")]
-        public int SplitterRight {
+        public int GUI_SplitterRight {
             get {
-                return ((int)(this["SplitterRight"]));
+                return ((int)(this["GUI_SplitterRight"]));
             }
             set {
-                this["SplitterRight"] = value;
+                this["GUI_SplitterRight"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("-1")]
-        public int SplitterButtom {
+        public int GUI_SplitterButtom {
             get {
-                return ((int)(this["SplitterButtom"]));
+                return ((int)(this["GUI_SplitterButtom"]));
             }
             set {
-                this["SplitterButtom"] = value;
+                this["GUI_SplitterButtom"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("0, 0")]
-        public global::System.Drawing.Size FormSize {
+        public global::System.Drawing.Size GUI_FormSize {
             get {
-                return ((global::System.Drawing.Size)(this["FormSize"]));
+                return ((global::System.Drawing.Size)(this["GUI_FormSize"]));
             }
             set {
-                this["FormSize"] = value;
+                this["GUI_FormSize"] = value;
             }
         }
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("Normal")]
-        public string FormState {
+        public string GUI_FormState {
             get {
-                return ((string)(this["FormState"]));
+                return ((string)(this["GUI_FormState"]));
             }
             set {
-                this["FormState"] = value;
+                this["GUI_FormState"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool Udp_ExclusiveUseOfSocket {
+            get {
+                return ((bool)(this["Udp_ExclusiveUseOfSocket"]));
+            }
+            set {
+                this["Udp_ExclusiveUseOfSocket"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool MSTP_DisplayFreeAddresses {
+            get {
+                return ((bool)(this["MSTP_DisplayFreeAddresses"]));
+            }
+            set {
+                this["MSTP_DisplayFreeAddresses"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool MSTP_LogStateMachine {
+            get {
+                return ((bool)(this["MSTP_LogStateMachine"]));
+            }
+            set {
+                this["MSTP_LogStateMachine"] = value;
             }
         }
     }

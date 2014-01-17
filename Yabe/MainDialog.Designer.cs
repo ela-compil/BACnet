@@ -1,4 +1,4 @@
-﻿namespace BACNetExplorer
+﻿namespace Yabe
 {
     partial class MainDialog
     {
@@ -40,7 +40,10 @@
             this.searchToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.addDevicesearchToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removeDeviceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.helpToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.m_SplitContainerButtom = new System.Windows.Forms.SplitContainer();
             this.m_SplitContainerLeft = new System.Windows.Forms.SplitContainer();
@@ -110,7 +113,7 @@
             // m_SearchToolButton
             // 
             this.m_SearchToolButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.m_SearchToolButton.Image = global::BACNetExplorer.Properties.Resources.add;
+            this.m_SearchToolButton.Image = global::Yabe.Properties.Resources.add;
             this.m_SearchToolButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.m_SearchToolButton.Name = "m_SearchToolButton";
             this.m_SearchToolButton.Size = new System.Drawing.Size(23, 22);
@@ -120,7 +123,7 @@
             // m_RemoveToolButton
             // 
             this.m_RemoveToolButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.m_RemoveToolButton.Image = global::BACNetExplorer.Properties.Resources.cross;
+            this.m_RemoveToolButton.Image = global::Yabe.Properties.Resources.cross;
             this.m_RemoveToolButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.m_RemoveToolButton.Name = "m_RemoveToolButton";
             this.m_RemoveToolButton.Size = new System.Drawing.Size(23, 22);
@@ -132,6 +135,7 @@
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
             this.searchToolStripMenuItem,
+            this.optionsToolStripMenuItem,
             this.helpToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
@@ -165,7 +169,7 @@
             // 
             // addDevicesearchToolStripMenuItem
             // 
-            this.addDevicesearchToolStripMenuItem.Image = global::BACNetExplorer.Properties.Resources.add;
+            this.addDevicesearchToolStripMenuItem.Image = global::Yabe.Properties.Resources.add;
             this.addDevicesearchToolStripMenuItem.Name = "addDevicesearchToolStripMenuItem";
             this.addDevicesearchToolStripMenuItem.Size = new System.Drawing.Size(178, 22);
             this.addDevicesearchToolStripMenuItem.Text = "Add device (search)";
@@ -173,19 +177,42 @@
             // 
             // removeDeviceToolStripMenuItem
             // 
-            this.removeDeviceToolStripMenuItem.Image = global::BACNetExplorer.Properties.Resources.cross;
+            this.removeDeviceToolStripMenuItem.Image = global::Yabe.Properties.Resources.cross;
             this.removeDeviceToolStripMenuItem.Name = "removeDeviceToolStripMenuItem";
             this.removeDeviceToolStripMenuItem.Size = new System.Drawing.Size(178, 22);
             this.removeDeviceToolStripMenuItem.Text = "Remove device";
             this.removeDeviceToolStripMenuItem.Click += new System.EventHandler(this.removeDeviceToolStripMenuItem_Click);
             // 
+            // optionsToolStripMenuItem
+            // 
+            this.optionsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.settingsToolStripMenuItem});
+            this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
+            this.optionsToolStripMenuItem.Size = new System.Drawing.Size(61, 20);
+            this.optionsToolStripMenuItem.Text = "Options";
+            // 
+            // settingsToolStripMenuItem
+            // 
+            this.settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
+            this.settingsToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.settingsToolStripMenuItem.Text = "Settings";
+            this.settingsToolStripMenuItem.Click += new System.EventHandler(this.settingsToolStripMenuItem_Click);
+            // 
             // helpToolStripMenuItem
             // 
             this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.helpToolStripMenuItem1,
             this.aboutToolStripMenuItem});
             this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
             this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             this.helpToolStripMenuItem.Text = "Help";
+            // 
+            // helpToolStripMenuItem1
+            // 
+            this.helpToolStripMenuItem1.Name = "helpToolStripMenuItem1";
+            this.helpToolStripMenuItem1.Size = new System.Drawing.Size(107, 22);
+            this.helpToolStripMenuItem1.Text = "Help";
+            this.helpToolStripMenuItem1.Click += new System.EventHandler(this.helpToolStripMenuItem1_Click);
             // 
             // aboutToolStripMenuItem
             // 
@@ -280,7 +307,7 @@
             // 
             // addDeviceToolStripMenuItem
             // 
-            this.addDeviceToolStripMenuItem.Image = global::BACNetExplorer.Properties.Resources.add;
+            this.addDeviceToolStripMenuItem.Image = global::Yabe.Properties.Resources.add;
             this.addDeviceToolStripMenuItem.Name = "addDeviceToolStripMenuItem";
             this.addDeviceToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
             this.addDeviceToolStripMenuItem.Text = "Add device";
@@ -288,7 +315,7 @@
             // 
             // removeDeviceToolStripMenuItem1
             // 
-            this.removeDeviceToolStripMenuItem1.Image = global::BACNetExplorer.Properties.Resources.cross;
+            this.removeDeviceToolStripMenuItem1.Image = global::Yabe.Properties.Resources.cross;
             this.removeDeviceToolStripMenuItem1.Name = "removeDeviceToolStripMenuItem1";
             this.removeDeviceToolStripMenuItem1.Size = new System.Drawing.Size(154, 22);
             this.removeDeviceToolStripMenuItem1.Text = "Remove device";
@@ -355,7 +382,7 @@
             // 
             // downloadFileToolStripMenuItem
             // 
-            this.downloadFileToolStripMenuItem.Image = global::BACNetExplorer.Properties.Resources.note;
+            this.downloadFileToolStripMenuItem.Image = global::Yabe.Properties.Resources.note;
             this.downloadFileToolStripMenuItem.Name = "downloadFileToolStripMenuItem";
             this.downloadFileToolStripMenuItem.Size = new System.Drawing.Size(149, 22);
             this.downloadFileToolStripMenuItem.Text = "Download File";
@@ -363,7 +390,7 @@
             // 
             // uploadFileToolStripMenuItem
             // 
-            this.uploadFileToolStripMenuItem.Image = global::BACNetExplorer.Properties.Resources.note;
+            this.uploadFileToolStripMenuItem.Image = global::Yabe.Properties.Resources.note;
             this.uploadFileToolStripMenuItem.Name = "uploadFileToolStripMenuItem";
             this.uploadFileToolStripMenuItem.Size = new System.Drawing.Size(149, 22);
             this.uploadFileToolStripMenuItem.Text = "Upload File";
@@ -594,6 +621,9 @@
         private System.Windows.Forms.ColumnHeader columnHeader6;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem sendWhoIsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem1;
+        private System.Windows.Forms.ToolStripMenuItem optionsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem settingsToolStripMenuItem;
     }
 }
 
