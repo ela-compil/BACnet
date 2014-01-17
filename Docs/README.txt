@@ -139,7 +139,7 @@
 	I'm unlikely to care. This is not a commercial project and I'm not trying 
 	to push it to the greater good of the GPL world. (This may change though.)
 	If you find a device that doesn't work with Yabe, it might be interesting.
-    But in order for me to fix it, I need either access to the physical device
+	But in order for me to fix it, I need either access to the physical device
 	or printouts from programs like Wireshark, that displays the error.
 	Write to me at mk@pch-engineering.dk.
 
