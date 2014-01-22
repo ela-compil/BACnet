@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.TreeNode treeNode2 = new System.Windows.Forms.TreeNode("Devices");
+            System.Windows.Forms.TreeNode treeNode1 = new System.Windows.Forms.TreeNode("Devices");
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainDialog));
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.m_SearchToolButton = new System.Windows.Forms.ToolStripButton();
@@ -289,10 +289,10 @@
             this.m_DeviceTree.ImageList = this.m_ImageList;
             this.m_DeviceTree.Location = new System.Drawing.Point(0, 13);
             this.m_DeviceTree.Name = "m_DeviceTree";
-            treeNode2.Name = "Node0";
-            treeNode2.Text = "Devices";
+            treeNode1.Name = "Node0";
+            treeNode1.Text = "Devices";
             this.m_DeviceTree.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
-            treeNode2});
+            treeNode1});
             this.m_DeviceTree.SelectedImageIndex = 0;
             this.m_DeviceTree.ShowRootLines = false;
             this.m_DeviceTree.Size = new System.Drawing.Size(164, 174);
