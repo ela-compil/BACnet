@@ -38,6 +38,8 @@ namespace DemoServer
         private static DeviceStorage m_storage;
         private static BacnetClient m_udp_server;
         private static BacnetClient m_pipe_server;
+        private static Dictionary<BACNET_OBJECT_ID, List<Subscription>> m_subscriptions = new Dictionary<BACNET_OBJECT_ID, List<Subscription>>();
+        private static object m_lockObject = new object();
 
         static void Main(string[] args)
         {
@@ -46,6 +48,8 @@ namespace DemoServer
                 //init
                 Trace.Listeners.Add(new ConsoleTraceListener());
                 m_storage = DeviceStorage.Load("DeviceStorage.xml");
+                m_storage.ChangeOfValue += new DeviceStorage.ChangeOfValueHandler(m_storage_ChangeOfValue);
+                m_storage.ReadOverride += new DeviceStorage.ReadOverrideHandler(m_storage_ReadOverride);
 
                 //create udp service point
                 BacnetIpUdpProtocolTransport udp_transport = new BacnetIpUdpProtocolTransport(0xBAC0, false);       //set to true to force "single socket" usage
@@ -55,11 +59,15 @@ namespace DemoServer
                 m_udp_server.OnWritePropertyRequest += new BacnetClient.WritePropertyRequestHandler(OnWritePropertyRequest);
                 m_udp_server.OnReadPropertyMultipleRequest += new BacnetClient.ReadPropertyMultipleRequestHandler(OnReadPropertyMultipleRequest);
                 m_udp_server.OnWritePropertyMultipleRequest += new BacnetClient.WritePropertyMultipleRequestHandler(OnWritePropertyMultipleRequest);
+                m_udp_server.OnAtomicWriteFileRequest += new BacnetClient.AtomicWriteFileRequestHandler(OnAtomicWriteFileRequest);
+                m_udp_server.OnAtomicReadFileRequest += new BacnetClient.AtomicReadFileRequestHandler(OnAtomicReadFileRequest);
+                m_udp_server.OnSubscribeCOV += new BacnetClient.SubscribeCOVRequestHandler(OnSubscribeCOV);
+                m_udp_server.OnSubscribeCOVProperty += new BacnetClient.SubscribeCOVPropertyRequestHandler(OnSubscribeCOVProperty);
                 m_udp_server.Start();
 
                 //create pipe (MSTP) service point
                 BacnetPipeTransport pipe_transport = new BacnetPipeTransport("COM1003", true);
-                BacnetMstpProtocolTransport mstp_transport = new BacnetMstpProtocolTransport(pipe_transport, 0);
+                BacnetMstpProtocolTransport mstp_transport = new BacnetMstpProtocolTransport(pipe_transport, 0, 127, 1);
                 mstp_transport.StateLogging = false;        //if you enable this, it will display a lot of information about the StateMachine
                 m_pipe_server = new BacnetClient(mstp_transport);
                 m_pipe_server.OnWhoIs += new BacnetClient.WhoIsHandler(OnWhoIs);
@@ -67,6 +75,10 @@ namespace DemoServer
                 m_pipe_server.OnWritePropertyRequest += new BacnetClient.WritePropertyRequestHandler(OnWritePropertyRequest);
                 m_pipe_server.OnReadPropertyMultipleRequest += new BacnetClient.ReadPropertyMultipleRequestHandler(OnReadPropertyMultipleRequest);
                 m_pipe_server.OnWritePropertyMultipleRequest += new BacnetClient.WritePropertyMultipleRequestHandler(OnWritePropertyMultipleRequest);
+                m_pipe_server.OnAtomicWriteFileRequest += new BacnetClient.AtomicWriteFileRequestHandler(OnAtomicWriteFileRequest);
+                m_pipe_server.OnAtomicReadFileRequest += new BacnetClient.AtomicReadFileRequestHandler(OnAtomicReadFileRequest);
+                m_pipe_server.OnSubscribeCOV += new BacnetClient.SubscribeCOVRequestHandler(OnSubscribeCOV);
+                m_pipe_server.OnSubscribeCOVProperty += new BacnetClient.SubscribeCOVPropertyRequestHandler(OnSubscribeCOVProperty);
                 m_pipe_server.Start();
 
                 //display info
@@ -98,83 +110,472 @@ namespace DemoServer
             }
         }
 
+        private static void m_storage_ReadOverride(BACNET_OBJECT_ID object_id, BACNET_PROPERTY_ID property_id, uint array_index, out IList<BACNET_VALUE> value, out DeviceStorage.ErrorCodes status, out bool handled)
+        {
+            handled = true;
+            value = new BACNET_VALUE[0];
+            status = DeviceStorage.ErrorCodes.Good;
+
+            if (object_id.type == BACNET_OBJECT_TYPE.OBJECT_DEVICE && property_id == BACNET_PROPERTY_ID.PROP_OBJECT_LIST)
+            {
+                //object list
+                BACNET_VALUE[] list = new BACNET_VALUE[m_storage.Objects.Length];
+                for (int i = 0; i < list.Length; i++)
+                {
+                    list[i].Tag = BACNET_APPLICATION_TAG.BACNET_APPLICATION_TAG_OBJECT_ID;
+                    list[i].Value = new BACNET_OBJECT_ID(m_storage.Objects[i].Type, m_storage.Objects[i].Instance);
+                }
+                value = list;
+            }
+            else if (object_id.type == BACNET_OBJECT_TYPE.OBJECT_DEVICE && object_id.instance == m_storage.DeviceId && property_id == BACNET_PROPERTY_ID.PROP_PROTOCOL_OBJECT_TYPES_SUPPORTED)
+            {
+                BACNET_VALUE v = new BACNET_VALUE();
+                v.Tag = BACNET_APPLICATION_TAG.BACNET_APPLICATION_TAG_BIT_STRING;
+                BACNET_BIT_STRING b = new BACNET_BIT_STRING();
+                b.SetBit((byte)BACNET_OBJECT_TYPE.MAX_ASHRAE_OBJECT_TYPE, false); //set all false
+                b.SetBit((byte)BACNET_OBJECT_TYPE.OBJECT_ANALOG_INPUT, true);
+                b.SetBit((byte)BACNET_OBJECT_TYPE.OBJECT_ANALOG_OUTPUT, true);
+                b.SetBit((byte)BACNET_OBJECT_TYPE.OBJECT_ANALOG_VALUE, true);
+                b.SetBit((byte)BACNET_OBJECT_TYPE.OBJECT_BINARY_INPUT, true);
+                b.SetBit((byte)BACNET_OBJECT_TYPE.OBJECT_BINARY_OUTPUT, true);
+                b.SetBit((byte)BACNET_OBJECT_TYPE.OBJECT_BINARY_VALUE, true);
+                b.SetBit((byte)BACNET_OBJECT_TYPE.OBJECT_DEVICE, true);
+                b.SetBit((byte)BACNET_OBJECT_TYPE.OBJECT_FILE, true);
+                b.SetBit((byte)BACNET_OBJECT_TYPE.OBJECT_MULTI_STATE_INPUT, true);
+                b.SetBit((byte)BACNET_OBJECT_TYPE.OBJECT_MULTI_STATE_OUTPUT, true);
+                b.SetBit((byte)BACNET_OBJECT_TYPE.OBJECT_MULTI_STATE_VALUE, true);
+                b.SetBit((byte)BACNET_OBJECT_TYPE.OBJECT_BITSTRING_VALUE, true);
+                b.SetBit((byte)BACNET_OBJECT_TYPE.OBJECT_CHARACTERSTRING_VALUE, true);
+                b.SetBit((byte)BACNET_OBJECT_TYPE.OBJECT_OCTETSTRING_VALUE, true);
+                b.SetBit((byte)BACNET_OBJECT_TYPE.OBJECT_DATE_VALUE, true);
+                b.SetBit((byte)BACNET_OBJECT_TYPE.OBJECT_DATETIME_VALUE, true);
+                b.SetBit((byte)BACNET_OBJECT_TYPE.OBJECT_TIME_VALUE, true);
+                b.SetBit((byte)BACNET_OBJECT_TYPE.OBJECT_INTEGER_VALUE, true);
+                v.Value = b;
+                value = new BACNET_VALUE[] { v };
+            }
+            else if (object_id.type == BACNET_OBJECT_TYPE.OBJECT_DEVICE && object_id.instance == m_storage.DeviceId && property_id == BACNET_PROPERTY_ID.PROP_PROTOCOL_SERVICES_SUPPORTED)
+            {
+                BACNET_VALUE v = new BACNET_VALUE();
+                v.Tag = BACNET_APPLICATION_TAG.BACNET_APPLICATION_TAG_BIT_STRING;
+                BACNET_BIT_STRING b = new BACNET_BIT_STRING();
+                b.SetBit((byte)BACNET_SERVICES_SUPPORTED.MAX_BACNET_SERVICES_SUPPORTED, false); //set all false
+                b.SetBit((byte)BACNET_SERVICES_SUPPORTED.SERVICE_SUPPORTED_I_AM, true);
+                b.SetBit((byte)BACNET_SERVICES_SUPPORTED.SERVICE_SUPPORTED_WHO_IS, true);
+                b.SetBit((byte)BACNET_SERVICES_SUPPORTED.SERVICE_SUPPORTED_READ_PROP_MULTIPLE, true);
+                b.SetBit((byte)BACNET_SERVICES_SUPPORTED.SERVICE_SUPPORTED_READ_PROPERTY, true);
+                b.SetBit((byte)BACNET_SERVICES_SUPPORTED.SERVICE_SUPPORTED_WRITE_PROPERTY, true);
+                b.SetBit((byte)BACNET_SERVICES_SUPPORTED.SERVICE_SUPPORTED_WRITE_PROP_MULTIPLE, true);
+                b.SetBit((byte)BACNET_SERVICES_SUPPORTED.SERVICE_SUPPORTED_ATOMIC_READ_FILE, true);
+                b.SetBit((byte)BACNET_SERVICES_SUPPORTED.SERVICE_SUPPORTED_ATOMIC_WRITE_FILE, true);
+                b.SetBit((byte)BACNET_SERVICES_SUPPORTED.SERVICE_SUPPORTED_CONFIRMED_COV_NOTIFICATION, true);
+                b.SetBit((byte)BACNET_SERVICES_SUPPORTED.SERVICE_SUPPORTED_UNCONFIRMED_COV_NOTIFICATION, true);
+                b.SetBit((byte)BACNET_SERVICES_SUPPORTED.SERVICE_SUPPORTED_SUBSCRIBE_COV, true);
+                //b.SetBit((byte)BACNET_SERVICES_SUPPORTED.SERVICE_SUPPORTED_SUBSCRIBE_COV_PROPERTY, true);
+                v.Value = b;
+                value = new BACNET_VALUE[] { v };
+            }
+            else if (object_id.type == BACNET_OBJECT_TYPE.OBJECT_DEVICE && object_id.instance == m_storage.DeviceId && property_id == BACNET_PROPERTY_ID.PROP_SEGMENTATION_SUPPORTED)
+            {
+                BACNET_VALUE v = new BACNET_VALUE();
+                v.Tag = BACNET_APPLICATION_TAG.BACNET_APPLICATION_TAG_ENUMERATED;
+                v.Value = (uint)BACNET_SEGMENTATION.SEGMENTATION_NONE;
+                value = new BACNET_VALUE[] { v };
+            }
+            else if (object_id.type == BACNET_OBJECT_TYPE.OBJECT_DEVICE && object_id.instance == m_storage.DeviceId && property_id == BACNET_PROPERTY_ID.PROP_SYSTEM_STATUS)
+            {
+                BACNET_VALUE v = new BACNET_VALUE();
+                v.Tag = BACNET_APPLICATION_TAG.BACNET_APPLICATION_TAG_ENUMERATED;
+                v.Value = (uint)BACNET_DEVICE_STATUS.STATUS_OPERATIONAL;
+                value = new BACNET_VALUE[] { v };
+            }
+            else if (object_id.type == BACNET_OBJECT_TYPE.OBJECT_DEVICE && object_id.instance == m_storage.DeviceId && property_id == BACNET_PROPERTY_ID.PROP_ACTIVE_COV_SUBSCRIPTIONS)
+            {
+                List<BACNET_VALUE> list = new List<BACNET_VALUE>();
+                foreach (KeyValuePair<BACNET_OBJECT_ID, List<Subscription>> entry in m_subscriptions)
+                {
+                    foreach (Subscription sub in entry.Value)
+                    {
+                        //count len
+                        int count = 0;
+                        count += System.IO.BACnet.Serialize.ASN1.encode_cov_subscription(null, 0, 0, sub.reciever_address, sub.subscriberProcessIdentifier, sub.monitoredObjectIdentifier, sub.monitoredProperty, sub.issueConfirmedNotifications, sub.lifetime, sub.covIncrement);
+
+                        //allocate
+                        byte[] allocated = new byte[count];
+
+                        //encode
+                        count = 0;
+                        count += System.IO.BACnet.Serialize.ASN1.encode_cov_subscription(allocated, 0, allocated.Length, sub.reciever_address, sub.subscriberProcessIdentifier, sub.monitoredObjectIdentifier, sub.monitoredProperty, sub.issueConfirmedNotifications, sub.lifetime, sub.covIncrement);
+
+                        //add
+                        BACNET_VALUE v = new BACNET_VALUE();
+                        v.Tag = BACNET_APPLICATION_TAG.BACNET_APPLICATION_TAG_COV_SUBSCRIPTION;
+                        v.Value = allocated;
+                        list.Add(v);
+                    }
+                }
+                value = list;
+            }
+            else
+            {
+                handled = false;
+            }
+        }
+
+        private class Subscription
+        {
+            public BacnetClient reciever;
+            public BACNET_ADDRESS reciever_address;
+            public uint subscriberProcessIdentifier;
+            public BACNET_OBJECT_ID monitoredObjectIdentifier;
+            public BACNET_PROPERTY_REFERENCE monitoredProperty;
+            public bool issueConfirmedNotifications;
+            public uint lifetime;
+            public DateTime start;
+            public float covIncrement;
+            public Subscription(BacnetClient reciever, BACNET_ADDRESS reciever_address, uint subscriberProcessIdentifier, BACNET_OBJECT_ID monitoredObjectIdentifier, BACNET_PROPERTY_REFERENCE property, bool issueConfirmedNotifications, uint lifetime, float covIncrement)
+            {
+                this.reciever = reciever;
+                this.reciever_address = reciever_address;
+                this.subscriberProcessIdentifier = subscriberProcessIdentifier;
+                this.monitoredObjectIdentifier = monitoredObjectIdentifier;
+                this.monitoredProperty = property;
+                this.issueConfirmedNotifications = issueConfirmedNotifications;
+                this.lifetime = lifetime;
+                this.start = DateTime.Now;
+                this.covIncrement = covIncrement;
+            }
+            public uint GetTimeRemaining()
+            {
+                if (lifetime == 0) return 0;
+                else return (uint)(DateTime.Now - start).TotalSeconds;
+            }
+        }
+
+        private static void RemoveOldSubscriptions()
+        {
+            LinkedList<BACNET_OBJECT_ID> to_be_deleted = new LinkedList<BACNET_OBJECT_ID>();
+            foreach (KeyValuePair<BACNET_OBJECT_ID, List<Subscription>> entry in m_subscriptions)
+            {
+                for (int i = 0; i < entry.Value.Count; i++)
+                {
+                    if (entry.Value[i].GetTimeRemaining() < 0)
+                    {
+                        entry.Value.RemoveAt(i);
+                        i--;
+                    }
+                }
+                if (entry.Value.Count == 0)
+                    to_be_deleted.AddLast(entry.Key);
+            }
+            foreach (BACNET_OBJECT_ID obj_id in to_be_deleted)
+                m_subscriptions.Remove(obj_id);
+        }
+
+        private static Subscription HandleSubscriptionRequest(BacnetClient sender, BACNET_ADDRESS adr, byte invoke_id, uint subscriberProcessIdentifier, BACNET_OBJECT_ID monitoredObjectIdentifier, uint property_id, bool cancellationRequest, bool issueConfirmedNotifications, uint lifetime, float covIncrement)
+        {
+            //remove old leftovers
+            RemoveOldSubscriptions();
+
+            //find existing
+            List<Subscription> subs = null;
+            Subscription sub = null;
+            if (m_subscriptions.ContainsKey(monitoredObjectIdentifier))
+            {
+                subs = m_subscriptions[monitoredObjectIdentifier];
+                foreach (Subscription s in subs)
+                {
+                    if (s.reciever == sender && s.reciever_address == adr && s.subscriberProcessIdentifier == subscriberProcessIdentifier && s.monitoredObjectIdentifier.Equals(monitoredObjectIdentifier) && s.monitoredProperty.propertyIdentifier == property_id)
+                    {
+                        sub = s;
+                        break;
+                    }
+                }
+            }
+
+            //cancel
+            if (cancellationRequest && sub != null)
+            {
+                subs.Remove(sub);
+                if (subs.Count == 0)
+                    m_subscriptions.Remove(sub.monitoredObjectIdentifier);
+
+                //send confirm
+                sender.SimpleAckResponse(adr, BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_SUBSCRIBE_COV, invoke_id);
+
+                return null;
+            }
+
+            //create if needed
+            if (sub == null)
+                sub = new Subscription(sender, adr, subscriberProcessIdentifier, monitoredObjectIdentifier, new BACNET_PROPERTY_REFERENCE((uint)BACNET_PROPERTY_ID.PROP_ALL, System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL), issueConfirmedNotifications, lifetime, covIncrement);
+            if (subs == null)
+            {
+                subs = new List<Subscription>();
+                subs.Add(sub);
+                m_subscriptions.Add(sub.monitoredObjectIdentifier, subs);
+            }
+
+            //update perhaps
+            sub.issueConfirmedNotifications = issueConfirmedNotifications;
+            sub.lifetime = lifetime;
+            sub.start = DateTime.Now;
+
+            return sub;
+        }
+
+        private static void OnSubscribeCOV(BacnetClient sender, BACNET_ADDRESS adr, byte invoke_id, uint subscriberProcessIdentifier, BACNET_OBJECT_ID monitoredObjectIdentifier, bool cancellationRequest, bool issueConfirmedNotifications, uint lifetime)
+        {
+            lock (m_lockObject)
+            {
+                try
+                {
+                    //create 
+                    Subscription sub = HandleSubscriptionRequest(sender, adr, invoke_id, subscriberProcessIdentifier, monitoredObjectIdentifier, (uint)BACNET_PROPERTY_ID.PROP_ALL, cancellationRequest, issueConfirmedNotifications, lifetime, 0);
+
+                    //send confirm
+                    sender.SimpleAckResponse(adr, BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_SUBSCRIBE_COV, invoke_id);
+
+                    //also send first values
+                    if (!cancellationRequest)
+                    {
+                        System.Threading.ThreadPool.QueueUserWorkItem((o) =>
+                                {
+                                    IList<BACNET_PROPERTY_VALUE> values;
+                                    m_storage.ReadPropertyAll(sub.monitoredObjectIdentifier, out values);
+                                    if (!sender.Notify(adr, sub.subscriberProcessIdentifier, m_storage.DeviceId, sub.monitoredObjectIdentifier, sub.GetTimeRemaining(), sub.issueConfirmedNotifications, values))
+                                        Trace.TraceError("Couldn't send notify");
+                                }, null);
+                    }
+                }
+                catch (Exception)
+                {
+                    sender.ErrorResponse(adr, BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_SUBSCRIBE_COV, invoke_id, BACNET_ERROR_CLASS.ERROR_CLASS_DEVICE, BACNET_ERROR_CODE.ERROR_CODE_OTHER);
+                }
+            }
+        }
+
+        private static void OnSubscribeCOVProperty(BacnetClient sender, BACNET_ADDRESS adr, byte invoke_id, uint subscriberProcessIdentifier, BACNET_OBJECT_ID monitoredObjectIdentifier, BACNET_PROPERTY_REFERENCE monitoredProperty, bool cancellationRequest, bool issueConfirmedNotifications, uint lifetime, float covIncrement)
+        {
+            lock (m_lockObject)
+            {
+                try
+                {
+                    //create 
+                    Subscription sub = HandleSubscriptionRequest(sender, adr, invoke_id, subscriberProcessIdentifier, monitoredObjectIdentifier, (uint)BACNET_PROPERTY_ID.PROP_ALL, cancellationRequest, issueConfirmedNotifications, lifetime, covIncrement);
+
+                    //send confirm
+                    sender.SimpleAckResponse(adr, BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_SUBSCRIBE_COV_PROPERTY, invoke_id);
+
+                    //also send first values
+                    if (!cancellationRequest)
+                    {
+                        System.Threading.ThreadPool.QueueUserWorkItem((o) =>
+                        {
+                            IList<BACNET_VALUE> _values;
+                            m_storage.ReadProperty(sub.monitoredObjectIdentifier, (BACNET_PROPERTY_ID)sub.monitoredProperty.propertyIdentifier, sub.monitoredProperty.propertyArrayIndex, out _values);
+                            List<BACNET_PROPERTY_VALUE> values = new List<BACNET_PROPERTY_VALUE>();
+                            BACNET_PROPERTY_VALUE tmp = new BACNET_PROPERTY_VALUE();
+                            tmp.property = sub.monitoredProperty;
+                            tmp.value = _values;
+                            values.Add(tmp);
+                            if (!sender.Notify(adr, sub.subscriberProcessIdentifier, m_storage.DeviceId, sub.monitoredObjectIdentifier, sub.GetTimeRemaining(), sub.issueConfirmedNotifications, values))
+                                Trace.TraceError("Couldn't send notify");
+                        }, null);
+                    }
+                }
+                catch (Exception)
+                {
+                    sender.ErrorResponse(adr, BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_SUBSCRIBE_COV_PROPERTY, invoke_id, BACNET_ERROR_CLASS.ERROR_CLASS_DEVICE, BACNET_ERROR_CODE.ERROR_CODE_OTHER);
+                }
+            }
+        }
+
+        private static void m_storage_ChangeOfValue(DeviceStorage sender, BACNET_OBJECT_ID object_id, BACNET_PROPERTY_ID property_id, uint array_index, IList<BACNET_VALUE> value)
+        {
+            System.Threading.ThreadPool.QueueUserWorkItem((o) =>
+                        {
+                            lock (m_lockObject)
+                            {
+                                //remove old leftovers
+                                RemoveOldSubscriptions();
+
+                                //find subscription
+                                if (!m_subscriptions.ContainsKey(object_id)) return;
+                                List<Subscription> subs = m_subscriptions[object_id];
+
+                                //convert
+                                List<BACNET_PROPERTY_VALUE> values = new List<BACNET_PROPERTY_VALUE>();
+                                BACNET_PROPERTY_VALUE tmp = new BACNET_PROPERTY_VALUE();
+                                tmp.property = new BACNET_PROPERTY_REFERENCE((uint)property_id, array_index);
+                                tmp.value = value;
+                                values.Add(tmp);
+
+                                //send to all
+                                foreach (Subscription sub in subs)
+                                {
+                                    if (sub.monitoredProperty.propertyIdentifier == (uint)BACNET_PROPERTY_ID.PROP_ALL || sub.monitoredProperty.propertyIdentifier == (uint)property_id)
+                                    {
+                                        //send notify
+                                        if (!sub.reciever.Notify(sub.reciever_address, sub.subscriberProcessIdentifier, m_storage.DeviceId, sub.monitoredObjectIdentifier, sub.GetTimeRemaining(), sub.issueConfirmedNotifications, values))
+                                            Trace.TraceError("Couldn't send notify");
+                                    }
+                                }
+                            }
+                        }, null);
+        }
+
+        private static void OnAtomicReadFileRequest(BacnetClient sender, BACNET_ADDRESS adr, byte invoke_id, bool is_stream, BACNET_OBJECT_ID object_id, int position, uint count)
+        {
+            lock (m_lockObject)
+            {
+                try
+                {
+                    if (object_id.type != BACNET_OBJECT_TYPE.OBJECT_FILE) throw new Exception("File Reading on non file objects ... bah!");
+                    else if (object_id.instance != 0) throw new Exception("Don't know this file");
+
+                    //this is a test file for performance measuring
+
+                    //fill file with bogus content 
+                    int filesize = m_storage.ReadPropertyValue(object_id, BACNET_PROPERTY_ID.PROP_FILE_SIZE);        //test file is ~10mb
+                    bool end_of_file = (position + count) >= filesize;
+                    count = (uint)Math.Min(count, filesize - position);
+                    count = (uint)Math.Min(count, sender.GetFileBufferMaxSize());
+                    byte[] file_buffer = new byte[count];
+                    byte[] bogus = new byte[] { (byte)'F', (byte)'I', (byte)'L', (byte)'L' };
+                    for (int i = 0; i < count; i += bogus.Length)
+                        Array.Copy(bogus, 0, file_buffer, i, Math.Min(bogus.Length, count - i));
+
+                    //send
+                    sender.ReadFileResponse(adr, invoke_id, position, count, end_of_file, file_buffer);
+                }
+                catch (Exception)
+                {
+                    sender.ErrorResponse(adr, BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_ATOMIC_READ_FILE, invoke_id, BACNET_ERROR_CLASS.ERROR_CLASS_DEVICE, BACNET_ERROR_CODE.ERROR_CODE_OTHER);
+                }
+            }
+        }
+
+        private static void OnAtomicWriteFileRequest(BacnetClient sender, BACNET_ADDRESS adr, byte invoke_id, bool is_stream, BACNET_OBJECT_ID object_id, int position, uint block_count, byte[][] blocks, int[] counts)
+        {
+            lock (m_lockObject)
+            {
+                try
+                {
+                    if (object_id.type != BACNET_OBJECT_TYPE.OBJECT_FILE) throw new Exception("File Reading on non file objects ... bah!");
+                    else if (object_id.instance != 0) throw new Exception("Don't know this file");
+
+                    //this is a test file for performance measuring
+                    //don't do anything with the content
+
+                    //adjust size though
+                    int filesize = m_storage.ReadPropertyValue(object_id, BACNET_PROPERTY_ID.PROP_FILE_SIZE);
+                    int new_filesize = position + counts[0];
+                    if (new_filesize > filesize) m_storage.WritePropertyValue(object_id, BACNET_PROPERTY_ID.PROP_FILE_SIZE, new_filesize);
+                    if (counts[0] == 0) m_storage.WritePropertyValue(object_id, BACNET_PROPERTY_ID.PROP_FILE_SIZE, 0);      //clear file
+
+                    //send confirm
+                    sender.WriteFileResponse(adr, invoke_id, position);
+                }
+                catch (Exception)
+                {
+                    sender.ErrorResponse(adr, BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_ATOMIC_WRITE_FILE, invoke_id, BACNET_ERROR_CLASS.ERROR_CLASS_DEVICE, BACNET_ERROR_CODE.ERROR_CODE_OTHER);
+                }
+            }
+        }
+
         private static void OnWritePropertyMultipleRequest(BacnetClient sender, BACNET_ADDRESS adr, byte invoke_id, BACNET_OBJECT_ID object_id, ICollection<BACNET_PROPERTY_VALUE> values)
         {
-            try
+            lock (m_lockObject)
             {
-                m_storage.WritePropertyMultiple(object_id, values);
-                sender.SimpleAckResponse(adr, BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_WRITE_PROP_MULTIPLE, invoke_id);
-            }
-            catch (Exception)
-            {
-                sender.ErrorResponse(adr, BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_WRITE_PROP_MULTIPLE, invoke_id, 0, 0);
+                try
+                {
+                    m_storage.WritePropertyMultiple(object_id, values);
+                    sender.SimpleAckResponse(adr, BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_WRITE_PROP_MULTIPLE, invoke_id);
+                }
+                catch (Exception)
+                {
+                    sender.ErrorResponse(adr, BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_WRITE_PROP_MULTIPLE, invoke_id, BACNET_ERROR_CLASS.ERROR_CLASS_DEVICE, BACNET_ERROR_CODE.ERROR_CODE_OTHER);
+                }
             }
         }
 
         private static void OnReadPropertyMultipleRequest(BacnetClient sender, BACNET_ADDRESS adr, byte invoke_id, IList<BACNET_OBJECT_ID> object_ids, IList<IList<BACNET_PROPERTY_REFERENCE>> property_id_and_array_index)
         {
-            try
+            lock (m_lockObject)
             {
-                IList<BACNET_PROPERTY_VALUE> value;
-                int o_count = 0;
-                List<ICollection<BACNET_PROPERTY_VALUE>> values = new List<ICollection<BACNET_PROPERTY_VALUE>>(); 
-                foreach (BACNET_OBJECT_ID object_id in object_ids)
+                try
                 {
-                    IList<BACNET_PROPERTY_REFERENCE> property = property_id_and_array_index[o_count];
-                    if (property.Count == 1 && property[0].propertyIdentifier == (uint)BACNET_PROPERTY_ID.PROP_ALL)
+                    IList<BACNET_PROPERTY_VALUE> value;
+                    int o_count = 0;
+                    List<ICollection<BACNET_PROPERTY_VALUE>> values = new List<ICollection<BACNET_PROPERTY_VALUE>>();
+                    foreach (BACNET_OBJECT_ID object_id in object_ids)
                     {
-                        m_storage.ReadPropertyAll(object_id, out value);
-                        property_id_and_array_index[o_count] = property;
+                        IList<BACNET_PROPERTY_REFERENCE> property = property_id_and_array_index[o_count];
+                        if (property.Count == 1 && property[0].propertyIdentifier == (uint)BACNET_PROPERTY_ID.PROP_ALL)
+                        {
+                            m_storage.ReadPropertyAll(object_id, out value);
+                            property_id_and_array_index[o_count] = property;
+                        }
+                        else
+                            m_storage.ReadPropertyMultiple(object_id, property, out value);
+                        values.Add(value);
+                        o_count++;
                     }
-                    else
-                        m_storage.ReadPropertyMultiple(object_id, property, out value);
-                    values.Add(value);
-                    o_count++;
+                    sender.ReadPropertyMultipleResponse(adr, invoke_id, object_ids, values);
                 }
-                sender.ReadPropertyMultipleResponse(adr, invoke_id, object_ids, values);
-            }
-            catch (Exception)
-            {
-                sender.ErrorResponse(adr, BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_READ_PROP_MULTIPLE, invoke_id, 0, 0);
+                catch (Exception)
+                {
+                    sender.ErrorResponse(adr, BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_READ_PROP_MULTIPLE, invoke_id, BACNET_ERROR_CLASS.ERROR_CLASS_DEVICE, BACNET_ERROR_CODE.ERROR_CODE_OTHER);
+                }
             }
         }
 
         private static void OnWritePropertyRequest(BacnetClient sender, BACNET_ADDRESS adr, byte invoke_id, BACNET_OBJECT_ID object_id, BACNET_PROPERTY_VALUE value)
         {
-            try
+            lock (m_lockObject)
             {
-                DeviceStorage.ErrorCodes code = m_storage.WriteProperty(object_id, (BACNET_PROPERTY_ID)value.property.propertyIdentifier, value.property.propertyArrayIndex, value.value);
-                if (code == DeviceStorage.ErrorCodes.Good)
-                    sender.SimpleAckResponse(adr, BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_WRITE_PROPERTY, invoke_id);
-                else
-                    sender.ErrorResponse(adr, BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_WRITE_PROPERTY, invoke_id, 0, 0);
-            }
-            catch (Exception)
-            {
-                sender.ErrorResponse(adr, BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_WRITE_PROPERTY, invoke_id, 0, 0);
+                try
+                {
+                    DeviceStorage.ErrorCodes code = m_storage.WriteProperty(object_id, (BACNET_PROPERTY_ID)value.property.propertyIdentifier, value.property.propertyArrayIndex, value.value);
+                    if (code == DeviceStorage.ErrorCodes.Good)
+                        sender.SimpleAckResponse(adr, BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_WRITE_PROPERTY, invoke_id);
+                    else
+                        sender.ErrorResponse(adr, BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_WRITE_PROPERTY, invoke_id, BACNET_ERROR_CLASS.ERROR_CLASS_DEVICE, BACNET_ERROR_CODE.ERROR_CODE_OTHER);
+                }
+                catch (Exception)
+                {
+                    sender.ErrorResponse(adr, BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_WRITE_PROPERTY, invoke_id, BACNET_ERROR_CLASS.ERROR_CLASS_DEVICE, BACNET_ERROR_CODE.ERROR_CODE_OTHER);
+                }
             }
         }
 
         private static void OnReadPropertyRequest(BacnetClient sender, BACNET_ADDRESS adr, byte invoke_id, BACNET_OBJECT_ID object_id, BACNET_PROPERTY_REFERENCE property)
         {
-            try
+            lock (m_lockObject)
             {
-                IList<BACNET_VALUE> value;
-                DeviceStorage.ErrorCodes code = m_storage.ReadProperty(object_id, (BACNET_PROPERTY_ID)property.propertyIdentifier, property.propertyArrayIndex, out value);
-                if (code == DeviceStorage.ErrorCodes.Good)
-                    sender.ReadPropertyResponse(adr, invoke_id, object_id, property, value);
-                else
-                    sender.ErrorResponse(adr, BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_READ_PROPERTY, invoke_id, 0, 0);
-            }
-            catch (Exception)
-            {
-                sender.ErrorResponse(adr, BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_READ_PROPERTY, invoke_id, 0, 0);
+                try
+                {
+                    IList<BACNET_VALUE> value;
+                    DeviceStorage.ErrorCodes code = m_storage.ReadProperty(object_id, (BACNET_PROPERTY_ID)property.propertyIdentifier, property.propertyArrayIndex, out value);
+                    if (code == DeviceStorage.ErrorCodes.Good)
+                        sender.ReadPropertyResponse(adr, invoke_id, object_id, property, value);
+                    else
+                        sender.ErrorResponse(adr, BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_READ_PROPERTY, invoke_id, BACNET_ERROR_CLASS.ERROR_CLASS_DEVICE, BACNET_ERROR_CODE.ERROR_CODE_OTHER);
+                }
+                catch (Exception)
+                {
+                    sender.ErrorResponse(adr, BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_READ_PROPERTY, invoke_id, BACNET_ERROR_CLASS.ERROR_CLASS_DEVICE, BACNET_ERROR_CODE.ERROR_CODE_OTHER);
+                }
             }
         }
 
         private static void OnWhoIs(BacnetClient sender, BACNET_ADDRESS adr, int low_limit, int high_limit)
         {
-            sender.Iam(m_storage.DeviceId);
+            lock (m_lockObject)
+            {
+                sender.Iam(m_storage.DeviceId);
+            }
         }
     }
 }

@@ -118,5 +118,113 @@ namespace Yabe.Properties {
                 this["MSTP_LogStateMachine"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("3")]
+        public decimal DefaultRetries {
+            get {
+                return ((decimal)(this["DefaultRetries"]));
+            }
+            set {
+                this["DefaultRetries"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1000")]
+        public decimal DefaultTimeout {
+            get {
+                return ((decimal)(this["DefaultTimeout"]));
+            }
+            set {
+                this["DefaultTimeout"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("47808")]
+        public decimal DefaultUdpPort {
+            get {
+                return ((decimal)(this["DefaultUdpPort"]));
+            }
+            set {
+                this["DefaultUdpPort"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("38400")]
+        public decimal DefaultBaudrate {
+            get {
+                return ((decimal)(this["DefaultBaudrate"]));
+            }
+            set {
+                this["DefaultBaudrate"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("-1")]
+        public decimal DefaultSourceAddress {
+            get {
+                return ((decimal)(this["DefaultSourceAddress"]));
+            }
+            set {
+                this["DefaultSourceAddress"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("127")]
+        public decimal DefaultMaxMaster {
+            get {
+                return ((decimal)(this["DefaultMaxMaster"]));
+            }
+            set {
+                this["DefaultMaxMaster"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1")]
+        public decimal DefaultMaxInfoFrames {
+            get {
+                return ((decimal)(this["DefaultMaxInfoFrames"]));
+            }
+            set {
+                this["DefaultMaxInfoFrames"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool Subscriptions_IssueConfirmedNotifies {
+            get {
+                return ((bool)(this["Subscriptions_IssueConfirmedNotifies"]));
+            }
+            set {
+                this["Subscriptions_IssueConfirmedNotifies"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("120")]
+        public uint Subscriptions_Lifetime {
+            get {
+                return ((uint)(this["Subscriptions_Lifetime"]));
+            }
+            set {
+                this["Subscriptions_Lifetime"] = value;
+            }
+        }
     }
 }

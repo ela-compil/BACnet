@@ -51,8 +51,8 @@ namespace System.IO.BACnet
         public static byte DEFAULT_HOP_COUNT = 0xFF;
 
         public IBacnetTransport Transport { get { return m_client; } }
-        public int Timeout { get { return m_timeout; } }
-        public int Retries { get { return m_retries; } }
+        public int Timeout { get { return m_timeout; } set { m_timeout = value; } }
+        public int Retries { get { return m_retries; } set { m_retries = value; } }
 
         public BacnetClient(int port = 0xBAC0, int timeout = 1000, int retries = 3) : 
             this(new BacnetIpUdpProtocolTransport(port), timeout, retries)
@@ -67,8 +67,8 @@ namespace System.IO.BACnet
         public BacnetClient(IBacnetTransport transport, int timeout = 1000, int retries = 3)
         {
             m_client = transport;
-            m_tx_buffer = new byte[m_client.GetMaxBufferLength()];
-            m_apdu_response = new byte[m_client.GetMaxBufferLength()];
+            m_tx_buffer = new byte[m_client.MaxBufferLength];
+            m_apdu_response = new byte[m_client.MaxBufferLength];
             m_timeout = timeout;
             m_retries = retries;
         }
@@ -107,6 +107,14 @@ namespace System.IO.BACnet
         public event WritePropertyRequestHandler OnWritePropertyRequest;
         public delegate void WritePropertyMultipleRequestHandler(BacnetClient sender, BACNET_ADDRESS adr, byte invoke_id, BACNET_OBJECT_ID object_id, ICollection<BACNET_PROPERTY_VALUE> values);
         public event WritePropertyMultipleRequestHandler OnWritePropertyMultipleRequest;
+        public delegate void AtomicWriteFileRequestHandler(BacnetClient sender, BACNET_ADDRESS adr, byte invoke_id, bool is_stream, BACNET_OBJECT_ID object_id, int position, uint block_count, byte[][] blocks, int[] counts);
+        public event AtomicWriteFileRequestHandler OnAtomicWriteFileRequest;
+        public delegate void AtomicReadFileRequestHandler(BacnetClient sender, BACNET_ADDRESS adr, byte invoke_id, bool is_stream, BACNET_OBJECT_ID object_id, int position, uint count);
+        public event AtomicReadFileRequestHandler OnAtomicReadFileRequest;
+        public delegate void SubscribeCOVRequestHandler(BacnetClient sender, BACNET_ADDRESS adr, byte invoke_id, uint subscriberProcessIdentifier, BACNET_OBJECT_ID monitoredObjectIdentifier, bool cancellationRequest, bool issueConfirmedNotifications, uint lifetime);
+        public event SubscribeCOVRequestHandler OnSubscribeCOV;
+        public delegate void SubscribeCOVPropertyRequestHandler(BacnetClient sender, BACNET_ADDRESS adr, byte invoke_id, uint subscriberProcessIdentifier, BACNET_OBJECT_ID monitoredObjectIdentifier, BACNET_PROPERTY_REFERENCE monitoredProperty, bool cancellationRequest, bool issueConfirmedNotifications, uint lifetime, float covIncrement);
+        public event SubscribeCOVPropertyRequestHandler OnSubscribeCOVProperty;
 
         protected void ProcessConfirmedServiceRequest(BACNET_ADDRESS adr, BACNET_PDU_TYPE type, BACNET_CONFIRMED_SERVICE service, BACNET_MAX_SEGMENTS max_segments, BACNET_MAX_ADPU max_adpu, byte invoke_id, byte sequence_number, byte proposed_window_number, byte[] buffer, int offset, int length)
         {
@@ -158,9 +166,59 @@ namespace System.IO.BACnet
                     uint timeRemaining;
                     ICollection<BACNET_PROPERTY_VALUE> values;
                     if (SERVICES.DecodeCOVNotifyUnconfirmed(buffer, offset, length, out subscriberProcessIdentifier, out initiatingDeviceIdentifier, out monitoredObjectIdentifier, out timeRemaining, out values) >= 0)
-                        OnCOVNotification(this, adr, subscriberProcessIdentifier, initiatingDeviceIdentifier, monitoredObjectIdentifier, timeRemaining, invoke_id, true, values);
+                        OnCOVNotification(this, adr, invoke_id, subscriberProcessIdentifier, initiatingDeviceIdentifier, monitoredObjectIdentifier, timeRemaining, true, values);
                     else
                         Trace.TraceWarning("Couldn't decode COVNotify");
+                }
+                else if (service == BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_ATOMIC_WRITE_FILE && OnAtomicWriteFileRequest != null)
+                {
+                    bool is_stream;
+                    BACNET_OBJECT_ID object_id;
+                    int position;
+                    uint block_count;
+                    byte[][] blocks;
+                    int[] counts;
+                    if (SERVICES.DecodeAtomicWriteFile(buffer, offset, length, out is_stream, out object_id, out position, out block_count, out blocks, out counts) >= 0)
+                        OnAtomicWriteFileRequest(this, adr, invoke_id, is_stream, object_id, position, block_count, blocks, counts);
+                    else
+                        Trace.TraceWarning("Couldn't decode AtomicWriteFile");
+                }
+                else if (service == BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_ATOMIC_READ_FILE && OnAtomicReadFileRequest != null)
+                {
+                    bool is_stream;
+                    BACNET_OBJECT_ID object_id;
+                    int position;
+                    uint count;
+                    if (SERVICES.DecodeAtomicReadFile(buffer, offset, length, out is_stream, out object_id, out position, out count) >= 0)
+                        OnAtomicReadFileRequest(this, adr, invoke_id, is_stream, object_id, position, count);
+                    else
+                        Trace.TraceWarning("Couldn't decode AtomicReadFile");
+                }
+                else if (service == BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_SUBSCRIBE_COV && OnSubscribeCOV != null)
+                {
+                    uint subscriberProcessIdentifier;
+                    BACNET_OBJECT_ID monitoredObjectIdentifier;
+                    bool cancellationRequest;
+                    bool issueConfirmedNotifications;
+                    uint lifetime;
+                    if (SERVICES.DecodeSubscribeCOV(buffer, offset, length, out subscriberProcessIdentifier, out monitoredObjectIdentifier, out cancellationRequest, out issueConfirmedNotifications, out lifetime) >= 0)
+                        OnSubscribeCOV(this, adr, invoke_id, subscriberProcessIdentifier, monitoredObjectIdentifier, cancellationRequest, issueConfirmedNotifications, lifetime);
+                    else
+                        Trace.TraceWarning("Couldn't decode SubscribeCOV");
+                }
+                else if (service == BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_SUBSCRIBE_COV_PROPERTY && OnSubscribeCOVProperty != null)
+                {
+                    uint subscriberProcessIdentifier;
+                    BACNET_OBJECT_ID monitoredObjectIdentifier;
+                    BACNET_PROPERTY_REFERENCE monitoredProperty;
+                    bool cancellationRequest;
+                    bool issueConfirmedNotifications;
+                    uint lifetime;
+                    float covIncrement;
+                    if (SERVICES.DecodeSubscribeProperty(buffer, offset, length, out subscriberProcessIdentifier, out monitoredObjectIdentifier, out monitoredProperty, out cancellationRequest, out issueConfirmedNotifications, out lifetime, out covIncrement) >= 0)
+                        OnSubscribeCOVProperty(this, adr, invoke_id, subscriberProcessIdentifier, monitoredObjectIdentifier, monitoredProperty, cancellationRequest, issueConfirmedNotifications, lifetime, covIncrement);
+                    else
+                        Trace.TraceWarning("Couldn't decode SubscribeCOVProperty");
                 }
             }
             catch (Exception ex)
@@ -177,7 +235,7 @@ namespace System.IO.BACnet
         public event WhoIsHandler OnWhoIs;
 
         //used by both 'confirmed' and 'unconfirmed' notify
-        public delegate void COVNotificationHandler(BacnetClient sender, BACNET_ADDRESS adr, uint subscriberProcessIdentifier, BACNET_OBJECT_ID initiatingDeviceIdentifier, BACNET_OBJECT_ID monitoredObjectIdentifier, uint timeRemaining, byte invoke_id, bool need_confirm, ICollection<BACNET_PROPERTY_VALUE> values);
+        public delegate void COVNotificationHandler(BacnetClient sender, BACNET_ADDRESS adr, byte invoke_id, uint subscriberProcessIdentifier, BACNET_OBJECT_ID initiatingDeviceIdentifier, BACNET_OBJECT_ID monitoredObjectIdentifier, uint timeRemaining, bool need_confirm, ICollection<BACNET_PROPERTY_VALUE> values);
         public event COVNotificationHandler OnCOVNotification;
 
         protected void ProcessUnconfirmedServiceRequest(BACNET_ADDRESS adr, BACNET_PDU_TYPE type, BACNET_UNCONFIRMED_SERVICE service, byte[] buffer, int offset, int length)
@@ -214,7 +272,7 @@ namespace System.IO.BACnet
                     uint timeRemaining;
                     ICollection<BACNET_PROPERTY_VALUE> values;
                     if (SERVICES.DecodeCOVNotifyUnconfirmed(buffer, offset, length, out subscriberProcessIdentifier, out initiatingDeviceIdentifier, out monitoredObjectIdentifier, out timeRemaining, out values) >= 0)
-                        OnCOVNotification(this, adr, subscriberProcessIdentifier, initiatingDeviceIdentifier, monitoredObjectIdentifier, timeRemaining, 0, false, values);
+                        OnCOVNotification(this, adr, 0, subscriberProcessIdentifier, initiatingDeviceIdentifier, monitoredObjectIdentifier, timeRemaining, false, values);
                     else
                         Trace.TraceWarning("Couldn't decode COVNotifyUnconfirmed");
                 }
@@ -439,14 +497,14 @@ namespace System.IO.BACnet
             Trace.WriteLine("Sending WhoIs ... ", null);
 
             int offset = 0;
-            offset += m_client.GetHeaderLength();
+            offset += m_client.HeaderLength;
             int org_offset = offset;
             BACNET_ADDRESS broadcast = m_client.GetBroadcastAddress();
             offset += NPDU.Encode(m_tx_buffer, offset, BACNET_NPDU_CONTROL.PriorityNormalMessage, broadcast, null, DEFAULT_HOP_COUNT, BACNET_NETWORK_MESSAGE_TYPE.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, 0);
             offset += APDU.EncodeUnconfirmedServiceRequest(m_tx_buffer, offset, BACNET_PDU_TYPE.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST, BACNET_UNCONFIRMED_SERVICE.SERVICE_UNCONFIRMED_WHO_IS);
             offset += SERVICES.EncodeWhoIsBroadcast(m_tx_buffer, offset, -1, -1);
 
-            m_client.Send(m_tx_buffer, m_client.GetHeaderLength(), offset - org_offset, broadcast, false);
+            m_client.Send(m_tx_buffer, m_client.HeaderLength, offset - org_offset, broadcast, false, 0);
         }
 
         public void Iam(uint device_id)
@@ -454,14 +512,14 @@ namespace System.IO.BACnet
             Trace.WriteLine("Sending Iam ... ", null);
 
             int offset = 0;
-            offset += m_client.GetHeaderLength();
+            offset += m_client.HeaderLength;
             int org_offset = offset;
             BACNET_ADDRESS broadcast = m_client.GetBroadcastAddress();
             offset += NPDU.Encode(m_tx_buffer, offset, BACNET_NPDU_CONTROL.PriorityNormalMessage, broadcast, null, DEFAULT_HOP_COUNT, BACNET_NETWORK_MESSAGE_TYPE.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, 0);
             offset += APDU.EncodeUnconfirmedServiceRequest(m_tx_buffer, offset, BACNET_PDU_TYPE.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST, BACNET_UNCONFIRMED_SERVICE.SERVICE_UNCONFIRMED_I_AM);
-            offset += SERVICES.EncodeIamBroadcast(m_tx_buffer, offset, device_id, (uint)m_client.GetMaxBufferLength(), BACNET_SEGMENTATION.SEGMENTATION_NONE, m_vendor_id);
+            offset += SERVICES.EncodeIamBroadcast(m_tx_buffer, offset, device_id, (uint)m_client.MaxAdpuLength, BACNET_SEGMENTATION.SEGMENTATION_NONE, m_vendor_id);
 
-            m_client.Send(m_tx_buffer, m_client.GetHeaderLength(), offset - org_offset, broadcast, false);
+            m_client.Send(m_tx_buffer, m_client.HeaderLength, offset - org_offset, broadcast, false, 0);
         }
 
         private bool SendRequestAndTakeLock(BACNET_ADDRESS adr, byte expected_invoke_id, BACNET_PDU_TYPE expected_type, byte[] data, int data_length)
@@ -470,7 +528,8 @@ namespace System.IO.BACnet
             for (int r = 0; r < m_retries; r++)
             {
                 m_response_event.Reset();
-                m_client.Send(data, m_client.GetHeaderLength(), data_length, adr, true);
+                if (m_client.Send(data, m_client.HeaderLength, data_length, adr, true, m_timeout) < 0)
+                    return false;
                 while (true)
                 {
                     if (m_response_event.WaitOne(m_timeout))
@@ -506,34 +565,70 @@ namespace System.IO.BACnet
             return success;
         }
 
+        public int GetMaxApdu()
+        {
+            switch (m_client.MaxAdpuLength)
+            {
+                case BACNET_MAX_ADPU.MAX_APDU1476:
+                    return 1476;
+                case BACNET_MAX_ADPU.MAX_APDU1024:
+                    return 1024;
+                case BACNET_MAX_ADPU.MAX_APDU480:
+                    return 480;
+                case BACNET_MAX_ADPU.MAX_APDU206:
+                    return 206;
+                case BACNET_MAX_ADPU.MAX_APDU128:
+                    return 128;
+                case BACNET_MAX_ADPU.MAX_APDU50:
+                    return 50;
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+
+        public int GetFileBufferMaxSize()
+        {
+            return GetMaxApdu() - 7;
+        }
+
         public bool WriteFileRequest(BACNET_ADDRESS adr, BACNET_OBJECT_ID object_id, ref int position, int count, byte[] file_buffer, byte invoke_id = 0)
         {
+            int tmp;
             Trace.WriteLine("Sending AtomicWriteFileRequest ... ", null);
             if (invoke_id == 0) invoke_id = unchecked(m_invoke_id++);
 
             int offset = 0;
-            offset += m_client.GetHeaderLength();
+            offset += m_client.HeaderLength;
             int org_offset = offset;
             offset += NPDU.Encode(m_tx_buffer, offset, BACNET_NPDU_CONTROL.PriorityNormalMessage, null, null, DEFAULT_HOP_COUNT, BACNET_NETWORK_MESSAGE_TYPE.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, 0);
-            offset += APDU.EncodeConfirmedServiceRequest(m_tx_buffer, offset, BACNET_PDU_TYPE.PDU_TYPE_CONFIRMED_SERVICE_REQUEST, BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_ATOMIC_WRITE_FILE, BACNET_MAX_SEGMENTS.MAX_SEG0, BACNET_MAX_ADPU.MAX_APDU1476, invoke_id, 0, 0);
-            offset += SERVICES.EncodeAtomicWriteFile(m_tx_buffer, offset, true, object_id, position, 1, new byte[][] { file_buffer }, new int[] { count });
+            offset += APDU.EncodeConfirmedServiceRequest(m_tx_buffer, offset, BACNET_PDU_TYPE.PDU_TYPE_CONFIRMED_SERVICE_REQUEST, BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_ATOMIC_WRITE_FILE, BACNET_MAX_SEGMENTS.MAX_SEG0, m_client.MaxAdpuLength, invoke_id, 0, 0);
+            tmp = SERVICES.EncodeAtomicWriteFile(m_tx_buffer, offset, true, object_id, position, 1, new byte[][] { file_buffer }, new int[] { count });
+            if (tmp < 0) throw new Exception("Couldn't encode AtomicWriteFile");
+            offset += tmp;
 
             if (SendRequestAndTakeLock(adr, invoke_id, BACNET_PDU_TYPE.PDU_TYPE_COMPLEX_ACK, m_tx_buffer, offset - org_offset))
             {
-                BACNET_PDU_TYPE type;
-                BACNET_CONFIRMED_SERVICE service;
-                byte sequence_number;
-                byte proposed_window_number;
-                int len = APDU.DecodeComplexAck(m_apdu_response, 0, out type, out service, out invoke_id, out sequence_number, out proposed_window_number);
-                if (service == BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_ATOMIC_WRITE_FILE)
+                try
                 {
-                    bool is_stream;
-                    if (SERVICES.DecodeAtomicWriteFileAcknowledge(m_apdu_response, len, m_apdu_length - len, out is_stream, out position) < 0)
-                        throw new System.IO.IOException("Couldn't decode AtomicWriteFileAcknowledge");
-                    return true;
+                    BACNET_PDU_TYPE type;
+                    BACNET_CONFIRMED_SERVICE service;
+                    byte sequence_number;
+                    byte proposed_window_number;
+                    int len = APDU.DecodeComplexAck(m_apdu_response, 0, out type, out service, out invoke_id, out sequence_number, out proposed_window_number);
+                    if (service == BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_ATOMIC_WRITE_FILE)
+                    {
+                        bool is_stream;
+                        if (SERVICES.DecodeAtomicWriteFileAcknowledge(m_apdu_response, len, m_apdu_length - len, out is_stream, out position) < 0)
+                            throw new System.IO.IOException("Couldn't decode AtomicWriteFileAcknowledge");
+                        return true;
+                    }
+                    else
+                        throw new System.IO.IOException("BACnet error: " + service);
                 }
-                else
-                    throw new System.IO.IOException("BACnet error: " + service);
+                finally
+                {
+                    System.Threading.Monitor.Exit(m_response_lock);
+                }
             }
             else
             {
@@ -543,33 +638,43 @@ namespace System.IO.BACnet
 
         public bool ReadFileRequest(BACNET_ADDRESS adr, BACNET_OBJECT_ID object_id, ref int position, ref uint count, out bool end_of_file, byte[] file_buffer, int file_buffer_offset, byte invoke_id = 0)
         {
+            int tmp;
             Trace.WriteLine("Sending AtomicReadFileRequest ... ", null);
             if (invoke_id == 0) invoke_id = unchecked(m_invoke_id++);
             end_of_file = true;
 
             int offset = 0;
-            offset += m_client.GetHeaderLength();
+            offset += m_client.HeaderLength;
             int org_offset = offset;
             offset += NPDU.Encode(m_tx_buffer, offset, BACNET_NPDU_CONTROL.PriorityNormalMessage, null, null, DEFAULT_HOP_COUNT, BACNET_NETWORK_MESSAGE_TYPE.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, 0);
-            offset += APDU.EncodeConfirmedServiceRequest(m_tx_buffer, offset, BACNET_PDU_TYPE.PDU_TYPE_CONFIRMED_SERVICE_REQUEST, BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_ATOMIC_READ_FILE, BACNET_MAX_SEGMENTS.MAX_SEG0, BACNET_MAX_ADPU.MAX_APDU1476, invoke_id, 0, 0);
-            offset += SERVICES.EncodeAtomicReadFile(m_tx_buffer, offset, true, object_id, position, count);
+            offset += APDU.EncodeConfirmedServiceRequest(m_tx_buffer, offset, BACNET_PDU_TYPE.PDU_TYPE_CONFIRMED_SERVICE_REQUEST, BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_ATOMIC_READ_FILE, BACNET_MAX_SEGMENTS.MAX_SEG0, m_client.MaxAdpuLength, invoke_id, 0, 0);
+            tmp = SERVICES.EncodeAtomicReadFile(m_tx_buffer, offset, true, object_id, position, count);
+            if (tmp < 0) throw new Exception("Couldn't encode AtomicReadFile");
+            offset += tmp;
 
             if (SendRequestAndTakeLock(adr, invoke_id, BACNET_PDU_TYPE.PDU_TYPE_COMPLEX_ACK, m_tx_buffer, offset - org_offset))
             {
-                BACNET_PDU_TYPE type;
-                BACNET_CONFIRMED_SERVICE service;
-                byte sequence_number;
-                byte proposed_window_number;
-                int len = APDU.DecodeComplexAck(m_apdu_response, 0, out type, out service, out invoke_id, out sequence_number, out proposed_window_number);
-                if (service == BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_ATOMIC_READ_FILE)
+                try
                 {
-                    bool is_stream;
-                    if (SERVICES.DecodeAtomicReadFileAcknowledge(m_apdu_response, len, m_apdu_length - len, out end_of_file, out is_stream, out position, out count, file_buffer, file_buffer_offset) < 0)
-                        throw new System.IO.IOException("Couldn't decode AtomicReadFileAcknowledge");
-                    return true;
+                    BACNET_PDU_TYPE type;
+                    BACNET_CONFIRMED_SERVICE service;
+                    byte sequence_number;
+                    byte proposed_window_number;
+                    int len = APDU.DecodeComplexAck(m_apdu_response, 0, out type, out service, out invoke_id, out sequence_number, out proposed_window_number);
+                    if (service == BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_ATOMIC_READ_FILE)
+                    {
+                        bool is_stream;
+                        if (SERVICES.DecodeAtomicReadFileAcknowledge(m_apdu_response, len, m_apdu_length - len, out end_of_file, out is_stream, out position, out count, file_buffer, file_buffer_offset) < 0)
+                            throw new System.IO.IOException("Couldn't decode AtomicReadFileAcknowledge");
+                        return true;
+                    }
+                    else
+                        throw new System.IO.IOException("BACnet error: " + service);
                 }
-                else
-                    throw new System.IO.IOException("BACnet error: " + service);
+                finally
+                {
+                    System.Threading.Monitor.Exit(m_response_lock);
+                }
             }
             else
             {
@@ -577,17 +682,17 @@ namespace System.IO.BACnet
             }
         }
 
-        public bool SubscribeCOVRequest(BACNET_ADDRESS adr, BACNET_OBJECT_ID object_id, uint subscribe_id, bool cancel, bool issue_confirmed_notifications, byte invoke_id = 0)
+        public bool SubscribeCOVRequest(BACNET_ADDRESS adr, BACNET_OBJECT_ID object_id, uint subscribe_id, bool cancel, bool issue_confirmed_notifications, uint lifetime, byte invoke_id = 0)
         {
             Trace.WriteLine("Sending SubscribeCOVRequest ... ", null);
             if (invoke_id == 0) invoke_id = unchecked(m_invoke_id++);
 
             int offset = 0;
-            offset += m_client.GetHeaderLength();
+            offset += m_client.HeaderLength;
             int org_offset = offset;
             offset += NPDU.Encode(m_tx_buffer, offset, BACNET_NPDU_CONTROL.PriorityNormalMessage, null, null, DEFAULT_HOP_COUNT, BACNET_NETWORK_MESSAGE_TYPE.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, 0);
-            offset += APDU.EncodeConfirmedServiceRequest(m_tx_buffer, offset, BACNET_PDU_TYPE.PDU_TYPE_CONFIRMED_SERVICE_REQUEST, BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_SUBSCRIBE_COV, BACNET_MAX_SEGMENTS.MAX_SEG0, BACNET_MAX_ADPU.MAX_APDU1476, invoke_id, 0, 0);
-            offset += SERVICES.EncodeSubscribeCOV(m_tx_buffer, offset, subscribe_id, object_id, cancel, issue_confirmed_notifications, 0);
+            offset += APDU.EncodeConfirmedServiceRequest(m_tx_buffer, offset, BACNET_PDU_TYPE.PDU_TYPE_CONFIRMED_SERVICE_REQUEST, BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_SUBSCRIBE_COV, BACNET_MAX_SEGMENTS.MAX_SEG0, m_client.MaxAdpuLength, invoke_id, 0, 0);
+            offset += SERVICES.EncodeSubscribeCOV(m_tx_buffer, offset, subscribe_id, object_id, cancel, issue_confirmed_notifications, lifetime);
 
             if (SendRequestAndTakeLock(adr, invoke_id, BACNET_PDU_TYPE.PDU_TYPE_SIMPLE_ACK, m_tx_buffer, offset - org_offset))
             {
@@ -620,10 +725,10 @@ namespace System.IO.BACnet
             if (invoke_id == 0) invoke_id = unchecked(m_invoke_id++);
 
             int offset = 0;
-            offset += m_client.GetHeaderLength();
+            offset += m_client.HeaderLength;
             int org_offset = offset;
             offset += NPDU.Encode(m_tx_buffer, offset, BACNET_NPDU_CONTROL.PriorityNormalMessage, null, null, DEFAULT_HOP_COUNT, BACNET_NETWORK_MESSAGE_TYPE.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, 0);
-            offset += APDU.EncodeConfirmedServiceRequest(m_tx_buffer, offset, BACNET_PDU_TYPE.PDU_TYPE_CONFIRMED_SERVICE_REQUEST, BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_SUBSCRIBE_COV_PROPERTY, BACNET_MAX_SEGMENTS.MAX_SEG0, BACNET_MAX_ADPU.MAX_APDU1476, invoke_id, 0, 0);
+            offset += APDU.EncodeConfirmedServiceRequest(m_tx_buffer, offset, BACNET_PDU_TYPE.PDU_TYPE_CONFIRMED_SERVICE_REQUEST, BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_SUBSCRIBE_COV_PROPERTY, BACNET_MAX_SEGMENTS.MAX_SEG0, m_client.MaxAdpuLength, invoke_id, 0, 0);
             offset += SERVICES.EncodeSubscribeProperty(m_tx_buffer, offset, subscribe_id, object_id, cancel, issue_confirmed_notifications, 0, monitored_property, false, 0f);
 
             if (SendRequestAndTakeLock(adr, invoke_id, BACNET_PDU_TYPE.PDU_TYPE_SIMPLE_ACK, m_tx_buffer, offset - org_offset))
@@ -651,16 +756,16 @@ namespace System.IO.BACnet
             }
         }
 
-        public bool ReadPropertyRequest(BACNET_ADDRESS adr, BACNET_OBJECT_ID object_id, BACNET_PROPERTY_ID property_id, out LinkedList<BACNET_VALUE> value_list, byte invoke_id = 0)
+        public bool ReadPropertyRequest(BACNET_ADDRESS adr, BACNET_OBJECT_ID object_id, BACNET_PROPERTY_ID property_id, out IList<BACNET_VALUE> value_list, byte invoke_id = 0)
         {
             Trace.WriteLine("Sending ReadPropertyRequest ... ", null);
             if(invoke_id == 0) invoke_id = unchecked ( m_invoke_id++);
 
             int offset = 0;
-            offset += m_client.GetHeaderLength();
+            offset += m_client.HeaderLength;
             int org_offset = offset;
             offset += NPDU.Encode(m_tx_buffer, offset, BACNET_NPDU_CONTROL.PriorityNormalMessage | BACNET_NPDU_CONTROL.ExpectingReply, null, null, DEFAULT_HOP_COUNT, BACNET_NETWORK_MESSAGE_TYPE.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, 0);
-            offset += APDU.EncodeConfirmedServiceRequest(m_tx_buffer, offset, BACNET_PDU_TYPE.PDU_TYPE_CONFIRMED_SERVICE_REQUEST, BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_READ_PROPERTY, BACNET_MAX_SEGMENTS.MAX_SEG0, BACNET_MAX_ADPU.MAX_APDU1476, invoke_id, 0, 0);
+            offset += APDU.EncodeConfirmedServiceRequest(m_tx_buffer, offset, BACNET_PDU_TYPE.PDU_TYPE_CONFIRMED_SERVICE_REQUEST, BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_READ_PROPERTY, BACNET_MAX_SEGMENTS.MAX_SEG0, m_client.MaxAdpuLength, invoke_id, 0, 0);
             offset += SERVICES.EncodeReadProperty(m_tx_buffer, offset, object_id, (uint)property_id);
 
             if (SendRequestAndTakeLock(adr, invoke_id, BACNET_PDU_TYPE.PDU_TYPE_COMPLEX_ACK, m_tx_buffer, offset - org_offset))
@@ -701,10 +806,10 @@ namespace System.IO.BACnet
             if (invoke_id == 0) invoke_id = unchecked(m_invoke_id++);
 
             int offset = 0;
-            offset += m_client.GetHeaderLength();
+            offset += m_client.HeaderLength;
             int org_offset = offset;
             offset += NPDU.Encode(m_tx_buffer, offset, BACNET_NPDU_CONTROL.PriorityNormalMessage, null, null, DEFAULT_HOP_COUNT, BACNET_NETWORK_MESSAGE_TYPE.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, 0);
-            offset += APDU.EncodeConfirmedServiceRequest(m_tx_buffer, offset, BACNET_PDU_TYPE.PDU_TYPE_CONFIRMED_SERVICE_REQUEST, BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_WRITE_PROPERTY, BACNET_MAX_SEGMENTS.MAX_SEG0, BACNET_MAX_ADPU.MAX_APDU1476, invoke_id, 0, 0);
+            offset += APDU.EncodeConfirmedServiceRequest(m_tx_buffer, offset, BACNET_PDU_TYPE.PDU_TYPE_CONFIRMED_SERVICE_REQUEST, BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_WRITE_PROPERTY, BACNET_MAX_SEGMENTS.MAX_SEG0, m_client.MaxAdpuLength, invoke_id, 0, 0);
             offset += SERVICES.EncodeWriteProperty(m_tx_buffer, offset, object_id, (uint)property_id, ASN1.BACNET_ARRAY_ALL, 0, value_list);
 
             if (SendRequestAndTakeLock(adr, invoke_id, BACNET_PDU_TYPE.PDU_TYPE_SIMPLE_ACK, m_tx_buffer, offset - org_offset))
@@ -739,10 +844,10 @@ namespace System.IO.BACnet
             if (invoke_id == 0) invoke_id = unchecked(m_invoke_id++);
 
             int offset = 0;
-            offset += m_client.GetHeaderLength();
+            offset += m_client.HeaderLength;
             int org_offset = offset;
             offset += NPDU.Encode(m_tx_buffer, offset, BACNET_NPDU_CONTROL.PriorityNormalMessage, null, null, DEFAULT_HOP_COUNT, BACNET_NETWORK_MESSAGE_TYPE.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, 0);
-            offset += APDU.EncodeConfirmedServiceRequest(m_tx_buffer, offset, BACNET_PDU_TYPE.PDU_TYPE_CONFIRMED_SERVICE_REQUEST, BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_READ_PROP_MULTIPLE, BACNET_MAX_SEGMENTS.MAX_SEG0, BACNET_MAX_ADPU.MAX_APDU1476, invoke_id, 0, 0);
+            offset += APDU.EncodeConfirmedServiceRequest(m_tx_buffer, offset, BACNET_PDU_TYPE.PDU_TYPE_CONFIRMED_SERVICE_REQUEST, BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_READ_PROP_MULTIPLE, BACNET_MAX_SEGMENTS.MAX_SEG0, m_client.MaxAdpuLength, invoke_id, 0, 0);
             offset += SERVICES.EncodeReadPropertyMultiple(m_tx_buffer, offset, object_id, property_id_and_array_index);
 
             if (SendRequestAndTakeLock(adr, invoke_id, BACNET_PDU_TYPE.PDU_TYPE_COMPLEX_ACK, m_tx_buffer, offset - org_offset))
@@ -756,7 +861,7 @@ namespace System.IO.BACnet
                     int len = APDU.DecodeComplexAck(m_apdu_response, 0, out type, out service, out invoke_id, out sequence_number, out proposed_window_number);
                     if (service == BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_READ_PROP_MULTIPLE)
                     {
-                        BACNET_OBJECT_ID response_object_id;;
+                        BACNET_OBJECT_ID response_object_id;
                         if (SERVICES.DecodeReadPropertyMultipleAcknowledge(m_apdu_response, len, m_apdu_length - len, out response_object_id, out value_list) < 0)
                             throw new System.IO.IOException("Couldn't decode ReadPropertyMultipleAcknowledge");
                         return true;
@@ -776,52 +881,118 @@ namespace System.IO.BACnet
             }
         }
 
+        public bool Notify(BACNET_ADDRESS adr, uint subscriberProcessIdentifier, uint initiatingDeviceIdentifier, BACNET_OBJECT_ID monitoredObjectIdentifier, uint timeRemaining, bool issueConfirmedNotifications, IList<BACNET_PROPERTY_VALUE> values)
+        {
+            Trace.WriteLine("Sending Notify ... ", null);
+            int offset = 0;
+            offset += m_client.HeaderLength;
+            int org_offset = offset;
+            offset += NPDU.Encode(m_tx_buffer, offset, BACNET_NPDU_CONTROL.PriorityNormalMessage, null, null, DEFAULT_HOP_COUNT, BACNET_NETWORK_MESSAGE_TYPE.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, 0);
+            if (issueConfirmedNotifications)
+            {
+                byte invoke_id = unchecked(m_invoke_id++);
+                offset += APDU.EncodeConfirmedServiceRequest(m_tx_buffer, offset, BACNET_PDU_TYPE.PDU_TYPE_CONFIRMED_SERVICE_REQUEST, BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_COV_NOTIFICATION, BACNET_MAX_SEGMENTS.MAX_SEG0, m_client.MaxAdpuLength, invoke_id, 0, 0);
+                offset += SERVICES.EncodeCOVNotifyConfirmed(m_tx_buffer, offset, subscriberProcessIdentifier, initiatingDeviceIdentifier, monitoredObjectIdentifier, timeRemaining, values);
+
+                if (SendRequestAndTakeLock(adr, invoke_id, BACNET_PDU_TYPE.PDU_TYPE_SIMPLE_ACK, m_tx_buffer, offset - org_offset))
+                {
+                    try
+                    {
+                        BACNET_PDU_TYPE type;
+                        BACNET_CONFIRMED_SERVICE service;
+                        APDU.DecodeSimpleAck(m_apdu_response, 0, out type, out service, out invoke_id);
+                        if (service == BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_READ_PROP_MULTIPLE)
+                            return true;
+                        else
+                            return false;
+                        }
+                    finally
+                    {
+                        System.Threading.Monitor.Exit(m_response_lock);
+                    }
+                }
+                else
+                    return false;
+            }
+            else
+            {
+                offset += APDU.EncodeUnconfirmedServiceRequest(m_tx_buffer, offset, BACNET_PDU_TYPE.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST, BACNET_UNCONFIRMED_SERVICE.SERVICE_UNCONFIRMED_COV_NOTIFICATION);
+                offset += SERVICES.EncodeCOVNotifyUnconfirmed(m_tx_buffer, offset, subscriberProcessIdentifier, initiatingDeviceIdentifier, monitoredObjectIdentifier, timeRemaining, values);
+                m_client.Send(m_tx_buffer, m_client.HeaderLength, offset - org_offset, adr, false, 0);
+                return true;
+            }
+        }
+
         public void ReadPropertyResponse(BACNET_ADDRESS adr, byte invoke_id, BACNET_OBJECT_ID object_id, BACNET_PROPERTY_REFERENCE property, IEnumerable<BACNET_VALUE> value)
         {
             Trace.WriteLine("Sending ReadPropertyResponse ... ", null);
             int offset = 0;
-            offset += m_client.GetHeaderLength();
+            offset += m_client.HeaderLength;
             int org_offset = offset;
             offset += NPDU.Encode(m_tx_buffer, offset, BACNET_NPDU_CONTROL.PriorityNormalMessage, null, null, DEFAULT_HOP_COUNT, BACNET_NETWORK_MESSAGE_TYPE.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, 0);
             offset += APDU.EncodeComplexAck(m_tx_buffer, offset, BACNET_PDU_TYPE.PDU_TYPE_COMPLEX_ACK, BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_READ_PROPERTY, invoke_id, 0, 0);
             offset += SERVICES.EncodeReadPropertyAcknowledge(m_tx_buffer, offset, object_id, property.propertyIdentifier, property.propertyArrayIndex, value);
-            m_client.Send(m_tx_buffer, m_client.GetHeaderLength(), offset - org_offset, adr, false);
+            m_client.Send(m_tx_buffer, m_client.HeaderLength, offset - org_offset, adr, false, 0);
         }
 
         public void ReadPropertyMultipleResponse(BACNET_ADDRESS adr, byte invoke_id, IList<BACNET_OBJECT_ID> object_ids, IList<ICollection<BACNET_PROPERTY_VALUE>> values)
         {
             Trace.WriteLine("Sending ReadPropertyMultipleResponse ... ", null);
             int offset = 0;
-            offset += m_client.GetHeaderLength();
+            offset += m_client.HeaderLength;
             int org_offset = offset;
             offset += NPDU.Encode(m_tx_buffer, offset, BACNET_NPDU_CONTROL.PriorityNormalMessage, null, null, DEFAULT_HOP_COUNT, BACNET_NETWORK_MESSAGE_TYPE.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, 0);
             offset += APDU.EncodeComplexAck(m_tx_buffer, offset, BACNET_PDU_TYPE.PDU_TYPE_COMPLEX_ACK, BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_READ_PROP_MULTIPLE, invoke_id, 0, 0);
             offset += SERVICES.EncodeReadPropertyMultipleAcknowledge(m_tx_buffer, offset, object_ids, values);
-            m_client.Send(m_tx_buffer, m_client.GetHeaderLength(), offset - org_offset, adr, false);
+            m_client.Send(m_tx_buffer, m_client.HeaderLength, offset - org_offset, adr, false, 0);
         }
 
-        public void ErrorResponse(BACNET_ADDRESS adr, BACNET_CONFIRMED_SERVICE service, byte invoke_id, uint error_class, uint error_code)
+        public void ReadFileResponse(BACNET_ADDRESS adr, byte invoke_id, int position, uint count, bool end_of_file, byte[] file_buffer)
+        {
+            Trace.WriteLine("Sending AtomicReadFileResponse ... ", null);
+            int offset = 0;
+            offset += m_client.HeaderLength;
+            int org_offset = offset;
+            offset += NPDU.Encode(m_tx_buffer, offset, BACNET_NPDU_CONTROL.PriorityNormalMessage, null, null, DEFAULT_HOP_COUNT, BACNET_NETWORK_MESSAGE_TYPE.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, 0);
+            offset += APDU.EncodeComplexAck(m_tx_buffer, offset, BACNET_PDU_TYPE.PDU_TYPE_COMPLEX_ACK, BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_ATOMIC_READ_FILE, invoke_id, 0, 0);
+            offset += SERVICES.EncodeAtomicReadFileAcknowledge(m_tx_buffer, offset, true, end_of_file, position, 1, new byte[][] { file_buffer }, new int[] { (int)count });
+            m_client.Send(m_tx_buffer, m_client.HeaderLength, offset - org_offset, adr, false, 0);
+        }
+
+        public void WriteFileResponse(BACNET_ADDRESS adr, byte invoke_id, int position)
+        {
+            Trace.WriteLine("Sending AtomicWriteFileResponse ... ", null);
+            int offset = 0;
+            offset += m_client.HeaderLength;
+            int org_offset = offset;
+            offset += NPDU.Encode(m_tx_buffer, offset, BACNET_NPDU_CONTROL.PriorityNormalMessage, null, null, DEFAULT_HOP_COUNT, BACNET_NETWORK_MESSAGE_TYPE.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, 0);
+            offset += APDU.EncodeComplexAck(m_tx_buffer, offset, BACNET_PDU_TYPE.PDU_TYPE_COMPLEX_ACK, BACNET_CONFIRMED_SERVICE.SERVICE_CONFIRMED_ATOMIC_WRITE_FILE, invoke_id, 0, 0);
+            offset += SERVICES.EncodeAtomicWriteFileAcknowledge(m_tx_buffer, offset, true, position);
+            m_client.Send(m_tx_buffer, m_client.HeaderLength, offset - org_offset, adr, false, 0);
+        }
+
+        public void ErrorResponse(BACNET_ADDRESS adr, BACNET_CONFIRMED_SERVICE service, byte invoke_id, BACNET_ERROR_CLASS error_class, BACNET_ERROR_CODE error_code)
         {
             Trace.WriteLine("Sending ErrorResponse ... ", null);
             int offset = 0;
-            offset += m_client.GetHeaderLength();
+            offset += m_client.HeaderLength;
             int org_offset = offset;
             offset += NPDU.Encode(m_tx_buffer, offset, BACNET_NPDU_CONTROL.PriorityNormalMessage, null, null, DEFAULT_HOP_COUNT, BACNET_NETWORK_MESSAGE_TYPE.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, 0);
             offset += APDU.EncodeError(m_tx_buffer, offset, BACNET_PDU_TYPE.PDU_TYPE_ERROR, service, invoke_id);
             offset += SERVICES.EncodeError(m_tx_buffer, offset, error_class, error_code);
-            m_client.Send(m_tx_buffer, m_client.GetHeaderLength(), offset - org_offset, adr, false);
+            m_client.Send(m_tx_buffer, m_client.HeaderLength, offset - org_offset, adr, false, 0);
         }
 
         public void SimpleAckResponse(BACNET_ADDRESS adr, BACNET_CONFIRMED_SERVICE service, byte invoke_id)
         {
             Trace.WriteLine("Sending SimpleAckResponse ... ", null);
             int offset = 0;
-            offset += m_client.GetHeaderLength();
+            offset += m_client.HeaderLength;
             int org_offset = offset;
             offset += NPDU.Encode(m_tx_buffer, offset, BACNET_NPDU_CONTROL.PriorityNormalMessage, null, null, DEFAULT_HOP_COUNT, BACNET_NETWORK_MESSAGE_TYPE.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, 0);
             offset += APDU.EncodeSimpleAck(m_tx_buffer, offset, BACNET_PDU_TYPE.PDU_TYPE_SIMPLE_ACK, service, invoke_id);
             offset += SERVICES.EncodeSimpleAck(m_tx_buffer, 0);
-            m_client.Send(m_tx_buffer, m_client.GetHeaderLength(), offset - org_offset, adr, false);
+            m_client.Send(m_tx_buffer, m_client.HeaderLength, offset - org_offset, adr, false, 0);
         }
 
         public void Dispose()

@@ -33,9 +33,7 @@
             this.m_AddUdpButton = new System.Windows.Forms.Button();
             this.m_PortValue = new System.Windows.Forms.NumericUpDown();
             this.label1 = new System.Windows.Forms.Label();
-            this.m_TimeoutValue = new System.Windows.Forms.NumericUpDown();
             this.label3 = new System.Windows.Forms.Label();
-            this.m_RetriesValue = new System.Windows.Forms.NumericUpDown();
             this.label2 = new System.Windows.Forms.Label();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.m_MaxInfoFramesValue = new System.Windows.Forms.NumericUpDown();
@@ -50,16 +48,18 @@
             this.label4 = new System.Windows.Forms.Label();
             this.m_SerialPortCombo = new System.Windows.Forms.ComboBox();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
+            this.m_TimeoutValue = new System.Windows.Forms.NumericUpDown();
+            this.m_RetriesValue = new System.Windows.Forms.NumericUpDown();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.m_PortValue)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.m_TimeoutValue)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.m_RetriesValue)).BeginInit();
             this.groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.m_MaxInfoFramesValue)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.m_MaxMasterValue)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.m_SourceAddressValue)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.m_BaudValue)).BeginInit();
             this.groupBox3.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.m_TimeoutValue)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.m_RetriesValue)).BeginInit();
             this.SuspendLayout();
             // 
             // groupBox1
@@ -89,6 +89,7 @@
             // 
             // m_PortValue
             // 
+            this.m_PortValue.DataBindings.Add(new System.Windows.Forms.Binding("Value", global::Yabe.Properties.Settings.Default, "DefaultUdpPort", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
             this.m_PortValue.Hexadecimal = true;
             this.m_PortValue.Location = new System.Drawing.Point(98, 19);
             this.m_PortValue.Maximum = new decimal(new int[] {
@@ -99,11 +100,7 @@
             this.m_PortValue.Name = "m_PortValue";
             this.m_PortValue.Size = new System.Drawing.Size(60, 20);
             this.m_PortValue.TabIndex = 1;
-            this.m_PortValue.Value = new decimal(new int[] {
-            47808,
-            0,
-            0,
-            0});
+            this.m_PortValue.Value = global::Yabe.Properties.Settings.Default.DefaultUdpPort;
             // 
             // label1
             // 
@@ -114,23 +111,6 @@
             this.label1.TabIndex = 0;
             this.label1.Text = "Port";
             // 
-            // m_TimeoutValue
-            // 
-            this.m_TimeoutValue.Location = new System.Drawing.Point(168, 19);
-            this.m_TimeoutValue.Maximum = new decimal(new int[] {
-            50000,
-            0,
-            0,
-            0});
-            this.m_TimeoutValue.Name = "m_TimeoutValue";
-            this.m_TimeoutValue.Size = new System.Drawing.Size(60, 20);
-            this.m_TimeoutValue.TabIndex = 5;
-            this.m_TimeoutValue.Value = new decimal(new int[] {
-            1000,
-            0,
-            0,
-            0});
-            // 
             // label3
             // 
             this.label3.AutoSize = true;
@@ -139,18 +119,6 @@
             this.label3.Size = new System.Drawing.Size(45, 13);
             this.label3.TabIndex = 4;
             this.label3.Text = "Timeout";
-            // 
-            // m_RetriesValue
-            // 
-            this.m_RetriesValue.Location = new System.Drawing.Point(56, 19);
-            this.m_RetriesValue.Name = "m_RetriesValue";
-            this.m_RetriesValue.Size = new System.Drawing.Size(60, 20);
-            this.m_RetriesValue.TabIndex = 3;
-            this.m_RetriesValue.Value = new decimal(new int[] {
-            3,
-            0,
-            0,
-            0});
             // 
             // label2
             // 
@@ -185,6 +153,7 @@
             // 
             // m_MaxInfoFramesValue
             // 
+            this.m_MaxInfoFramesValue.DataBindings.Add(new System.Windows.Forms.Binding("Value", global::Yabe.Properties.Settings.Default, "DefaultMaxInfoFrames", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
             this.m_MaxInfoFramesValue.Location = new System.Drawing.Point(98, 122);
             this.m_MaxInfoFramesValue.Maximum = new decimal(new int[] {
             255,
@@ -199,11 +168,7 @@
             this.m_MaxInfoFramesValue.Name = "m_MaxInfoFramesValue";
             this.m_MaxInfoFramesValue.Size = new System.Drawing.Size(47, 20);
             this.m_MaxInfoFramesValue.TabIndex = 15;
-            this.m_MaxInfoFramesValue.Value = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
+            this.m_MaxInfoFramesValue.Value = global::Yabe.Properties.Settings.Default.DefaultMaxInfoFrames;
             // 
             // label8
             // 
@@ -216,6 +181,7 @@
             // 
             // m_MaxMasterValue
             // 
+            this.m_MaxMasterValue.DataBindings.Add(new System.Windows.Forms.Binding("Value", global::Yabe.Properties.Settings.Default, "DefaultMaxMaster", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
             this.m_MaxMasterValue.Location = new System.Drawing.Point(98, 96);
             this.m_MaxMasterValue.Maximum = new decimal(new int[] {
             127,
@@ -225,11 +191,7 @@
             this.m_MaxMasterValue.Name = "m_MaxMasterValue";
             this.m_MaxMasterValue.Size = new System.Drawing.Size(47, 20);
             this.m_MaxMasterValue.TabIndex = 13;
-            this.m_MaxMasterValue.Value = new decimal(new int[] {
-            127,
-            0,
-            0,
-            0});
+            this.m_MaxMasterValue.Value = global::Yabe.Properties.Settings.Default.DefaultMaxMaster;
             // 
             // label7
             // 
@@ -242,6 +204,7 @@
             // 
             // m_SourceAddressValue
             // 
+            this.m_SourceAddressValue.DataBindings.Add(new System.Windows.Forms.Binding("Value", global::Yabe.Properties.Settings.Default, "DefaultSourceAddress", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
             this.m_SourceAddressValue.Location = new System.Drawing.Point(98, 70);
             this.m_SourceAddressValue.Maximum = new decimal(new int[] {
             127,
@@ -256,11 +219,7 @@
             this.m_SourceAddressValue.Name = "m_SourceAddressValue";
             this.m_SourceAddressValue.Size = new System.Drawing.Size(47, 20);
             this.m_SourceAddressValue.TabIndex = 11;
-            this.m_SourceAddressValue.Value = new decimal(new int[] {
-            1,
-            0,
-            0,
-            -2147483648});
+            this.m_SourceAddressValue.Value = global::Yabe.Properties.Settings.Default.DefaultSourceAddress;
             // 
             // label6
             // 
@@ -282,6 +241,7 @@
             // 
             // m_BaudValue
             // 
+            this.m_BaudValue.DataBindings.Add(new System.Windows.Forms.Binding("Value", global::Yabe.Properties.Settings.Default, "DefaultBaudrate", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
             this.m_BaudValue.Location = new System.Drawing.Point(98, 44);
             this.m_BaudValue.Maximum = new decimal(new int[] {
             1215752191,
@@ -291,11 +251,7 @@
             this.m_BaudValue.Name = "m_BaudValue";
             this.m_BaudValue.Size = new System.Drawing.Size(68, 20);
             this.m_BaudValue.TabIndex = 9;
-            this.m_BaudValue.Value = new decimal(new int[] {
-            38400,
-            0,
-            0,
-            0});
+            this.m_BaudValue.Value = global::Yabe.Properties.Settings.Default.DefaultBaudrate;
             // 
             // m_AddSerialButton
             // 
@@ -340,6 +296,39 @@
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "General";
             // 
+            // m_TimeoutValue
+            // 
+            this.m_TimeoutValue.DataBindings.Add(new System.Windows.Forms.Binding("Value", global::Yabe.Properties.Settings.Default, "DefaultTimeout", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
+            this.m_TimeoutValue.Increment = new decimal(new int[] {
+            1000,
+            0,
+            0,
+            0});
+            this.m_TimeoutValue.Location = new System.Drawing.Point(168, 19);
+            this.m_TimeoutValue.Maximum = new decimal(new int[] {
+            60000,
+            0,
+            0,
+            0});
+            this.m_TimeoutValue.Minimum = new decimal(new int[] {
+            100,
+            0,
+            0,
+            0});
+            this.m_TimeoutValue.Name = "m_TimeoutValue";
+            this.m_TimeoutValue.Size = new System.Drawing.Size(60, 20);
+            this.m_TimeoutValue.TabIndex = 5;
+            this.m_TimeoutValue.Value = global::Yabe.Properties.Settings.Default.DefaultTimeout;
+            // 
+            // m_RetriesValue
+            // 
+            this.m_RetriesValue.DataBindings.Add(new System.Windows.Forms.Binding("Value", global::Yabe.Properties.Settings.Default, "DefaultRetries", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
+            this.m_RetriesValue.Location = new System.Drawing.Point(56, 19);
+            this.m_RetriesValue.Name = "m_RetriesValue";
+            this.m_RetriesValue.Size = new System.Drawing.Size(60, 20);
+            this.m_RetriesValue.TabIndex = 3;
+            this.m_RetriesValue.Value = global::Yabe.Properties.Settings.Default.DefaultRetries;
+            // 
             // SearchDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -357,8 +346,6 @@
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.m_PortValue)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.m_TimeoutValue)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.m_RetriesValue)).EndInit();
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.m_MaxInfoFramesValue)).EndInit();
@@ -367,6 +354,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.m_BaudValue)).EndInit();
             this.groupBox3.ResumeLayout(false);
             this.groupBox3.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.m_TimeoutValue)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.m_RetriesValue)).EndInit();
             this.ResumeLayout(false);
 
         }

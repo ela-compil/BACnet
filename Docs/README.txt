@@ -48,7 +48,7 @@
 2.1 BACNET/IP OVER UDP
 	- Start up the DemoServer program or another BACnet device.
 	- Start Yabe.
-	- Select "Add device" under "Search".
+	- Select "Add device" under "Functions".
 	- Press the "Add" button in the "BACnet/IP" field.
 	  The program will now add a Udp connection to the "Devices" tree and send
 	  out 3 "WhoIs" broadcasts. If there're any BACnet/IP devices in the 

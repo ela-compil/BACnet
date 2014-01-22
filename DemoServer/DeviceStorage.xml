@@ -16,7 +16,7 @@
           <Value>0</Value>
         </Property>
         <Property Id="PROP_VENDOR_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
-          <Value>BACnet Explorer</Value>
+          <Value>Yabe</Value>
         </Property>
         <Property Id="PROP_VENDOR_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
           <Value>261</Value>
@@ -173,7 +173,7 @@
     <Object Type="OBJECT_ANALOG_INPUT" Instance="3333">
       <Properties>
         <Property Id="PROP_COV_INCREMENT" Tag="BACNET_APPLICATION_TAG_REAL">
-          <Value>4.600603E-41</Value>
+          <Value>1.0</Value>
         </Property>
         <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>This is the yellow analog_input description</Value>
@@ -291,151 +291,38 @@
         </Property>
       </Properties>
     </Object>
-    <Object Type="OBJECT_ANALOG_INPUT" Instance="6">
+	  <Object Type="OBJECT_FILE" Instance="0">
       <Properties>
-        <Property Id="PROP_COV_INCREMENT" Tag="BACNET_APPLICATION_TAG_REAL">
-          <Value>0</Value>
-        </Property>
-        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
-          <Value />
-        </Property>
-        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
-          <Value>0</Value>
-        </Property>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_ANALOG_INPUT: 6</Value>
+          <Value>OBJECT_FILE: 0</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
-          <Value>analog_input (6)</Value>
+          <Value>PerformanceTestFile</Value>
         </Property>
         <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
-          <Value>0</Value>
+          <Value>10</Value>
         </Property>
-        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+        <Property Id="PROP_FILE_TYPE" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>TEXT</Value>
+        </Property>
+        <Property Id="PROP_FILE_SIZE" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>10000000</Value>
+        </Property>
+        <Property Id="PROP_MODIFICATION_DATE" Tag="BACNET_APPLICATION_TAG_DATE">
+          <Value>01-04-2006 00:00:00</Value>
+          <Value>01-01-0001 07:00:03</Value>
+        </Property>
+        <Property Id="PROP_ARCHIVE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
           <Value>False</Value>
         </Property>
-        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_REAL">
-          <Value>0</Value>
+        <Property Id="PROP_READ_ONLY" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
         </Property>
-        <Property Id="PROP_RELIABILITY" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
-          <Value>0</Value>
-        </Property>
-        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
-          <Value>0000</Value>
-        </Property>
-        <Property Id="PROP_UNITS" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
-          <Value>95</Value>
-        </Property>
-      </Properties>
-    </Object>
-    <Object Type="OBJECT_ANALOG_INPUT" Instance="7">
-      <Properties>
-        <Property Id="PROP_COV_INCREMENT" Tag="BACNET_APPLICATION_TAG_REAL">
-          <Value>0</Value>
+        <Property Id="PROP_FILE_ACCESS_METHOD" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>2</Value>
         </Property>
         <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
-          <Value />
-        </Property>
-        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
-          <Value>0</Value>
-        </Property>
-        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_ANALOG_INPUT: 7</Value>
-        </Property>
-        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
-          <Value>analog_input (7)</Value>
-        </Property>
-        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
-          <Value>0</Value>
-        </Property>
-        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
-          <Value>False</Value>
-        </Property>
-        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_REAL">
-          <Value>0</Value>
-        </Property>
-        <Property Id="PROP_RELIABILITY" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
-          <Value>0</Value>
-        </Property>
-        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
-          <Value>0000</Value>
-        </Property>
-        <Property Id="PROP_UNITS" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
-          <Value>95</Value>
-        </Property>
-      </Properties>
-    </Object>
-    <Object Type="OBJECT_ANALOG_INPUT" Instance="8">
-      <Properties>
-        <Property Id="PROP_COV_INCREMENT" Tag="BACNET_APPLICATION_TAG_REAL">
-          <Value>0</Value>
-        </Property>
-        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
-          <Value />
-        </Property>
-        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
-          <Value>0</Value>
-        </Property>
-        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_ANALOG_INPUT: 8</Value>
-        </Property>
-        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
-          <Value>analog_input (8)</Value>
-        </Property>
-        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
-          <Value>0</Value>
-        </Property>
-        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
-          <Value>False</Value>
-        </Property>
-        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_REAL">
-          <Value>0</Value>
-        </Property>
-        <Property Id="PROP_RELIABILITY" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
-          <Value>0</Value>
-        </Property>
-        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
-          <Value>0000</Value>
-        </Property>
-        <Property Id="PROP_UNITS" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
-          <Value>95</Value>
-        </Property>
-      </Properties>
-    </Object>
-    <Object Type="OBJECT_ANALOG_INPUT" Instance="9">
-      <Properties>
-        <Property Id="PROP_COV_INCREMENT" Tag="BACNET_APPLICATION_TAG_REAL">
-          <Value>0</Value>
-        </Property>
-        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
-          <Value />
-        </Property>
-        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
-          <Value>0</Value>
-        </Property>
-        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_ANALOG_INPUT: 9</Value>
-        </Property>
-        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
-          <Value>analog_input (9)</Value>
-        </Property>
-        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
-          <Value>0</Value>
-        </Property>
-        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
-          <Value>False</Value>
-        </Property>
-        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_REAL">
-          <Value>0</Value>
-        </Property>
-        <Property Id="PROP_RELIABILITY" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
-          <Value>0</Value>
-        </Property>
-        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
-          <Value>0000</Value>
-        </Property>
-        <Property Id="PROP_UNITS" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
-          <Value>95</Value>
+          <Value>temp.txt</Value>
         </Property>
       </Properties>
     </Object>

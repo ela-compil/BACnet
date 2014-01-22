@@ -38,17 +38,17 @@ namespace Yabe
 {
     public partial class MainDialog : Form
     {
-        private Dictionary<BacnetClient, BacnetLine> m_devices = new Dictionary<BacnetClient, BacnetLine>();
+        private Dictionary<BacnetClient, BacnetDeviceLine> m_devices = new Dictionary<BacnetClient, BacnetDeviceLine>();
         private Dictionary<string, ListViewItem> m_subscription_index = new Dictionary<string, ListViewItem>();
         private uint m_next_subscription_id = 0;
 
-        private class BacnetLine
+        private class BacnetDeviceLine
         {
             public BacnetClient Line;
             public List<KeyValuePair<BACNET_ADDRESS, uint>> Devices = new List<KeyValuePair<BACNET_ADDRESS,uint>>();
             public HashSet<byte> mstp_sources_seen = new HashSet<byte>();
             public HashSet<byte> mstp_pfm_destinations_seen = new HashSet<byte>();
-            public BacnetLine(BacnetClient comm)
+            public BacnetDeviceLine(BacnetClient comm)
             {
                 Line = comm;
             }
@@ -100,7 +100,7 @@ namespace Yabe
             }
         }
 
-        private void m_client_OnCOVNotification(BacnetClient sender, BACNET_ADDRESS adr, uint subscriberProcessIdentifier, BACNET_OBJECT_ID initiatingDeviceIdentifier, BACNET_OBJECT_ID monitoredObjectIdentifier, uint timeRemaining, byte invoke_id, bool need_confirm, ICollection<BACNET_PROPERTY_VALUE> values)
+        private void OnCOVNotification(BacnetClient sender, BACNET_ADDRESS adr, byte invoke_id, uint subscriberProcessIdentifier, BACNET_OBJECT_ID initiatingDeviceIdentifier, BACNET_OBJECT_ID monitoredObjectIdentifier, uint timeRemaining, bool need_confirm, ICollection<BACNET_PROPERTY_VALUE> values)
         {
             string sub_key = adr.ToString() + ":" + initiatingDeviceIdentifier.instance + ":" + subscriberProcessIdentifier;
             if (m_subscription_index.ContainsKey(sub_key))
@@ -115,7 +115,7 @@ namespace Yabe
                         {
                             case BACNET_PROPERTY_ID.PROP_PRESENT_VALUE:
                                 itm.SubItems[3].Text = ConvertToText(value.value);
-                                itm.SubItems[4].Text = DateTime.Now.ToString();
+                                itm.SubItems[4].Text = DateTime.Now.ToString("HH:mm:ss");
                                 if (itm.SubItems[5].Text == "Not started") itm.SubItems[5].Text = "OK";
                                 break;
                             case BACNET_PROPERTY_ID.PROP_STATUS_FLAGS:
@@ -141,7 +141,7 @@ namespace Yabe
                                 }
                                 break;
                             default:
-                                Trace.TraceInformation("Got " + ((BACNET_PROPERTY_ID)value.property.propertyIdentifier).ToString() + " from device");
+                                //got something else? ignore it
                                 break;
                         }
                     }
@@ -239,7 +239,9 @@ namespace Yabe
 
         private void MainDialog_Load(object sender, EventArgs e)
         {
-
+            //start renew timer at half lifetime
+            m_subscriptionRenewTimer.Interval = ((int)Properties.Settings.Default.Subscriptions_Lifetime / 2) * 1000;
+            m_subscriptionRenewTimer.Enabled = true;
         }
 
         private TreeNode FindCommTreeNode(BacnetClient comm)
@@ -262,7 +264,7 @@ namespace Yabe
             return null;
         }
 
-        void m_client_OnIam(BacnetClient sender, BACNET_ADDRESS adr, uint device_id, uint max_apdu, BACNET_SEGMENTATION segmentation, ushort vendor_id)
+        void OnIam(BacnetClient sender, BACNET_ADDRESS adr, uint device_id, uint max_apdu, BACNET_SEGMENTATION segmentation, ushort vendor_id)
         {
             KeyValuePair<BACNET_ADDRESS, uint> new_entry = new KeyValuePair<BACNET_ADDRESS, uint>(adr, device_id);
             if (!m_devices.ContainsKey(sender)) return;
@@ -317,7 +319,7 @@ namespace Yabe
             if (dlg.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
             {
                 BacnetClient comm = dlg.Result;
-                m_devices.Add(comm, new BacnetLine(comm));
+                m_devices.Add(comm, new BacnetDeviceLine(comm));
 
                 //add to tree
                 TreeNode node = m_DeviceTree.Nodes[0].Nodes.Add(comm.ToString());
@@ -340,8 +342,8 @@ namespace Yabe
                 try
                 {
                     //start BACnet
-                    comm.OnIam += new BacnetClient.IamHandler(m_client_OnIam);
-                    comm.OnCOVNotification += new BacnetClient.COVNotificationHandler(m_client_OnCOVNotification);
+                    comm.OnIam += new BacnetClient.IamHandler(OnIam);
+                    comm.OnCOVNotification += new BacnetClient.COVNotificationHandler(OnCOVNotification);
                     comm.Start();
 
                     //start search
@@ -365,6 +367,8 @@ namespace Yabe
                 }
                 catch (Exception ex)
                 {
+                    m_devices.Remove(comm);
+                    node.Remove();
                     MessageBox.Show(this, "Couldn't start Bacnet communication: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
@@ -375,8 +379,8 @@ namespace Yabe
             try
             {
                 if (this.IsDisposed) return;
-                BacnetLine device_line = null;
-                foreach (BacnetLine l in m_devices.Values)
+                BacnetDeviceLine device_line = null;
+                foreach (BacnetDeviceLine l in m_devices.Values)
                 {
                     if (l.Line.Transport == sender)
                     {
@@ -405,6 +409,7 @@ namespace Yabe
                             }
                         }
 
+                        //update gui
                         this.Invoke((MethodInvoker)delegate
                         {
                             TreeNode node = parent.Nodes.Add("device" + source_address);
@@ -414,6 +419,15 @@ namespace Yabe
                             if (free_node != null) free_node.Remove();
                             m_DeviceTree.ExpandAll();
                         });
+
+                        //detect collision
+                        if (source_address == sender.SourceAddress)
+                        {
+                            this.Invoke((MethodInvoker)delegate
+                            {
+                                MessageBox.Show(this, "Selected source address seems to be occupied!", "Collision detected", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                            });
+                        }
                     }
                     if (frame_type == MSTP_FRAME_TYPE.FRAME_TYPE_POLL_FOR_MASTER && !device_line.mstp_pfm_destinations_seen.Contains(destination_address) && sender.SourceAddress != destination_address)
                     {
@@ -449,7 +463,7 @@ namespace Yabe
             LinkedList<string> deletes = new LinkedList<string>();
             foreach (KeyValuePair<string, ListViewItem> entry in m_subscription_index)
             {
-                SubscribtionIndex sub = (SubscribtionIndex)entry.Value.Tag;
+                Subscribtion sub = (Subscribtion)entry.Value.Tag;
                 if (sub.adr == device.Key)
                 {
                     m_SubscriptionView.Items.Remove(entry.Value);
@@ -465,7 +479,7 @@ namespace Yabe
             LinkedList<string> deletes = new LinkedList<string>();
             foreach (KeyValuePair<string, ListViewItem> entry in m_subscription_index)
             {
-                SubscribtionIndex sub = (SubscribtionIndex)entry.Value.Tag;
+                Subscribtion sub = (Subscribtion)entry.Value.Tag;
                 if (sub.comm == comm)
                 {
                     m_SubscriptionView.Items.Remove(entry.Value);
@@ -519,7 +533,7 @@ namespace Yabe
 
                 BacnetClient comm = (BacnetClient)e.Node.Parent.Tag;
                 BACNET_ADDRESS adr = entry.Value.Key;
-                LinkedList<BACNET_VALUE> value_list;
+                IList<BACNET_VALUE> value_list;
                 uint device_id = entry.Value.Value;
 
                 //unconfigured MSTP?
@@ -529,7 +543,7 @@ namespace Yabe
 
                     //find suggested address
                     byte address = 0xFF;
-                    BacnetLine line = m_devices[comm];
+                    BacnetDeviceLine line = m_devices[comm];
                     lock (line.mstp_sources_seen)
                     {
                         foreach (byte s in line.mstp_pfm_destinations_seen)
@@ -550,8 +564,13 @@ namespace Yabe
                 //update "address space"?
                 this.Cursor = Cursors.WaitCursor;
                 Application.DoEvents();
+                int old_timeout = comm.Timeout;
                 try
                 {
+                    //first connection to MSTP should have much longer timeout ... until we get into the ring
+                    if (comm.Transport is BacnetMstpProtocolTransport)
+                        comm.Timeout = 30000;
+
                     try
                     {
                         if (!comm.ReadPropertyRequest(adr, new BACNET_OBJECT_ID(BACNET_OBJECT_TYPE.OBJECT_DEVICE, device_id), BACNET_PROPERTY_ID.PROP_OBJECT_LIST, out value_list))
@@ -603,6 +622,8 @@ namespace Yabe
                 }
                 finally
                 {
+                    if (comm.Transport is BacnetMstpProtocolTransport)
+                        comm.Timeout = old_timeout;
                     this.Cursor = Cursors.Default;
                 }
             }
@@ -627,6 +648,92 @@ namespace Yabe
             return name;
         }
 
+        private void ReadProperty(BacnetClient comm, BACNET_ADDRESS adr, BACNET_OBJECT_ID object_id, BACNET_PROPERTY_ID property_id, ref IList<BACNET_PROPERTY_VALUE> values)
+        {
+            BACNET_PROPERTY_VALUE new_entry = new BACNET_PROPERTY_VALUE();
+            new_entry.property = new BACNET_PROPERTY_REFERENCE((uint)property_id, System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL);
+            IList<BACNET_VALUE> value;
+            try
+            {
+                if (!comm.ReadPropertyRequest(adr, object_id, property_id, out value))
+                    return;     //ignore
+            }
+            catch
+            {
+                return;         //ignore
+            }
+            new_entry.value = value;
+            values.Add(new_entry);
+        }
+
+        private bool ReadAllPropertiesBySingle(BacnetClient comm, BACNET_ADDRESS adr, BACNET_OBJECT_ID object_id, out ICollection<BACNET_PROPERTY_VALUE> value_list)
+        {
+            value_list = null;
+
+            IList<BACNET_PROPERTY_VALUE> values = new List<BACNET_PROPERTY_VALUE>();
+
+            int old_retries = comm.Retries;
+            comm.Retries = 1;       //we don't want to spend too much time on non existing properties
+            try
+            {
+                if (object_id.type == BACNET_OBJECT_TYPE.OBJECT_DEVICE)
+                {
+                    ReadProperty(comm, adr, object_id, BACNET_PROPERTY_ID.PROP_OBJECT_IDENTIFIER, ref values);
+                    ReadProperty(comm, adr, object_id, BACNET_PROPERTY_ID.PROP_OBJECT_NAME, ref values);
+                    ReadProperty(comm, adr, object_id, BACNET_PROPERTY_ID.PROP_OBJECT_TYPE, ref values);
+                    ReadProperty(comm, adr, object_id, BACNET_PROPERTY_ID.PROP_SYSTEM_STATUS, ref values);
+                    ReadProperty(comm, adr, object_id, BACNET_PROPERTY_ID.PROP_VENDOR_NAME, ref values);
+                    ReadProperty(comm, adr, object_id, BACNET_PROPERTY_ID.PROP_VENDOR_IDENTIFIER, ref values);
+                    ReadProperty(comm, adr, object_id, BACNET_PROPERTY_ID.PROP_MODEL_NAME, ref values);
+                    ReadProperty(comm, adr, object_id, BACNET_PROPERTY_ID.PROP_FIRMWARE_REVISION, ref values);
+                    ReadProperty(comm, adr, object_id, BACNET_PROPERTY_ID.PROP_APPLICATION_SOFTWARE_VERSION, ref values);
+                    ReadProperty(comm, adr, object_id, BACNET_PROPERTY_ID.PROP_LOCATION, ref values);
+                    ReadProperty(comm, adr, object_id, BACNET_PROPERTY_ID.PROP_DESCRIPTION, ref values);
+                    ReadProperty(comm, adr, object_id, BACNET_PROPERTY_ID.PROP_PROTOCOL_VERSION, ref values);
+                    ReadProperty(comm, adr, object_id, BACNET_PROPERTY_ID.PROP_PROTOCOL_REVISION, ref values);
+                    ReadProperty(comm, adr, object_id, BACNET_PROPERTY_ID.PROP_PROTOCOL_SERVICES_SUPPORTED, ref values);
+                    ReadProperty(comm, adr, object_id, BACNET_PROPERTY_ID.PROP_PROTOCOL_OBJECT_TYPES_SUPPORTED, ref values);
+                    ReadProperty(comm, adr, object_id, BACNET_PROPERTY_ID.PROP_OBJECT_LIST, ref values);
+                    ReadProperty(comm, adr, object_id, BACNET_PROPERTY_ID.PROP_MAX_APDU_LENGTH_ACCEPTED, ref values);
+                    ReadProperty(comm, adr, object_id, BACNET_PROPERTY_ID.PROP_SEGMENTATION_SUPPORTED, ref values);
+                    ReadProperty(comm, adr, object_id, BACNET_PROPERTY_ID.PROP_MAX_SEGMENTS_ACCEPTED, ref values);
+                    ReadProperty(comm, adr, object_id, BACNET_PROPERTY_ID.PROP_VT_CLASSES_SUPPORTED, ref values);
+                    ReadProperty(comm, adr, object_id, BACNET_PROPERTY_ID.PROP_ACTIVE_VT_SESSIONS, ref values);
+                    ReadProperty(comm, adr, object_id, BACNET_PROPERTY_ID.PROP_LOCAL_DATE, ref values);
+                    ReadProperty(comm, adr, object_id, BACNET_PROPERTY_ID.PROP_LOCAL_DATE, ref values);
+                    ReadProperty(comm, adr, object_id, BACNET_PROPERTY_ID.PROP_UTC_OFFSET, ref values);
+                    ReadProperty(comm, adr, object_id, BACNET_PROPERTY_ID.PROP_DAYLIGHT_SAVINGS_STATUS, ref values);
+                    ReadProperty(comm, adr, object_id, BACNET_PROPERTY_ID.PROP_APDU_SEGMENT_TIMEOUT, ref values);
+                    ReadProperty(comm, adr, object_id, BACNET_PROPERTY_ID.PROP_APDU_TIMEOUT, ref values);
+                    ReadProperty(comm, adr, object_id, BACNET_PROPERTY_ID.PROP_NUMBER_OF_APDU_RETRIES, ref values);
+                    ReadProperty(comm, adr, object_id, BACNET_PROPERTY_ID.PROP_LIST_OF_SESSION_KEYS, ref values);
+                    ReadProperty(comm, adr, object_id, BACNET_PROPERTY_ID.PROP_TIME_SYNCHRONIZATION_RECIPIENTS, ref values);
+                    ReadProperty(comm, adr, object_id, BACNET_PROPERTY_ID.PROP_MAX_MASTER, ref values);
+                    ReadProperty(comm, adr, object_id, BACNET_PROPERTY_ID.PROP_MAX_INFO_FRAMES, ref values);
+                    ReadProperty(comm, adr, object_id, BACNET_PROPERTY_ID.PROP_DEVICE_ADDRESS_BINDING, ref values);
+                    ReadProperty(comm, adr, object_id, BACNET_PROPERTY_ID.PROP_DATABASE_REVISION, ref values);
+                    ReadProperty(comm, adr, object_id, BACNET_PROPERTY_ID.PROP_CONFIGURATION_FILES, ref values);
+                    ReadProperty(comm, adr, object_id, BACNET_PROPERTY_ID.PROP_LAST_RESTORE_TIME, ref values);
+                    ReadProperty(comm, adr, object_id, BACNET_PROPERTY_ID.PROP_BACKUP_FAILURE_TIMEOUT, ref values);
+                    ReadProperty(comm, adr, object_id, BACNET_PROPERTY_ID.PROP_ACTIVE_COV_SUBSCRIPTIONS, ref values);
+                    ReadProperty(comm, adr, object_id, BACNET_PROPERTY_ID.PROP_SLAVE_PROXY_ENABLE, ref values);
+                    ReadProperty(comm, adr, object_id, BACNET_PROPERTY_ID.PROP_MANUAL_SLAVE_ADDRESS_BINDING, ref values);
+                    ReadProperty(comm, adr, object_id, BACNET_PROPERTY_ID.PROP_AUTO_SLAVE_DISCOVERY, ref values);
+                    ReadProperty(comm, adr, object_id, BACNET_PROPERTY_ID.PROP_SLAVE_ADDRESS_BINDING, ref values);
+                    ReadProperty(comm, adr, object_id, BACNET_PROPERTY_ID.PROP_PROFILE_NAME, ref values);
+                }
+                else
+                    throw new NotImplementedException("Haven't got to this yet");
+            }
+            finally
+            {
+                comm.Retries = old_retries;
+            }
+
+            value_list = values;
+            return true;
+        }
+
         private void UpdateGrid(TreeNode selected_node)
         {
             this.Cursor = Cursors.WaitCursor;
@@ -644,40 +751,60 @@ namespace Yabe
                 {
                     m_DataGrid.SelectedObject = null;   //clear
 
-                    //fetch properties. This might not be supported by ReadMultiple. (Too bad)
                     BACNET_OBJECT_ID object_id = (BACNET_OBJECT_ID)((BACNET_VALUE)selected_node.Tag).Value;
                     BACNET_PROPERTY_REFERENCE[] properties = new BACNET_PROPERTY_REFERENCE[] { new BACNET_PROPERTY_REFERENCE((uint)BACNET_PROPERTY_ID.PROP_ALL, System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL) };
                     ICollection<BACNET_PROPERTY_VALUE> multi_value_list;
                     try
                     {
+                        //fetch properties. This might not be supported (ReadMultiple) or the response might be too long.
                         if (!comm.ReadPropertyMultipleRequest(adr, object_id, properties, out multi_value_list))
                         {
                             MessageBox.Show(this, "Couldn't fetch properties", "Communication Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                             return;
                         }
                     }
-                    catch (Exception ex)
+                    catch (Exception)
                     {
-                        MessageBox.Show(this, "Error during read: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        return;
+                        Trace.TraceWarning("Couldn't perform ReadPropertyMultiple ... Trying ReadProperty instead");
+                        Application.DoEvents();
+                        try
+                        {
+                            //fetch properties with single calls
+                            if (!ReadAllPropertiesBySingle(comm, adr, object_id, out multi_value_list))
+                            {
+                                MessageBox.Show(this, "Couldn't fetch properties", "Communication Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                return;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show(this, "Error during read: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            return;
+                        }
                     }
 
                     //update grid
                     Utilities.DynamicPropertyGridContainer bag = new Utilities.DynamicPropertyGridContainer();
                     foreach (BACNET_PROPERTY_VALUE p_value in multi_value_list)
                     {
-                        BACNET_VALUE[] b_values = new BACNET_VALUE[p_value.value.Count];
-                        p_value.value.CopyTo(b_values, 0);
                         object value = null;
-                        if (b_values.Length > 1)
+                        BACNET_VALUE[] b_values = null;
+                        if (p_value.value != null)
                         {
-                            object[] arr = new object[b_values.Length];
-                            for (int j = 0; j < arr.Length; j++)
-                                arr[j] = b_values[j].Value;
-                            value = arr;
+                            b_values = new BACNET_VALUE[p_value.value.Count];
+                            p_value.value.CopyTo(b_values, 0);
+                            if (b_values.Length > 1)
+                            {
+                                object[] arr = new object[b_values.Length];
+                                for (int j = 0; j < arr.Length; j++)
+                                    arr[j] = b_values[j].Value;
+                                value = arr;
+                            }
+                            else if (b_values.Length == 1)
+                                value = b_values[0].Value;
                         }
-                        else if (b_values.Length == 1)
-                            value = b_values[0].Value;
+                        else
+                            b_values = new BACNET_VALUE[0];
                         bag.Add(new Utilities.CustomProperty(GetNiceName((BACNET_PROPERTY_ID)p_value.property.propertyIdentifier), value, value != null ? value.GetType() : typeof(string), false, "", b_values.Length > 0 ? b_values[0].Tag.ToString() : "", null, p_value.property));
                     }
                     m_DataGrid.SelectedObject = bag;
@@ -765,18 +892,37 @@ namespace Yabe
             }
         }
 
+        private int ReadFileSize(BacnetClient comm, BACNET_ADDRESS adr, BACNET_OBJECT_ID object_id)
+        {
+            IList<BACNET_VALUE> value;
+            if (!comm.ReadPropertyRequest(adr, object_id, BACNET_PROPERTY_ID.PROP_FILE_SIZE, out value))
+                return -1;
+            if (value == null || value.Count == 0)
+                return -1;
+            return (int)Convert.ChangeType(value[0].Value, typeof(int));
+        }
+
         private void downloadFileToolStripMenuItem_Click(object sender, EventArgs e)
         {
             this.Cursor = Cursors.WaitCursor;
             try
             {
                 //fetch end point
-                if (m_DeviceTree.SelectedNode == null) return;
-                else if (m_DeviceTree.SelectedNode.Tag == null) return;
-                else if (!(m_DeviceTree.SelectedNode.Tag is KeyValuePair<BACNET_ADDRESS, uint>)) return;
-                KeyValuePair<BACNET_ADDRESS, uint> entry = (KeyValuePair<BACNET_ADDRESS, uint>)m_DeviceTree.SelectedNode.Tag;
-                BACNET_ADDRESS adr = entry.Key;
-                BacnetClient comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag;
+                BacnetClient comm = null;
+                BACNET_ADDRESS adr;
+                try
+                {
+                    if (m_DeviceTree.SelectedNode == null) return;
+                    else if (m_DeviceTree.SelectedNode.Tag == null) return;
+                    else if (!(m_DeviceTree.SelectedNode.Tag is KeyValuePair<BACNET_ADDRESS, uint>)) return;
+                    KeyValuePair<BACNET_ADDRESS, uint> entry = (KeyValuePair<BACNET_ADDRESS, uint>)m_DeviceTree.SelectedNode.Tag;
+                    adr = entry.Key;
+                    comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag;
+                }
+                finally
+                {
+                    if (comm == null) MessageBox.Show(this, "This is not a valid node", "Wrong node", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
 
                 //fetch object_id
                 if (
@@ -807,13 +953,30 @@ namespace Yabe
                     return;
                 }
 
+                //get file size
+                int filesize = ReadFileSize(comm, adr, object_id);
+                if (filesize < 0)
+                {
+                    MessageBox.Show(this, "Couldn't read file size", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                //display progress
+                ProgressDialog progress = new ProgressDialog();
+                progress.Text = "Downloading file ...";
+                progress.Label = "0 of " + (filesize / 1024) + " kb ... (0.0 kb/s)";
+                progress.Maximum = filesize;
+                progress.Show(this);
+
                 int position = 0;
-                uint count = (uint)comm.Transport.GetMaxBufferLength() - 7;
+                uint count = (uint)comm.GetFileBufferMaxSize();
                 bool end_of_file = false;
                 byte[] buffer = new byte[count];
                 try
                 {
-                    while (!end_of_file)
+                    DateTime start = DateTime.Now;
+                    double kb_per_sec = 0;
+                    while (!end_of_file && !progress.IsCancelled)
                     {
                         //read from device
                         if (!comm.ReadFileRequest(adr, object_id, ref position, ref count, out end_of_file, buffer, 0))
@@ -824,7 +987,13 @@ namespace Yabe
                         position += (int)count;
 
                         //write to file
-                        fs.Write(buffer, 0, (int)count);
+                        if (count > 0)
+                        {
+                            fs.Write(buffer, 0, (int)count);
+                            kb_per_sec = (position/1024) / (DateTime.Now - start).TotalSeconds;
+                            progress.Increment((int)count);
+                            progress.Label = string.Format((position/1024) + " of " + (filesize/1024) + " kb ... ({0:F1} kb/s)", kb_per_sec);
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -834,6 +1003,7 @@ namespace Yabe
                 }
                 finally
                 {
+                    progress.Hide();
                     fs.Close();
                 }
             }
@@ -852,12 +1022,21 @@ namespace Yabe
             try
             {
                 //fetch end point
-                if (m_DeviceTree.SelectedNode == null) return;
-                else if (m_DeviceTree.SelectedNode.Tag == null) return;
-                else if (!(m_DeviceTree.SelectedNode.Tag is KeyValuePair<BACNET_ADDRESS, uint>)) return;
-                KeyValuePair<BACNET_ADDRESS, uint> entry = (KeyValuePair<BACNET_ADDRESS, uint>)m_DeviceTree.SelectedNode.Tag;
-                BACNET_ADDRESS adr = entry.Key;
-                BacnetClient comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag;
+                BacnetClient comm = null;
+                BACNET_ADDRESS adr;
+                try
+                {
+                    if (m_DeviceTree.SelectedNode == null) return;
+                    else if (m_DeviceTree.SelectedNode.Tag == null) return;
+                    else if (!(m_DeviceTree.SelectedNode.Tag is KeyValuePair<BACNET_ADDRESS, uint>)) return;
+                    KeyValuePair<BACNET_ADDRESS, uint> entry = (KeyValuePair<BACNET_ADDRESS, uint>)m_DeviceTree.SelectedNode.Tag;
+                    adr = entry.Key;
+                    comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag;
+                }
+                finally
+                {
+                    if (comm == null) MessageBox.Show(this, "This is not a valid node", "Wrong node", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
 
                 //fetch object_id
                 if (
@@ -887,15 +1066,25 @@ namespace Yabe
                     MessageBox.Show(this, "Couldn't open file: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
+                int filesize = (int)(new System.IO.FileInfo(filename)).Length;
+
+                //display progress
+                ProgressDialog progress = new ProgressDialog();
+                progress.Text = "Uploading file ...";
+                progress.Label = "0 of " + (filesize / 1024) + " kb ... (0.0 kb/s)";
+                progress.Maximum = filesize;
+                progress.Show(this);
 
                 try
                 {
                     int position = 0;
-                    int count = (int)comm.Transport.GetMaxBufferLength() - 7;
+                    int count = comm.GetFileBufferMaxSize();
                     byte[] buffer = new byte[count];
-                    while (count > 0)
+                    DateTime start = DateTime.Now;
+                    double kb_per_sec = 0;
+                    while (count > 0 && !progress.IsCancelled)
                     {
-                        count = fs.Read(buffer, position, count);
+                        count = fs.Read(buffer, 0, count);
                         if (count <= 0) continue;
 
                         if (!comm.WriteFileRequest(adr, object_id, ref position, count, buffer))
@@ -904,7 +1093,13 @@ namespace Yabe
                             return;
                         }
 
-                        position += count;
+                        if (count > 0)
+                        {
+                            position += count;
+                            kb_per_sec = (position / 1024) / (DateTime.Now - start).TotalSeconds;
+                            progress.Increment((int)count);
+                            progress.Label = string.Format((position / 1024) + " of " + (filesize / 1024) + " kb ... ({0:F1} kb/s)", kb_per_sec);
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -914,6 +1109,7 @@ namespace Yabe
                 }
                 finally
                 {
+                    progress.Hide();
                     fs.Close();
                 }
             }
@@ -941,10 +1137,13 @@ namespace Yabe
             this.Cursor = Cursors.WaitCursor;
             try
             {
-                LinkedList<BACNET_VALUE> value;
+                IList<BACNET_VALUE> value;
                 if (!comm.ReadPropertyRequest(adr, object_id, BACNET_PROPERTY_ID.PROP_OBJECT_NAME, out value))
                     return "[Timed out]";
-                return value.First.Value.Value.ToString();
+                if (value == null || value.Count == 0)
+                    return "";
+                else
+                    return value[0].Value.ToString();
             }
             catch (Exception ex)
             {
@@ -956,20 +1155,60 @@ namespace Yabe
             }
         }
 
-        private class SubscribtionIndex
+        private class Subscribtion
         {
             public BacnetClient comm;
             public BACNET_ADDRESS adr;
             public BACNET_OBJECT_ID object_id;
             public string sub_key;
             public uint subscribe_id;
-            public SubscribtionIndex(BacnetClient comm, BACNET_ADDRESS adr, BACNET_OBJECT_ID object_id, string sub_key, uint subscribe_id)
+            public Subscribtion(BacnetClient comm, BACNET_ADDRESS adr, BACNET_OBJECT_ID object_id, string sub_key, uint subscribe_id)
             {
                 this.comm = comm;
                 this.adr = adr;
                 this.object_id = object_id;
                 this.sub_key = sub_key;
                 this.subscribe_id = subscribe_id;
+            }
+        }
+
+        private void CreateSubscription(BacnetClient comm, BACNET_ADDRESS adr, uint device_id, BACNET_OBJECT_ID object_id)
+        {
+            this.Cursor = Cursors.WaitCursor;
+            try
+            {
+                //add to list
+                ListViewItem itm = m_SubscriptionView.Items.Add(adr + " - " + device_id);
+                itm.SubItems.Add(object_id.ToString());
+                itm.SubItems.Add(GetObjectName(comm, adr, object_id));   //name
+                itm.SubItems.Add("");   //value
+                itm.SubItems.Add("");   //time
+                itm.SubItems.Add("Not started");   //status
+
+                //add to index
+                m_next_subscription_id++;
+                string sub_key = adr.ToString() + ":" + device_id + ":" + m_next_subscription_id;
+                itm.Tag = new Subscribtion(comm, adr, object_id, sub_key, m_next_subscription_id);
+                m_subscription_index.Add(sub_key, itm);
+
+                //add to device
+                try
+                {
+                    if (!comm.SubscribeCOVRequest(adr, object_id, m_next_subscription_id, false, Properties.Settings.Default.Subscriptions_IssueConfirmedNotifies, Properties.Settings.Default.Subscriptions_Lifetime))
+                    {
+                        MessageBox.Show(this, "Couldn't subscribe", "Communication Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(this, "Error during subscribe: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+            }
+            finally
+            {
+                this.Cursor = Cursors.Default;
             }
         }
 
@@ -990,34 +1229,8 @@ namespace Yabe
                 if (node.Tag == null || !(node.Tag is BACNET_VALUE) || !(((BACNET_VALUE)node.Tag).Value is BACNET_OBJECT_ID)) return;
                 BACNET_OBJECT_ID object_id = (BACNET_OBJECT_ID)((BACNET_VALUE)node.Tag).Value;
 
-                //add to list
-                ListViewItem itm = m_SubscriptionView.Items.Add(entry.Key + " - " + entry.Value);
-                itm.SubItems.Add(object_id.ToString());
-                itm.SubItems.Add(GetObjectName(comm, adr, object_id));   //name
-                itm.SubItems.Add("");   //value
-                itm.SubItems.Add("");   //time
-                itm.SubItems.Add("Not started");   //status
-
-                //add to index
-                m_next_subscription_id++;
-                string sub_key = adr.ToString() + ":" + entry.Value + ":" + m_next_subscription_id;
-                itm.Tag = new SubscribtionIndex(comm, adr, object_id, sub_key, m_next_subscription_id);
-                m_subscription_index.Add(sub_key, itm);
-
-                //add to device
-                try
-                {
-                    if (!comm.SubscribeCOVRequest(adr, object_id, m_next_subscription_id, false, false))      //should we use confirmed or unconfirmed events?
-                    {
-                        MessageBox.Show(this, "Couldn't subscribe", "Communication Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        return;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(this, "Error during subscribe: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
+                //create
+                CreateSubscription(comm, adr, entry.Value, object_id);
             }
         }
 
@@ -1047,13 +1260,13 @@ namespace Yabe
             if (m_SubscriptionView.SelectedItems.Count == 1)
             {
                 ListViewItem itm = m_SubscriptionView.SelectedItems[0];
-                SubscribtionIndex sub = (SubscribtionIndex)itm.Tag;
+                Subscribtion sub = (Subscribtion)itm.Tag;
                 if (m_subscription_index.ContainsKey(sub.sub_key))
                 {
                     //remove from device
                     try
                     {
-                        if (!sub.comm.SubscribeCOVRequest(sub.adr, sub.object_id, sub.subscribe_id, true, false))
+                        if (!sub.comm.SubscribeCOVRequest(sub.adr, sub.object_id, sub.subscribe_id, true, false, 0))
                         {
                             MessageBox.Show(this, "Couldn't unsubscribe", "Communication Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                             return;
@@ -1102,6 +1315,117 @@ namespace Yabe
             SettingsDialog dlg = new SettingsDialog();
             dlg.SelectedObject = Properties.Settings.Default;
             dlg.ShowDialog(this);
+        }
+
+        /// <summary>
+        /// This will download all values from a given device and store it in a xml format, fit for the DemoServer
+        /// This can be a good way to test serializing
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void exportDeviceDBToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            //fetch end point
+            BacnetClient comm = null;
+            BACNET_ADDRESS adr;
+            uint device_id;
+            try
+            {
+                if (m_DeviceTree.SelectedNode == null) return;
+                else if (m_DeviceTree.SelectedNode.Tag == null) return;
+                else if (!(m_DeviceTree.SelectedNode.Tag is KeyValuePair<BACNET_ADDRESS, uint>)) return;
+                KeyValuePair<BACNET_ADDRESS, uint> entry = (KeyValuePair<BACNET_ADDRESS, uint>)m_DeviceTree.SelectedNode.Tag;
+                adr = entry.Key;
+                device_id = entry.Value;
+                comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag;
+            }
+            finally
+            {
+                if (comm == null) MessageBox.Show(this, "Please select a device node", "Wrong node", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+
+            //select file to store
+            SaveFileDialog dlg = new SaveFileDialog();
+            dlg.Filter = "xml|*.xml";
+            if (dlg.ShowDialog(this) != System.Windows.Forms.DialogResult.OK) return;
+
+            this.Cursor = Cursors.WaitCursor;
+            Application.DoEvents();
+            try
+            {
+                //get all objects
+                System.IO.BACnet.Storage.DeviceStorage storage = new System.IO.BACnet.Storage.DeviceStorage();
+                IList<BACNET_VALUE> value_list;
+                comm.ReadPropertyRequest(adr, new BACNET_OBJECT_ID(BACNET_OBJECT_TYPE.OBJECT_DEVICE, device_id), BACNET_PROPERTY_ID.PROP_OBJECT_LIST, out value_list);
+                LinkedList<BACNET_OBJECT_ID> object_list = new LinkedList<BACNET_OBJECT_ID>();
+                foreach (BACNET_VALUE value in value_list)
+                    object_list.AddLast((BACNET_OBJECT_ID)value.Value);
+
+                foreach (BACNET_OBJECT_ID object_id in object_list)
+                {
+                    //read all properties
+                    ICollection<BACNET_PROPERTY_VALUE> multi_value_list;
+                    BACNET_PROPERTY_REFERENCE[] properties = new BACNET_PROPERTY_REFERENCE[] { new BACNET_PROPERTY_REFERENCE((uint)BACNET_PROPERTY_ID.PROP_ALL, System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL) };
+                    comm.ReadPropertyMultipleRequest(adr, object_id, properties, out multi_value_list);
+
+                    //store
+                    foreach (BACNET_PROPERTY_VALUE value in multi_value_list)
+                    {
+                        storage.WriteProperty(object_id, (BACNET_PROPERTY_ID)value.property.propertyIdentifier, value.property.propertyArrayIndex, value.value, true);
+                    }
+                }
+
+                //save to disk
+                storage.Save(dlg.FileName);
+            }
+            finally
+            {
+                this.Cursor = Cursors.Default;
+            }
+        }
+
+        private void subscribeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            //fetch end point
+            if (m_DeviceTree.SelectedNode == null) return;
+            else if (m_DeviceTree.SelectedNode.Tag == null) return;
+            else if (!(m_DeviceTree.SelectedNode.Tag is KeyValuePair<BACNET_ADDRESS, uint>)) return;
+            KeyValuePair<BACNET_ADDRESS, uint> entry = (KeyValuePair<BACNET_ADDRESS, uint>)m_DeviceTree.SelectedNode.Tag;
+            BACNET_ADDRESS adr = entry.Key;
+            BacnetClient comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag;
+
+            //fetch object_id
+            if (
+                m_AddressSpaceTree.SelectedNode == null ||
+                !(m_AddressSpaceTree.SelectedNode.Tag is BACNET_VALUE) ||
+                !(((BACNET_VALUE)m_AddressSpaceTree.SelectedNode.Tag).Value is BACNET_OBJECT_ID))
+            {
+                MessageBox.Show(this, "The marked object is not an object", "Not an object", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return;
+            }
+            BACNET_OBJECT_ID object_id = (BACNET_OBJECT_ID)((BACNET_VALUE)m_AddressSpaceTree.SelectedNode.Tag).Value;
+
+            //create 
+            CreateSubscription(comm, adr, entry.Value, object_id);
+        }
+
+        private void m_subscriptionRenewTimer_Tick(object sender, EventArgs e)
+        {
+            foreach (ListViewItem itm in m_subscription_index.Values)
+            {
+                try
+                {
+                    Subscribtion sub = (Subscribtion)itm.Tag;
+                    if (!sub.comm.SubscribeCOVRequest(sub.adr, sub.object_id, sub.subscribe_id, false, Properties.Settings.Default.Subscriptions_IssueConfirmedNotifies, Properties.Settings.Default.Subscriptions_Lifetime))
+                    {
+                        Trace.TraceWarning("Couldn't renew subscription " + sub.subscribe_id);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Trace.TraceError("Exception during renew subscription: " + ex.Message);
+                }
+            }
         }
     }
 }

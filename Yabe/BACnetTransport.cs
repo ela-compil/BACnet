@@ -37,13 +37,14 @@ namespace System.IO.BACnet
     public interface IBacnetTransport : IDisposable
     {
         event MessageRecievedHandler MessageRecieved;
-        int Send(byte[] buffer, int offset, int data_length, BACNET_ADDRESS address, bool wait_for_transmission);
+        int Send(byte[] buffer, int offset, int data_length, BACNET_ADDRESS address, bool wait_for_transmission, int timeout);
         BACNET_ADDRESS GetBroadcastAddress();
         AddressTypes Type { get; }
         void Start();
 
-        int GetHeaderLength();
-        int GetMaxBufferLength();
+        int HeaderLength { get; }
+        int MaxBufferLength { get; }
+        BACNET_MAX_ADPU MaxAdpuLength { get; }
     }
 
     /// <summary>
@@ -62,10 +63,14 @@ namespace System.IO.BACnet
         public int SharedPort { get { return m_port; } }
         public int ExclusivePort { get { return ((Net.IPEndPoint)m_exclusive_conn.Client.LocalEndPoint).Port; } }
 
+        public int HeaderLength { get { return BVLC.BVLC_HEADER_LENGTH; } }
+        public int MaxBufferLength { get { return BVLC.MSTP_MAX_NDPU + BVLC.BVLC_HEADER_LENGTH; } }
+        public BACNET_MAX_ADPU MaxAdpuLength { get { return BVLC.BVLC_MAX_APDU; } }
+
         public BacnetIpUdpProtocolTransport(int port, bool use_exclusive_port = false)
         {
             m_port = port;
-            m_local_buffer = new byte[GetMaxBufferLength()];
+            m_local_buffer = new byte[MaxBufferLength];
             m_exclusive_port = use_exclusive_port;
         }
 
@@ -186,12 +191,12 @@ namespace System.IO.BACnet
             return ret;
         }
 
-        public int Send(byte[] buffer, int offset, int data_length, BACNET_ADDRESS address, bool wait_for_transmission)
+        public int Send(byte[] buffer, int offset, int data_length, BACNET_ADDRESS address, bool wait_for_transmission, int timeout)
         {
             if (m_exclusive_conn == null) return 0;
 
             //add header
-            int full_length = data_length + GetHeaderLength();
+            int full_length = data_length + HeaderLength;
             BVLC.Encode(buffer, offset - BVLC.BVLC_HEADER_LENGTH, address.net == 0xFFFF ? BACNET_BVLC_FUNCTION.BVLC_ORIGINAL_BROADCAST_NPDU : BACNET_BVLC_FUNCTION.BVLC_ORIGINAL_UNICAST_NPDU, full_length);
 
             //create end point
@@ -206,6 +211,7 @@ namespace System.IO.BACnet
         {
             byte[] tmp1 = ep.Address.GetAddressBytes();
             byte[] tmp2 = BitConverter.GetBytes((ushort)ep.Port);
+            Array.Reverse(tmp2);
             Array.Resize<byte>(ref tmp1, tmp1.Length + tmp2.Length);
             Array.Copy(tmp2, 0, tmp1, tmp1.Length - tmp2.Length, tmp2.Length);
             addr = new BACNET_ADDRESS(AddressTypes.IP, 0, tmp1);
@@ -214,7 +220,7 @@ namespace System.IO.BACnet
         private static void Convert(BACNET_ADDRESS addr, out System.Net.IPEndPoint ep)
         {
             long ip_address = BitConverter.ToUInt32(addr.adr, 0);
-            ushort port = BitConverter.ToUInt16(addr.adr, 4);
+            ushort port = (ushort)((addr.adr[4] << 8) | (addr.adr[5] << 0));
             ep = new System.Net.IPEndPoint(ip_address, (int)port);
         }
 
@@ -225,16 +231,6 @@ namespace System.IO.BACnet
             Convert(ep, out broadcast);
             broadcast.net = 0xFFFF;
             return broadcast;
-        }
-
-        public int GetHeaderLength()
-        {
-            return BVLC.BVLC_HEADER_LENGTH;
-        }
-
-        public int GetMaxBufferLength()
-        {
-            return BVLC.MSTP_MAX_NDPU + BVLC.BVLC_HEADER_LENGTH;
         }
 
         public void Dispose()
@@ -607,6 +603,7 @@ namespace System.IO.BACnet
         private byte m_retry_token = 1;
         private byte m_reply_source;
         private System.Threading.ManualResetEvent m_reply_mutex = new Threading.ManualResetEvent(false);
+        private MessageFrame m_reply = null;
         private LinkedList<MessageFrame> m_send_queue = new LinkedList<MessageFrame>();
 
         public const int T_FRAME_ABORT = 80;        //ms    The minimum time without a DataAvailable or ReceiveError event within a frame before a receiving node may discard the frame
@@ -622,6 +619,10 @@ namespace System.IO.BACnet
         public byte MaxInfoFrames { get { return m_max_info_frames; } set { m_max_info_frames = value; } }
         public bool StateLogging { get; set; }
 
+        public int HeaderLength { get { return MSTP.MSTP_HEADER_LENGTH; } }
+        public int MaxBufferLength { get { return MSTP.MSTP_MAX_NDPU + MSTP.MSTP_HEADER_LENGTH + 2 + 1; } }
+        public BACNET_MAX_ADPU MaxAdpuLength { get { return MSTP.MSTP_MAX_APDU; } }
+
         public delegate void FrameRecievedHandler(BacnetMstpProtocolTransport sender, MSTP_FRAME_TYPE frame_type, byte destination_address, byte source_address, int msg_length);
         public event MessageRecievedHandler MessageRecieved;
         public event FrameRecievedHandler FrameRecieved;
@@ -631,7 +632,7 @@ namespace System.IO.BACnet
             m_max_info_frames = max_info_frames;
             m_TS = source_address;
             m_max_master = max_master;
-            m_local_buffer = new byte[MSTP.MSTP_MAX_APDU];
+            m_local_buffer = new byte[MaxBufferLength];
             m_port = transport;
         }
 
@@ -1071,6 +1072,7 @@ namespace System.IO.BACnet
                                     if (frame_type == MSTP_FRAME_TYPE.FRAME_TYPE_BACNET_DATA_EXPECTING_REPLY)
                                     {
                                         m_reply_source = source_address;
+                                        m_reply = null;
                                         m_reply_mutex.Reset();
                                         return StateChanges.ReceivedDataNeedingReply;
                                     }
@@ -1112,8 +1114,8 @@ namespace System.IO.BACnet
         {
             if (m_reply_mutex.WaitOne(T_REPLY_DELAY))
             {
-                SendFrame(m_send_queue.Last.Value);
-                m_send_queue.RemoveLast();
+                SendFrame(m_reply);
+                m_send_queue.Remove(m_reply);
                 return StateChanges.Reply;
             }
             else
@@ -1209,6 +1211,7 @@ namespace System.IO.BACnet
                         //move back
                         Array.Copy(m_local_buffer, i, m_local_buffer, 0, m_local_offset - i);
                         m_local_offset -= i;
+                        Trace.WriteLine("Garbage", null);
                     }
                     return;
                 }
@@ -1219,11 +1222,16 @@ namespace System.IO.BACnet
             {
                 m_local_buffer[0] = MSTP.MSTP_PREAMBLE1;
                 m_local_offset = 1;
+                Trace.WriteLine("Garbage", null);
                 return;
             }
 
             //no preamble?
-            m_local_offset = 0;
+            if (m_local_offset > 0)
+            {
+                m_local_offset = 0;
+                Trace.WriteLine("Garbage", null);
+            }
         }
 
         private enum GetMessageStatus
@@ -1363,20 +1371,27 @@ namespace System.IO.BACnet
             return GetMessageStatus.Good;
         }
 
-        public int Send(byte[] buffer, int offset, int data_length, BACNET_ADDRESS address, bool wait_for_transmission)
+        public int Send(byte[] buffer, int offset, int data_length, BACNET_ADDRESS address, bool wait_for_transmission, int timeout)
         {
             if (m_TS == -1) throw new Exception("Source address must be set up before sending messages");
 
             //add to queue
-            MSTP_FRAME_TYPE frame_type = address.net == 0xFFFF ? MSTP_FRAME_TYPE.FRAME_TYPE_BACNET_DATA_NOT_EXPECTING_REPLY : MSTP_FRAME_TYPE.FRAME_TYPE_BACNET_DATA_EXPECTING_REPLY;
+            BACNET_NPDU_CONTROL function = NPDU.DecodeFunction(buffer, offset);
+            MSTP_FRAME_TYPE frame_type = (function & BACNET_NPDU_CONTROL.ExpectingReply) == BACNET_NPDU_CONTROL.ExpectingReply ? MSTP_FRAME_TYPE.FRAME_TYPE_BACNET_DATA_EXPECTING_REPLY : MSTP_FRAME_TYPE.FRAME_TYPE_BACNET_DATA_NOT_EXPECTING_REPLY;
             byte[] copy = new byte[data_length + MSTP.MSTP_HEADER_LENGTH + 2];
             Array.Copy(buffer, offset, copy, MSTP.MSTP_HEADER_LENGTH, data_length);
             MessageFrame f = new MessageFrame(frame_type, address.adr[0], copy, data_length);
             m_send_queue.AddLast(f);
-            m_reply_mutex.Set();
+            if (m_reply == null)
+            {
+                m_reply = f;
+                m_reply_mutex.Set();
+            }
 
             //wait for message to be sent
-            if (wait_for_transmission) f.send_mutex.WaitOne();
+            if (wait_for_transmission) 
+                if (!f.send_mutex.WaitOne(timeout))
+                    return -ETIMEDOUT;
 
             return data_length;
         }
@@ -1384,16 +1399,6 @@ namespace System.IO.BACnet
         public BACNET_ADDRESS GetBroadcastAddress()
         {
             return new BACNET_ADDRESS(AddressTypes.MSTP, 0xFFFF, new byte[] { 0xFF });
-        }
-
-        public int GetHeaderLength()
-        {
-            return MSTP.MSTP_HEADER_LENGTH;
-        }
-
-        public int GetMaxBufferLength()
-        {
-            return MSTP.MSTP_MAX_NDPU + MSTP.MSTP_HEADER_LENGTH + 2 + 1;
         }
 
         public void Dispose()

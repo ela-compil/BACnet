@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.TreeNode treeNode1 = new System.Windows.Forms.TreeNode("Devices");
+            System.Windows.Forms.TreeNode treeNode2 = new System.Windows.Forms.TreeNode("Devices");
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainDialog));
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.m_SearchToolButton = new System.Windows.Forms.ToolStripButton();
@@ -54,12 +54,15 @@
             this.removeDeviceToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
             this.sendWhoIsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripSeparator();
+            this.exportDeviceDBToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.m_ImageList = new System.Windows.Forms.ImageList(this.components);
             this.label2 = new System.Windows.Forms.Label();
             this.m_AddressSpaceTree = new System.Windows.Forms.TreeView();
             this.m_AddressSpaceMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.downloadFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.uploadFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.subscribeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.label3 = new System.Windows.Forms.Label();
             this.m_SplitContainerRight = new System.Windows.Forms.SplitContainer();
             this.tabControl1 = new System.Windows.Forms.TabControl();
@@ -75,6 +78,7 @@
             this.label1 = new System.Windows.Forms.Label();
             this.m_LogText = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
+            this.m_subscriptionRenewTimer = new System.Windows.Forms.Timer(this.components);
             this.toolStrip1.SuspendLayout();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.m_SplitContainerButtom)).BeginInit();
@@ -164,8 +168,8 @@
             this.addDevicesearchToolStripMenuItem,
             this.removeDeviceToolStripMenuItem});
             this.searchToolStripMenuItem.Name = "searchToolStripMenuItem";
-            this.searchToolStripMenuItem.Size = new System.Drawing.Size(54, 20);
-            this.searchToolStripMenuItem.Text = "Search";
+            this.searchToolStripMenuItem.Size = new System.Drawing.Size(71, 20);
+            this.searchToolStripMenuItem.Text = "Functions";
             // 
             // addDevicesearchToolStripMenuItem
             // 
@@ -194,7 +198,7 @@
             // settingsToolStripMenuItem
             // 
             this.settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
-            this.settingsToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.settingsToolStripMenuItem.Size = new System.Drawing.Size(116, 22);
             this.settingsToolStripMenuItem.Text = "Settings";
             this.settingsToolStripMenuItem.Click += new System.EventHandler(this.settingsToolStripMenuItem_Click);
             // 
@@ -285,10 +289,10 @@
             this.m_DeviceTree.ImageList = this.m_ImageList;
             this.m_DeviceTree.Location = new System.Drawing.Point(0, 13);
             this.m_DeviceTree.Name = "m_DeviceTree";
-            treeNode1.Name = "Node0";
-            treeNode1.Text = "Devices";
+            treeNode2.Name = "Node0";
+            treeNode2.Text = "Devices";
             this.m_DeviceTree.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
-            treeNode1});
+            treeNode2});
             this.m_DeviceTree.SelectedImageIndex = 0;
             this.m_DeviceTree.ShowRootLines = false;
             this.m_DeviceTree.Size = new System.Drawing.Size(164, 174);
@@ -301,15 +305,17 @@
             this.addDeviceToolStripMenuItem,
             this.removeDeviceToolStripMenuItem1,
             this.toolStripMenuItem1,
-            this.sendWhoIsToolStripMenuItem});
+            this.sendWhoIsToolStripMenuItem,
+            this.toolStripMenuItem2,
+            this.exportDeviceDBToolStripMenuItem});
             this.m_DeviceTreeMenuStrip.Name = "m_DeviceTreeMenuStrip";
-            this.m_DeviceTreeMenuStrip.Size = new System.Drawing.Size(155, 76);
+            this.m_DeviceTreeMenuStrip.Size = new System.Drawing.Size(163, 104);
             // 
             // addDeviceToolStripMenuItem
             // 
             this.addDeviceToolStripMenuItem.Image = global::Yabe.Properties.Resources.add;
             this.addDeviceToolStripMenuItem.Name = "addDeviceToolStripMenuItem";
-            this.addDeviceToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
+            this.addDeviceToolStripMenuItem.Size = new System.Drawing.Size(162, 22);
             this.addDeviceToolStripMenuItem.Text = "Add device";
             this.addDeviceToolStripMenuItem.Click += new System.EventHandler(this.addDeviceToolStripMenuItem_Click);
             // 
@@ -317,21 +323,34 @@
             // 
             this.removeDeviceToolStripMenuItem1.Image = global::Yabe.Properties.Resources.cross;
             this.removeDeviceToolStripMenuItem1.Name = "removeDeviceToolStripMenuItem1";
-            this.removeDeviceToolStripMenuItem1.Size = new System.Drawing.Size(154, 22);
+            this.removeDeviceToolStripMenuItem1.Size = new System.Drawing.Size(162, 22);
             this.removeDeviceToolStripMenuItem1.Text = "Remove device";
             this.removeDeviceToolStripMenuItem1.Click += new System.EventHandler(this.removeDeviceToolStripMenuItem1_Click);
             // 
             // toolStripMenuItem1
             // 
             this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-            this.toolStripMenuItem1.Size = new System.Drawing.Size(151, 6);
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(159, 6);
             // 
             // sendWhoIsToolStripMenuItem
             // 
             this.sendWhoIsToolStripMenuItem.Name = "sendWhoIsToolStripMenuItem";
-            this.sendWhoIsToolStripMenuItem.Size = new System.Drawing.Size(154, 22);
+            this.sendWhoIsToolStripMenuItem.Size = new System.Drawing.Size(162, 22);
             this.sendWhoIsToolStripMenuItem.Text = "Send WhoIs";
             this.sendWhoIsToolStripMenuItem.Click += new System.EventHandler(this.sendWhoIsToolStripMenuItem_Click);
+            // 
+            // toolStripMenuItem2
+            // 
+            this.toolStripMenuItem2.Name = "toolStripMenuItem2";
+            this.toolStripMenuItem2.Size = new System.Drawing.Size(159, 6);
+            // 
+            // exportDeviceDBToolStripMenuItem
+            // 
+            this.exportDeviceDBToolStripMenuItem.Image = global::Yabe.Properties.Resources.database;
+            this.exportDeviceDBToolStripMenuItem.Name = "exportDeviceDBToolStripMenuItem";
+            this.exportDeviceDBToolStripMenuItem.Size = new System.Drawing.Size(162, 22);
+            this.exportDeviceDBToolStripMenuItem.Text = "Export device DB";
+            this.exportDeviceDBToolStripMenuItem.Click += new System.EventHandler(this.exportDeviceDBToolStripMenuItem_Click);
             // 
             // m_ImageList
             // 
@@ -376,9 +395,10 @@
             // 
             this.m_AddressSpaceMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.downloadFileToolStripMenuItem,
-            this.uploadFileToolStripMenuItem});
+            this.uploadFileToolStripMenuItem,
+            this.subscribeToolStripMenuItem});
             this.m_AddressSpaceMenuStrip.Name = "m_AddressSpaceMenuStrip";
-            this.m_AddressSpaceMenuStrip.Size = new System.Drawing.Size(150, 48);
+            this.m_AddressSpaceMenuStrip.Size = new System.Drawing.Size(150, 70);
             // 
             // downloadFileToolStripMenuItem
             // 
@@ -395,6 +415,13 @@
             this.uploadFileToolStripMenuItem.Size = new System.Drawing.Size(149, 22);
             this.uploadFileToolStripMenuItem.Text = "Upload File";
             this.uploadFileToolStripMenuItem.Click += new System.EventHandler(this.uploadFileToolStripMenuItem_Click);
+            // 
+            // subscribeToolStripMenuItem
+            // 
+            this.subscribeToolStripMenuItem.Name = "subscribeToolStripMenuItem";
+            this.subscribeToolStripMenuItem.Size = new System.Drawing.Size(149, 22);
+            this.subscribeToolStripMenuItem.Text = "Subscribe";
+            this.subscribeToolStripMenuItem.Click += new System.EventHandler(this.subscribeToolStripMenuItem_Click);
             // 
             // label3
             // 
@@ -531,6 +558,10 @@
             this.label4.TabIndex = 2;
             this.label4.Text = "Log";
             // 
+            // m_subscriptionRenewTimer
+            // 
+            this.m_subscriptionRenewTimer.Tick += new System.EventHandler(this.m_subscriptionRenewTimer_Tick);
+            // 
             // MainDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -624,6 +655,10 @@
         private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem optionsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem settingsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripMenuItem2;
+        private System.Windows.Forms.ToolStripMenuItem exportDeviceDBToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem subscribeToolStripMenuItem;
+        private System.Windows.Forms.Timer m_subscriptionRenewTimer;
     }
 }
 
