@@ -1427,5 +1427,30 @@ namespace Yabe
                 }
             }
         }
+
+        private void sendWhoIsToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            sendWhoIsToolStripMenuItem_Click(this, null);
+        }
+
+        private void exportDeviceDBToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            exportDeviceDBToolStripMenuItem_Click(this, null);
+        }
+
+        private void downloadFileToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            downloadFileToolStripMenuItem_Click(this, null);
+        }
+
+        private void uploadFileToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            uploadFileToolStripMenuItem_Click(this, null);
+        }
+
+        private void subscribeToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            subscribeToolStripMenuItem_Click(this, null);
+        }
     }
 }
