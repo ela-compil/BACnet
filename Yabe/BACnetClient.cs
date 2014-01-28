@@ -132,6 +132,11 @@ namespace System.IO.BACnet
             return m_client.ToString();
         }
 
+        private EncodeBuffer GetEncodeBuffer(int start_offset)
+        {
+            return new EncodeBuffer(new byte[m_client.MaxBufferLength], m_client.HeaderLength);
+        }
+
         public void Start()
         {
             m_client.Start();
@@ -158,6 +163,8 @@ namespace System.IO.BACnet
         public event SubscribeCOVRequestHandler OnSubscribeCOV;
         public delegate void SubscribeCOVPropertyRequestHandler(BacnetClient sender, BacnetAddress adr, byte invoke_id, uint subscriberProcessIdentifier, BacnetObjectId monitoredObjectIdentifier, BacnetPropertyReference monitoredProperty, bool cancellationRequest, bool issueConfirmedNotifications, uint lifetime, float covIncrement, BacnetMaxSegments max_segments);
         public event SubscribeCOVPropertyRequestHandler OnSubscribeCOVProperty;
+        public delegate void DeviceCommunicationControlRequestHandler(BacnetClient sender, BacnetAddress adr, byte invoke_id, uint time_duration, uint enable_disable, string password, BacnetMaxSegments max_segments);
+        public event DeviceCommunicationControlRequestHandler OnDeviceCommunicationControl;
 
         protected void ProcessConfirmedServiceRequest(BacnetAddress adr, BacnetPduTypes type, BacnetConfirmedServices service, BacnetMaxSegments max_segments, BacnetMaxAdpu max_adpu, byte invoke_id, byte[] buffer, int offset, int length)
         {
@@ -269,6 +276,16 @@ namespace System.IO.BACnet
                         OnSubscribeCOVProperty(this, adr, invoke_id, subscriberProcessIdentifier, monitoredObjectIdentifier, monitoredProperty, cancellationRequest, issueConfirmedNotifications, lifetime, covIncrement, max_segments);
                     else
                         Trace.TraceWarning("Couldn't decode SubscribeCOVProperty");
+                }
+                else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_DEVICE_COMMUNICATION_CONTROL && OnDeviceCommunicationControl != null)
+                {
+                    uint timeDuration;
+                    uint enable_disable;
+                    string password;
+                    if (Services.DecodeDeviceCommunicationControl(buffer, offset, length, out timeDuration, out enable_disable, out password) >= 0)
+                        OnDeviceCommunicationControl(this, adr, invoke_id, timeDuration, enable_disable, password, max_segments);
+                    else
+                        Trace.TraceWarning("Couldn't decode DeviceCommunicationControl");
                 }
             }
             catch (Exception ex)
@@ -671,7 +688,7 @@ namespace System.IO.BACnet
             }
         }
 
-        public void WhoIs()
+        public void WhoIs(int low_limit = -1, int high_limit = -1)
         {
             Trace.WriteLine("Sending WhoIs ... ", null);
 
@@ -679,12 +696,12 @@ namespace System.IO.BACnet
             BacnetAddress broadcast = m_client.GetBroadcastAddress();
             NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, broadcast, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, 0);
             APDU.EncodeUnconfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_WHO_IS);
-            Services.EncodeWhoIsBroadcast(b, -1, -1);
+            Services.EncodeWhoIsBroadcast(b, low_limit, high_limit);
 
             m_client.Send(b.buffer, m_client.HeaderLength, b.offset - m_client.HeaderLength, broadcast, false, 0);
         }
 
-        public void Iam(uint device_id)
+        public void Iam(uint device_id, BacnetSegmentations segmentation)
         {
             Trace.WriteLine("Sending Iam ... ", null);
 
@@ -692,7 +709,7 @@ namespace System.IO.BACnet
             BacnetAddress broadcast = m_client.GetBroadcastAddress();
             NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, broadcast, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, 0);
             APDU.EncodeUnconfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_I_AM);
-            Services.EncodeIamBroadcast(b, device_id, (uint)m_client.MaxAdpuLength, BacnetSegmentations.SEGMENTATION_NONE, m_vendor_id);
+            Services.EncodeIamBroadcast(b, device_id, (uint)m_client.MaxAdpuLength, segmentation, m_vendor_id);
 
             m_client.Send(b.buffer, m_client.HeaderLength, b.offset - m_client.HeaderLength, broadcast, false, 0);
         }
@@ -794,11 +811,6 @@ namespace System.IO.BACnet
             }
 
             res.Dispose();
-        }
-
-        private EncodeBuffer GetEncodeBuffer(int start_offset)
-        {
-            return new EncodeBuffer(new byte[m_client.MaxBufferLength], m_client.HeaderLength);
         }
 
         public IAsyncResult BeginReadFileRequest(BacnetAddress adr, BacnetObjectId object_id, int position, uint count, bool wait_for_transmit, byte invoke_id = 0)
@@ -1148,6 +1160,59 @@ namespace System.IO.BACnet
             else
             {
                 value_list = null;
+            }
+
+            res.Dispose();
+        }
+
+        public bool DeviceCommunicationControlRequest(BacnetAddress adr, uint timeDuration, uint enable_disable, string password, byte invoke_id = 0)
+        {
+            using (BacnetAsyncResult result = (BacnetAsyncResult)BeginDeviceCommunicationControlRequest(adr, timeDuration, enable_disable, password, true, invoke_id))
+            {
+                for (int r = 0; r < m_retries; r++)
+                {
+                    if (result.WaitForDone(m_timeout))
+                    {
+                        Exception ex;
+                        EndDeviceCommunicationControlRequest(result, out ex);
+                        if (ex != null) throw ex;
+                        else return true;
+                    }
+                    result.Resend();
+                }
+            }
+            return false;
+        }
+
+        public IAsyncResult BeginDeviceCommunicationControlRequest(BacnetAddress adr, uint timeDuration, uint enable_disable, string password, bool wait_for_transmit, byte invoke_id = 0)
+        {
+            Trace.WriteLine("Sending DeviceCommunicationControlRequest ... ", null);
+            if (invoke_id == 0) invoke_id = unchecked(m_invoke_id++);
+
+            EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, null, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, 0);
+            APDU.EncodeConfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST | (m_max_segments != BacnetMaxSegments.MAX_SEG0 ? BacnetPduTypes.SEGMENTED_RESPONSE_ACCEPTED : 0), BacnetConfirmedServices.SERVICE_CONFIRMED_DEVICE_COMMUNICATION_CONTROL, m_max_segments, m_client.MaxAdpuLength, invoke_id, 0, 0);
+            Services.EncodeDeviceCommunicationControl(b, timeDuration, enable_disable, password);
+
+            //send
+            BacnetAsyncResult ret = new BacnetAsyncResult(this, adr, invoke_id, b.buffer, b.offset - m_client.HeaderLength, wait_for_transmit, m_transmit_timeout);
+            ret.Resend();
+
+            return ret;
+        }
+
+        public void EndDeviceCommunicationControlRequest(IAsyncResult result, out Exception ex)
+        {
+            BacnetAsyncResult res = (BacnetAsyncResult)result;
+            ex = res.Error;
+            if (ex == null && !res.WaitForDone(m_timeout))
+                ex = new Exception("Wait Timeout");
+
+            if (ex == null)
+            {
+            }
+            else
+            {   
             }
 
             res.Dispose();

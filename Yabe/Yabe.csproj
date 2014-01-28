@@ -54,6 +54,12 @@
     <Compile Include="BACnetBase.cs" />
     <Compile Include="BACnetClient.cs" />
     <Compile Include="BACnetTransport.cs" />
+    <Compile Include="DeviceCommunicationControlDialog.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DeviceCommunicationControlDialog.Designer.cs">
+      <DependentUpon>DeviceCommunicationControlDialog.cs</DependentUpon>
+    </Compile>
     <Compile Include="DynamicPropertyGridContainer.cs" />
     <Compile Include="FileTransfers.cs" />
     <Compile Include="MainDialog.cs">
@@ -88,6 +94,9 @@
     <Compile Include="SourceAddressDialog.Designer.cs">
       <DependentUpon>SourceAddressDialog.cs</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="DeviceCommunicationControlDialog.resx">
+      <DependentUpon>DeviceCommunicationControlDialog.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="MainDialog.resx">
       <DependentUpon>MainDialog.cs</DependentUpon>
     </EmbeddedResource>
@@ -138,6 +147,7 @@
     <None Include="Resources\clock.png" />
     <None Include="Resources\information.png" />
     <None Include="Resources\application_form.png" />
+    <None Include="Resources\transmit.png" />
     <Content Include="Search.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

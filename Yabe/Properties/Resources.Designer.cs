@@ -122,5 +122,12 @@ namespace Yabe.Properties {
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
+        
+        internal static System.Drawing.Bitmap transmit {
+            get {
+                object obj = ResourceManager.GetObject("transmit", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
     }
 }

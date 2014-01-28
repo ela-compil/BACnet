@@ -64,6 +64,7 @@ namespace DemoServer
                 m_udp_server.OnSubscribeCOV += new BacnetClient.SubscribeCOVRequestHandler(OnSubscribeCOV);
                 m_udp_server.OnSubscribeCOVProperty += new BacnetClient.SubscribeCOVPropertyRequestHandler(OnSubscribeCOVProperty);
                 m_udp_server.OnTimeSynchronize += new BacnetClient.TimeSynchronizeHandler(OnTimeSynchronize);
+                m_udp_server.OnDeviceCommunicationControl += new BacnetClient.DeviceCommunicationControlRequestHandler(OnDeviceCommunicationControl);
                 m_udp_server.Start();
 
                 //create pipe (MSTP) service point
@@ -81,6 +82,7 @@ namespace DemoServer
                 m_pipe_server.OnSubscribeCOV += new BacnetClient.SubscribeCOVRequestHandler(OnSubscribeCOV);
                 m_pipe_server.OnSubscribeCOVProperty += new BacnetClient.SubscribeCOVPropertyRequestHandler(OnSubscribeCOVProperty);
                 m_pipe_server.OnTimeSynchronize += new BacnetClient.TimeSynchronizeHandler(OnTimeSynchronize);
+                m_pipe_server.OnDeviceCommunicationControl += new BacnetClient.DeviceCommunicationControlRequestHandler(OnDeviceCommunicationControl);
                 m_pipe_server.Start();
 
                 //display info
@@ -90,8 +92,8 @@ namespace DemoServer
                 Console.WriteLine("");
 
                 //send greeting
-                m_udp_server.Iam(m_storage.DeviceId);
-                m_pipe_server.Iam(m_storage.DeviceId);
+                m_udp_server.Iam(m_storage.DeviceId, BacnetSegmentations.SEGMENTATION_BOTH);
+                m_pipe_server.Iam(m_storage.DeviceId, BacnetSegmentations.SEGMENTATION_BOTH);
 
                 //endless loop of nothing
                 Console.WriteLine("Press the ANY key to exit!");
@@ -110,11 +112,6 @@ namespace DemoServer
                 Console.WriteLine("Press the ANY key ... once more");
                 Console.ReadKey();
             }
-        }
-
-        private static void OnTimeSynchronize(BacnetClient sender, BacnetAddress adr, DateTime dateTime, bool utc)
-        {
-            Trace.TraceInformation("Uh, a new date: " + dateTime.ToString());
         }
 
         private static void m_storage_ReadOverride(BacnetObjectId object_id, BacnetPropertyIds property_id, uint array_index, out IList<BacnetValue> value, out DeviceStorage.ErrorCodes status, out bool handled)
@@ -496,6 +493,34 @@ namespace DemoServer
             });
         }
 
+        private static void OnDeviceCommunicationControl(BacnetClient sender, BacnetAddress adr, byte invoke_id, uint time_duration, uint enable_disable, string password, BacnetMaxSegments max_segments)
+        {
+            switch (enable_disable)
+            {
+                case 0:
+                    Trace.TraceInformation("Enable communication? Sure!");
+                    sender.SimpleAckResponse(adr, BacnetConfirmedServices.SERVICE_CONFIRMED_DEVICE_COMMUNICATION_CONTROL, invoke_id);
+                    break;
+                case 1:
+                    Trace.TraceInformation("Disable communication? ... smile and wave (ignored)");
+                    sender.SimpleAckResponse(adr, BacnetConfirmedServices.SERVICE_CONFIRMED_DEVICE_COMMUNICATION_CONTROL, invoke_id);
+                    break;
+                case 2:
+                    Trace.TraceWarning("Disable initiation? I don't think so!");
+                    sender.ErrorResponse(adr, BacnetConfirmedServices.SERVICE_CONFIRMED_DEVICE_COMMUNICATION_CONTROL, invoke_id, BacnetErrorClasses.ERROR_CLASS_DEVICE, BacnetErrorCodes.ERROR_CODE_OTHER);
+                    break;
+                default:
+                    Trace.TraceError("Now, what is this device_communication code: " + enable_disable + "!!!!");
+                    sender.ErrorResponse(adr, BacnetConfirmedServices.SERVICE_CONFIRMED_DEVICE_COMMUNICATION_CONTROL, invoke_id, BacnetErrorClasses.ERROR_CLASS_DEVICE, BacnetErrorCodes.ERROR_CODE_OTHER);
+                    break;
+            }
+        }
+
+        private static void OnTimeSynchronize(BacnetClient sender, BacnetAddress adr, DateTime dateTime, bool utc)
+        {
+            Trace.TraceInformation("Uh, a new date: " + dateTime.ToString());
+        }
+
         private static void OnAtomicReadFileRequest(BacnetClient sender, BacnetAddress adr, byte invoke_id, bool is_stream, BacnetObjectId object_id, int position, uint count, BacnetMaxSegments max_segments)
         {
             lock (m_lockObject)
@@ -663,7 +688,7 @@ namespace DemoServer
         {
             lock (m_lockObject)
             {
-                sender.Iam(m_storage.DeviceId);
+                sender.Iam(m_storage.DeviceId, BacnetSegmentations.SEGMENTATION_BOTH);
             }
         }
     }

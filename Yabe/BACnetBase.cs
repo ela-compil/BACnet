@@ -4848,6 +4848,60 @@ namespace System.IO.BACnet.Serialize
             ASN1.encode_closing_tag(buffer, 2);
         }
 
+        public static void EncodeDeviceCommunicationControl(EncodeBuffer buffer, uint timeDuration, uint enable_disable, string password)
+        {
+            /* optional timeDuration */
+            if (timeDuration > 0)
+                ASN1.encode_context_unsigned(buffer, 0, timeDuration);
+
+            /* enable disable */
+            ASN1.encode_context_enumerated(buffer, 1, enable_disable);
+
+            /* optional password */
+            if (!string.IsNullOrEmpty(password))
+            {
+                /* FIXME: must be at least 1 character, limited to 20 characters */
+                ASN1.encode_context_character_string(buffer, 2, password);
+            }
+        }
+
+        public static int DecodeDeviceCommunicationControl(byte[] buffer, int offset, int apdu_len, out uint timeDuration, out uint enable_disable, out string password)
+        {
+            int len = 0;
+            byte tag_number = 0;
+            uint len_value_type = 0;
+
+            timeDuration = 0;
+            enable_disable = 0;
+            password = "";
+
+            /* Tag 0: timeDuration, in minutes --optional--
+             * But if not included, take it as indefinite,
+             * which we return as "very large" */
+            if (ASN1.decode_is_context_tag(buffer, offset + len, 0))
+            {
+                len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value_type);
+                len += ASN1.decode_unsigned(buffer, offset + len, len_value_type, out timeDuration);
+            }
+
+            /* Tag 1: enable_disable */
+            if (!ASN1.decode_is_context_tag(buffer, offset + len, 1))
+                return -1;
+            len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value_type);
+            len += ASN1.decode_enumerated(buffer, offset + len, len_value_type, out enable_disable);
+
+            /* Tag 2: password --optional-- */
+            if (len < apdu_len)
+            {
+                if (!ASN1.decode_is_context_tag(buffer, offset + len, 2))
+                    return -1;
+                len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value_type);
+                len += ASN1.decode_character_string(buffer, offset + len, apdu_len - (offset + len), len_value_type, out password);
+            }
+
+            return len;
+        }
+
         public static void EncodeReinitializeDevice(EncodeBuffer buffer, string password)
         {
             /* optional password */

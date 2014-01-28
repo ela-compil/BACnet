@@ -4,6 +4,7 @@
 
 0.9.4 - 2014...
  - Added Time Synchronize
+ - Added Device Communication Control
 
 0.9.3 - 20140128
  - Segementation

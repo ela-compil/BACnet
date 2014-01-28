@@ -1500,5 +1500,46 @@ namespace Yabe
             //done
             MessageBox.Show(this, "OK", "Time Synchronize", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
+
+        private void communicationControlToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            //fetch end point
+            BacnetClient comm = null;
+            BacnetAddress adr;
+            uint device_id;
+            try
+            {
+                if (m_DeviceTree.SelectedNode == null) return;
+                else if (m_DeviceTree.SelectedNode.Tag == null) return;
+                else if (!(m_DeviceTree.SelectedNode.Tag is KeyValuePair<BacnetAddress, uint>)) return;
+                KeyValuePair<BacnetAddress, uint> entry = (KeyValuePair<BacnetAddress, uint>)m_DeviceTree.SelectedNode.Tag;
+                adr = entry.Key;
+                device_id = entry.Value;
+                comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag;
+            }
+            finally
+            {
+                if (comm == null) MessageBox.Show(this, "Please select a device node", "Wrong node", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+
+            //Options
+            DeviceCommunicationControlDialog dlg = new DeviceCommunicationControlDialog();
+            if (dlg.ShowDialog(this) != System.Windows.Forms.DialogResult.OK) return;
+
+            //send
+            if (!comm.DeviceCommunicationControlRequest(adr, dlg.Duration, dlg.DisableCommunication ? (uint)1 : (uint)0, dlg.Password))
+            {
+                MessageBox.Show(this, "Couldn't perform device communication control", "Device Communication Control", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            else
+            {
+                MessageBox.Show(this, "OK", "Device Communication Control", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+        private void communicationControlToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            communicationControlToolStripMenuItem_Click(this, null);
+        }
     }
 }
