@@ -135,6 +135,9 @@
     <None Include="Resources\database.png" />
     <None Include="Resources\magnifier.png" />
     <None Include="Resources\eye.png" />
+    <None Include="Resources\clock.png" />
+    <None Include="Resources\information.png" />
+    <None Include="Resources\application_form.png" />
     <Content Include="Search.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

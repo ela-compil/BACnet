@@ -3093,7 +3093,7 @@ namespace System.IO.BACnet.Serialize
         public static int decode_date(byte[] buffer, int offset, out DateTime bdate)
         {
             int year = (ushort)(buffer[offset] + 1900);
-            int month = buffer[offset+1];
+            int month = buffer[offset + 1];
             int day = buffer[offset + 2];
             int wday = buffer[offset + 3];
 
@@ -3120,7 +3120,7 @@ namespace System.IO.BACnet.Serialize
 
         public static int decode_bacnet_time(byte[] buffer, int offset, out DateTime btime)
         {
-            int hour = buffer[offset+0];
+            int hour = buffer[offset + 0];
             int min = buffer[offset + 1];
             int sec = buffer[offset + 2];
             int hundredths = buffer[offset + 3];
@@ -5758,10 +5758,30 @@ namespace System.IO.BACnet.Serialize
             ASN1.encode_application_time(buffer, time);
         }
 
-        public static void EncodeUtcTimeSync(EncodeBuffer buffer, DateTime time)
+        public static int DecodeTimeSync(byte[] buffer, int offset, int length, out DateTime dateTime)
         {
-            ASN1.encode_application_date(buffer, time);
-            ASN1.encode_application_time(buffer, time);
+            int len = 0;
+            byte tag_number;
+            uint len_value;
+            DateTime d_date, t_date;
+
+            dateTime = new DateTime(1, 1, 1);
+
+            /* date */
+            len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value);
+            if (tag_number != (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_DATE)
+                return -1;
+            len += ASN1.decode_date(buffer, offset + len, out d_date);
+            /* time */
+            len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value);
+            if (tag_number != (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_TIME)
+                return -1;
+            len += ASN1.decode_bacnet_time(buffer, offset + len, out t_date);
+
+            //merge
+            dateTime = new DateTime(d_date.Year, d_date.Month, d_date.Day, t_date.Hour, t_date.Minute, t_date.Second, t_date.Millisecond);
+
+            return len;
         }
 
         public static void EncodeError(EncodeBuffer buffer, BacnetErrorClasses error_class, BacnetErrorCodes error_code)

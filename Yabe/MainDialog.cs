@@ -1464,5 +1464,41 @@ namespace Yabe
         {
             subscribeToolStripMenuItem_Click(this, null);
         }
+
+        private void timeSynchronizeToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            timeSynchronizeToolStripMenuItem_Click(this, null);
+        }
+
+        private void timeSynchronizeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            //fetch end point
+            BacnetClient comm = null;
+            BacnetAddress adr;
+            uint device_id;
+            try
+            {
+                if (m_DeviceTree.SelectedNode == null) return;
+                else if (m_DeviceTree.SelectedNode.Tag == null) return;
+                else if (!(m_DeviceTree.SelectedNode.Tag is KeyValuePair<BacnetAddress, uint>)) return;
+                KeyValuePair<BacnetAddress, uint> entry = (KeyValuePair<BacnetAddress, uint>)m_DeviceTree.SelectedNode.Tag;
+                adr = entry.Key;
+                device_id = entry.Value;
+                comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag;
+            }
+            finally
+            {
+                if (comm == null) MessageBox.Show(this, "Please select a device node", "Wrong node", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+
+            //send
+            if(Properties.Settings.Default.TimeSynchronize_UTC)
+                comm.SynchronizeTime(adr, DateTime.Now.ToUniversalTime(), true);
+            else
+                comm.SynchronizeTime(adr, DateTime.Now, false);
+
+            //done
+            MessageBox.Show(this, "OK", "Time Synchronize", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
     }
 }

@@ -283,6 +283,8 @@ namespace System.IO.BACnet
         public event IamHandler OnIam;
         public delegate void WhoIsHandler(BacnetClient sender, BacnetAddress adr, int low_limit, int high_limit);
         public event WhoIsHandler OnWhoIs;
+        public delegate void TimeSynchronizeHandler(BacnetClient sender, BacnetAddress adr, DateTime dateTime, bool utc);
+        public event TimeSynchronizeHandler OnTimeSynchronize;
 
         //used by both 'confirmed' and 'unconfirmed' notify
         public delegate void COVNotificationHandler(BacnetClient sender, BacnetAddress adr, byte invoke_id, uint subscriberProcessIdentifier, BacnetObjectId initiatingDeviceIdentifier, BacnetObjectId monitoredObjectIdentifier, uint timeRemaining, bool need_confirm, ICollection<BacnetPropertyValue> values, BacnetMaxSegments max_segments);
@@ -325,6 +327,22 @@ namespace System.IO.BACnet
                         OnCOVNotification(this, adr, 0, subscriberProcessIdentifier, initiatingDeviceIdentifier, monitoredObjectIdentifier, timeRemaining, false, values, BacnetMaxSegments.MAX_SEG0);
                     else
                         Trace.TraceWarning("Couldn't decode COVNotifyUnconfirmed");
+                }
+                else if (service == BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_TIME_SYNCHRONIZATION && OnTimeSynchronize != null)
+                {
+                    DateTime dateTime;
+                    if (Services.DecodeTimeSync(buffer, offset, length, out dateTime) >= 0)
+                        OnTimeSynchronize(this, adr, dateTime, false);
+                    else
+                        Trace.TraceWarning("Couldn't decode TimeSynchronize");
+                }
+                else if (service == BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_UTC_TIME_SYNCHRONIZATION && OnTimeSynchronize != null)
+                {
+                    DateTime dateTime;
+                    if (Services.DecodeTimeSync(buffer, offset, length, out dateTime) >= 0)
+                        OnTimeSynchronize(this, adr, dateTime, true);
+                    else
+                        Trace.TraceWarning("Couldn't decode TimeSynchronize");
                 }
             }
             catch (Exception ex)
@@ -677,6 +695,21 @@ namespace System.IO.BACnet
             Services.EncodeIamBroadcast(b, device_id, (uint)m_client.MaxAdpuLength, BacnetSegmentations.SEGMENTATION_NONE, m_vendor_id);
 
             m_client.Send(b.buffer, m_client.HeaderLength, b.offset - m_client.HeaderLength, broadcast, false, 0);
+        }
+
+        public void SynchronizeTime(BacnetAddress adr, DateTime dateTime, bool utc)
+        {
+            Trace.WriteLine("Sending Time Synchronize ... ", null);
+
+            EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, adr, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, 0);
+            if(!utc)
+                APDU.EncodeUnconfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_TIME_SYNCHRONIZATION);
+            else
+                APDU.EncodeUnconfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_UTC_TIME_SYNCHRONIZATION);
+            Services.EncodeTimeSync(b, dateTime);
+
+            m_client.Send(b.buffer, m_client.HeaderLength, b.offset - m_client.HeaderLength, adr, false, 0);
         }
 
         public int GetMaxApdu()

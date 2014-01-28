@@ -63,6 +63,7 @@ namespace DemoServer
                 m_udp_server.OnAtomicReadFileRequest += new BacnetClient.AtomicReadFileRequestHandler(OnAtomicReadFileRequest);
                 m_udp_server.OnSubscribeCOV += new BacnetClient.SubscribeCOVRequestHandler(OnSubscribeCOV);
                 m_udp_server.OnSubscribeCOVProperty += new BacnetClient.SubscribeCOVPropertyRequestHandler(OnSubscribeCOVProperty);
+                m_udp_server.OnTimeSynchronize += new BacnetClient.TimeSynchronizeHandler(OnTimeSynchronize);
                 m_udp_server.Start();
 
                 //create pipe (MSTP) service point
@@ -79,6 +80,7 @@ namespace DemoServer
                 m_pipe_server.OnAtomicReadFileRequest += new BacnetClient.AtomicReadFileRequestHandler(OnAtomicReadFileRequest);
                 m_pipe_server.OnSubscribeCOV += new BacnetClient.SubscribeCOVRequestHandler(OnSubscribeCOV);
                 m_pipe_server.OnSubscribeCOVProperty += new BacnetClient.SubscribeCOVPropertyRequestHandler(OnSubscribeCOVProperty);
+                m_pipe_server.OnTimeSynchronize += new BacnetClient.TimeSynchronizeHandler(OnTimeSynchronize);
                 m_pipe_server.Start();
 
                 //display info
@@ -108,6 +110,11 @@ namespace DemoServer
                 Console.WriteLine("Press the ANY key ... once more");
                 Console.ReadKey();
             }
+        }
+
+        private static void OnTimeSynchronize(BacnetClient sender, BacnetAddress adr, DateTime dateTime, bool utc)
+        {
+            Trace.TraceInformation("Uh, a new date: " + dateTime.ToString());
         }
 
         private static void m_storage_ReadOverride(BacnetObjectId object_id, BacnetPropertyIds property_id, uint array_index, out IList<BacnetValue> value, out DeviceStorage.ErrorCodes status, out bool handled)

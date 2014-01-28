@@ -274,5 +274,17 @@ namespace Yabe.Properties {
                 this["Segments_Max"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool TimeSynchronize_UTC {
+            get {
+                return ((bool)(this["TimeSynchronize_UTC"]));
+            }
+            set {
+                this["TimeSynchronize_UTC"] = value;
+            }
+        }
     }
 }

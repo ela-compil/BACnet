@@ -65,5 +65,8 @@
     <Setting Name="Segments_Max" Type="System.Byte" Scope="User">
       <Value Profile="(Default)">65</Value>
     </Setting>
+    <Setting Name="TimeSynchronize_UTC" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
