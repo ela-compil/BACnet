@@ -32,7 +32,7 @@
 	have been too big a mouthful. My patches were not approved. 
 	CAS BACnet Explorer, by Chipkin Automation Systems:
 	http://www.chipkin.com/products/software/bacnet-software/cas-bacnet-explorer
-	Same concept as Yabe. Not as nicely finished as InneaBACnetExplorer	and 
+	Same concept as Yabe. Not as nicely finished as InneaBACnetExplorer and 
 	not as comprehensive as BACnet Stack. To be honest, the program is 
 	actually fairly horrible. It runs very poorly (at least on my machine) and
 	the interface is not much different from a console. The documentation are 
@@ -48,7 +48,7 @@
 	set accordingly.
 	I'm not sure if my implementation or my usage is correct though. I've 
 	followed the guidelines	from the 'standard'. But my copy is rather old and 
-	I haven't found any	other BACnet programs that supports it. 
+	I haven't found any other BACnet programs that supports it. 
 	I also support 'segmentation' with a window_size > 1 in MSTP. (This was my
 	original purpose.) According to my 'standard' this is illegal. I hope that
 	means that my copy is old. I was recommended to this solution by the 
