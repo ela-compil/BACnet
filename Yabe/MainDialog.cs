@@ -1526,14 +1526,21 @@ namespace Yabe
             DeviceCommunicationControlDialog dlg = new DeviceCommunicationControlDialog();
             if (dlg.ShowDialog(this) != System.Windows.Forms.DialogResult.OK) return;
 
-            //send
-            if (!comm.DeviceCommunicationControlRequest(adr, dlg.Duration, dlg.DisableCommunication ? (uint)1 : (uint)0, dlg.Password))
+            if (dlg.IsReinitialize)
             {
-                MessageBox.Show(this, "Couldn't perform device communication control", "Device Communication Control", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                //Reinitialize Device
+                if (!comm.ReinitializeRequest(adr, dlg.ReinitializeState, dlg.Password))
+                    MessageBox.Show(this, "Couldn't perform device communication control", "Device Communication Control", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                else
+                    MessageBox.Show(this, "OK", "Device Communication Control", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             else
             {
-                MessageBox.Show(this, "OK", "Device Communication Control", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                //Device Communication Control
+                if (!comm.DeviceCommunicationControlRequest(adr, dlg.Duration, dlg.DisableCommunication ? (uint)1 : (uint)0, dlg.Password))
+                    MessageBox.Show(this, "Couldn't perform device communication control", "Device Communication Control", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                else
+                    MessageBox.Show(this, "OK", "Device Communication Control", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
 

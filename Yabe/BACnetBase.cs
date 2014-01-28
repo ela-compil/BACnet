@@ -1573,6 +1573,18 @@ namespace System.IO.BACnet
         /* X'0A' to X'7F': Reserved for use by ASHRAE, */
         /* X'80' to X'FF': Available for vendor proprietary messages */
     } ;
+
+    public enum BacnetReinitializedStates
+    {
+        BACNET_REINIT_COLDSTART = 0,
+        BACNET_REINIT_WARMSTART = 1,
+        BACNET_REINIT_STARTBACKUP = 2,
+        BACNET_REINIT_ENDBACKUP = 3,
+        BACNET_REINIT_STARTRESTORE = 4,
+        BACNET_REINIT_ENDRESTORE = 5,
+        BACNET_REINIT_ABORTRESTORE = 6,
+        BACNET_REINIT_IDLE = 255
+    };
 }
 
 namespace System.IO.BACnet.Serialize
@@ -4902,14 +4914,44 @@ namespace System.IO.BACnet.Serialize
             return len;
         }
 
-        public static void EncodeReinitializeDevice(EncodeBuffer buffer, string password)
+        public static void EncodeReinitializeDevice(EncodeBuffer buffer, BacnetReinitializedStates state, string password)
         {
+            ASN1.encode_context_enumerated(buffer, 0, (uint)state);
+
             /* optional password */
             if (!string.IsNullOrEmpty(password))
             {
                 /* FIXME: must be at least 1 character, limited to 20 characters */
                 ASN1.encode_context_character_string(buffer, 1, password);
             }
+        }
+
+        public static int DecodeReinitializeDevice(byte[] buffer, int offset, int apdu_len, out BacnetReinitializedStates state, out string password)
+        {
+            int len = 0;
+            byte tag_number = 0;
+            uint len_value_type = 0;
+            uint value;
+
+            state = BacnetReinitializedStates.BACNET_REINIT_IDLE;
+            password = "";
+
+            /* Tag 0: reinitializedStateOfDevice */
+            if (!ASN1.decode_is_context_tag(buffer, offset + len, 0))
+                return -1;
+            len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value_type);
+            len += ASN1.decode_enumerated(buffer, offset + len, len_value_type, out value);
+            state = (BacnetReinitializedStates)value;
+            /* Tag 1: password - optional */
+            if (len < apdu_len)
+            {
+                if (!ASN1.decode_is_context_tag(buffer, offset + len, 1))
+                    return -1;
+                len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value_type);
+                len += ASN1.decode_character_string(buffer, offset + len, apdu_len - (offset + len), len_value_type, out password);
+            }
+
+            return len;
         }
 
         public enum BacnetReadRangeRequestTypes

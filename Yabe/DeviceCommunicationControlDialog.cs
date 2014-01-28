@@ -41,8 +41,34 @@ namespace Yabe
             InitializeComponent();
         }
 
+        public bool IsReinitialize { get { return m_reinitializeRadio.Checked; } set { m_reinitializeRadio.Checked = value; } }
         public bool DisableCommunication { get { return m_disableCheck.Checked; } set { m_disableCheck.Checked = value; } }
         public uint Duration { get { return (uint)m_durationValue.Value; } set { m_durationValue.Value = value; } }
         public string Password { get { return m_passwordText.Text; } set { m_passwordText.Text = value; } }
+        public System.IO.BACnet.BacnetReinitializedStates ReinitializeState { get { return (System.IO.BACnet.BacnetReinitializedStates)Enum.Parse(typeof(System.IO.BACnet.BacnetReinitializedStates), "BACNET_REINIT_" + m_StateCombo.Text); } set { m_StateCombo.Text = value.ToString(); } }
+
+        private void reinitializeRadio_CheckedChanged(object sender, EventArgs e)
+        {
+            if (m_reinitializeRadio.Checked)
+            {
+                m_reinitializeGroup.Enabled = true;
+                m_communicationGroup.Enabled = false;
+            }
+            else
+            {
+                m_reinitializeGroup.Enabled = false;
+                m_communicationGroup.Enabled = true;
+            }
+        }
+
+        private void DeviceCommunicationControlDialog_Load(object sender, EventArgs e)
+        {
+            string[] names = Enum.GetNames(typeof(System.IO.BACnet.BacnetReinitializedStates));
+            for (int i = 0; i < names.Length; i++)
+                names[i] = names[i].Replace("BACNET_REINIT_", "");
+            m_StateCombo.Items.AddRange(names);
+            if (names.Length > 0)
+                m_StateCombo.Text = names[0];
+        }
     }
 }

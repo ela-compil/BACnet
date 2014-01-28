@@ -2,9 +2,10 @@
                    YABE - YET ANOTHER BACNET EXPLORER
 -------------------------------------------------------------------------------
 
-0.9.4 - 2014...
+0.9.4 - 20140128
  - Added Time Synchronize
  - Added Device Communication Control
+ - Added ReinitializedDevice
 
 0.9.3 - 20140128
  - Segementation

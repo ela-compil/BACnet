@@ -65,6 +65,7 @@ namespace DemoServer
                 m_udp_server.OnSubscribeCOVProperty += new BacnetClient.SubscribeCOVPropertyRequestHandler(OnSubscribeCOVProperty);
                 m_udp_server.OnTimeSynchronize += new BacnetClient.TimeSynchronizeHandler(OnTimeSynchronize);
                 m_udp_server.OnDeviceCommunicationControl += new BacnetClient.DeviceCommunicationControlRequestHandler(OnDeviceCommunicationControl);
+                m_udp_server.OnReinitializedDevice += new BacnetClient.ReinitializedRequestHandler(OnReinitializedDevice);
                 m_udp_server.Start();
 
                 //create pipe (MSTP) service point
@@ -83,6 +84,7 @@ namespace DemoServer
                 m_pipe_server.OnSubscribeCOVProperty += new BacnetClient.SubscribeCOVPropertyRequestHandler(OnSubscribeCOVProperty);
                 m_pipe_server.OnTimeSynchronize += new BacnetClient.TimeSynchronizeHandler(OnTimeSynchronize);
                 m_pipe_server.OnDeviceCommunicationControl += new BacnetClient.DeviceCommunicationControlRequestHandler(OnDeviceCommunicationControl);
+                m_pipe_server.OnReinitializedDevice += new BacnetClient.ReinitializedRequestHandler(OnReinitializedDevice);
                 m_pipe_server.Start();
 
                 //display info
@@ -514,6 +516,12 @@ namespace DemoServer
                     sender.ErrorResponse(adr, BacnetConfirmedServices.SERVICE_CONFIRMED_DEVICE_COMMUNICATION_CONTROL, invoke_id, BacnetErrorClasses.ERROR_CLASS_DEVICE, BacnetErrorCodes.ERROR_CODE_OTHER);
                     break;
             }
+        }
+
+        private static void OnReinitializedDevice(BacnetClient sender, BacnetAddress adr, byte invoke_id, BacnetReinitializedStates state, string password, BacnetMaxSegments max_segments)
+        {
+            Trace.TraceInformation("So you wanna reboot me, eh? Pfff! (" + state.ToString() + ")");
+            sender.SimpleAckResponse(adr, BacnetConfirmedServices.SERVICE_CONFIRMED_REINITIALIZE_DEVICE, invoke_id);
         }
 
         private static void OnTimeSynchronize(BacnetClient sender, BacnetAddress adr, DateTime dateTime, bool utc)

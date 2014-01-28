@@ -165,6 +165,8 @@ namespace System.IO.BACnet
         public event SubscribeCOVPropertyRequestHandler OnSubscribeCOVProperty;
         public delegate void DeviceCommunicationControlRequestHandler(BacnetClient sender, BacnetAddress adr, byte invoke_id, uint time_duration, uint enable_disable, string password, BacnetMaxSegments max_segments);
         public event DeviceCommunicationControlRequestHandler OnDeviceCommunicationControl;
+        public delegate void ReinitializedRequestHandler(BacnetClient sender, BacnetAddress adr, byte invoke_id, BacnetReinitializedStates state, string password, BacnetMaxSegments max_segments);
+        public event ReinitializedRequestHandler OnReinitializedDevice;
 
         protected void ProcessConfirmedServiceRequest(BacnetAddress adr, BacnetPduTypes type, BacnetConfirmedServices service, BacnetMaxSegments max_segments, BacnetMaxAdpu max_adpu, byte invoke_id, byte[] buffer, int offset, int length)
         {
@@ -286,6 +288,15 @@ namespace System.IO.BACnet
                         OnDeviceCommunicationControl(this, adr, invoke_id, timeDuration, enable_disable, password, max_segments);
                     else
                         Trace.TraceWarning("Couldn't decode DeviceCommunicationControl");
+                }
+                else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_REINITIALIZE_DEVICE && OnReinitializedDevice != null)
+                {
+                    BacnetReinitializedStates state;
+                    string password;
+                    if (Services.DecodeReinitializeDevice(buffer, offset, length, out state, out password) >= 0)
+                        OnReinitializedDevice(this, adr, invoke_id, state, password, max_segments);
+                    else
+                        Trace.TraceWarning("Couldn't decode ReinitializeDevice");
                 }
             }
             catch (Exception ex)
@@ -1213,6 +1224,59 @@ namespace System.IO.BACnet
             }
             else
             {   
+            }
+
+            res.Dispose();
+        }
+
+        public bool ReinitializeRequest(BacnetAddress adr, BacnetReinitializedStates state, string password, byte invoke_id = 0)
+        {
+            using (BacnetAsyncResult result = (BacnetAsyncResult)BeginReinitializeRequest(adr, state, password, true, invoke_id))
+            {
+                for (int r = 0; r < m_retries; r++)
+                {
+                    if (result.WaitForDone(m_timeout))
+                    {
+                        Exception ex;
+                        EndReinitializeRequest(result, out ex);
+                        if (ex != null) throw ex;
+                        else return true;
+                    }
+                    result.Resend();
+                }
+            }
+            return false;
+        }
+
+        public IAsyncResult BeginReinitializeRequest(BacnetAddress adr, BacnetReinitializedStates state, string password, bool wait_for_transmit, byte invoke_id = 0)
+        {
+            Trace.WriteLine("Sending ReinitializeRequest ... ", null);
+            if (invoke_id == 0) invoke_id = unchecked(m_invoke_id++);
+
+            EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, null, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, 0);
+            APDU.EncodeConfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST | (m_max_segments != BacnetMaxSegments.MAX_SEG0 ? BacnetPduTypes.SEGMENTED_RESPONSE_ACCEPTED : 0), BacnetConfirmedServices.SERVICE_CONFIRMED_REINITIALIZE_DEVICE, m_max_segments, m_client.MaxAdpuLength, invoke_id, 0, 0);
+            Services.EncodeReinitializeDevice(b, state, password);
+
+            //send
+            BacnetAsyncResult ret = new BacnetAsyncResult(this, adr, invoke_id, b.buffer, b.offset - m_client.HeaderLength, wait_for_transmit, m_transmit_timeout);
+            ret.Resend();
+
+            return ret;
+        }
+
+        public void EndReinitializeRequest(IAsyncResult result, out Exception ex)
+        {
+            BacnetAsyncResult res = (BacnetAsyncResult)result;
+            ex = res.Error;
+            if (ex == null && !res.WaitForDone(m_timeout))
+                ex = new Exception("Wait Timeout");
+
+            if (ex == null)
+            {
+            }
+            else
+            {
             }
 
             res.Dispose();
