@@ -10,8 +10,6 @@
 	The project was created in order to test and evaluate the BACnet protocol.
 	In specific I needed a platform on which to test theoretical performance 
 	throughput for huge amounts of data over MSTP/RS485 multidrop network. 
-	The BACnet feature "segmentation" will be required to increase throughput
-	in order to fulfill our requirements. Or so I assume. 
 	There're other free/open programs that also implements BACnet "exploring". 
 	So far I haven't found any to my satisfaction though. Some are worth 
 	mentioning. 
@@ -31,11 +29,32 @@
 	device but not very useful on devices like PCs. 
 	I would have liked to contribute and base my tests on Steves project, but
 	the shift to "session" based code (as agreed upon in the mail list) may 
-	have been too big a mouthful. My patches were ignored. 
+	have been too big a mouthful. My patches were not approved. 
+	CAS BACnet Explorer, by Chipkin Automation Systems:
+	http://www.chipkin.com/products/software/bacnet-software/cas-bacnet-explorer
+	Same concept as Yabe. Not as nicely finished as InneaBACnetExplorer	and 
+	not as comprehensive as BACnet Stack. To be honest, the program is 
+	actually fairly horrible. It runs very poorly (at least on my machine) and
+	the interface is not much different from a console. The documentation are 
+	very nice though. Also got a few articles about performance in MSTP.
 	
 	This document is subject to change.
 
-1.2 CREDITS
+1.2 SEGMENTATION
+	I've implemented 'segmentation' as a part of my performance testing. Too
+	see it in action, I've added a 'HugeBlob' octet value in the DemoServer, 
+	ranging 2000 bytes. This is more than the max_adpu. 
+	The file operations are also able to use 'segmentation' if the options are
+	set accordingly.
+	I'm not sure if my implementation or my usage is correct though. I've 
+	followed the guidelines	from the 'standard'. But my copy is rather old and 
+	I haven't found any	other BACnet programs that supports it. 
+	I also support 'segmentation' with a window_size > 1 in MSTP. (This was my
+	original purpose.) According to my 'standard' this is illegal. I hope that
+	means that my copy is old. I was recommended to this solution by the 
+	bacnet-l mailing list. 
+
+1.3 CREDITS
 	The projected is created by me, Morten Kvistgaard, anno 2014. 
 	Graphics are the usual FamFamFam: http://www.famfamfam.com/
 	Serializing (most/some) is ported from project by Steve Karg:
@@ -87,6 +106,46 @@
 	- Click on the device node in the "Devices" tree. If the source_address is
 	  configured to "-1" the program will ask if you will define a new one.
 	  You must do so, in order to continue communication. 
+
+2.3 OPTIONS
+	A few selected options.
+
+2.3.1 Udp_ExclusiveUseOfSocket
+	Set this to 'true' to force single socket usage on port 0xBAC0. A value of 
+	'false' will create an extra unicast socket and allow multiple clients on
+	same ip/machine.
+
+2.3.2 Subscriptions_Lifetime
+	Subscriptions will be created with this lifetime. Eg. after 120 seconds the
+	subscription will be removed by device. Set to 0 to disable.
+	
+2.3.3 Subscriptions_IssueConfirmedNotifies
+	By default notifications will be sent 'unconfirmed'. If you think your 
+	notifications are important set this to 'true' instead. 
+
+2.3.4 MSTP_DisplayFreeAddresses
+	By default a MSTP connection will display all 'free' addresses in the 
+	'Device' tree. This can help select a source_address for the program.
+	If you don't want to see the 'free' entries, set this option to 'false'
+
+2.3.5 MSTP_LogStateMachine
+	The MSTP code is able to display all state changes in log. This is very
+	verbose. It may help you understand the MSTP better though.
+	
+2.3.6 Segments_Max
+	This value sets 'allowed max_segments' to send to the client. The client
+	might not support segmentation though. If it gives you trouble, set this 
+	to 0 to disable.
+	
+2.3.7 DefaultDownloadSpeed
+	This value sets the method for 'file download'. (This is part of the 
+	original tests.) 
+	The default value of '0' will result in a standard 'send request, wait 
+	for response' sequence. This is rather efficient on udp.
+	Value '1' will result in a 'stacked asynchronous' sequence. This is suited
+	for MSTP when combined with increasing the max_info_frames. 
+	Value '2' will result in a 'segmented' sequence. This is the most efficient
+	for both Udp and MSTP. This is the result I sought!
 
 3.  TECHNICAL
     

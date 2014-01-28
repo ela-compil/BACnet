@@ -100,7 +100,7 @@ namespace Yabe
             }
         }
 
-        private void OnCOVNotification(BacnetClient sender, BacnetAddress adr, byte invoke_id, uint subscriberProcessIdentifier, BacnetObjectId initiatingDeviceIdentifier, BacnetObjectId monitoredObjectIdentifier, uint timeRemaining, bool need_confirm, ICollection<BacnetPropertyValue> values)
+        private void OnCOVNotification(BacnetClient sender, BacnetAddress adr, byte invoke_id, uint subscriberProcessIdentifier, BacnetObjectId initiatingDeviceIdentifier, BacnetObjectId monitoredObjectIdentifier, uint timeRemaining, bool need_confirm, ICollection<BacnetPropertyValue> values, BacnetMaxSegments max_segments)
         {
             string sub_key = adr.ToString() + ":" + initiatingDeviceIdentifier.instance + ":" + subscriberProcessIdentifier;
             if (m_subscription_index.ContainsKey(sub_key))
@@ -240,8 +240,12 @@ namespace Yabe
         private void MainDialog_Load(object sender, EventArgs e)
         {
             //start renew timer at half lifetime
-            m_subscriptionRenewTimer.Interval = ((int)Properties.Settings.Default.Subscriptions_Lifetime / 2) * 1000;
-            m_subscriptionRenewTimer.Enabled = true;
+            int lifetime = (int)Properties.Settings.Default.Subscriptions_Lifetime;
+            if (lifetime > 0)
+            {
+                m_subscriptionRenewTimer.Interval = (lifetime / 2) * 1000;
+                m_subscriptionRenewTimer.Enabled = true;
+            }
         }
 
         private TreeNode FindCommTreeNode(BacnetClient comm)
@@ -342,6 +346,10 @@ namespace Yabe
                 try
                 {
                     //start BACnet
+                    comm.ProposedWindowSize = Properties.Settings.Default.Segments_ProposedWindowSize;
+                    comm.Retries = (int)Properties.Settings.Default.DefaultRetries;
+                    comm.Timeout = (int)Properties.Settings.Default.DefaultTimeout;
+                    comm.MaxSegments = BacnetClient.GetSegmentsCount(Properties.Settings.Default.Segments_Max);
                     comm.OnIam += new BacnetClient.IamHandler(OnIam);
                     comm.OnCOVNotification += new BacnetClient.COVNotificationHandler(OnCOVNotification);
                     comm.Start();
@@ -567,10 +575,6 @@ namespace Yabe
                 int old_timeout = comm.Timeout;
                 try
                 {
-                    //first connection to MSTP should have much longer timeout ... until we get into the ring
-                    if (comm.Transport is BacnetMstpProtocolTransport)
-                        comm.Timeout = 30000;
-
                     try
                     {
                         if (!comm.ReadPropertyRequest(adr, new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, device_id), BacnetPropertyIds.PROP_OBJECT_LIST, out value_list))
@@ -622,8 +626,6 @@ namespace Yabe
                 }
                 finally
                 {
-                    if (comm.Transport is BacnetMstpProtocolTransport)
-                        comm.Timeout = old_timeout;
                     this.Cursor = Cursors.Default;
                 }
             }
@@ -720,6 +722,61 @@ namespace Yabe
                     ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_MANUAL_SLAVE_ADDRESS_BINDING, ref values);
                     ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_AUTO_SLAVE_DISCOVERY, ref values);
                     ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_SLAVE_ADDRESS_BINDING, ref values);
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PROFILE_NAME, ref values);
+                }
+                else if (object_id.type == BacnetObjectTypes.OBJECT_ANALOG_VALUE || object_id.type == BacnetObjectTypes.OBJECT_ANALOG_INPUT || object_id.type == BacnetObjectTypes.OBJECT_ANALOG_OUTPUT)
+                {
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_SYSTEM_STATUS, ref values);
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_DESCRIPTION, ref values);
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRESENT_VALUE, ref values);
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_EVENT_STATE, ref values);
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_RELIABILITY, ref values);
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OUT_OF_SERVICE, ref values);
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_UNITS, ref values);
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRIORITY_ARRAY, ref values);
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_RELINQUISH_DEFAULT, ref values);
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_COV_INCREMENT, ref values);
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_TIME_DELAY, ref values);
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_NOTIFICATION_CLASS, ref values);
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_HIGH_LIMIT, ref values);
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_LOW_LIMIT, ref values);
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_DEADBAND, ref values);
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_LIMIT_ENABLE, ref values);
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_EVENT_ENABLE, ref values);
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_ACKED_TRANSITIONS, ref values);
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_NOTIFY_TYPE, ref values);
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_EVENT_TIME_STAMPS, ref values);
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PROFILE_NAME, ref values);
+                }
+                else if (object_id.type == BacnetObjectTypes.OBJECT_OCTETSTRING_VALUE)
+                {
+                    /* I'm not these are these are the right ones */
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_SYSTEM_STATUS, ref values);
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_DESCRIPTION, ref values);
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRESENT_VALUE, ref values);
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_EVENT_STATE, ref values);
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_RELIABILITY, ref values);
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OUT_OF_SERVICE, ref values);
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_UNITS, ref values);
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRIORITY_ARRAY, ref values);
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_RELINQUISH_DEFAULT, ref values);
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_COV_INCREMENT, ref values);
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_TIME_DELAY, ref values);
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_NOTIFICATION_CLASS, ref values);
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_HIGH_LIMIT, ref values);
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_LOW_LIMIT, ref values);
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_DEADBAND, ref values);
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_LIMIT_ENABLE, ref values);
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_EVENT_ENABLE, ref values);
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_ACKED_TRANSITIONS, ref values);
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_NOTIFY_TYPE, ref values);
+                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_EVENT_TIME_STAMPS, ref values);
                     ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PROFILE_NAME, ref values);
                 }
                 else
@@ -892,16 +949,6 @@ namespace Yabe
             }
         }
 
-        private int ReadFileSize(BacnetClient comm, BacnetAddress adr, BacnetObjectId object_id)
-        {
-            IList<BacnetValue> value;
-            if (!comm.ReadPropertyRequest(adr, object_id, BacnetPropertyIds.PROP_FILE_SIZE, out value))
-                return -1;
-            if (value == null || value.Count == 0)
-                return -1;
-            return (int)Convert.ChangeType(value[0].Value, typeof(int));
-        }
-
         private void downloadFileToolStripMenuItem_Click(object sender, EventArgs e)
         {
             this.Cursor = Cursors.WaitCursor;
@@ -938,23 +985,13 @@ namespace Yabe
 
                 //where to store file?
                 SaveFileDialog dlg = new SaveFileDialog();
+                dlg.FileName = Properties.Settings.Default.GUI_LastFilename;
                 if (dlg.ShowDialog(this) != System.Windows.Forms.DialogResult.OK) return;
                 string filename = dlg.FileName;
-
-                //open file
-                System.IO.FileStream fs = null;
-                try
-                {
-                    fs = System.IO.File.OpenWrite(filename);
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(this, "Couldn't open file: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
+                Properties.Settings.Default.GUI_LastFilename = filename;
 
                 //get file size
-                int filesize = ReadFileSize(comm, adr, object_id);
+                int filesize = FileTransfers.ReadFileSize(comm, adr, object_id);
                 if (filesize < 0)
                 {
                     MessageBox.Show(this, "Couldn't read file size", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -968,43 +1005,35 @@ namespace Yabe
                 progress.Maximum = filesize;
                 progress.Show(this);
 
-                int position = 0;
-                uint count = (uint)comm.GetFileBufferMaxSize();
-                bool end_of_file = false;
-                byte[] buffer = new byte[count];
+                DateTime start = DateTime.Now;
+                double kb_per_sec = 0;
+                FileTransfers transfer = new FileTransfers();
+                EventHandler cancel_handler = (s, a) => { transfer.Cancel = true; };
+                progress.Cancel += cancel_handler;
+                Action<int> update_progress = (position) =>
+                {
+                    kb_per_sec = (position / 1024) / (DateTime.Now - start).TotalSeconds;
+                    progress.Value = position;
+                    progress.Label = string.Format((position / 1024) + " of " + (filesize / 1024) + " kb ... ({0:F1} kb/s)", kb_per_sec);
+                };
+                Application.DoEvents();
                 try
                 {
-                    DateTime start = DateTime.Now;
-                    double kb_per_sec = 0;
-                    while (!end_of_file && !progress.IsCancelled)
-                    {
-                        //read from device
-                        if (!comm.ReadFileRequest(adr, object_id, ref position, ref count, out end_of_file, buffer, 0))
-                        {
-                            MessageBox.Show(this, "Couldn't read file", "Communication Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                            return;
-                        }
-                        position += (int)count;
-
-                        //write to file
-                        if (count > 0)
-                        {
-                            fs.Write(buffer, 0, (int)count);
-                            kb_per_sec = (position/1024) / (DateTime.Now - start).TotalSeconds;
-                            progress.Increment((int)count);
-                            progress.Label = string.Format((position/1024) + " of " + (filesize/1024) + " kb ... ({0:F1} kb/s)", kb_per_sec);
-                        }
-                    }
+                    if(Properties.Settings.Default.DefaultDownloadSpeed == 2)
+                        transfer.DownloadFileBySegmentation(comm, adr, object_id, filename, update_progress);
+                    else if(Properties.Settings.Default.DefaultDownloadSpeed == 1)
+                        transfer.DownloadFileByAsync(comm, adr, object_id, filename, update_progress);
+                    else
+                        transfer.DownloadFileByBlocking(comm, adr, object_id, filename, update_progress);
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(this, "Error during read file: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(this, "Error during download file: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
                 finally
                 {
                     progress.Hide();
-                    fs.Close();
                 }
             }
             finally
@@ -1013,7 +1042,13 @@ namespace Yabe
             }
 
             //information
-            MessageBox.Show(this, "Done", "Done", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            try
+            {
+                MessageBox.Show(this, "Done", "Done", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch
+            {
+            }
         }
 
         private void uploadFileToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1052,65 +1087,42 @@ namespace Yabe
 
                 //which file to upload?
                 OpenFileDialog dlg = new OpenFileDialog();
+                dlg.FileName = Properties.Settings.Default.GUI_LastFilename;
                 if (dlg.ShowDialog(this) != System.Windows.Forms.DialogResult.OK) return;
                 string filename = dlg.FileName;
-
-                //open file
-                System.IO.FileStream fs = null;
-                try
-                {
-                    fs = System.IO.File.OpenRead(filename);
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(this, "Couldn't open file: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
-                int filesize = (int)(new System.IO.FileInfo(filename)).Length;
+                Properties.Settings.Default.GUI_LastFilename = filename;
 
                 //display progress
+                int filesize = (int)(new System.IO.FileInfo(filename)).Length;
                 ProgressDialog progress = new ProgressDialog();
                 progress.Text = "Uploading file ...";
                 progress.Label = "0 of " + (filesize / 1024) + " kb ... (0.0 kb/s)";
                 progress.Maximum = filesize;
                 progress.Show(this);
 
+                FileTransfers transfer = new FileTransfers();
+                DateTime start = DateTime.Now;
+                double kb_per_sec = 0;
+                EventHandler cancel_handler = (s, a) => { transfer.Cancel = true; };
+                progress.Cancel += cancel_handler;
+                Action<int> update_progress = (position) =>
+                {
+                    kb_per_sec = (position / 1024) / (DateTime.Now - start).TotalSeconds;
+                    progress.Value = position;
+                    progress.Label = string.Format((position / 1024) + " of " + (filesize / 1024) + " kb ... ({0:F1} kb/s)", kb_per_sec);
+                };
                 try
                 {
-                    int position = 0;
-                    int count = comm.GetFileBufferMaxSize();
-                    byte[] buffer = new byte[count];
-                    DateTime start = DateTime.Now;
-                    double kb_per_sec = 0;
-                    while (count > 0 && !progress.IsCancelled)
-                    {
-                        count = fs.Read(buffer, 0, count);
-                        if (count <= 0) continue;
-
-                        if (!comm.WriteFileRequest(adr, object_id, ref position, count, buffer))
-                        {
-                            MessageBox.Show(this, "Couldn't write file", "Communication Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                            return;
-                        }
-
-                        if (count > 0)
-                        {
-                            position += count;
-                            kb_per_sec = (position / 1024) / (DateTime.Now - start).TotalSeconds;
-                            progress.Increment((int)count);
-                            progress.Label = string.Format((position / 1024) + " of " + (filesize / 1024) + " kb ... ({0:F1} kb/s)", kb_per_sec);
-                        }
-                    }
+                    transfer.UploadFileByBlocking(comm, adr, object_id, filename, update_progress);
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(this, "Error during write file: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(this, "Error during upload file: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
                 finally
                 {
                     progress.Hide();
-                    fs.Close();
                 }
             }
             finally

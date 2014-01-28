@@ -53,5 +53,17 @@
     <Setting Name="Subscriptions_Lifetime" Type="System.UInt32" Scope="User">
       <Value Profile="(Default)">120</Value>
     </Setting>
+    <Setting Name="GUI_LastFilename" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="DefaultDownloadSpeed" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="Segments_ProposedWindowSize" Type="System.Byte" Scope="User">
+      <Value Profile="(Default)">20</Value>
+    </Setting>
+    <Setting Name="Segments_Max" Type="System.Byte" Scope="User">
+      <Value Profile="(Default)">65</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

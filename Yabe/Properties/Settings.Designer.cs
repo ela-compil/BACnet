@@ -226,5 +226,53 @@ namespace Yabe.Properties {
                 this["Subscriptions_Lifetime"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string GUI_LastFilename {
+            get {
+                return ((string)(this["GUI_LastFilename"]));
+            }
+            set {
+                this["GUI_LastFilename"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public int DefaultDownloadSpeed {
+            get {
+                return ((int)(this["DefaultDownloadSpeed"]));
+            }
+            set {
+                this["DefaultDownloadSpeed"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("20")]
+        public byte Segments_ProposedWindowSize {
+            get {
+                return ((byte)(this["Segments_ProposedWindowSize"]));
+            }
+            set {
+                this["Segments_ProposedWindowSize"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("65")]
+        public byte Segments_Max {
+            get {
+                return ((byte)(this["Segments_Max"]));
+            }
+            set {
+                this["Segments_Max"] = value;
+            }
+        }
     }
 }

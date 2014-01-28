@@ -45,6 +45,9 @@ namespace System.IO.BACnet
         int HeaderLength { get; }
         int MaxBufferLength { get; }
         BacnetMaxAdpu MaxAdpuLength { get; }
+
+        bool WaitForAllTransmits(int timeout);
+        byte MaxInfoFrames { get; set; }
     }
 
     /// <summary>
@@ -66,6 +69,7 @@ namespace System.IO.BACnet
         public int HeaderLength { get { return BVLC.BVLC_HEADER_LENGTH; } }
         public int MaxBufferLength { get { return BVLC.MSTP_MAX_NDPU + BVLC.BVLC_HEADER_LENGTH; } }
         public BacnetMaxAdpu MaxAdpuLength { get { return BVLC.BVLC_MAX_APDU; } }
+        public byte MaxInfoFrames { get { return 0xff; } set { /* ignore */ } }     //the udp doesn't have max info frames
 
         public BacnetIpUdpProtocolTransport(int port, bool use_exclusive_port = false)
         {
@@ -105,12 +109,14 @@ namespace System.IO.BACnet
                     m_shared_conn.Client.SetSocketOption(Net.Sockets.SocketOptionLevel.Socket, Net.Sockets.SocketOptionName.ReuseAddress, true);
                     System.Net.EndPoint ep = new System.Net.IPEndPoint(System.Net.IPAddress.Any, m_port);
                     m_shared_conn.Client.Bind(ep);
+                    m_shared_conn.DontFragment = true;
                 }
                 /* This is our own exclusive port. We'll recieve everything sent to this. */
                 /* So this is how we'll present our selves to the world */
                 if (m_exclusive_conn == null)
                 {
                     m_exclusive_conn = new Net.Sockets.UdpClient(0);
+                    m_exclusive_conn.DontFragment = true;
                 }
             }
             else
@@ -179,6 +185,12 @@ namespace System.IO.BACnet
             {
                 Trace.TraceError("Exception in Ip OnRecieveData: " + ex.Message);
             }
+        }
+
+        public bool WaitForAllTransmits(int timeout)
+        {
+            //we got no sending queue in udp, so just return true
+            return true;
         }
 
         public static string ConvertToHex(byte[] buffer, int length)
@@ -1394,6 +1406,16 @@ namespace System.IO.BACnet
                     return -ETIMEDOUT;
 
             return data_length;
+        }
+
+        public bool WaitForAllTransmits(int timeout)
+        {
+            while (m_send_queue.Count > 0)
+            {
+                if (!m_send_queue.First.Value.send_mutex.WaitOne(timeout))
+                    return false;
+            }
+            return true;
         }
 
         public BacnetAddress GetBroadcastAddress()

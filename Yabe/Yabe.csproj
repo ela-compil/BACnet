@@ -55,6 +55,7 @@
     <Compile Include="BACnetClient.cs" />
     <Compile Include="BACnetTransport.cs" />
     <Compile Include="DynamicPropertyGridContainer.cs" />
+    <Compile Include="FileTransfers.cs" />
     <Compile Include="MainDialog.cs">
       <SubType>Form</SubType>
     </Compile>

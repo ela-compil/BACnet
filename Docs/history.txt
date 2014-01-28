@@ -2,6 +2,12 @@
                    YABE - YET ANOTHER BACNET EXPLORER
 -------------------------------------------------------------------------------
 
+0.9.3 - 20140128
+ - Segementation
+ - Some refactoring
+ - Added some menus
+ - FileTransfer Tests
+
 0.9.2 - 20140122
  - Device Database export
  - Added default settings

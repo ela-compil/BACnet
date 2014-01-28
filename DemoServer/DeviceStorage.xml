@@ -19,16 +19,16 @@
           <Value>Yabe</Value>
         </Property>
         <Property Id="PROP_VENDOR_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
-          <Value>261</Value>
+          <Value>260</Value>
         </Property>
         <Property Id="PROP_MODEL_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>GNU</Value>
         </Property>
         <Property Id="PROP_FIRMWARE_REVISION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
-          <Value>0.9.0</Value>
+          <Value>0.9.3</Value>
         </Property>
         <Property Id="PROP_APPLICATION_SOFTWARE_VERSION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
-          <Value>1.0</Value>
+          <Value>0.9.3</Value>
         </Property>
         <Property Id="PROP_PROTOCOL_VERSION" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
           <Value>1</Value>
@@ -288,6 +288,34 @@
           <Value>This is bit three it should be on</Value>
           <Value>This is bit four it should be on</Value>
           <Value>This is bit five it should be off</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_OCTETSTRING_VALUE" Instance="0">
+      <Properties>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>This is a huge blob. 2000 bytes. It can only be transfered by segmentation</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_OCTETSTRING_VALUE: 0</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>HugeBlob</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>47</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_OCTET_STRING">
+          <Value />
+        </Property>
+        <Property Id="PROP_STATUS_FLAGS" Tag="BACNET_APPLICATION_TAG_BIT_STRING">
+          <Value>0000</Value>
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+        <Property Id="PROP_OUT_OF_SERVICE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
         </Property>
       </Properties>
     </Object>

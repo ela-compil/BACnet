@@ -63,6 +63,7 @@
             this.m_CancelButton.TabIndex = 3;
             this.m_CancelButton.Text = "Cancel";
             this.m_CancelButton.UseVisualStyleBackColor = true;
+            this.m_CancelButton.Click += new System.EventHandler(this.m_CancelButton_Click);
             // 
             // ProgressDialog
             // 
@@ -81,6 +82,7 @@
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "ProgressDialog";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.ProgressDialog_FormClosing);
             this.ResumeLayout(false);
 
         }
