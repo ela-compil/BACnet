@@ -286,5 +286,17 @@ namespace Yabe.Properties {
                 this["TimeSynchronize_UTC"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool Udp_DontFragment {
+            get {
+                return ((bool)(this["Udp_DontFragment"]));
+            }
+            set {
+                this["Udp_DontFragment"] = value;
+            }
+        }
     }
 }

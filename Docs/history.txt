@@ -2,6 +2,11 @@
                    YABE - YET ANOTHER BACNET EXPLORER
 -------------------------------------------------------------------------------
 
+0.9.5 - 2014
+ - Added Group object
+ - Fixed error in Iam encoding
+ - Fixed error in basic encoding (seen in upload file)
+
 0.9.4 - 20140128
  - Added Time Synchronize
  - Added Device Communication Control

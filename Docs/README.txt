@@ -146,6 +146,10 @@
 	for MSTP when combined with increasing the max_info_frames. 
 	Value '2' will result in a 'segmented' sequence. This is the most efficient
 	for both Udp and MSTP. This is the result I sought!
+	
+2.3.8 Udp_DontFragment
+	This will enforce (if set to 'true') no fragmentation on the udp. It ought
+	to be enforced, but it turns out that MTU is a bit tricky.
 
 3.  TECHNICAL
     

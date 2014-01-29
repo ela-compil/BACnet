@@ -61,7 +61,7 @@ namespace Yabe
 
         private void m_SearchIpButton_Click(object sender, EventArgs e)
         {
-            m_result = new BacnetClient(new BacnetIpUdpProtocolTransport((int)m_PortValue.Value, Properties.Settings.Default.Udp_ExclusiveUseOfSocket), (int)m_TimeoutValue.Value, (int)m_RetriesValue.Value);
+            m_result = new BacnetClient(new BacnetIpUdpProtocolTransport((int)m_PortValue.Value, Properties.Settings.Default.Udp_ExclusiveUseOfSocket, Properties.Settings.Default.Udp_DontFragment), (int)m_TimeoutValue.Value, (int)m_RetriesValue.Value);
             this.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.Close();
         }

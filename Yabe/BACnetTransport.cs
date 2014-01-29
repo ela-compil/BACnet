@@ -60,6 +60,7 @@ namespace System.IO.BACnet
         private int m_port;
         private byte[] m_local_buffer;
         private bool m_exclusive_port = false;
+        private bool m_dont_fragment;
 
         public BacnetAddressTypes Type { get { return BacnetAddressTypes.IP; } }
         public event MessageRecievedHandler MessageRecieved;
@@ -71,11 +72,12 @@ namespace System.IO.BACnet
         public BacnetMaxAdpu MaxAdpuLength { get { return BVLC.BVLC_MAX_APDU; } }
         public byte MaxInfoFrames { get { return 0xff; } set { /* ignore */ } }     //the udp doesn't have max info frames
 
-        public BacnetIpUdpProtocolTransport(int port, bool use_exclusive_port = false)
+        public BacnetIpUdpProtocolTransport(int port, bool use_exclusive_port = false, bool dont_fragment = false)
         {
             m_port = port;
             m_local_buffer = new byte[MaxBufferLength];
             m_exclusive_port = use_exclusive_port;
+            m_dont_fragment = dont_fragment;
         }
 
         public override bool Equals(object obj)
@@ -109,19 +111,20 @@ namespace System.IO.BACnet
                     m_shared_conn.Client.SetSocketOption(Net.Sockets.SocketOptionLevel.Socket, Net.Sockets.SocketOptionName.ReuseAddress, true);
                     System.Net.EndPoint ep = new System.Net.IPEndPoint(System.Net.IPAddress.Any, m_port);
                     m_shared_conn.Client.Bind(ep);
-                    m_shared_conn.DontFragment = true;
+                    m_shared_conn.DontFragment = m_dont_fragment;
                 }
                 /* This is our own exclusive port. We'll recieve everything sent to this. */
                 /* So this is how we'll present our selves to the world */
                 if (m_exclusive_conn == null)
                 {
                     m_exclusive_conn = new Net.Sockets.UdpClient(0);
-                    m_exclusive_conn.DontFragment = true;
+                    m_exclusive_conn.DontFragment = m_dont_fragment;
                 }
             }
             else
             {
                 m_exclusive_conn = new Net.Sockets.UdpClient(m_port);
+                m_exclusive_conn.DontFragment = m_dont_fragment;
             }
         }
 

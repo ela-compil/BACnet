@@ -145,32 +145,31 @@ namespace System.IO.BACnet.Storage
             return ErrorCodes.Good;
         }
 
-        public ErrorCodes[] ReadPropertyMultiple(BacnetObjectId object_id, ICollection<BacnetPropertyReference> properties, out IList<BacnetPropertyValue> values)
+        public void ReadPropertyMultiple(BacnetObjectId object_id, ICollection<BacnetPropertyReference> properties, out IList<BacnetPropertyValue> values)
         {
             BacnetPropertyValue[] values_ret = new BacnetPropertyValue[properties.Count];
-            ErrorCodes[] ret = new ErrorCodes[properties.Count];
 
             int count = 0;
             foreach (BacnetPropertyReference entry in properties)
             {
                 BacnetPropertyValue new_entry = new BacnetPropertyValue();
                 new_entry.property = entry;
-                ret[count] = ReadProperty(object_id, (BacnetPropertyIds)entry.propertyIdentifier, entry.propertyArrayIndex, out new_entry.value);
+                if (ReadProperty(object_id, (BacnetPropertyIds)entry.propertyIdentifier, entry.propertyArrayIndex, out new_entry.value) != ErrorCodes.Good)
+                    new_entry.value = new BacnetValue[] { new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_ERROR, new BacnetError(BacnetErrorClasses.ERROR_CLASS_OBJECT, BacnetErrorCodes.ERROR_CODE_UNKNOWN_PROPERTY)) };
                 values_ret[count] = new_entry;
                 count++;
             }
 
             values = values_ret;
-            return ret;
         }
 
-        public ErrorCodes[] ReadPropertyAll(BacnetObjectId object_id, out IList<BacnetPropertyValue> values)
+        public bool ReadPropertyAll(BacnetObjectId object_id, out IList<BacnetPropertyValue> values)
         {
             values = null;
 
             //find
             Object obj = FindObject(object_id);
-            if (obj == null) return new ErrorCodes[] { ErrorCodes.NotExist };
+            if (obj == null) return false;
 
             //build
             ErrorCodes[] ret = new ErrorCodes[obj.Properties.Length];
@@ -179,12 +178,13 @@ namespace System.IO.BACnet.Storage
             {
                 BacnetPropertyValue new_entry = new BacnetPropertyValue();
                 new_entry.property = new BacnetPropertyReference((uint)obj.Properties[i].Id, System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL);
-                ReadProperty(object_id, obj.Properties[i].Id, System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL, out new_entry.value);
+                if (ReadProperty(object_id, obj.Properties[i].Id, System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL, out new_entry.value) != ErrorCodes.Good)
+                    new_entry.value = new BacnetValue[] { new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_ERROR, new BacnetError(BacnetErrorClasses.ERROR_CLASS_OBJECT, BacnetErrorCodes.ERROR_CODE_UNKNOWN_PROPERTY)) };
                 _values[i] = new_entry;
             }
             values = _values;
 
-            return ret;
+            return true;
         }
 
         public void WritePropertyValue(BacnetObjectId object_id, BacnetPropertyIds property_id, int value)
@@ -383,6 +383,8 @@ namespace System.IO.BACnet.Storage
                     return new BacnetValue(type, DateTime.Parse(value));
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID:
                     return new BacnetValue(type, BacnetObjectId.Parse(value));
+                case BacnetApplicationTags.BACNET_APPLICATION_TAG_READ_ACCESS_SPECIFICATION:
+                    return new BacnetValue(type, BacnetReadAccessSpecification.Parse(value));
                 default:
                     return new BacnetValue(type, null);
             }

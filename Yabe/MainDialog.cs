@@ -532,6 +532,36 @@ namespace Yabe
             removeDeviceToolStripMenuItem_Click(this, null);
         }
 
+        private void SetNodeIcon(BacnetObjectTypes object_type, TreeNode node)
+        {
+            switch (object_type)
+            {
+                case BacnetObjectTypes.OBJECT_DEVICE:
+                    node.ImageIndex = 2;
+                    break;
+                case BacnetObjectTypes.OBJECT_FILE:
+                    node.ImageIndex = 5;
+                    break;
+                case BacnetObjectTypes.OBJECT_ANALOG_INPUT:
+                case BacnetObjectTypes.OBJECT_ANALOG_OUTPUT:
+                case BacnetObjectTypes.OBJECT_ANALOG_VALUE:
+                    node.ImageIndex = 6;
+                    break;
+                case BacnetObjectTypes.OBJECT_BINARY_INPUT:
+                case BacnetObjectTypes.OBJECT_BINARY_OUTPUT:
+                case BacnetObjectTypes.OBJECT_BINARY_VALUE:
+                    node.ImageIndex = 7;
+                    break;
+                case BacnetObjectTypes.OBJECT_GROUP:
+                    node.ImageIndex = 10;
+                    break;
+                default:
+                    node.ImageIndex = 4;
+                    break;
+            }
+            node.SelectedImageIndex = node.ImageIndex;
+        }
+
         private void m_DeviceTree_AfterSelect(object sender, TreeViewEventArgs e)
         {
             KeyValuePair<BacnetAddress, uint>? entry = e.Node.Tag as KeyValuePair<BacnetAddress, uint>?;
@@ -592,42 +622,57 @@ namespace Yabe
                     foreach (BacnetValue value in value_list)
                     {
                         TreeNode node = m_AddressSpaceTree.Nodes.Add(((BacnetObjectId)value.Value).type + ": " + ((BacnetObjectId)value.Value).instance);
-                        node.Tag = value;
+                        node.Tag = (BacnetObjectId)value.Value;
                         BacnetObjectId? id = value.Value as BacnetObjectId?;
                         if (id != null)
                         {
-                            switch (id.Value.type)
-                            {
-                                case BacnetObjectTypes.OBJECT_DEVICE:
-                                    node.ImageIndex = 2;
-                                    break;
-                                case BacnetObjectTypes.OBJECT_FILE:
-                                    node.ImageIndex = 5;
-                                    break;
-                                case BacnetObjectTypes.OBJECT_ANALOG_INPUT:
-                                case BacnetObjectTypes.OBJECT_ANALOG_OUTPUT:
-                                case BacnetObjectTypes.OBJECT_ANALOG_VALUE:
-                                    node.ImageIndex = 6;
-                                    break;
-                                case BacnetObjectTypes.OBJECT_BINARY_INPUT:
-                                case BacnetObjectTypes.OBJECT_BINARY_OUTPUT:
-                                case BacnetObjectTypes.OBJECT_BINARY_VALUE:
-                                    node.ImageIndex = 7;
-                                    break;
-                                default:
-                                    node.ImageIndex = 4;
-                                    break;
-                            }
+                            //icon
+                            SetNodeIcon(id.Value.type, node);
+
+                            //fetch sub properties
+                            if(id.Value.type == BacnetObjectTypes.OBJECT_GROUP)
+                                FetchGroupProperties(comm, adr, (BacnetObjectId)id, node);
                         }
                         else
                             node.ImageIndex = 4;
-                        node.SelectedImageIndex = node.ImageIndex;
                     }
                 }
                 finally
                 {
                     this.Cursor = Cursors.Default;
                 }
+            }
+        }
+
+        private void FetchGroupProperties(BacnetClient comm, BacnetAddress adr, BacnetObjectId object_id, TreeNode parent)
+        {
+            try
+            {
+                IList<BacnetValue> values;
+                if (comm.ReadPropertyRequest(adr, object_id, BacnetPropertyIds.PROP_LIST_OF_GROUP_MEMBERS, out values))
+                {
+                    foreach (BacnetValue value in values)
+                    {
+                        if (value.Value is BacnetReadAccessSpecification)
+                        {
+                            BacnetReadAccessSpecification spec = (BacnetReadAccessSpecification)value.Value;
+                            foreach (BacnetPropertyReference p in spec.propertyReferences)
+                            {
+                                TreeNode node = parent.Nodes.Add(spec.objectIdentifier.ToString() + ":" + ((BacnetPropertyIds)p.propertyIdentifier).ToString());
+                                SetNodeIcon(spec.objectIdentifier.type, node);
+                                node.Tag = spec.objectIdentifier;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    Trace.TraceWarning("Couldn't fetch group members");
+                }
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError("Couldn't fetch group members: " + ex.Message);
             }
         }
 
@@ -668,7 +713,7 @@ namespace Yabe
             values.Add(new_entry);
         }
 
-        private bool ReadAllPropertiesBySingle(BacnetClient comm, BacnetAddress adr, BacnetObjectId object_id, out ICollection<BacnetPropertyValue> value_list)
+        private bool ReadAllPropertiesBySingle(BacnetClient comm, BacnetAddress adr, BacnetObjectId object_id, out IList<BacnetReadAccessResult> value_list)
         {
             value_list = null;
 
@@ -787,7 +832,7 @@ namespace Yabe
                 comm.Retries = old_retries;
             }
 
-            value_list = values;
+            value_list = new BacnetReadAccessResult[] { new BacnetReadAccessResult(object_id, values) };
             return true;
         }
 
@@ -804,13 +849,13 @@ namespace Yabe
                 BacnetAddress adr = entry.Key;
                 BacnetClient comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag;
 
-                if (selected_node.Tag is BacnetValue && ((BacnetValue)selected_node.Tag).Value is BacnetObjectId)
+                if (selected_node.Tag is BacnetObjectId)
                 {
                     m_DataGrid.SelectedObject = null;   //clear
 
-                    BacnetObjectId object_id = (BacnetObjectId)((BacnetValue)selected_node.Tag).Value;
+                    BacnetObjectId object_id = (BacnetObjectId)selected_node.Tag;
                     BacnetPropertyReference[] properties = new BacnetPropertyReference[] { new BacnetPropertyReference((uint)BacnetPropertyIds.PROP_ALL, System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL) };
-                    ICollection<BacnetPropertyValue> multi_value_list;
+                    IList<BacnetReadAccessResult> multi_value_list;
                     try
                     {
                         //fetch properties. This might not be supported (ReadMultiple) or the response might be too long.
@@ -842,7 +887,7 @@ namespace Yabe
 
                     //update grid
                     Utilities.DynamicPropertyGridContainer bag = new Utilities.DynamicPropertyGridContainer();
-                    foreach (BacnetPropertyValue p_value in multi_value_list)
+                    foreach (BacnetPropertyValue p_value in multi_value_list[0].values)
                     {
                         object value = null;
                         BacnetValue[] b_values = null;
@@ -894,8 +939,8 @@ namespace Yabe
                 //fetch object_id
                 if (m_AddressSpaceTree.SelectedNode == null) return;
                 else if (m_AddressSpaceTree.SelectedNode.Tag == null) return;
-                else if (!(m_AddressSpaceTree.SelectedNode.Tag is BacnetValue) || !(((BacnetValue)m_AddressSpaceTree.SelectedNode.Tag).Value is BacnetObjectId)) return;
-                BacnetObjectId object_id = (BacnetObjectId)((BacnetValue)m_AddressSpaceTree.SelectedNode.Tag).Value;
+                else if (!(m_AddressSpaceTree.SelectedNode.Tag is BacnetObjectId)) return;
+                BacnetObjectId object_id = (BacnetObjectId)m_AddressSpaceTree.SelectedNode.Tag;
 
                 //fetch property
                 Utilities.CustomPropertyDescriptor c = (Utilities.CustomPropertyDescriptor)e.ChangedItem.PropertyDescriptor;
@@ -974,14 +1019,13 @@ namespace Yabe
                 //fetch object_id
                 if (
                     m_AddressSpaceTree.SelectedNode == null ||
-                    !(m_AddressSpaceTree.SelectedNode.Tag is BacnetValue) ||
-                    !(((BacnetValue)m_AddressSpaceTree.SelectedNode.Tag).Value is BacnetObjectId) ||
-                    !(((BacnetObjectId)((BacnetValue)m_AddressSpaceTree.SelectedNode.Tag).Value).type == BacnetObjectTypes.OBJECT_FILE))
+                    !(m_AddressSpaceTree.SelectedNode.Tag is BacnetObjectId) ||
+                    !(((BacnetObjectId)m_AddressSpaceTree.SelectedNode.Tag).type == BacnetObjectTypes.OBJECT_FILE))
                 {
                     MessageBox.Show(this, "The marked object is not a file", "Not a file", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                     return;
                 }
-                BacnetObjectId object_id = (BacnetObjectId)((BacnetValue)m_AddressSpaceTree.SelectedNode.Tag).Value;
+                BacnetObjectId object_id = (BacnetObjectId)m_AddressSpaceTree.SelectedNode.Tag;
 
                 //where to store file?
                 SaveFileDialog dlg = new SaveFileDialog();
@@ -1076,14 +1120,13 @@ namespace Yabe
                 //fetch object_id
                 if (
                     m_AddressSpaceTree.SelectedNode == null ||
-                    !(m_AddressSpaceTree.SelectedNode.Tag is BacnetValue) ||
-                    !(((BacnetValue)m_AddressSpaceTree.SelectedNode.Tag).Value is BacnetObjectId) ||
-                    !(((BacnetObjectId)((BacnetValue)m_AddressSpaceTree.SelectedNode.Tag).Value).type == BacnetObjectTypes.OBJECT_FILE))
+                    !(m_AddressSpaceTree.SelectedNode.Tag is BacnetObjectId) ||
+                    !(((BacnetObjectId)m_AddressSpaceTree.SelectedNode.Tag).type == BacnetObjectTypes.OBJECT_FILE))
                 {
                     MessageBox.Show(this, "The marked object is not a file", "Not a file", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                     return;
                 }
-                BacnetObjectId object_id = (BacnetObjectId)((BacnetValue)m_AddressSpaceTree.SelectedNode.Tag).Value;
+                BacnetObjectId object_id = (BacnetObjectId)m_AddressSpaceTree.SelectedNode.Tag;
 
                 //which file to upload?
                 OpenFileDialog dlg = new OpenFileDialog();
@@ -1238,8 +1281,8 @@ namespace Yabe
 
                 //fetch object_id
                 TreeNode node = (TreeNode)e.Data.GetData("System.Windows.Forms.TreeNode");
-                if (node.Tag == null || !(node.Tag is BacnetValue) || !(((BacnetValue)node.Tag).Value is BacnetObjectId)) return;
-                BacnetObjectId object_id = (BacnetObjectId)((BacnetValue)node.Tag).Value;
+                if (node.Tag == null || !(node.Tag is BacnetObjectId)) return;
+                BacnetObjectId object_id = (BacnetObjectId)node.Tag;
 
                 //create
                 CreateSubscription(comm, adr, entry.Value, object_id);
@@ -1376,12 +1419,12 @@ namespace Yabe
                 foreach (BacnetObjectId object_id in object_list)
                 {
                     //read all properties
-                    ICollection<BacnetPropertyValue> multi_value_list;
+                    IList<BacnetReadAccessResult> multi_value_list;
                     BacnetPropertyReference[] properties = new BacnetPropertyReference[] { new BacnetPropertyReference((uint)BacnetPropertyIds.PROP_ALL, System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL) };
                     comm.ReadPropertyMultipleRequest(adr, object_id, properties, out multi_value_list);
 
                     //store
-                    foreach (BacnetPropertyValue value in multi_value_list)
+                    foreach (BacnetPropertyValue value in multi_value_list[0].values)
                     {
                         storage.WriteProperty(object_id, (BacnetPropertyIds)value.property.propertyIdentifier, value.property.propertyArrayIndex, value.value, true);
                     }
@@ -1409,13 +1452,12 @@ namespace Yabe
             //fetch object_id
             if (
                 m_AddressSpaceTree.SelectedNode == null ||
-                !(m_AddressSpaceTree.SelectedNode.Tag is BacnetValue) ||
-                !(((BacnetValue)m_AddressSpaceTree.SelectedNode.Tag).Value is BacnetObjectId))
+                !(m_AddressSpaceTree.SelectedNode.Tag is BacnetObjectId))
             {
                 MessageBox.Show(this, "The marked object is not an object", "Not an object", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                 return;
             }
-            BacnetObjectId object_id = (BacnetObjectId)((BacnetValue)m_AddressSpaceTree.SelectedNode.Tag).Value;
+            BacnetObjectId object_id = (BacnetObjectId)m_AddressSpaceTree.SelectedNode.Tag;
 
             //create 
             CreateSubscription(comm, adr, entry.Value, object_id);

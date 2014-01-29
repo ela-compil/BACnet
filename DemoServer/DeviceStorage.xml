@@ -4,7 +4,7 @@
     <Object Type="OBJECT_DEVICE" Instance="400001">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_DEVICE: 400001</Value>
+          <Value>OBJECT_DEVICE:400001</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>DemoServer</Value>
@@ -25,10 +25,10 @@
           <Value>GNU</Value>
         </Property>
         <Property Id="PROP_FIRMWARE_REVISION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
-          <Value>0.9.3</Value>
+          <Value>0.9.5</Value>
         </Property>
         <Property Id="PROP_APPLICATION_SOFTWARE_VERSION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
-          <Value>0.9.3</Value>
+          <Value>0.9.5</Value>
         </Property>
         <Property Id="PROP_PROTOCOL_VERSION" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
           <Value>1</Value>
@@ -90,7 +90,7 @@
           <Value>0</Value>
         </Property>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_BINARY_INPUT: 33</Value>
+          <Value>OBJECT_BINARY_INPUT:33</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>green</Value>
@@ -124,7 +124,7 @@
           <Value>0</Value>
         </Property>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_ANALOG_OUTPUT: 3</Value>
+          <Value>OBJECT_ANALOG_OUTPUT:3</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>red</Value>
@@ -182,7 +182,7 @@
           <Value>0</Value>
         </Property>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_ANALOG_INPUT: 3333</Value>
+          <Value>OBJECT_ANALOG_INPUT:3333</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>yellow</Value>
@@ -219,7 +219,7 @@
           <Value>3</Value>
         </Property>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_MULTI_STATE_VALUE: 333</Value>
+          <Value>OBJECT_MULTI_STATE_VALUE:333</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>blue</Value>
@@ -267,7 +267,7 @@
     <Object Type="OBJECT_BITSTRING_VALUE" Instance="33333">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_BITSTRING_VALUE: 33333</Value>
+          <Value>OBJECT_BITSTRING_VALUE:33333</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>Pink</Value>
@@ -297,7 +297,7 @@
           <Value>This is a huge blob. 2000 bytes. It can only be transfered by segmentation</Value>
         </Property>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_OCTETSTRING_VALUE: 0</Value>
+          <Value>OBJECT_OCTETSTRING_VALUE:0</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>HugeBlob</Value>
@@ -322,7 +322,7 @@
 	  <Object Type="OBJECT_FILE" Instance="0">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_FILE: 0</Value>
+          <Value>OBJECT_FILE:0</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>PerformanceTestFile</Value>
@@ -351,6 +351,29 @@
         </Property>
         <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>temp.txt</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_GROUP" Instance="0">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_GROUP:0</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>MyGroup</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>11</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>Test group containing two registers (3 properties)</Value>
+        </Property>
+        <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_READ_ACCESS_RESULT">
+          <Value />
+        </Property>
+        <Property Id="PROP_LIST_OF_GROUP_MEMBERS" Tag="BACNET_APPLICATION_TAG_READ_ACCESS_SPECIFICATION">
+          <Value>OBJECT_BITSTRING_VALUE:33333:PROP_PRESENT_VALUE:PROP_OBJECT_NAME</Value>
+          <Value>OBJECT_BINARY_INPUT:33:PROP_PRESENT_VALUE</Value>
         </Property>
       </Properties>
     </Object>

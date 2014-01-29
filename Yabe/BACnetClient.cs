@@ -149,7 +149,7 @@ namespace System.IO.BACnet
 
         public delegate void ReadPropertyRequestHandler(BacnetClient sender, BacnetAddress adr, byte invoke_id, BacnetObjectId object_id, BacnetPropertyReference property, BacnetMaxSegments max_segments);
         public event ReadPropertyRequestHandler OnReadPropertyRequest;
-        public delegate void ReadPropertyMultipleRequestHandler(BacnetClient sender, BacnetAddress adr, byte invoke_id, IList<BacnetObjectId> object_ids, IList<IList<BacnetPropertyReference>> property_id_and_array_index, BacnetMaxSegments max_segments);
+        public delegate void ReadPropertyMultipleRequestHandler(BacnetClient sender, BacnetAddress adr, byte invoke_id, IList<BacnetReadAccessSpecification> properties, BacnetMaxSegments max_segments);
         public event ReadPropertyMultipleRequestHandler OnReadPropertyMultipleRequest;
         public delegate void WritePropertyRequestHandler(BacnetClient sender, BacnetAddress adr, byte invoke_id, BacnetObjectId object_id, BacnetPropertyValue value, BacnetMaxSegments max_segments);
         public event WritePropertyRequestHandler OnWritePropertyRequest;
@@ -201,10 +201,9 @@ namespace System.IO.BACnet
                 }
                 else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROP_MULTIPLE && OnReadPropertyMultipleRequest != null)
                 {
-                    IList<BacnetObjectId> object_ids;
-                    IList<IList<BacnetPropertyReference>> property_id_and_array_index;
-                    if (Services.DecodeReadPropertyMultiple(buffer, offset, length, out object_ids, out property_id_and_array_index) >= 0)
-                        OnReadPropertyMultipleRequest(this, adr, invoke_id, object_ids, property_id_and_array_index, max_segments);
+                    IList<BacnetReadAccessSpecification> properties;
+                    if (Services.DecodeReadPropertyMultiple(buffer, offset, length, out properties) >= 0)
+                        OnReadPropertyMultipleRequest(this, adr, invoke_id, properties, max_segments);
                     else
                         Trace.TraceWarning("Couldn't decode DecodeReadPropertyMultiple");
                 }
@@ -720,7 +719,7 @@ namespace System.IO.BACnet
             BacnetAddress broadcast = m_client.GetBroadcastAddress();
             NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, broadcast, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, 0);
             APDU.EncodeUnconfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_I_AM);
-            Services.EncodeIamBroadcast(b, device_id, (uint)m_client.MaxAdpuLength, segmentation, m_vendor_id);
+            Services.EncodeIamBroadcast(b, device_id, (uint)GetMaxApdu(), segmentation, m_vendor_id);
 
             m_client.Send(b.buffer, m_client.HeaderLength, b.offset - m_client.HeaderLength, broadcast, false, 0);
         }
@@ -763,7 +762,7 @@ namespace System.IO.BACnet
 
         public int GetFileBufferMaxSize()
         {
-            return GetMaxApdu() - 15;
+            return GetMaxApdu() - 30;
         }
 
         public bool WriteFileRequest(BacnetAddress adr, BacnetObjectId object_id, ref int position, int count, byte[] file_buffer, byte invoke_id = 0)
@@ -1117,7 +1116,7 @@ namespace System.IO.BACnet
             res.Dispose();
         }
 
-        public bool ReadPropertyMultipleRequest(BacnetAddress adr, BacnetObjectId object_id, IEnumerable<BacnetPropertyReference> property_id_and_array_index, out ICollection<BacnetPropertyValue> value_list, byte invoke_id = 0)
+        public bool ReadPropertyMultipleRequest(BacnetAddress adr, BacnetObjectId object_id, IList<BacnetPropertyReference> property_id_and_array_index, out IList<BacnetReadAccessResult> values, byte invoke_id = 0)
         {
             using (BacnetAsyncResult result = (BacnetAsyncResult)BeginReadPropertyMultipleRequest(adr, object_id, property_id_and_array_index, true, invoke_id))
             {
@@ -1126,18 +1125,18 @@ namespace System.IO.BACnet
                     if (result.WaitForDone(m_timeout))
                     {
                         Exception ex;
-                        EndReadPropertyMultipleRequest(result, out value_list, out ex);
+                        EndReadPropertyMultipleRequest(result, out values, out ex);
                         if (ex != null) throw ex;
                         else return true;
                     }
                     result.Resend();
                 }
             }
-            value_list = null;
+            values = null;
             return false;
         }
 
-        public IAsyncResult BeginReadPropertyMultipleRequest(BacnetAddress adr, BacnetObjectId object_id, IEnumerable<BacnetPropertyReference> property_id_and_array_index, bool wait_for_transmit, byte invoke_id = 0)
+        public IAsyncResult BeginReadPropertyMultipleRequest(BacnetAddress adr, BacnetObjectId object_id, IList<BacnetPropertyReference> property_id_and_array_index, bool wait_for_transmit, byte invoke_id = 0)
         {
             Trace.WriteLine("Sending ReadPropertyMultipleRequest ... ", null);
             if (invoke_id == 0) invoke_id = unchecked(m_invoke_id++);
@@ -1154,7 +1153,7 @@ namespace System.IO.BACnet
             return ret;
         }
 
-        public void EndReadPropertyMultipleRequest(IAsyncResult result, out ICollection<BacnetPropertyValue> value_list, out Exception ex)
+        public void EndReadPropertyMultipleRequest(IAsyncResult result, out IList<BacnetReadAccessResult> values, out Exception ex)
         {
             BacnetAsyncResult res = (BacnetAsyncResult)result;
             ex = res.Error;
@@ -1164,13 +1163,12 @@ namespace System.IO.BACnet
             if (ex == null)
             {
                 //decode
-                BacnetObjectId response_object_id;
-                if (Services.DecodeReadPropertyMultipleAcknowledge(res.Result, 0, res.Result.Length, out response_object_id, out value_list) < 0)
+                if (Services.DecodeReadPropertyMultipleAcknowledge(res.Result, 0, res.Result.Length, out values) < 0)
                     ex = new Exception("Decode");
             }
             else
             {
-                value_list = null;
+                values = null;
             }
 
             res.Dispose();
@@ -1502,11 +1500,11 @@ namespace System.IO.BACnet
             });
         }
 
-        public void ReadPropertyMultipleResponse(BacnetAddress adr, byte invoke_id, Segmentation segmentation, IList<BacnetObjectId> object_ids, IList<ICollection<BacnetPropertyValue>> values)
+        public void ReadPropertyMultipleResponse(BacnetAddress adr, byte invoke_id, Segmentation segmentation, IList<BacnetReadAccessResult> values)
         {
             SendComplexAck(adr, invoke_id, segmentation, BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROP_MULTIPLE, (b) => 
             { 
-                Services.EncodeReadPropertyMultipleAcknowledge(b, object_ids, values); 
+                Services.EncodeReadPropertyMultipleAcknowledge(b, values); 
             });
         }
 

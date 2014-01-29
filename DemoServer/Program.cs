@@ -40,6 +40,7 @@ namespace DemoServer
         private static BacnetClient m_pipe_server;
         private static Dictionary<BacnetObjectId, List<Subscription>> m_subscriptions = new Dictionary<BacnetObjectId, List<Subscription>>();
         private static object m_lockObject = new object();
+        private static BacnetSegmentations m_supported_segmentation = BacnetSegmentations.SEGMENTATION_BOTH;
 
         static void Main(string[] args)
         {
@@ -94,8 +95,8 @@ namespace DemoServer
                 Console.WriteLine("");
 
                 //send greeting
-                m_udp_server.Iam(m_storage.DeviceId, BacnetSegmentations.SEGMENTATION_BOTH);
-                m_pipe_server.Iam(m_storage.DeviceId, BacnetSegmentations.SEGMENTATION_BOTH);
+                m_udp_server.Iam(m_storage.DeviceId, m_supported_segmentation);
+                m_pipe_server.Iam(m_storage.DeviceId, m_supported_segmentation);
 
                 //endless loop of nothing
                 Console.WriteLine("Press the ANY key to exit!");
@@ -205,7 +206,15 @@ namespace DemoServer
                     {
                         //encode
                         System.IO.BACnet.Serialize.EncodeBuffer buffer = new System.IO.BACnet.Serialize.EncodeBuffer();
-                        System.IO.BACnet.Serialize.ASN1.encode_cov_subscription(buffer, sub.reciever_address, sub.subscriberProcessIdentifier, sub.monitoredObjectIdentifier, sub.monitoredProperty, sub.issueConfirmedNotifications, sub.lifetime, sub.covIncrement);
+                        BacnetCOVSubscription cov = new BacnetCOVSubscription();
+                        cov.Recipient = sub.reciever_address;
+                        cov.subscriptionProcessIdentifier = sub.subscriberProcessIdentifier;
+                        cov.monitoredObjectIdentifier = sub.monitoredObjectIdentifier;
+                        cov.monitoredProperty = sub.monitoredProperty;
+                        cov.IssueConfirmedNotifications = sub.issueConfirmedNotifications;
+                        cov.TimeRemaining = (uint)sub.lifetime - (uint)(DateTime.Now - sub.start).TotalMinutes;
+                        cov.COVIncrement = sub.covIncrement;
+                        System.IO.BACnet.Serialize.ASN1.encode_cov_subscription(buffer, cov);
 
                         //add
                         BacnetValue v = new BacnetValue();
@@ -226,6 +235,42 @@ namespace DemoServer
                     blob[i] = (i % 2 == 0) ? (byte)'A' : (byte)'B';
                 v.Value = blob;
                 value = new BacnetValue[] { v };
+            }
+            else if (object_id.type == BacnetObjectTypes.OBJECT_GROUP && property_id == BacnetPropertyIds.PROP_PRESENT_VALUE)
+            {
+                //get property list
+                IList<BacnetValue> properties;
+                if (m_storage.ReadProperty(object_id, BacnetPropertyIds.PROP_LIST_OF_GROUP_MEMBERS, System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL, out properties) != DeviceStorage.ErrorCodes.Good)
+                {
+                    value = new BacnetValue[] { new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_ERROR, new BacnetError(BacnetErrorClasses.ERROR_CLASS_DEVICE, BacnetErrorCodes.ERROR_CODE_INTERNAL_ERROR)) };
+                }
+                else
+                {
+                    List<BacnetValue> _value = new List<BacnetValue>();
+                    foreach (BacnetValue p in properties)
+                    {
+                        if (p.Value is BacnetReadAccessSpecification)
+                        {
+                            BacnetReadAccessSpecification prop = (BacnetReadAccessSpecification)p.Value;
+                            BacnetReadAccessResult result = new BacnetReadAccessResult();
+                            result.objectIdentifier = prop.objectIdentifier;
+                            List<BacnetPropertyValue> result_values = new List<BacnetPropertyValue>();
+                            foreach (BacnetPropertyReference r in prop.propertyReferences)
+                            {
+                                BacnetPropertyValue prop_value = new BacnetPropertyValue();
+                                prop_value.property = r;
+                                if (m_storage.ReadProperty(prop.objectIdentifier, (BacnetPropertyIds)r.propertyIdentifier, r.propertyArrayIndex, out prop_value.value) != DeviceStorage.ErrorCodes.Good)
+                                {
+                                    prop_value.value = new BacnetValue[] { new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_ERROR, new BacnetError(BacnetErrorClasses.ERROR_CLASS_DEVICE, BacnetErrorCodes.ERROR_CODE_INTERNAL_ERROR)) };
+                                }
+                                result_values.Add(prop_value);
+                            }
+                            result.values = result_values;
+                            _value.Add(new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_READ_ACCESS_RESULT, result));
+                        }
+                    }
+                    value = _value;
+                }
             }
             else
             {
@@ -353,9 +398,9 @@ namespace DemoServer
                         System.Threading.ThreadPool.QueueUserWorkItem((o) =>
                                 {
                                     IList<BacnetPropertyValue> values;
-                                    m_storage.ReadPropertyAll(sub.monitoredObjectIdentifier, out values);
-                                    if (!sender.Notify(adr, sub.subscriberProcessIdentifier, m_storage.DeviceId, sub.monitoredObjectIdentifier, sub.GetTimeRemaining(), sub.issueConfirmedNotifications, values))
-                                        Trace.TraceError("Couldn't send notify");
+                                    if(m_storage.ReadPropertyAll(sub.monitoredObjectIdentifier, out values))
+                                        if (!sender.Notify(adr, sub.subscriberProcessIdentifier, m_storage.DeviceId, sub.monitoredObjectIdentifier, sub.GetTimeRemaining(), sub.issueConfirmedNotifications, values))
+                                            Trace.TraceError("Couldn't send notify");
                                 }, null);
                     }
                 }
@@ -618,32 +663,32 @@ namespace DemoServer
             }
         }
 
-        private static void OnReadPropertyMultipleRequest(BacnetClient sender, BacnetAddress adr, byte invoke_id, IList<BacnetObjectId> object_ids, IList<IList<BacnetPropertyReference>> property_id_and_array_index, BacnetMaxSegments max_segments)
+        private static void OnReadPropertyMultipleRequest(BacnetClient sender, BacnetAddress adr, byte invoke_id, IList<BacnetReadAccessSpecification> properties, BacnetMaxSegments max_segments)
         {
             lock (m_lockObject)
             {
                 try
                 {
                     IList<BacnetPropertyValue> value;
-                    int o_count = 0;
-                    List<ICollection<BacnetPropertyValue>> values = new List<ICollection<BacnetPropertyValue>>();
-                    foreach (BacnetObjectId object_id in object_ids)
+                    List<BacnetReadAccessResult> values = new List<BacnetReadAccessResult>();
+                    foreach (BacnetReadAccessSpecification p in properties)
                     {
-                        IList<BacnetPropertyReference> property = property_id_and_array_index[o_count];
-                        if (property.Count == 1 && property[0].propertyIdentifier == (uint)BacnetPropertyIds.PROP_ALL)
+                        if (p.propertyReferences.Count == 1 && p.propertyReferences[0].propertyIdentifier == (uint)BacnetPropertyIds.PROP_ALL)
                         {
-                            m_storage.ReadPropertyAll(object_id, out value);
-                            property_id_and_array_index[o_count] = property;
+                            if (!m_storage.ReadPropertyAll(p.objectIdentifier, out value))
+                            {
+                                sender.ErrorResponse(adr, BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROP_MULTIPLE, invoke_id, BacnetErrorClasses.ERROR_CLASS_OBJECT, BacnetErrorCodes.ERROR_CODE_UNKNOWN_OBJECT);
+                                return;
+                            }
                         }
                         else
-                            m_storage.ReadPropertyMultiple(object_id, property, out value);
-                        values.Add(value);
-                        o_count++;
+                            m_storage.ReadPropertyMultiple(p.objectIdentifier, p.propertyReferences, out value);
+                        values.Add(new BacnetReadAccessResult(p.objectIdentifier, value));
                     }
 
                     HandleSegmentationResponse(sender, adr, invoke_id, max_segments, (seg) => 
                     { 
-                        sender.ReadPropertyMultipleResponse(adr, invoke_id, seg, object_ids, values); 
+                        sender.ReadPropertyMultipleResponse(adr, invoke_id, seg, values); 
                     });
                 }
                 catch (Exception)
@@ -696,7 +741,7 @@ namespace DemoServer
         {
             lock (m_lockObject)
             {
-                sender.Iam(m_storage.DeviceId, BacnetSegmentations.SEGMENTATION_BOTH);
+                sender.Iam(m_storage.DeviceId, m_supported_segmentation);
             }
         }
     }
