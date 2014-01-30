@@ -2,10 +2,15 @@
                    YABE - YET ANOTHER BACNET EXPLORER
 -------------------------------------------------------------------------------
 
-0.9.5 - 2014
+0.9.5 - 20140130
  - Added Group object
  - Fixed error in Iam encoding
  - Fixed error in basic encoding (seen in upload file)
+ - Improved Iam
+ - Added better MTU in udp
+ - Fixed 'supported' bitstring
+ - Fixed float error
+ - Improved subscription status
 
 0.9.4 - 20140128
  - Added Time Synchronize

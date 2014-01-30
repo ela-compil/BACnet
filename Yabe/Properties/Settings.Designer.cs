@@ -298,5 +298,17 @@ namespace Yabe.Properties {
                 this["Udp_DontFragment"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("1472")]
+        public int Udp_MaxPayload {
+            get {
+                return ((int)(this["Udp_MaxPayload"]));
+            }
+            set {
+                this["Udp_MaxPayload"] = value;
+            }
+        }
     }
 }

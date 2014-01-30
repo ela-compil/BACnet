@@ -4,7 +4,7 @@
     <Object Type="OBJECT_DEVICE" Instance="260001">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_DEVICE: 260001</Value>
+          <Value>OBJECT_DEVICE:260001</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>SimpleServer</Value>
@@ -43,78 +43,78 @@
           <Value>0000000010101010000000000000000100000000111110111111111</Value>
         </Property>
         <Property Id="PROP_OBJECT_LIST" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_DEVICE: 260001</Value>
-          <Value>OBJECT_ANALOG_INPUT: 0</Value>
-          <Value>OBJECT_ANALOG_INPUT: 1</Value>
-          <Value>OBJECT_ANALOG_INPUT: 2</Value>
-          <Value>OBJECT_ANALOG_INPUT: 3</Value>
-          <Value>OBJECT_ANALOG_OUTPUT: 0</Value>
-          <Value>OBJECT_ANALOG_OUTPUT: 1</Value>
-          <Value>OBJECT_ANALOG_OUTPUT: 2</Value>
-          <Value>OBJECT_ANALOG_OUTPUT: 3</Value>
-          <Value>OBJECT_ANALOG_VALUE: 0</Value>
-          <Value>OBJECT_ANALOG_VALUE: 1</Value>
-          <Value>OBJECT_ANALOG_VALUE: 2</Value>
-          <Value>OBJECT_ANALOG_VALUE: 3</Value>
-          <Value>OBJECT_BINARY_INPUT: 0</Value>
-          <Value>OBJECT_BINARY_INPUT: 1</Value>
-          <Value>OBJECT_BINARY_INPUT: 2</Value>
-          <Value>OBJECT_BINARY_INPUT: 3</Value>
-          <Value>OBJECT_BINARY_INPUT: 4</Value>
-          <Value>OBJECT_BINARY_OUTPUT: 0</Value>
-          <Value>OBJECT_BINARY_OUTPUT: 1</Value>
-          <Value>OBJECT_BINARY_OUTPUT: 2</Value>
-          <Value>OBJECT_BINARY_OUTPUT: 3</Value>
-          <Value>OBJECT_BINARY_VALUE: 0</Value>
-          <Value>OBJECT_BINARY_VALUE: 1</Value>
-          <Value>OBJECT_BINARY_VALUE: 2</Value>
-          <Value>OBJECT_BINARY_VALUE: 3</Value>
-          <Value>OBJECT_BINARY_VALUE: 4</Value>
-          <Value>OBJECT_BINARY_VALUE: 5</Value>
-          <Value>OBJECT_BINARY_VALUE: 6</Value>
-          <Value>OBJECT_BINARY_VALUE: 7</Value>
-          <Value>OBJECT_BINARY_VALUE: 8</Value>
-          <Value>OBJECT_BINARY_VALUE: 9</Value>
-          <Value>OBJECT_CHARACTERSTRING_VALUE: 0</Value>
-          <Value>OBJECT_NOTIFICATION_CLASS: 0</Value>
-          <Value>OBJECT_NOTIFICATION_CLASS: 1</Value>
-          <Value>OBJECT_LIFE_SAFETY_POINT: 0</Value>
-          <Value>OBJECT_LIFE_SAFETY_POINT: 1</Value>
-          <Value>OBJECT_LIFE_SAFETY_POINT: 2</Value>
-          <Value>OBJECT_LIFE_SAFETY_POINT: 3</Value>
-          <Value>OBJECT_LIFE_SAFETY_POINT: 4</Value>
-          <Value>OBJECT_LIFE_SAFETY_POINT: 5</Value>
-          <Value>OBJECT_LIFE_SAFETY_POINT: 6</Value>
-          <Value>OBJECT_LOAD_CONTROL: 0</Value>
-          <Value>OBJECT_LOAD_CONTROL: 1</Value>
-          <Value>OBJECT_LOAD_CONTROL: 2</Value>
-          <Value>OBJECT_LOAD_CONTROL: 3</Value>
-          <Value>OBJECT_MULTI_STATE_INPUT: 0</Value>
-          <Value>OBJECT_MULTI_STATE_OUTPUT: 0</Value>
-          <Value>OBJECT_MULTI_STATE_OUTPUT: 1</Value>
-          <Value>OBJECT_MULTI_STATE_OUTPUT: 2</Value>
-          <Value>OBJECT_MULTI_STATE_OUTPUT: 3</Value>
-          <Value>OBJECT_MULTI_STATE_VALUE: 0</Value>
-          <Value>OBJECT_TRENDLOG: 0</Value>
-          <Value>OBJECT_TRENDLOG: 1</Value>
-          <Value>OBJECT_TRENDLOG: 2</Value>
-          <Value>OBJECT_TRENDLOG: 3</Value>
-          <Value>OBJECT_TRENDLOG: 4</Value>
-          <Value>OBJECT_TRENDLOG: 5</Value>
-          <Value>OBJECT_TRENDLOG: 6</Value>
-          <Value>OBJECT_TRENDLOG: 7</Value>
-          <Value>OBJECT_LIGHTING_OUTPUT: 1</Value>
-          <Value>OBJECT_LIGHTING_OUTPUT: 2</Value>
-          <Value>OBJECT_LIGHTING_OUTPUT: 3</Value>
-          <Value>OBJECT_LIGHTING_OUTPUT: 4</Value>
-          <Value>OBJECT_LIGHTING_OUTPUT: 5</Value>
-          <Value>OBJECT_LIGHTING_OUTPUT: 6</Value>
-          <Value>OBJECT_LIGHTING_OUTPUT: 7</Value>
-          <Value>OBJECT_LIGHTING_OUTPUT: 8</Value>
-          <Value>OBJECT_CHANNEL: 1</Value>
-          <Value>OBJECT_FILE: 0</Value>
-          <Value>OBJECT_FILE: 1</Value>
-          <Value>OBJECT_FILE: 2</Value>
+          <Value>OBJECT_DEVICE:260001</Value>
+          <Value>OBJECT_ANALOG_INPUT:0</Value>
+          <Value>OBJECT_ANALOG_INPUT:1</Value>
+          <Value>OBJECT_ANALOG_INPUT:2</Value>
+          <Value>OBJECT_ANALOG_INPUT:3</Value>
+          <Value>OBJECT_ANALOG_OUTPUT:0</Value>
+          <Value>OBJECT_ANALOG_OUTPUT:1</Value>
+          <Value>OBJECT_ANALOG_OUTPUT:2</Value>
+          <Value>OBJECT_ANALOG_OUTPUT:3</Value>
+          <Value>OBJECT_ANALOG_VALUE:0</Value>
+          <Value>OBJECT_ANALOG_VALUE:1</Value>
+          <Value>OBJECT_ANALOG_VALUE:2</Value>
+          <Value>OBJECT_ANALOG_VALUE:3</Value>
+          <Value>OBJECT_BINARY_INPUT:0</Value>
+          <Value>OBJECT_BINARY_INPUT:1</Value>
+          <Value>OBJECT_BINARY_INPUT:2</Value>
+          <Value>OBJECT_BINARY_INPUT:3</Value>
+          <Value>OBJECT_BINARY_INPUT:4</Value>
+          <Value>OBJECT_BINARY_OUTPUT:0</Value>
+          <Value>OBJECT_BINARY_OUTPUT:1</Value>
+          <Value>OBJECT_BINARY_OUTPUT:2</Value>
+          <Value>OBJECT_BINARY_OUTPUT:3</Value>
+          <Value>OBJECT_BINARY_VALUE:0</Value>
+          <Value>OBJECT_BINARY_VALUE:1</Value>
+          <Value>OBJECT_BINARY_VALUE:2</Value>
+          <Value>OBJECT_BINARY_VALUE:3</Value>
+          <Value>OBJECT_BINARY_VALUE:4</Value>
+          <Value>OBJECT_BINARY_VALUE:5</Value>
+          <Value>OBJECT_BINARY_VALUE:6</Value>
+          <Value>OBJECT_BINARY_VALUE:7</Value>
+          <Value>OBJECT_BINARY_VALUE:8</Value>
+          <Value>OBJECT_BINARY_VALUE:9</Value>
+          <Value>OBJECT_CHARACTERSTRING_VALUE:0</Value>
+          <Value>OBJECT_NOTIFICATION_CLASS:0</Value>
+          <Value>OBJECT_NOTIFICATION_CLASS:1</Value>
+          <Value>OBJECT_LIFE_SAFETY_POINT:0</Value>
+          <Value>OBJECT_LIFE_SAFETY_POINT:1</Value>
+          <Value>OBJECT_LIFE_SAFETY_POINT:2</Value>
+          <Value>OBJECT_LIFE_SAFETY_POINT:3</Value>
+          <Value>OBJECT_LIFE_SAFETY_POINT:4</Value>
+          <Value>OBJECT_LIFE_SAFETY_POINT:5</Value>
+          <Value>OBJECT_LIFE_SAFETY_POINT:6</Value>
+          <Value>OBJECT_LOAD_CONTROL:0</Value>
+          <Value>OBJECT_LOAD_CONTROL:1</Value>
+          <Value>OBJECT_LOAD_CONTROL:2</Value>
+          <Value>OBJECT_LOAD_CONTROL:3</Value>
+          <Value>OBJECT_MULTI_STATE_INPUT:0</Value>
+          <Value>OBJECT_MULTI_STATE_OUTPUT:0</Value>
+          <Value>OBJECT_MULTI_STATE_OUTPUT:1</Value>
+          <Value>OBJECT_MULTI_STATE_OUTPUT:2</Value>
+          <Value>OBJECT_MULTI_STATE_OUTPUT:3</Value>
+          <Value>OBJECT_MULTI_STATE_VALUE:0</Value>
+          <Value>OBJECT_TRENDLOG:0</Value>
+          <Value>OBJECT_TRENDLOG:1</Value>
+          <Value>OBJECT_TRENDLOG:2</Value>
+          <Value>OBJECT_TRENDLOG:3</Value>
+          <Value>OBJECT_TRENDLOG:4</Value>
+          <Value>OBJECT_TRENDLOG:5</Value>
+          <Value>OBJECT_TRENDLOG:6</Value>
+          <Value>OBJECT_TRENDLOG:7</Value>
+          <Value>OBJECT_LIGHTING_OUTPUT:1</Value>
+          <Value>OBJECT_LIGHTING_OUTPUT:2</Value>
+          <Value>OBJECT_LIGHTING_OUTPUT:3</Value>
+          <Value>OBJECT_LIGHTING_OUTPUT:4</Value>
+          <Value>OBJECT_LIGHTING_OUTPUT:5</Value>
+          <Value>OBJECT_LIGHTING_OUTPUT:6</Value>
+          <Value>OBJECT_LIGHTING_OUTPUT:7</Value>
+          <Value>OBJECT_LIGHTING_OUTPUT:8</Value>
+          <Value>OBJECT_CHANNEL:1</Value>
+          <Value>OBJECT_FILE:0</Value>
+          <Value>OBJECT_FILE:1</Value>
+          <Value>OBJECT_FILE:2</Value>
         </Property>
         <Property Id="PROP_MAX_APDU_LENGTH_ACCEPTED" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
           <Value>1476</Value>
@@ -156,7 +156,7 @@
     <Object Type="OBJECT_ANALOG_INPUT" Instance="0">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_ANALOG_INPUT: 0</Value>
+          <Value>OBJECT_ANALOG_INPUT:0</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>ANALOG INPUT 0</Value>
@@ -231,7 +231,7 @@
     <Object Type="OBJECT_ANALOG_INPUT" Instance="1">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_ANALOG_INPUT: 1</Value>
+          <Value>OBJECT_ANALOG_INPUT:1</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>ANALOG INPUT 1</Value>
@@ -306,7 +306,7 @@
     <Object Type="OBJECT_ANALOG_INPUT" Instance="2">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_ANALOG_INPUT: 2</Value>
+          <Value>OBJECT_ANALOG_INPUT:2</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>ANALOG INPUT 2</Value>
@@ -381,7 +381,7 @@
     <Object Type="OBJECT_ANALOG_INPUT" Instance="3">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_ANALOG_INPUT: 3</Value>
+          <Value>OBJECT_ANALOG_INPUT:3</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>ANALOG INPUT 3</Value>
@@ -456,7 +456,7 @@
     <Object Type="OBJECT_ANALOG_OUTPUT" Instance="0">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_ANALOG_OUTPUT: 0</Value>
+          <Value>OBJECT_ANALOG_OUTPUT:0</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>ANALOG OUTPUT 0</Value>
@@ -505,7 +505,7 @@
     <Object Type="OBJECT_ANALOG_OUTPUT" Instance="1">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_ANALOG_OUTPUT: 1</Value>
+          <Value>OBJECT_ANALOG_OUTPUT:1</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>ANALOG OUTPUT 1</Value>
@@ -554,7 +554,7 @@
     <Object Type="OBJECT_ANALOG_OUTPUT" Instance="2">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_ANALOG_OUTPUT: 2</Value>
+          <Value>OBJECT_ANALOG_OUTPUT:2</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>ANALOG OUTPUT 2</Value>
@@ -603,7 +603,7 @@
     <Object Type="OBJECT_ANALOG_OUTPUT" Instance="3">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_ANALOG_OUTPUT: 3</Value>
+          <Value>OBJECT_ANALOG_OUTPUT:3</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>ANALOG OUTPUT 3</Value>
@@ -652,7 +652,7 @@
     <Object Type="OBJECT_ANALOG_VALUE" Instance="0">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_ANALOG_VALUE: 0</Value>
+          <Value>OBJECT_ANALOG_VALUE:0</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>ANALOG VALUE 0</Value>
@@ -736,7 +736,7 @@
     <Object Type="OBJECT_ANALOG_VALUE" Instance="1">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_ANALOG_VALUE: 1</Value>
+          <Value>OBJECT_ANALOG_VALUE:1</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>ANALOG VALUE 1</Value>
@@ -820,7 +820,7 @@
     <Object Type="OBJECT_ANALOG_VALUE" Instance="2">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_ANALOG_VALUE: 2</Value>
+          <Value>OBJECT_ANALOG_VALUE:2</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>ANALOG VALUE 2</Value>
@@ -904,7 +904,7 @@
     <Object Type="OBJECT_ANALOG_VALUE" Instance="3">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_ANALOG_VALUE: 3</Value>
+          <Value>OBJECT_ANALOG_VALUE:3</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>ANALOG VALUE 3</Value>
@@ -988,7 +988,7 @@
     <Object Type="OBJECT_BINARY_INPUT" Instance="0">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_BINARY_INPUT: 0</Value>
+          <Value>OBJECT_BINARY_INPUT:0</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>BINARY INPUT 0</Value>
@@ -1019,7 +1019,7 @@
     <Object Type="OBJECT_BINARY_INPUT" Instance="1">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_BINARY_INPUT: 1</Value>
+          <Value>OBJECT_BINARY_INPUT:1</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>BINARY INPUT 1</Value>
@@ -1050,7 +1050,7 @@
     <Object Type="OBJECT_BINARY_INPUT" Instance="2">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_BINARY_INPUT: 2</Value>
+          <Value>OBJECT_BINARY_INPUT:2</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>BINARY INPUT 2</Value>
@@ -1081,7 +1081,7 @@
     <Object Type="OBJECT_BINARY_INPUT" Instance="3">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_BINARY_INPUT: 3</Value>
+          <Value>OBJECT_BINARY_INPUT:3</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>BINARY INPUT 3</Value>
@@ -1112,7 +1112,7 @@
     <Object Type="OBJECT_BINARY_INPUT" Instance="4">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_BINARY_INPUT: 4</Value>
+          <Value>OBJECT_BINARY_INPUT:4</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>BINARY INPUT 4</Value>
@@ -1143,7 +1143,7 @@
     <Object Type="OBJECT_BINARY_OUTPUT" Instance="0">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_BINARY_OUTPUT: 0</Value>
+          <Value>OBJECT_BINARY_OUTPUT:0</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>BINARY OUTPUT 0</Value>
@@ -1201,7 +1201,7 @@
     <Object Type="OBJECT_BINARY_OUTPUT" Instance="1">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_BINARY_OUTPUT: 1</Value>
+          <Value>OBJECT_BINARY_OUTPUT:1</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>BINARY OUTPUT 1</Value>
@@ -1259,7 +1259,7 @@
     <Object Type="OBJECT_BINARY_OUTPUT" Instance="2">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_BINARY_OUTPUT: 2</Value>
+          <Value>OBJECT_BINARY_OUTPUT:2</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>BINARY OUTPUT 2</Value>
@@ -1317,7 +1317,7 @@
     <Object Type="OBJECT_BINARY_OUTPUT" Instance="3">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_BINARY_OUTPUT: 3</Value>
+          <Value>OBJECT_BINARY_OUTPUT:3</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>BINARY OUTPUT 3</Value>
@@ -1375,7 +1375,7 @@
     <Object Type="OBJECT_BINARY_VALUE" Instance="0">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_BINARY_VALUE: 0</Value>
+          <Value>OBJECT_BINARY_VALUE:0</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>BINARY VALUE 0</Value>
@@ -1424,7 +1424,7 @@
     <Object Type="OBJECT_BINARY_VALUE" Instance="1">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_BINARY_VALUE: 1</Value>
+          <Value>OBJECT_BINARY_VALUE:1</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>BINARY VALUE 1</Value>
@@ -1473,7 +1473,7 @@
     <Object Type="OBJECT_BINARY_VALUE" Instance="2">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_BINARY_VALUE: 2</Value>
+          <Value>OBJECT_BINARY_VALUE:2</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>BINARY VALUE 2</Value>
@@ -1522,7 +1522,7 @@
     <Object Type="OBJECT_BINARY_VALUE" Instance="3">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_BINARY_VALUE: 3</Value>
+          <Value>OBJECT_BINARY_VALUE:3</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>BINARY VALUE 3</Value>
@@ -1571,7 +1571,7 @@
     <Object Type="OBJECT_BINARY_VALUE" Instance="4">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_BINARY_VALUE: 4</Value>
+          <Value>OBJECT_BINARY_VALUE:4</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>BINARY VALUE 4</Value>
@@ -1620,7 +1620,7 @@
     <Object Type="OBJECT_BINARY_VALUE" Instance="5">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_BINARY_VALUE: 5</Value>
+          <Value>OBJECT_BINARY_VALUE:5</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>BINARY VALUE 5</Value>
@@ -1669,7 +1669,7 @@
     <Object Type="OBJECT_BINARY_VALUE" Instance="6">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_BINARY_VALUE: 6</Value>
+          <Value>OBJECT_BINARY_VALUE:6</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>BINARY VALUE 6</Value>
@@ -1718,7 +1718,7 @@
     <Object Type="OBJECT_BINARY_VALUE" Instance="7">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_BINARY_VALUE: 7</Value>
+          <Value>OBJECT_BINARY_VALUE:7</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>BINARY VALUE 7</Value>
@@ -1767,7 +1767,7 @@
     <Object Type="OBJECT_BINARY_VALUE" Instance="8">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_BINARY_VALUE: 8</Value>
+          <Value>OBJECT_BINARY_VALUE:8</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>BINARY VALUE 8</Value>
@@ -1816,7 +1816,7 @@
     <Object Type="OBJECT_BINARY_VALUE" Instance="9">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_BINARY_VALUE: 9</Value>
+          <Value>OBJECT_BINARY_VALUE:9</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>BINARY VALUE 9</Value>
@@ -1865,7 +1865,7 @@
     <Object Type="OBJECT_CHARACTERSTRING_VALUE" Instance="0">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_CHARACTERSTRING_VALUE: 0</Value>
+          <Value>OBJECT_CHARACTERSTRING_VALUE:0</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value />
@@ -1890,7 +1890,7 @@
     <Object Type="OBJECT_NOTIFICATION_CLASS" Instance="0">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_NOTIFICATION_CLASS: 0</Value>
+          <Value>OBJECT_NOTIFICATION_CLASS:0</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>NOTIFICATION CLASS 0</Value>
@@ -1918,7 +1918,7 @@
     <Object Type="OBJECT_NOTIFICATION_CLASS" Instance="1">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_NOTIFICATION_CLASS: 1</Value>
+          <Value>OBJECT_NOTIFICATION_CLASS:1</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>NOTIFICATION CLASS 1</Value>
@@ -1946,7 +1946,7 @@
     <Object Type="OBJECT_LIFE_SAFETY_POINT" Instance="0">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_LIFE_SAFETY_POINT: 0</Value>
+          <Value>OBJECT_LIFE_SAFETY_POINT:0</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>LS POINT 0</Value>
@@ -2006,7 +2006,7 @@
     <Object Type="OBJECT_LIFE_SAFETY_POINT" Instance="1">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_LIFE_SAFETY_POINT: 1</Value>
+          <Value>OBJECT_LIFE_SAFETY_POINT:1</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>LS POINT 1</Value>
@@ -2066,7 +2066,7 @@
     <Object Type="OBJECT_LIFE_SAFETY_POINT" Instance="2">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_LIFE_SAFETY_POINT: 2</Value>
+          <Value>OBJECT_LIFE_SAFETY_POINT:2</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>LS POINT 2</Value>
@@ -2126,7 +2126,7 @@
     <Object Type="OBJECT_LIFE_SAFETY_POINT" Instance="3">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_LIFE_SAFETY_POINT: 3</Value>
+          <Value>OBJECT_LIFE_SAFETY_POINT:3</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>LS POINT 3</Value>
@@ -2186,7 +2186,7 @@
     <Object Type="OBJECT_LIFE_SAFETY_POINT" Instance="4">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_LIFE_SAFETY_POINT: 4</Value>
+          <Value>OBJECT_LIFE_SAFETY_POINT:4</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>LS POINT 4</Value>
@@ -2246,7 +2246,7 @@
     <Object Type="OBJECT_LIFE_SAFETY_POINT" Instance="5">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_LIFE_SAFETY_POINT: 5</Value>
+          <Value>OBJECT_LIFE_SAFETY_POINT:5</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>LS POINT 5</Value>
@@ -2306,7 +2306,7 @@
     <Object Type="OBJECT_LIFE_SAFETY_POINT" Instance="6">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_LIFE_SAFETY_POINT: 6</Value>
+          <Value>OBJECT_LIFE_SAFETY_POINT:6</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>LS POINT 6</Value>
@@ -2366,7 +2366,7 @@
     <Object Type="OBJECT_LOAD_CONTROL" Instance="0">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_LOAD_CONTROL: 0</Value>
+          <Value>OBJECT_LOAD_CONTROL:0</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>LOAD CONTROL 0</Value>
@@ -2426,7 +2426,7 @@
     <Object Type="OBJECT_LOAD_CONTROL" Instance="1">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_LOAD_CONTROL: 1</Value>
+          <Value>OBJECT_LOAD_CONTROL:1</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>LOAD CONTROL 1</Value>
@@ -2486,7 +2486,7 @@
     <Object Type="OBJECT_LOAD_CONTROL" Instance="2">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_LOAD_CONTROL: 2</Value>
+          <Value>OBJECT_LOAD_CONTROL:2</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>LOAD CONTROL 2</Value>
@@ -2546,7 +2546,7 @@
     <Object Type="OBJECT_LOAD_CONTROL" Instance="3">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_LOAD_CONTROL: 3</Value>
+          <Value>OBJECT_LOAD_CONTROL:3</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>LOAD CONTROL 3</Value>
@@ -2606,7 +2606,7 @@
     <Object Type="OBJECT_MULTI_STATE_INPUT" Instance="0">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_MULTI_STATE_INPUT: 0</Value>
+          <Value>OBJECT_MULTI_STATE_INPUT:0</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value />
@@ -2893,7 +2893,7 @@
     <Object Type="OBJECT_MULTI_STATE_OUTPUT" Instance="0">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_MULTI_STATE_OUTPUT: 0</Value>
+          <Value>OBJECT_MULTI_STATE_OUTPUT:0</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>MULTISTATE OUTPUT 0</Value>
@@ -2945,7 +2945,7 @@
     <Object Type="OBJECT_MULTI_STATE_OUTPUT" Instance="1">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_MULTI_STATE_OUTPUT: 1</Value>
+          <Value>OBJECT_MULTI_STATE_OUTPUT:1</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>MULTISTATE OUTPUT 1</Value>
@@ -2997,7 +2997,7 @@
     <Object Type="OBJECT_MULTI_STATE_OUTPUT" Instance="2">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_MULTI_STATE_OUTPUT: 2</Value>
+          <Value>OBJECT_MULTI_STATE_OUTPUT:2</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>MULTISTATE OUTPUT 2</Value>
@@ -3049,7 +3049,7 @@
     <Object Type="OBJECT_MULTI_STATE_OUTPUT" Instance="3">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_MULTI_STATE_OUTPUT: 3</Value>
+          <Value>OBJECT_MULTI_STATE_OUTPUT:3</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>MULTISTATE OUTPUT 3</Value>
@@ -3101,7 +3101,7 @@
     <Object Type="OBJECT_MULTI_STATE_VALUE" Instance="0">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_MULTI_STATE_VALUE: 0</Value>
+          <Value>OBJECT_MULTI_STATE_VALUE:0</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value />
@@ -3388,7 +3388,7 @@
     <Object Type="OBJECT_TRENDLOG" Instance="0">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_TRENDLOG: 0</Value>
+          <Value>OBJECT_TRENDLOG:0</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>Trend Log 0</Value>
@@ -3433,7 +3433,7 @@
           <Value>01-01-0001 23:59:59</Value>
         </Property>
         <Property Id="PROP_LOG_DEVICE_OBJECT_PROPERTY" Tag="BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC">
-          <Value>OBJECT_ANALOG_INPUT: 0;85;OBJECT_DEVICE: 260001</Value>
+          <Value>OBJECT_ANALOG_INPUT:0;85;OBJECT_DEVICE:260001</Value>
         </Property>
         <Property Id="PROP_LOG_INTERVAL" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
           <Value>90000</Value>
@@ -3452,7 +3452,7 @@
     <Object Type="OBJECT_TRENDLOG" Instance="1">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_TRENDLOG: 1</Value>
+          <Value>OBJECT_TRENDLOG:1</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>Trend Log 1</Value>
@@ -3497,7 +3497,7 @@
           <Value>01-01-0001 23:59:59</Value>
         </Property>
         <Property Id="PROP_LOG_DEVICE_OBJECT_PROPERTY" Tag="BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC">
-          <Value>OBJECT_ANALOG_INPUT: 1;85;OBJECT_DEVICE: 260001</Value>
+          <Value>OBJECT_ANALOG_INPUT:1;85;OBJECT_DEVICE:260001</Value>
         </Property>
         <Property Id="PROP_LOG_INTERVAL" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
           <Value>90000</Value>
@@ -3516,7 +3516,7 @@
     <Object Type="OBJECT_TRENDLOG" Instance="2">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_TRENDLOG: 2</Value>
+          <Value>OBJECT_TRENDLOG:2</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>Trend Log 2</Value>
@@ -3561,7 +3561,7 @@
           <Value>01-01-0001 23:59:59</Value>
         </Property>
         <Property Id="PROP_LOG_DEVICE_OBJECT_PROPERTY" Tag="BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC">
-          <Value>OBJECT_ANALOG_INPUT: 2;85;OBJECT_DEVICE: 260001</Value>
+          <Value>OBJECT_ANALOG_INPUT:2;85;OBJECT_DEVICE:260001</Value>
         </Property>
         <Property Id="PROP_LOG_INTERVAL" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
           <Value>90000</Value>
@@ -3580,7 +3580,7 @@
     <Object Type="OBJECT_TRENDLOG" Instance="3">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_TRENDLOG: 3</Value>
+          <Value>OBJECT_TRENDLOG:3</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>Trend Log 3</Value>
@@ -3625,7 +3625,7 @@
           <Value>01-01-0001 23:59:59</Value>
         </Property>
         <Property Id="PROP_LOG_DEVICE_OBJECT_PROPERTY" Tag="BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC">
-          <Value>OBJECT_ANALOG_INPUT: 3;85;OBJECT_DEVICE: 260001</Value>
+          <Value>OBJECT_ANALOG_INPUT:3;85;OBJECT_DEVICE:260001</Value>
         </Property>
         <Property Id="PROP_LOG_INTERVAL" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
           <Value>90000</Value>
@@ -3644,7 +3644,7 @@
     <Object Type="OBJECT_TRENDLOG" Instance="4">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_TRENDLOG: 4</Value>
+          <Value>OBJECT_TRENDLOG:4</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>Trend Log 4</Value>
@@ -3689,7 +3689,7 @@
           <Value>01-01-0001 23:59:59</Value>
         </Property>
         <Property Id="PROP_LOG_DEVICE_OBJECT_PROPERTY" Tag="BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC">
-          <Value>OBJECT_ANALOG_INPUT: 4;85;OBJECT_DEVICE: 260001</Value>
+          <Value>OBJECT_ANALOG_INPUT:4;85;OBJECT_DEVICE:260001</Value>
         </Property>
         <Property Id="PROP_LOG_INTERVAL" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
           <Value>90000</Value>
@@ -3708,7 +3708,7 @@
     <Object Type="OBJECT_TRENDLOG" Instance="5">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_TRENDLOG: 5</Value>
+          <Value>OBJECT_TRENDLOG:5</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>Trend Log 5</Value>
@@ -3753,7 +3753,7 @@
           <Value>01-01-0001 23:59:59</Value>
         </Property>
         <Property Id="PROP_LOG_DEVICE_OBJECT_PROPERTY" Tag="BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC">
-          <Value>OBJECT_ANALOG_INPUT: 5;85;OBJECT_DEVICE: 260001</Value>
+          <Value>OBJECT_ANALOG_INPUT:5;85;OBJECT_DEVICE:260001</Value>
         </Property>
         <Property Id="PROP_LOG_INTERVAL" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
           <Value>90000</Value>
@@ -3772,7 +3772,7 @@
     <Object Type="OBJECT_TRENDLOG" Instance="6">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_TRENDLOG: 6</Value>
+          <Value>OBJECT_TRENDLOG:6</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>Trend Log 6</Value>
@@ -3817,7 +3817,7 @@
           <Value>01-01-0001 23:59:59</Value>
         </Property>
         <Property Id="PROP_LOG_DEVICE_OBJECT_PROPERTY" Tag="BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC">
-          <Value>OBJECT_ANALOG_INPUT: 6;85;OBJECT_DEVICE: 260001</Value>
+          <Value>OBJECT_ANALOG_INPUT:6;85;OBJECT_DEVICE:260001</Value>
         </Property>
         <Property Id="PROP_LOG_INTERVAL" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
           <Value>90000</Value>
@@ -3836,7 +3836,7 @@
     <Object Type="OBJECT_TRENDLOG" Instance="7">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_TRENDLOG: 7</Value>
+          <Value>OBJECT_TRENDLOG:7</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>Trend Log 7</Value>
@@ -3881,7 +3881,7 @@
           <Value>01-01-0001 23:59:59</Value>
         </Property>
         <Property Id="PROP_LOG_DEVICE_OBJECT_PROPERTY" Tag="BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC">
-          <Value>OBJECT_ANALOG_INPUT: 7;85;OBJECT_DEVICE: 260001</Value>
+          <Value>OBJECT_ANALOG_INPUT:7;85;OBJECT_DEVICE:260001</Value>
         </Property>
         <Property Id="PROP_LOG_INTERVAL" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
           <Value>90000</Value>
@@ -3900,7 +3900,7 @@
     <Object Type="OBJECT_LIGHTING_OUTPUT" Instance="1">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_LIGHTING_OUTPUT: 1</Value>
+          <Value>OBJECT_LIGHTING_OUTPUT:1</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>LIGHTING OUTPUT 1</Value>
@@ -3973,7 +3973,7 @@
     <Object Type="OBJECT_LIGHTING_OUTPUT" Instance="2">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_LIGHTING_OUTPUT: 2</Value>
+          <Value>OBJECT_LIGHTING_OUTPUT:2</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>LIGHTING OUTPUT 2</Value>
@@ -4046,7 +4046,7 @@
     <Object Type="OBJECT_LIGHTING_OUTPUT" Instance="3">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_LIGHTING_OUTPUT: 3</Value>
+          <Value>OBJECT_LIGHTING_OUTPUT:3</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>LIGHTING OUTPUT 3</Value>
@@ -4119,7 +4119,7 @@
     <Object Type="OBJECT_LIGHTING_OUTPUT" Instance="4">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_LIGHTING_OUTPUT: 4</Value>
+          <Value>OBJECT_LIGHTING_OUTPUT:4</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>LIGHTING OUTPUT 4</Value>
@@ -4192,7 +4192,7 @@
     <Object Type="OBJECT_LIGHTING_OUTPUT" Instance="5">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_LIGHTING_OUTPUT: 5</Value>
+          <Value>OBJECT_LIGHTING_OUTPUT:5</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>LIGHTING OUTPUT 5</Value>
@@ -4265,7 +4265,7 @@
     <Object Type="OBJECT_LIGHTING_OUTPUT" Instance="6">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_LIGHTING_OUTPUT: 6</Value>
+          <Value>OBJECT_LIGHTING_OUTPUT:6</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>LIGHTING OUTPUT 6</Value>
@@ -4338,7 +4338,7 @@
     <Object Type="OBJECT_LIGHTING_OUTPUT" Instance="7">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_LIGHTING_OUTPUT: 7</Value>
+          <Value>OBJECT_LIGHTING_OUTPUT:7</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>LIGHTING OUTPUT 7</Value>
@@ -4411,7 +4411,7 @@
     <Object Type="OBJECT_LIGHTING_OUTPUT" Instance="8">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_LIGHTING_OUTPUT: 8</Value>
+          <Value>OBJECT_LIGHTING_OUTPUT:8</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>LIGHTING OUTPUT 8</Value>
@@ -4484,7 +4484,7 @@
     <Object Type="OBJECT_CHANNEL" Instance="1">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_CHANNEL: 1</Value>
+          <Value>OBJECT_CHANNEL:1</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>CHANNEL 1</Value>
@@ -4528,7 +4528,7 @@
     <Object Type="OBJECT_FILE" Instance="0">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_FILE: 0</Value>
+          <Value>OBJECT_FILE:0</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>FILE 0</Value>
@@ -4563,7 +4563,7 @@
     <Object Type="OBJECT_FILE" Instance="1">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_FILE: 1</Value>
+          <Value>OBJECT_FILE:1</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>FILE 1</Value>
@@ -4598,7 +4598,7 @@
     <Object Type="OBJECT_FILE" Instance="2">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_FILE: 2</Value>
+          <Value>OBJECT_FILE:2</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>FILE 2</Value>

@@ -149,7 +149,12 @@
 	
 2.3.8 Udp_DontFragment
 	This will enforce (if set to 'true') no fragmentation on the udp. It ought
-	to be enforced, but it turns out that MTU is a bit tricky.
+	to be enforced, but it turns out that MTU is a bit tricky. (See 2.3.9)
+
+2.3.9 Udp_MaxPayload
+	The max payload for udp seems to differ from the expectations of BACnet.
+	The most common payload is 1472. Which is 1500 when added with the 28 bytes
+	ip headers. This numbers is determined by your local switch/router through.
 
 3.  TECHNICAL
     

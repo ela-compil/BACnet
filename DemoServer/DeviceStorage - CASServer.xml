@@ -4,7 +4,7 @@
     <Object Type="OBJECT_DEVICE" Instance="389002">
       <Properties>
 		<Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_DEVICE: 389002</Value>
+          <Value>OBJECT_DEVICE:389002</Value>
         </Property>
 		<Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>CAS BACnet Stack server example</Value>
@@ -43,16 +43,16 @@
           <Value>000000000000000000000000000100000000101010111110111</Value>
         </Property>
 		<Property Id="PROP_OBJECT_LIST" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_DEVICE: 389002</Value>
-          <Value>OBJECT_BINARY_INPUT: 33</Value>
-          <Value>OBJECT_ANALOG_OUTPUT: 3</Value>
-          <Value>OBJECT_ANALOG_INPUT: 3333</Value>
-          <Value>OBJECT_MULTI_STATE_VALUE: 333</Value>
-          <Value>OBJECT_BITSTRING_VALUE: 33333</Value>
-          <Value>OBJECT_ANALOG_INPUT: 6</Value>
-          <Value>OBJECT_ANALOG_INPUT: 7</Value>
-          <Value>OBJECT_ANALOG_INPUT: 8</Value>
-          <Value>OBJECT_ANALOG_INPUT: 9</Value>
+          <Value>OBJECT_DEVICE:389002</Value>
+          <Value>OBJECT_BINARY_INPUT:33</Value>
+          <Value>OBJECT_ANALOG_OUTPUT:3</Value>
+          <Value>OBJECT_ANALOG_INPUT:3333</Value>
+          <Value>OBJECT_MULTI_STATE_VALUE:333</Value>
+          <Value>OBJECT_BITSTRING_VALUE:33333</Value>
+          <Value>OBJECT_ANALOG_INPUT:6</Value>
+          <Value>OBJECT_ANALOG_INPUT:7</Value>
+          <Value>OBJECT_ANALOG_INPUT:8</Value>
+          <Value>OBJECT_ANALOG_INPUT:9</Value>
         </Property>
 		<Property Id="PROP_MAX_APDU_LENGTH_ACCEPTED" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
           <Value>1497</Value>
@@ -88,7 +88,7 @@
           <Value>0</Value>
         </Property>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_BINARY_INPUT: 33</Value>
+          <Value>OBJECT_BINARY_INPUT:33</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>green</Value>
@@ -122,7 +122,7 @@
           <Value>0</Value>
         </Property>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_ANALOG_OUTPUT: 3</Value>
+          <Value>OBJECT_ANALOG_OUTPUT:3</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>red</Value>
@@ -180,7 +180,7 @@
           <Value>0</Value>
         </Property>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_ANALOG_INPUT: 3333</Value>
+          <Value>OBJECT_ANALOG_INPUT:3333</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>yellow</Value>
@@ -217,7 +217,7 @@
           <Value>3</Value>
         </Property>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_MULTI_STATE_VALUE: 333</Value>
+          <Value>OBJECT_MULTI_STATE_VALUE:333</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>blue</Value>
@@ -265,7 +265,7 @@
     <Object Type="OBJECT_BITSTRING_VALUE" Instance="33333">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_BITSTRING_VALUE: 33333</Value>
+          <Value>OBJECT_BITSTRING_VALUE:33333</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>Pink</Value>
@@ -301,7 +301,7 @@
           <Value>0</Value>
         </Property>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_ANALOG_INPUT: 6</Value>
+          <Value>OBJECT_ANALOG_INPUT:6</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>analog_input (6)</Value>
@@ -338,7 +338,7 @@
           <Value>0</Value>
         </Property>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_ANALOG_INPUT: 7</Value>
+          <Value>OBJECT_ANALOG_INPUT:7</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>analog_input (7)</Value>
@@ -375,7 +375,7 @@
           <Value>0</Value>
         </Property>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_ANALOG_INPUT: 8</Value>
+          <Value>OBJECT_ANALOG_INPUT:8</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>analog_input (8)</Value>
@@ -412,7 +412,7 @@
           <Value>0</Value>
         </Property>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
-          <Value>OBJECT_ANALOG_INPUT: 9</Value>
+          <Value>OBJECT_ANALOG_INPUT:9</Value>
         </Property>
         <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
           <Value>analog_input (9)</Value>

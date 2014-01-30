@@ -100,6 +100,13 @@ namespace Yabe
             }
         }
 
+        private void SetSubscriptionStatus(ListViewItem itm, string status)
+        {
+            if (itm.SubItems[5].Text == status) return;
+            itm.SubItems[5].Text = status;
+            itm.SubItems[4].Text = DateTime.Now.ToString("HH:mm:ss");
+        }
+
         private void OnCOVNotification(BacnetClient sender, BacnetAddress adr, byte invoke_id, uint subscriberProcessIdentifier, BacnetObjectId initiatingDeviceIdentifier, BacnetObjectId monitoredObjectIdentifier, uint timeRemaining, bool need_confirm, ICollection<BacnetPropertyValue> values, BacnetMaxSegments max_segments)
         {
             string sub_key = adr.ToString() + ":" + initiatingDeviceIdentifier.instance + ":" + subscriberProcessIdentifier;
@@ -246,6 +253,9 @@ namespace Yabe
                 m_subscriptionRenewTimer.Interval = (lifetime / 2) * 1000;
                 m_subscriptionRenewTimer.Enabled = true;
             }
+
+            //display nice floats in propertygrid
+            Utilities.CustomSingleConverter.DontDisplayExactFloats = true;
         }
 
         private TreeNode FindCommTreeNode(BacnetClient comm)
@@ -1232,6 +1242,12 @@ namespace Yabe
             this.Cursor = Cursors.WaitCursor;
             try
             {
+                //fetch device_id if needed
+                if (device_id >= System.IO.BACnet.Serialize.ASN1.BACNET_MAX_INSTANCE)
+                {
+                    device_id = FetchDeviceId(comm, adr);
+                }
+
                 //add to list
                 ListViewItem itm = m_SubscriptionView.Items.Add(adr + " - " + device_id);
                 itm.SubItems.Add(object_id.ToString());
@@ -1432,11 +1448,35 @@ namespace Yabe
 
                 //save to disk
                 storage.Save(dlg.FileName);
+
+                //display
+                MessageBox.Show(this, "Done", "Export done", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, "Error during export: " + ex.Message, "Export Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
             {
                 this.Cursor = Cursors.Default;
             }
+        }
+
+        private uint FetchDeviceId(BacnetClient comm, BacnetAddress adr)
+        {
+            IList<BacnetValue> value;
+            if (comm.ReadPropertyRequest(adr, new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, System.IO.BACnet.Serialize.ASN1.BACNET_MAX_INSTANCE), BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, out value))
+            {
+                if (value != null && value.Count > 0 && value[0].Value is BacnetObjectId)
+                {
+                    BacnetObjectId object_id = (BacnetObjectId)value[0].Value;
+                    return object_id.instance;
+                }
+                else
+                    return 0xFFFFFFFF;
+            }
+            else
+                return 0xFFFFFFFF;
         }
 
         private void subscribeToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1448,6 +1488,7 @@ namespace Yabe
             KeyValuePair<BacnetAddress, uint> entry = (KeyValuePair<BacnetAddress, uint>)m_DeviceTree.SelectedNode.Tag;
             BacnetAddress adr = entry.Key;
             BacnetClient comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag;
+            uint device_id = entry.Value;
 
             //fetch object_id
             if (
@@ -1460,7 +1501,7 @@ namespace Yabe
             BacnetObjectId object_id = (BacnetObjectId)m_AddressSpaceTree.SelectedNode.Tag;
 
             //create 
-            CreateSubscription(comm, adr, entry.Value, object_id);
+            CreateSubscription(comm, adr, device_id, object_id);
         }
 
         private void m_subscriptionRenewTimer_Tick(object sender, EventArgs e)
@@ -1472,6 +1513,7 @@ namespace Yabe
                     Subscribtion sub = (Subscribtion)itm.Tag;
                     if (!sub.comm.SubscribeCOVRequest(sub.adr, sub.object_id, sub.subscribe_id, false, Properties.Settings.Default.Subscriptions_IssueConfirmedNotifies, Properties.Settings.Default.Subscriptions_Lifetime))
                     {
+                        SetSubscriptionStatus(itm, "Offline");
                         Trace.TraceWarning("Couldn't renew subscription " + sub.subscribe_id);
                     }
                 }

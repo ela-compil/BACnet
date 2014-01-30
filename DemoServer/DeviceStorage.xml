@@ -294,7 +294,7 @@
     <Object Type="OBJECT_OCTETSTRING_VALUE" Instance="0">
       <Properties>
         <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
-          <Value>This is a huge blob. 2000 bytes. It can only be transfered by segmentation</Value>
+          <Value>This is a huge blob. 2000 bytes. It can only be transferred by segmentation</Value>
         </Property>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
           <Value>OBJECT_OCTETSTRING_VALUE:0</Value>

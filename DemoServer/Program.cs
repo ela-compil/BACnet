@@ -158,6 +158,7 @@ namespace DemoServer
                 b.SetBit((byte)BacnetObjectTypes.OBJECT_DATETIME_VALUE, true);
                 b.SetBit((byte)BacnetObjectTypes.OBJECT_TIME_VALUE, true);
                 b.SetBit((byte)BacnetObjectTypes.OBJECT_INTEGER_VALUE, true);
+                b.SetBit((byte)BacnetObjectTypes.OBJECT_GROUP, true);
                 //there're prolly more, who knows
                 v.Value = b;
                 value = new BacnetValue[] { v };
@@ -180,6 +181,10 @@ namespace DemoServer
                 b.SetBit((byte)BacnetServicesSupported.SERVICE_SUPPORTED_UNCONFIRMED_COV_NOTIFICATION, true);
                 b.SetBit((byte)BacnetServicesSupported.SERVICE_SUPPORTED_SUBSCRIBE_COV, true);
                 b.SetBit((byte)BacnetServicesSupported.SERVICE_SUPPORTED_SUBSCRIBE_COV_PROPERTY, true);
+                b.SetBit((byte)BacnetServicesSupported.SERVICE_SUPPORTED_REINITIALIZE_DEVICE, true);
+                b.SetBit((byte)BacnetServicesSupported.SERVICE_SUPPORTED_DEVICE_COMMUNICATION_CONTROL, true);
+                b.SetBit((byte)BacnetServicesSupported.SERVICE_SUPPORTED_TIME_SYNCHRONIZATION, true);
+                b.SetBit((byte)BacnetServicesSupported.SERVICE_SUPPORTED_UTC_TIME_SYNCHRONIZATION, true);
                 v.Value = b;
                 value = new BacnetValue[] { v };
             }
@@ -741,7 +746,9 @@ namespace DemoServer
         {
             lock (m_lockObject)
             {
-                sender.Iam(m_storage.DeviceId, m_supported_segmentation);
+                if (low_limit != -1 && m_storage.DeviceId < low_limit) return;
+                else if (high_limit != -1 && m_storage.DeviceId > high_limit) return;
+                else sender.Iam(m_storage.DeviceId, m_supported_segmentation);
             }
         }
     }

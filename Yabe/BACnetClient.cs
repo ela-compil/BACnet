@@ -741,28 +741,42 @@ namespace System.IO.BACnet
 
         public int GetMaxApdu()
         {
+            int max_apdu;
             switch (m_client.MaxAdpuLength)
             {
                 case BacnetMaxAdpu.MAX_APDU1476:
-                    return 1476;
+                    max_apdu = 1476;
+                    break;
                 case BacnetMaxAdpu.MAX_APDU1024:
-                    return 1024;
+                    max_apdu = 1024;
+                    break;
                 case BacnetMaxAdpu.MAX_APDU480:
-                    return 480;
+                    max_apdu = 480;
+                    break;
                 case BacnetMaxAdpu.MAX_APDU206:
-                    return 206;
+                    max_apdu = 206;
+                    break;
                 case BacnetMaxAdpu.MAX_APDU128:
-                    return 128;
+                    max_apdu = 128;
+                    break;
                 case BacnetMaxAdpu.MAX_APDU50:
-                    return 50;
+                    max_apdu = 50;
+                    break;
                 default:
                     throw new NotImplementedException();
             }
+
+            //max udp payload IRL seems to differ from the expectations in BACnet
+            //so we have to adjust it. (In order to fulfill the standard)
+            const int max_npdu_header_length = 4;       //usually it's '2', but it can also be more than '4'. Beware!
+            return Math.Min(max_apdu, m_client.MaxBufferLength - m_client.HeaderLength - max_npdu_header_length);
         }
 
         public int GetFileBufferMaxSize()
         {
-            return GetMaxApdu() - 30;
+            //6 should be the max_apdu_header_length for Confirmed (with segmentation)
+            //12 should be the max_atomic_write_file
+            return GetMaxApdu() - 18;
         }
 
         public bool WriteFileRequest(BacnetAddress adr, BacnetObjectId object_id, ref int position, int count, byte[] file_buffer, byte invoke_id = 0)
@@ -1635,7 +1649,7 @@ namespace System.IO.BACnet
             }
             catch (Exception ex)
             {
-                Error = new Exception("Write Exception", ex);
+                Error = new Exception("Write Exception: " + ex.Message);
             }
         }
 

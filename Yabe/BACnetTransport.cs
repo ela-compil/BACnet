@@ -61,6 +61,7 @@ namespace System.IO.BACnet
         private byte[] m_local_buffer;
         private bool m_exclusive_port = false;
         private bool m_dont_fragment;
+        private int m_max_payload;
 
         public BacnetAddressTypes Type { get { return BacnetAddressTypes.IP; } }
         public event MessageRecievedHandler MessageRecieved;
@@ -68,13 +69,14 @@ namespace System.IO.BACnet
         public int ExclusivePort { get { return ((Net.IPEndPoint)m_exclusive_conn.Client.LocalEndPoint).Port; } }
 
         public int HeaderLength { get { return BVLC.BVLC_HEADER_LENGTH; } }
-        public int MaxBufferLength { get { return BVLC.MSTP_MAX_NDPU + BVLC.BVLC_HEADER_LENGTH; } }
         public BacnetMaxAdpu MaxAdpuLength { get { return BVLC.BVLC_MAX_APDU; } }
         public byte MaxInfoFrames { get { return 0xff; } set { /* ignore */ } }     //the udp doesn't have max info frames
+        public int MaxBufferLength { get { return m_max_payload; } }
 
-        public BacnetIpUdpProtocolTransport(int port, bool use_exclusive_port = false, bool dont_fragment = false)
+        public BacnetIpUdpProtocolTransport(int port, bool use_exclusive_port = false, bool dont_fragment = false, int max_payload = 1472)
         {
             m_port = port;
+            m_max_payload = max_payload;
             m_local_buffer = new byte[MaxBufferLength];
             m_exclusive_port = use_exclusive_port;
             m_dont_fragment = dont_fragment;
@@ -148,6 +150,7 @@ namespace System.IO.BACnet
                 if (m_exclusive_conn == null) return;
                 System.Net.EndPoint ep = new Net.IPEndPoint(System.Net.IPAddress.Any, 0);
                 System.Net.Sockets.UdpClient conn = (System.Net.Sockets.UdpClient)asyncResult.AsyncState;
+                if (conn.Client == null) return;
                 int rx = conn.Client.EndReceiveFrom(asyncResult, ref ep);
 
                 //closed (can't happen in udp I think)
@@ -635,7 +638,7 @@ namespace System.IO.BACnet
         public bool StateLogging { get; set; }
 
         public int HeaderLength { get { return MSTP.MSTP_HEADER_LENGTH; } }
-        public int MaxBufferLength { get { return MSTP.MSTP_MAX_NDPU + MSTP.MSTP_HEADER_LENGTH + 2 + 1; } }
+        public int MaxBufferLength { get { return 502; } }
         public BacnetMaxAdpu MaxAdpuLength { get { return MSTP.MSTP_MAX_APDU; } }
 
         public delegate void FrameRecievedHandler(BacnetMstpProtocolTransport sender, BacnetMstpFrameTypes frame_type, byte destination_address, byte source_address, int msg_length);
@@ -1319,7 +1322,7 @@ namespace System.IO.BACnet
 
             //valid length?
             int full_msg_length = msg_length + MSTP.MSTP_HEADER_LENGTH + (msg_length > 0 ? 2 : 0);
-            if (msg_length > MSTP.MSTP_MAX_NDPU)
+            if (msg_length > MaxBufferLength)
             {
                 //drop message
                 m_local_buffer[0] = 0xFF;

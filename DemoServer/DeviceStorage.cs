@@ -364,9 +364,9 @@ namespace System.IO.BACnet.Storage
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_SIGNED_INT:
                     return new BacnetValue(type, int.Parse(value));
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_REAL:
-                    return new BacnetValue(type, float.Parse(value));
+                    return new BacnetValue(type, float.Parse(value, System.Globalization.CultureInfo.InvariantCulture));
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_DOUBLE:
-                    return new BacnetValue(type, double.Parse(value));
+                    return new BacnetValue(type, double.Parse(value, System.Globalization.CultureInfo.InvariantCulture));
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_OCTET_STRING:
                     return new BacnetValue(type, Convert.FromBase64String(value));
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC_DECODED:

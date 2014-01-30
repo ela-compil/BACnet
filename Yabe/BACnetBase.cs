@@ -1671,7 +1671,6 @@ namespace System.IO.BACnet.Serialize
         public const byte BVLL_TYPE_BACNET_IP = 0x81;
         public const byte BVLC_HEADER_LENGTH = 4;
         public const BacnetMaxAdpu BVLC_MAX_APDU = BacnetMaxAdpu.MAX_APDU1476;
-        public const int MSTP_MAX_NDPU = 1497;
 
         public static int Encode(byte[] buffer, int offset, BacnetBvlcFunctions function, int msg_length)
         {
@@ -1696,7 +1695,6 @@ namespace System.IO.BACnet.Serialize
         public const byte MSTP_PREAMBLE1 = 0x55;
         public const byte MSTP_PREAMBLE2 = 0xFF;
         public const BacnetMaxAdpu MSTP_MAX_APDU = BacnetMaxAdpu.MAX_APDU480;
-        public const int MSTP_MAX_NDPU = 501;
         public const byte MSTP_HEADER_LENGTH = 8;
 
         public static byte CRC_Calc_Header(byte dataValue, byte crcValue)
@@ -1845,10 +1843,13 @@ namespace System.IO.BACnet.Serialize
 
         public static void Encode(EncodeBuffer buffer, BacnetNpduControls function, BacnetAddress destination, BacnetAddress source, byte hop_count, BacnetNetworkMessageTypes network_msg_type, ushort vendor_id)
         {
-            buffer.buffer[buffer.offset++] = BACNET_PROTOCOL_VERSION;
-            buffer.buffer[buffer.offset++] = (byte)(function | (destination != null && destination.net > 0 ? BacnetNpduControls.DestinationSpecified : (BacnetNpduControls)0) | (source != null && source.net > 0 ? BacnetNpduControls.SourceSpecified : (BacnetNpduControls)0));
+            bool has_destination = destination != null && destination.net > 0 && destination.net != 0xFFFF;
+            bool has_source = source != null && source.net > 0 && source.net != 0xFFFF;
 
-            if (destination != null && destination.net > 0)
+            buffer.buffer[buffer.offset++] = BACNET_PROTOCOL_VERSION;
+            buffer.buffer[buffer.offset++] = (byte)(function | (has_destination ? BacnetNpduControls.DestinationSpecified : 0) | (has_source ? BacnetNpduControls.SourceSpecified : 0));
+
+            if (has_destination)
             {
                 buffer.buffer[buffer.offset++] =(byte)((destination.net & 0xFF00) >> 8);
                 buffer.buffer[buffer.offset++] =(byte)((destination.net & 0x00FF) >> 0);
@@ -1860,7 +1861,7 @@ namespace System.IO.BACnet.Serialize
                 }
             }
 
-            if (source != null && source.net > 0)
+            if (has_source)
             {
                 buffer.buffer[buffer.offset++] =(byte)((source.net & 0xFF00) >> 8);
                 buffer.buffer[buffer.offset++] =(byte)((source.net & 0x00FF) >> 0);
@@ -1872,9 +1873,15 @@ namespace System.IO.BACnet.Serialize
                 }
             }
 
-            if (destination != null && destination.net > 0)
+            if (has_destination)
             {
-                buffer.buffer[buffer.offset++] =hop_count;
+                buffer.buffer[buffer.offset++] = hop_count;
+            }
+
+            //display warning
+            if (has_destination || has_source)
+            {
+                System.Diagnostics.Trace.TraceWarning("NPDU size is more than 4. This will give an error in the current max_apdu calculation");
             }
 
             if ((function & BacnetNpduControls.NetworkLayerMessage) > 0)
