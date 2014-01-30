@@ -154,7 +154,7 @@
 2.3.9 Udp_MaxPayload
 	The max payload for udp seems to differ from the expectations of BACnet.
 	The most common payload is 1472. Which is 1500 when added with the 28 bytes
-	ip headers. This numbers is determined by your local switch/router through.
+	ip headers. This number is determined by your local switch/router through.
 
 3.  TECHNICAL
     
@@ -178,13 +178,13 @@
 3.2 MSTP TIMINGS
 	The timing requirements in the BACnet/MSTP standard is a bit tricky issue
 	on systems like Windows. In particular the standard defines a time slot in
-	which to assume ownership of the token. The time slot is definded as 
+	which to assume ownership of the token. The time slot is defined as 
 	[500 + TS*10 : 500 + (TS+1)*10] ms. This is a 10 ms time slot measured 
 	after the last byte on the line. 
 	My code implements the MSTP Master state machine a bit differently from the
 	standard. The standard is designed for small unscheduled MCUs. Scheduled 
 	systems like RTOS and Windows can take advantage of blocking code structure
-	and thereby give a bit more simpler code. This is probably not wise to use 
+	and thereby give a bit more simple code. This is probably not wise to use 
 	in non real time systems like Windows. But so I've done. My first version
 	was implemented with a high resolution timer (The Stopwatch class in .NET)
 	but I like this version better. And it still retains most of the state
