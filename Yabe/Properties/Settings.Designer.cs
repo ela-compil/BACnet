@@ -310,5 +310,17 @@ namespace Yabe.Properties {
                 this["Udp_MaxPayload"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool DefaultPreferStructuredView {
+            get {
+                return ((bool)(this["DefaultPreferStructuredView"]));
+            }
+            set {
+                this["DefaultPreferStructuredView"] = value;
+            }
+        }
     }
 }

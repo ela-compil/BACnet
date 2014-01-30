@@ -159,6 +159,7 @@ namespace DemoServer
                 b.SetBit((byte)BacnetObjectTypes.OBJECT_TIME_VALUE, true);
                 b.SetBit((byte)BacnetObjectTypes.OBJECT_INTEGER_VALUE, true);
                 b.SetBit((byte)BacnetObjectTypes.OBJECT_GROUP, true);
+                b.SetBit((byte)BacnetObjectTypes.OBJECT_STRUCTURED_VIEW, true);
                 //there're prolly more, who knows
                 v.Value = b;
                 value = new BacnetValue[] { v };

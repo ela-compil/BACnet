@@ -2,6 +2,9 @@
                    YABE - YET ANOTHER BACNET EXPLORER
 -------------------------------------------------------------------------------
 
+0.9.6 - 2014...
+ - Added Structured View object
+
 0.9.5 - 20140130
  - Added Group object
  - Fixed error in Iam encoding

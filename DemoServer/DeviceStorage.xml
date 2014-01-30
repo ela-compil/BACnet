@@ -79,6 +79,10 @@
           <Value>EU</Value>
         </Property>
         <Property Id="PROP_ACTIVE_COV_SUBSCRIPTIONS" Tag="BACNET_APPLICATION_TAG_NULL" />
+        <Property Id="PROP_STRUCTURED_OBJECT_LIST" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_STRUCTURED_VIEW:0</Value>
+          <Value>OBJECT_STRUCTURED_VIEW:2</Value>
+        </Property>
       </Properties>
     </Object>
     <Object Type="OBJECT_BINARY_INPUT" Instance="33">
@@ -374,6 +378,79 @@
         <Property Id="PROP_LIST_OF_GROUP_MEMBERS" Tag="BACNET_APPLICATION_TAG_READ_ACCESS_SPECIFICATION">
           <Value>OBJECT_BITSTRING_VALUE:33333:PROP_PRESENT_VALUE:PROP_OBJECT_NAME</Value>
           <Value>OBJECT_BINARY_INPUT:33:PROP_PRESENT_VALUE</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_STRUCTURED_VIEW" Instance="0">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_STRUCTURED_VIEW:0</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>Device</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>29</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>Contains the device</Value>
+        </Property>
+        <Property Id="PROP_NODE_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>3</Value>
+        </Property>
+        <Property Id="PROP_SUBORDINATE_LIST" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_DEVICE:400001</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_STRUCTURED_VIEW" Instance="1">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_STRUCTURED_VIEW:1</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>SubData</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>29</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>Contains 1 object</Value>
+        </Property>
+        <Property Id="PROP_NODE_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>8</Value>
+        </Property>
+        <Property Id="PROP_SUBORDINATE_LIST" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_GROUP:0</Value>
+        </Property>
+      </Properties>
+    </Object>
+    <Object Type="OBJECT_STRUCTURED_VIEW" Instance="2">
+      <Properties>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_STRUCTURED_VIEW:2</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>Data</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>29</Value>
+        </Property>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>Contains the rest</Value>
+        </Property>
+        <Property Id="PROP_NODE_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>8</Value>
+        </Property>
+        <Property Id="PROP_SUBORDINATE_LIST" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_BINARY_INPUT:33</Value>
+          <Value>OBJECT_ANALOG_OUTPUT:3</Value>
+          <Value>OBJECT_ANALOG_INPUT:3333</Value>
+          <Value>OBJECT_MULTI_STATE_VALUE:333</Value>
+          <Value>OBJECT_BITSTRING_VALUE:33333</Value>
+          <Value>OBJECT_OCTETSTRING_VALUE:0</Value>
+          <Value>OBJECT_FILE:0</Value>
+          <Value>OBJECT_STRUCTURED_VIEW:1</Value>
         </Property>
       </Properties>
     </Object>

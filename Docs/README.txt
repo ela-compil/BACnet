@@ -156,6 +156,11 @@
 	The most common payload is 1472. Which is 1500 when added with the 28 bytes
 	ip headers. This number is determined by your local switch/router through.
 
+2.3.10 DefaultPreferStructuredView
+	The Addendum 135d defines a 'Structured View' entry in the address space.
+	This enables a hierarchical address space. (Thank you very much.)
+	Though if you like the flat model better, set this to 'false'.
+
 3.  TECHNICAL
     
 3.1 MULTIPLE UDP CLIENTS ON SAME IP

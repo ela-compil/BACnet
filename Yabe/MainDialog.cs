@@ -565,11 +565,51 @@ namespace Yabe
                 case BacnetObjectTypes.OBJECT_GROUP:
                     node.ImageIndex = 10;
                     break;
+                case BacnetObjectTypes.OBJECT_STRUCTURED_VIEW:
+                    node.ImageIndex = 11;
+                    break;
                 default:
                     node.ImageIndex = 4;
                     break;
             }
             node.SelectedImageIndex = node.ImageIndex;
+        }
+
+        private void AddObjectEntry(BacnetClient comm, BacnetAddress adr, string name, BacnetObjectId object_id, TreeNodeCollection nodes)
+        {
+            if (string.IsNullOrEmpty(name)) name = object_id.ToString();
+            TreeNode node = nodes.Add(name);
+            node.Tag = object_id;
+
+            //icon
+            SetNodeIcon(object_id.type, node);
+
+            //fetch sub properties
+            if (object_id.type == BacnetObjectTypes.OBJECT_GROUP)
+                FetchGroupProperties(comm, adr, object_id, node.Nodes);
+            else if (object_id.type == BacnetObjectTypes.OBJECT_STRUCTURED_VIEW)
+                FetchViewObjects(comm, adr, object_id, node.Nodes);
+        }
+
+        private IList<BacnetValue> FetchStructuredObjects(BacnetClient comm, BacnetAddress adr, uint device_id)
+        {
+            IList<BacnetValue> ret;
+            int old_reties = comm.Retries;
+            try
+            {
+                comm.Retries = 1;       //only do 1 retry
+                if (!comm.ReadPropertyRequest(adr, new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, device_id), BacnetPropertyIds.PROP_STRUCTURED_OBJECT_LIST, out ret))
+                    return null;
+                return ret == null || ret.Count == 0 ? null : ret;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+            finally
+            {
+                comm.Retries = old_reties;
+            }
         }
 
         private void m_DeviceTree_AfterSelect(object sender, TreeViewEventArgs e)
@@ -581,7 +621,6 @@ namespace Yabe
 
                 BacnetClient comm = (BacnetClient)e.Node.Parent.Tag;
                 BacnetAddress adr = entry.Value.Key;
-                IList<BacnetValue> value_list;
                 uint device_id = entry.Value.Value;
 
                 //unconfigured MSTP?
@@ -613,38 +652,35 @@ namespace Yabe
                 this.Cursor = Cursors.WaitCursor;
                 Application.DoEvents();
                 int old_timeout = comm.Timeout;
+                IList<BacnetValue> value_list = null;
                 try
                 {
-                    try
+                    //fetch structured view if possible
+                    if(Properties.Settings.Default.DefaultPreferStructuredView) 
+                        value_list = FetchStructuredObjects(comm, adr, device_id);
+
+                    //fetch normal list
+                    if (value_list == null)
                     {
-                        if (!comm.ReadPropertyRequest(adr, new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, device_id), BacnetPropertyIds.PROP_OBJECT_LIST, out value_list))
+                        try
                         {
-                            MessageBox.Show(this, "Couldn't fetch objects", "Communication Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            if (!comm.ReadPropertyRequest(adr, new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, device_id), BacnetPropertyIds.PROP_OBJECT_LIST, out value_list))
+                            {
+                                MessageBox.Show(this, "Couldn't fetch objects", "Communication Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                return;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show(this, "Error during read: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                             return;
                         }
                     }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show(this, "Error during read: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        return;
-                    }
 
+                    //add to tree
                     foreach (BacnetValue value in value_list)
                     {
-                        TreeNode node = m_AddressSpaceTree.Nodes.Add(((BacnetObjectId)value.Value).type + ": " + ((BacnetObjectId)value.Value).instance);
-                        node.Tag = (BacnetObjectId)value.Value;
-                        BacnetObjectId? id = value.Value as BacnetObjectId?;
-                        if (id != null)
-                        {
-                            //icon
-                            SetNodeIcon(id.Value.type, node);
-
-                            //fetch sub properties
-                            if(id.Value.type == BacnetObjectTypes.OBJECT_GROUP)
-                                FetchGroupProperties(comm, adr, (BacnetObjectId)id, node);
-                        }
-                        else
-                            node.ImageIndex = 4;
+                        AddObjectEntry(comm, adr, null, (BacnetObjectId)value.Value, m_AddressSpaceTree.Nodes);
                     }
                 }
                 finally
@@ -654,7 +690,33 @@ namespace Yabe
             }
         }
 
-        private void FetchGroupProperties(BacnetClient comm, BacnetAddress adr, BacnetObjectId object_id, TreeNode parent)
+        private void FetchViewObjects(BacnetClient comm, BacnetAddress adr, BacnetObjectId object_id, TreeNodeCollection nodes)
+        {
+            try
+            {
+                IList<BacnetValue> values;
+                if (comm.ReadPropertyRequest(adr, object_id, BacnetPropertyIds.PROP_SUBORDINATE_LIST, out values))
+                {
+                    foreach (BacnetValue value in values)
+                    {
+                        if (value.Value is BacnetObjectId)
+                        {
+                            AddObjectEntry(comm, adr, null, (BacnetObjectId)value.Value, nodes);
+                        }
+                    }
+                }
+                else
+                {
+                    Trace.TraceWarning("Couldn't fetch view members");
+                }
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError("Couldn't fetch view members: " + ex.Message);
+            }
+        }
+
+        private void FetchGroupProperties(BacnetClient comm, BacnetAddress adr, BacnetObjectId object_id, TreeNodeCollection nodes)
         {
             try
             {
@@ -668,9 +730,7 @@ namespace Yabe
                             BacnetReadAccessSpecification spec = (BacnetReadAccessSpecification)value.Value;
                             foreach (BacnetPropertyReference p in spec.propertyReferences)
                             {
-                                TreeNode node = parent.Nodes.Add(spec.objectIdentifier.ToString() + ":" + ((BacnetPropertyIds)p.propertyIdentifier).ToString());
-                                SetNodeIcon(spec.objectIdentifier.type, node);
-                                node.Tag = spec.objectIdentifier;
+                                AddObjectEntry(comm, adr, spec.objectIdentifier.ToString() + ":" + ((BacnetPropertyIds)p.propertyIdentifier).ToString(), spec.objectIdentifier, nodes);
                             }
                         }
                     }
