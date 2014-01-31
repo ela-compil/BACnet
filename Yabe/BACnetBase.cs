@@ -1132,6 +1132,7 @@ namespace System.IO.BACnet
         Ethernet,
         ArcNet,
         LonTalk,
+        PTP,
     }
 
     public class BacnetAddress
@@ -1161,6 +1162,8 @@ namespace System.IO.BACnet
                 case BacnetAddressTypes.MSTP:
                     if(adr == null || adr.Length < 1) return "-1";
                     return adr[0].ToString();
+                case BacnetAddressTypes.PTP:
+                    return "x";
                 default:
                     return base.ToString();
             }
@@ -1179,6 +1182,37 @@ namespace System.IO.BACnet
                 return true;
             }
         }
+    }
+
+    public enum BacnetPtpFrameTypes : byte
+    {
+        FRAME_TYPE_HEARTBEAT_XOFF = 0,
+        FRAME_TYPE_HEARTBEAT_XON = 1,
+        FRAME_TYPE_DATA0 = 2,
+        FRAME_TYPE_DATA1 = 3,
+        FRAME_TYPE_DATA_ACK0_XOFF = 4,
+        FRAME_TYPE_DATA_ACK1_XOFF = 5,
+        FRAME_TYPE_DATA_ACK0_XON = 6,
+        FRAME_TYPE_DATA_ACK1_XON = 7,
+        FRAME_TYPE_DATA_NAK0_XOFF = 8,
+        FRAME_TYPE_DATA_NAK1_XOFF = 9,
+        FRAME_TYPE_DATA_NAK0_XON = 0x0A,
+        FRAME_TYPE_DATA_NAK1_XON = 0x0B,
+        FRAME_TYPE_CONNECT_REQUEST = 0x0C,
+        FRAME_TYPE_CONNECT_RESPONSE = 0x0D,
+        FRAME_TYPE_DISCONNECT_REQUEST = 0x0E,
+        FRAME_TYPE_DISCONNECT_RESPONSE = 0x0F,
+        FRAME_TYPE_TEST_REQUEST = 0x14,
+        FRAME_TYPE_TEST_RESPONSE = 0x15,
+        FRAME_TYPE_GREETING = 0xFF,     //special invention
+    }
+
+    public enum BacnetPtpDisconnectReasons : byte
+    {
+        PTP_DISCONNECT_NO_MORE_DATA = 0,
+        PTP_DISCONNECT_PREEMPTED = 1,
+        PTP_DISCONNECT_INVALID_PASSWORD = 2,
+        PTP_DISCONNECT_OTHER = 3,
     }
 
     /* MS/TP Frame Type */
@@ -1791,6 +1825,50 @@ namespace System.IO.BACnet.Serialize
             if (msg_length > 0 && max_length >= (MSTP_HEADER_LENGTH + msg_length + 2) && CRC_Calc_Data(buffer, offset + 8, msg_length) != crc_data) return -1;
             return 8 + (msg_length) + (msg_length > 0 ? 2 : 0);
         }
+    }
+
+    public class PTP
+    {
+        public const byte PTP_PREAMBLE1 = 0x55;
+        public const byte PTP_PREAMBLE2 = 0xFF;
+        public const byte PTP_GREETING_PREAMBLE1 = 0x42;
+        public const byte PTP_GREETING_PREAMBLE2 = 0x41;
+        public const BacnetMaxAdpu PTP_MAX_APDU = BacnetMaxAdpu.MAX_APDU480;
+        public const byte PTP_HEADER_LENGTH = 6;
+
+        public static int Encode(byte[] buffer, int offset, BacnetPtpFrameTypes frame_type, int msg_length)
+        {
+            buffer[offset + 0] = PTP_PREAMBLE1;
+            buffer[offset + 1] = PTP_PREAMBLE2;
+            buffer[offset + 2] = (byte)frame_type;
+            buffer[offset + 3] = (byte)((msg_length & 0xFF00) >> 8);
+            buffer[offset + 4] = (byte)((msg_length & 0x00FF) >> 0);
+            buffer[offset + 5] = MSTP.CRC_Calc_Header(buffer, offset + 2, 3);
+            if (msg_length > 0)
+            {
+                //calculate data crc
+                ushort data_crc = MSTP.CRC_Calc_Data(buffer, offset + 6, msg_length);
+                buffer[offset + 6 + msg_length + 0] = (byte)(data_crc & 0xFF);  //LSB first!
+                buffer[offset + 6 + msg_length + 1] = (byte)(data_crc >> 8);
+            }
+            return PTP_HEADER_LENGTH + (msg_length) + (msg_length > 0 ? 2 : 0);
+        }
+
+        public static int Decode(byte[] buffer, int offset, int max_length, out BacnetPtpFrameTypes frame_type, out int msg_length)
+        {
+            frame_type = (BacnetPtpFrameTypes)buffer[offset + 2];
+            msg_length = (buffer[offset + 3] << 8) | (buffer[offset + 4] << 0);
+            byte crc_header = buffer[offset + 5];
+            ushort crc_data = 0;
+            if (max_length < PTP_HEADER_LENGTH) return -1;     //not enough data
+            if (msg_length > 0) crc_data = (ushort)((buffer[offset + 6 + msg_length + 1] << 8) | (buffer[offset + 6 + msg_length + 0] << 0));
+            if (buffer[offset + 0] != PTP_PREAMBLE1) return -1;
+            if (buffer[offset + 1] != PTP_PREAMBLE2) return -1;
+            if (MSTP.CRC_Calc_Header(buffer, offset + 2, 3) != crc_header) return -1;
+            if (msg_length > 0 && max_length >= (PTP_HEADER_LENGTH + msg_length + 2) && MSTP.CRC_Calc_Data(buffer, offset + 6, msg_length) != crc_data) return -1;
+            return 8 + (msg_length) + (msg_length > 0 ? 2 : 0);
+        }
+
     }
 
     public class NPDU

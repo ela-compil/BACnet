@@ -48,15 +48,20 @@ namespace Yabe
             //find all serial ports
             string[] ports = System.IO.Ports.SerialPort.GetPortNames();
             m_SerialPortCombo.Items.AddRange(ports);
+            m_SerialPtpPortCombo.Items.AddRange(ports);
 
             //find all pipe transports that's pretending to be com ports
             ports = BacnetPipeTransport.AvailablePorts;
             foreach (string str in ports)
                 if (str.StartsWith("com", StringComparison.InvariantCultureIgnoreCase))
+                {
                     m_SerialPortCombo.Items.Add(str);
+                    m_SerialPtpPortCombo.Items.Add(str);
+                }
 
             //select first
             if (m_SerialPortCombo.Items.Count > 0) m_SerialPortCombo.SelectedItem = m_SerialPortCombo.Items[0];
+            if (m_SerialPtpPortCombo.Items.Count > 0) m_SerialPtpPortCombo.SelectedItem = m_SerialPtpPortCombo.Items[0];
         }
 
         private void m_SearchIpButton_Click(object sender, EventArgs e)
@@ -75,6 +80,22 @@ namespace Yabe
                 transport = new BacnetMstpProtocolTransport(new BacnetPipeTransport(m_SerialPortCombo.Text), (short)m_SourceAddressValue.Value, (byte)m_MaxMasterValue.Value, (byte)m_MaxInfoFramesValue.Value);
             else
                 transport = new BacnetMstpProtocolTransport(m_SerialPortCombo.Text, (int)m_BaudValue.Value, (short)m_SourceAddressValue.Value, (byte)m_MaxMasterValue.Value, (byte)m_MaxInfoFramesValue.Value);
+            transport.StateLogging = Properties.Settings.Default.MSTP_LogStateMachine;
+            m_result = new BacnetClient(transport, (int)m_TimeoutValue.Value, (int)m_RetriesValue.Value);
+            this.DialogResult = System.Windows.Forms.DialogResult.OK;
+            this.Close();
+        }
+
+        private void m_AddPtpSerialButton_Click(object sender, EventArgs e)
+        {
+            int com_number = 0;
+            if (m_SerialPtpPortCombo.Text.Length >= 3) int.TryParse(m_SerialPtpPortCombo.Text.Substring(3), out com_number);
+            BacnetPtpProtocolTransport transport;
+            if (com_number >= 1000)      //these are my special "pipe" com ports 
+                transport = new BacnetPtpProtocolTransport(new BacnetPipeTransport(m_SerialPtpPortCombo.Text), false);
+            else
+                transport = new BacnetPtpProtocolTransport(m_SerialPtpPortCombo.Text, (int)m_BaudValue.Value, false);
+            transport.Password = m_PasswordText.Text;
             transport.StateLogging = Properties.Settings.Default.MSTP_LogStateMachine;
             m_result = new BacnetClient(transport, (int)m_TimeoutValue.Value, (int)m_RetriesValue.Value);
             this.DialogResult = System.Windows.Forms.DialogResult.OK;

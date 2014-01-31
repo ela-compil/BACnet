@@ -50,6 +50,14 @@
             this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.m_TimeoutValue = new System.Windows.Forms.NumericUpDown();
             this.m_RetriesValue = new System.Windows.Forms.NumericUpDown();
+            this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.label12 = new System.Windows.Forms.Label();
+            this.m_PtpBaudRate = new System.Windows.Forms.NumericUpDown();
+            this.m_AddPtpSerialButton = new System.Windows.Forms.Button();
+            this.label13 = new System.Windows.Forms.Label();
+            this.m_SerialPtpPortCombo = new System.Windows.Forms.ComboBox();
+            this.label9 = new System.Windows.Forms.Label();
+            this.m_PasswordText = new System.Windows.Forms.TextBox();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.m_PortValue)).BeginInit();
             this.groupBox2.SuspendLayout();
@@ -60,6 +68,8 @@
             this.groupBox3.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.m_TimeoutValue)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.m_RetriesValue)).BeginInit();
+            this.groupBox4.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.m_PtpBaudRate)).BeginInit();
             this.SuspendLayout();
             // 
             // groupBox1
@@ -131,7 +141,7 @@
             // 
             // groupBox2
             // 
-            this.groupBox2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            this.groupBox2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBox2.Controls.Add(this.m_MaxInfoFramesValue);
             this.groupBox2.Controls.Add(this.label8);
@@ -144,7 +154,7 @@
             this.groupBox2.Controls.Add(this.m_AddSerialButton);
             this.groupBox2.Controls.Add(this.label4);
             this.groupBox2.Controls.Add(this.m_SerialPortCombo);
-            this.groupBox2.Location = new System.Drawing.Point(12, 137);
+            this.groupBox2.Location = new System.Drawing.Point(12, 135);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Size = new System.Drawing.Size(274, 160);
             this.groupBox2.TabIndex = 1;
@@ -329,11 +339,98 @@
             this.m_RetriesValue.TabIndex = 3;
             this.m_RetriesValue.Value = global::Yabe.Properties.Settings.Default.DefaultRetries;
             // 
+            // groupBox4
+            // 
+            this.groupBox4.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox4.Controls.Add(this.m_PasswordText);
+            this.groupBox4.Controls.Add(this.label9);
+            this.groupBox4.Controls.Add(this.label12);
+            this.groupBox4.Controls.Add(this.m_PtpBaudRate);
+            this.groupBox4.Controls.Add(this.m_AddPtpSerialButton);
+            this.groupBox4.Controls.Add(this.label13);
+            this.groupBox4.Controls.Add(this.m_SerialPtpPortCombo);
+            this.groupBox4.Location = new System.Drawing.Point(12, 301);
+            this.groupBox4.Name = "groupBox4";
+            this.groupBox4.Size = new System.Drawing.Size(274, 108);
+            this.groupBox4.TabIndex = 3;
+            this.groupBox4.TabStop = false;
+            this.groupBox4.Text = "BACnet/PTP over serial";
+            // 
+            // label12
+            // 
+            this.label12.AutoSize = true;
+            this.label12.Location = new System.Drawing.Point(10, 46);
+            this.label12.Name = "label12";
+            this.label12.Size = new System.Drawing.Size(32, 13);
+            this.label12.TabIndex = 8;
+            this.label12.Text = "Baud";
+            // 
+            // m_PtpBaudRate
+            // 
+            this.m_PtpBaudRate.DataBindings.Add(new System.Windows.Forms.Binding("Value", global::Yabe.Properties.Settings.Default, "DefaultBaudrate", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
+            this.m_PtpBaudRate.Location = new System.Drawing.Point(98, 44);
+            this.m_PtpBaudRate.Maximum = new decimal(new int[] {
+            1215752191,
+            23,
+            0,
+            0});
+            this.m_PtpBaudRate.Name = "m_PtpBaudRate";
+            this.m_PtpBaudRate.Size = new System.Drawing.Size(68, 20);
+            this.m_PtpBaudRate.TabIndex = 9;
+            this.m_PtpBaudRate.Value = global::Yabe.Properties.Settings.Default.DefaultBaudrate;
+            // 
+            // m_AddPtpSerialButton
+            // 
+            this.m_AddPtpSerialButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.m_AddPtpSerialButton.Location = new System.Drawing.Point(208, 69);
+            this.m_AddPtpSerialButton.Name = "m_AddPtpSerialButton";
+            this.m_AddPtpSerialButton.Size = new System.Drawing.Size(60, 23);
+            this.m_AddPtpSerialButton.TabIndex = 7;
+            this.m_AddPtpSerialButton.Text = "Add";
+            this.m_AddPtpSerialButton.UseVisualStyleBackColor = true;
+            this.m_AddPtpSerialButton.Click += new System.EventHandler(this.m_AddPtpSerialButton_Click);
+            // 
+            // label13
+            // 
+            this.label13.AutoSize = true;
+            this.label13.Location = new System.Drawing.Point(10, 22);
+            this.label13.Name = "label13";
+            this.label13.Size = new System.Drawing.Size(26, 13);
+            this.label13.TabIndex = 1;
+            this.label13.Text = "Port";
+            // 
+            // m_SerialPtpPortCombo
+            // 
+            this.m_SerialPtpPortCombo.FormattingEnabled = true;
+            this.m_SerialPtpPortCombo.Location = new System.Drawing.Point(98, 19);
+            this.m_SerialPtpPortCombo.Name = "m_SerialPtpPortCombo";
+            this.m_SerialPtpPortCombo.Size = new System.Drawing.Size(100, 21);
+            this.m_SerialPtpPortCombo.TabIndex = 0;
+            // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(10, 73);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(53, 13);
+            this.label9.TabIndex = 10;
+            this.label9.Text = "Password";
+            // 
+            // m_PasswordText
+            // 
+            this.m_PasswordText.Location = new System.Drawing.Point(98, 70);
+            this.m_PasswordText.Name = "m_PasswordText";
+            this.m_PasswordText.PasswordChar = '*';
+            this.m_PasswordText.Size = new System.Drawing.Size(100, 20);
+            this.m_PasswordText.TabIndex = 11;
+            // 
             // SearchDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(298, 309);
+            this.ClientSize = new System.Drawing.Size(298, 421);
+            this.Controls.Add(this.groupBox4);
             this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
@@ -356,6 +453,9 @@
             this.groupBox3.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.m_TimeoutValue)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.m_RetriesValue)).EndInit();
+            this.groupBox4.ResumeLayout(false);
+            this.groupBox4.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.m_PtpBaudRate)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -383,5 +483,13 @@
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.NumericUpDown m_MaxInfoFramesValue;
         private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.GroupBox groupBox4;
+        private System.Windows.Forms.Label label12;
+        private System.Windows.Forms.NumericUpDown m_PtpBaudRate;
+        private System.Windows.Forms.Button m_AddPtpSerialButton;
+        private System.Windows.Forms.Label label13;
+        private System.Windows.Forms.ComboBox m_SerialPtpPortCombo;
+        private System.Windows.Forms.TextBox m_PasswordText;
+        private System.Windows.Forms.Label label9;
     }
 }

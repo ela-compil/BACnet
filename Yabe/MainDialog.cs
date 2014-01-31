@@ -365,7 +365,7 @@ namespace Yabe
                     comm.Start();
 
                     //start search
-                    if (comm.Transport.Type == BacnetAddressTypes.IP || (comm.Transport is BacnetMstpProtocolTransport && ((BacnetMstpProtocolTransport)comm.Transport).SourceAddress != -1))
+                    if (comm.Transport.Type == BacnetAddressTypes.IP || (comm.Transport is BacnetMstpProtocolTransport && ((BacnetMstpProtocolTransport)comm.Transport).SourceAddress != -1) || comm.Transport.Type == BacnetAddressTypes.PTP)
                     {
                         System.Threading.ThreadPool.QueueUserWorkItem((o) =>
                         {

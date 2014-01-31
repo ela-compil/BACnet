@@ -36,8 +36,9 @@ namespace DemoServer
     class Program
     {
         private static DeviceStorage m_storage;
-        private static BacnetClient m_udp_server;
-        private static BacnetClient m_pipe_server;
+        private static BacnetClient m_ip_server;
+        private static BacnetClient m_mstp_server;
+        private static BacnetClient m_ptp_server;
         private static Dictionary<BacnetObjectId, List<Subscription>> m_subscriptions = new Dictionary<BacnetObjectId, List<Subscription>>();
         private static object m_lockObject = new object();
         private static BacnetSegmentations m_supported_segmentation = BacnetSegmentations.SEGMENTATION_BOTH;
@@ -54,49 +55,69 @@ namespace DemoServer
 
                 //create udp service point
                 BacnetIpUdpProtocolTransport udp_transport = new BacnetIpUdpProtocolTransport(0xBAC0, false);       //set to true to force "single socket" usage
-                m_udp_server = new BacnetClient(udp_transport);
-                m_udp_server.OnWhoIs += new BacnetClient.WhoIsHandler(OnWhoIs);
-                m_udp_server.OnReadPropertyRequest += new BacnetClient.ReadPropertyRequestHandler(OnReadPropertyRequest);
-                m_udp_server.OnWritePropertyRequest += new BacnetClient.WritePropertyRequestHandler(OnWritePropertyRequest);
-                m_udp_server.OnReadPropertyMultipleRequest += new BacnetClient.ReadPropertyMultipleRequestHandler(OnReadPropertyMultipleRequest);
-                m_udp_server.OnWritePropertyMultipleRequest += new BacnetClient.WritePropertyMultipleRequestHandler(OnWritePropertyMultipleRequest);
-                m_udp_server.OnAtomicWriteFileRequest += new BacnetClient.AtomicWriteFileRequestHandler(OnAtomicWriteFileRequest);
-                m_udp_server.OnAtomicReadFileRequest += new BacnetClient.AtomicReadFileRequestHandler(OnAtomicReadFileRequest);
-                m_udp_server.OnSubscribeCOV += new BacnetClient.SubscribeCOVRequestHandler(OnSubscribeCOV);
-                m_udp_server.OnSubscribeCOVProperty += new BacnetClient.SubscribeCOVPropertyRequestHandler(OnSubscribeCOVProperty);
-                m_udp_server.OnTimeSynchronize += new BacnetClient.TimeSynchronizeHandler(OnTimeSynchronize);
-                m_udp_server.OnDeviceCommunicationControl += new BacnetClient.DeviceCommunicationControlRequestHandler(OnDeviceCommunicationControl);
-                m_udp_server.OnReinitializedDevice += new BacnetClient.ReinitializedRequestHandler(OnReinitializedDevice);
-                m_udp_server.Start();
+                m_ip_server = new BacnetClient(udp_transport);
+                m_ip_server.OnWhoIs += new BacnetClient.WhoIsHandler(OnWhoIs);
+                m_ip_server.OnReadPropertyRequest += new BacnetClient.ReadPropertyRequestHandler(OnReadPropertyRequest);
+                m_ip_server.OnWritePropertyRequest += new BacnetClient.WritePropertyRequestHandler(OnWritePropertyRequest);
+                m_ip_server.OnReadPropertyMultipleRequest += new BacnetClient.ReadPropertyMultipleRequestHandler(OnReadPropertyMultipleRequest);
+                m_ip_server.OnWritePropertyMultipleRequest += new BacnetClient.WritePropertyMultipleRequestHandler(OnWritePropertyMultipleRequest);
+                m_ip_server.OnAtomicWriteFileRequest += new BacnetClient.AtomicWriteFileRequestHandler(OnAtomicWriteFileRequest);
+                m_ip_server.OnAtomicReadFileRequest += new BacnetClient.AtomicReadFileRequestHandler(OnAtomicReadFileRequest);
+                m_ip_server.OnSubscribeCOV += new BacnetClient.SubscribeCOVRequestHandler(OnSubscribeCOV);
+                m_ip_server.OnSubscribeCOVProperty += new BacnetClient.SubscribeCOVPropertyRequestHandler(OnSubscribeCOVProperty);
+                m_ip_server.OnTimeSynchronize += new BacnetClient.TimeSynchronizeHandler(OnTimeSynchronize);
+                m_ip_server.OnDeviceCommunicationControl += new BacnetClient.DeviceCommunicationControlRequestHandler(OnDeviceCommunicationControl);
+                m_ip_server.OnReinitializedDevice += new BacnetClient.ReinitializedRequestHandler(OnReinitializedDevice);
+                m_ip_server.Start();
 
                 //create pipe (MSTP) service point
                 BacnetPipeTransport pipe_transport = new BacnetPipeTransport("COM1003", true);
                 BacnetMstpProtocolTransport mstp_transport = new BacnetMstpProtocolTransport(pipe_transport, 0, 127, 1);
                 mstp_transport.StateLogging = false;        //if you enable this, it will display a lot of information about the StateMachine
-                m_pipe_server = new BacnetClient(mstp_transport);
-                m_pipe_server.OnWhoIs += new BacnetClient.WhoIsHandler(OnWhoIs);
-                m_pipe_server.OnReadPropertyRequest += new BacnetClient.ReadPropertyRequestHandler(OnReadPropertyRequest);
-                m_pipe_server.OnWritePropertyRequest += new BacnetClient.WritePropertyRequestHandler(OnWritePropertyRequest);
-                m_pipe_server.OnReadPropertyMultipleRequest += new BacnetClient.ReadPropertyMultipleRequestHandler(OnReadPropertyMultipleRequest);
-                m_pipe_server.OnWritePropertyMultipleRequest += new BacnetClient.WritePropertyMultipleRequestHandler(OnWritePropertyMultipleRequest);
-                m_pipe_server.OnAtomicWriteFileRequest += new BacnetClient.AtomicWriteFileRequestHandler(OnAtomicWriteFileRequest);
-                m_pipe_server.OnAtomicReadFileRequest += new BacnetClient.AtomicReadFileRequestHandler(OnAtomicReadFileRequest);
-                m_pipe_server.OnSubscribeCOV += new BacnetClient.SubscribeCOVRequestHandler(OnSubscribeCOV);
-                m_pipe_server.OnSubscribeCOVProperty += new BacnetClient.SubscribeCOVPropertyRequestHandler(OnSubscribeCOVProperty);
-                m_pipe_server.OnTimeSynchronize += new BacnetClient.TimeSynchronizeHandler(OnTimeSynchronize);
-                m_pipe_server.OnDeviceCommunicationControl += new BacnetClient.DeviceCommunicationControlRequestHandler(OnDeviceCommunicationControl);
-                m_pipe_server.OnReinitializedDevice += new BacnetClient.ReinitializedRequestHandler(OnReinitializedDevice);
-                m_pipe_server.Start();
+                m_mstp_server = new BacnetClient(mstp_transport);
+                m_mstp_server.OnWhoIs += new BacnetClient.WhoIsHandler(OnWhoIs);
+                m_mstp_server.OnReadPropertyRequest += new BacnetClient.ReadPropertyRequestHandler(OnReadPropertyRequest);
+                m_mstp_server.OnWritePropertyRequest += new BacnetClient.WritePropertyRequestHandler(OnWritePropertyRequest);
+                m_mstp_server.OnReadPropertyMultipleRequest += new BacnetClient.ReadPropertyMultipleRequestHandler(OnReadPropertyMultipleRequest);
+                m_mstp_server.OnWritePropertyMultipleRequest += new BacnetClient.WritePropertyMultipleRequestHandler(OnWritePropertyMultipleRequest);
+                m_mstp_server.OnAtomicWriteFileRequest += new BacnetClient.AtomicWriteFileRequestHandler(OnAtomicWriteFileRequest);
+                m_mstp_server.OnAtomicReadFileRequest += new BacnetClient.AtomicReadFileRequestHandler(OnAtomicReadFileRequest);
+                m_mstp_server.OnSubscribeCOV += new BacnetClient.SubscribeCOVRequestHandler(OnSubscribeCOV);
+                m_mstp_server.OnSubscribeCOVProperty += new BacnetClient.SubscribeCOVPropertyRequestHandler(OnSubscribeCOVProperty);
+                m_mstp_server.OnTimeSynchronize += new BacnetClient.TimeSynchronizeHandler(OnTimeSynchronize);
+                m_mstp_server.OnDeviceCommunicationControl += new BacnetClient.DeviceCommunicationControlRequestHandler(OnDeviceCommunicationControl);
+                m_mstp_server.OnReinitializedDevice += new BacnetClient.ReinitializedRequestHandler(OnReinitializedDevice);
+                m_mstp_server.Start();
+
+                //create pipe (PTP) service point
+                BacnetPipeTransport pipe2_transport = new BacnetPipeTransport("COM1004", true);
+                BacnetPtpProtocolTransport ptp_transport = new BacnetPtpProtocolTransport(pipe2_transport, true);
+                ptp_transport.StateLogging = false;        //if you enable this, it will display a lot of information
+                m_ptp_server = new BacnetClient(ptp_transport);
+                m_ptp_server.OnWhoIs += new BacnetClient.WhoIsHandler(OnWhoIs);
+                m_ptp_server.OnReadPropertyRequest += new BacnetClient.ReadPropertyRequestHandler(OnReadPropertyRequest);
+                m_ptp_server.OnWritePropertyRequest += new BacnetClient.WritePropertyRequestHandler(OnWritePropertyRequest);
+                m_ptp_server.OnReadPropertyMultipleRequest += new BacnetClient.ReadPropertyMultipleRequestHandler(OnReadPropertyMultipleRequest);
+                m_ptp_server.OnWritePropertyMultipleRequest += new BacnetClient.WritePropertyMultipleRequestHandler(OnWritePropertyMultipleRequest);
+                m_ptp_server.OnAtomicWriteFileRequest += new BacnetClient.AtomicWriteFileRequestHandler(OnAtomicWriteFileRequest);
+                m_ptp_server.OnAtomicReadFileRequest += new BacnetClient.AtomicReadFileRequestHandler(OnAtomicReadFileRequest);
+                m_ptp_server.OnSubscribeCOV += new BacnetClient.SubscribeCOVRequestHandler(OnSubscribeCOV);
+                m_ptp_server.OnSubscribeCOVProperty += new BacnetClient.SubscribeCOVPropertyRequestHandler(OnSubscribeCOVProperty);
+                m_ptp_server.OnTimeSynchronize += new BacnetClient.TimeSynchronizeHandler(OnTimeSynchronize);
+                m_ptp_server.OnDeviceCommunicationControl += new BacnetClient.DeviceCommunicationControlRequestHandler(OnDeviceCommunicationControl);
+                m_ptp_server.OnReinitializedDevice += new BacnetClient.ReinitializedRequestHandler(OnReinitializedDevice);
+                m_ptp_server.Start();
 
                 //display info
                 Console.WriteLine("DemoServer startet ...");
                 Console.WriteLine("Udp service point - port: 0x" + udp_transport.SharedPort.ToString("X4") + "" + (udp_transport.ExclusivePort != udp_transport.SharedPort ? " and 0x" + udp_transport.ExclusivePort.ToString("X4") : ""));
                 Console.WriteLine("MSTP service point - name: \\\\.pipe\\" + pipe_transport.Name + ", source_address: " + mstp_transport.SourceAddress + ", max_master: " + mstp_transport.MaxMaster + ", max_info_frames: " + mstp_transport.MaxInfoFrames);
+                Console.WriteLine("PTP service point - name: \\\\.pipe\\" + pipe2_transport.Name);
                 Console.WriteLine("");
 
                 //send greeting
-                m_udp_server.Iam(m_storage.DeviceId, m_supported_segmentation);
-                m_pipe_server.Iam(m_storage.DeviceId, m_supported_segmentation);
+                m_ip_server.Iam(m_storage.DeviceId, m_supported_segmentation);
+                m_mstp_server.Iam(m_storage.DeviceId, m_supported_segmentation);
 
                 //endless loop of nothing
                 Console.WriteLine("Press the ANY key to exit!");

@@ -201,6 +201,8 @@
 	- BACnet Stack - By Steve Karg
 	- Wireshark. (This is most likely the same as the BACnet Stack)
 	- CAS BACnet Explorer
+	'Segmentation' has only been verified with Wireshark.
+	'PTP' has not been tested with any 3rd parties.
 
 5.  SUPPORT
 	There's no support for the project at this time. That's reserved for our 

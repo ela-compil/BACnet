@@ -25,10 +25,10 @@
           <Value>GNU</Value>
         </Property>
         <Property Id="PROP_FIRMWARE_REVISION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
-          <Value>0.9.5</Value>
+          <Value>0.9.6</Value>
         </Property>
         <Property Id="PROP_APPLICATION_SOFTWARE_VERSION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
-          <Value>0.9.5</Value>
+          <Value>0.9.6</Value>
         </Property>
         <Property Id="PROP_PROTOCOL_VERSION" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
           <Value>1</Value>
