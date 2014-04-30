@@ -66,7 +66,7 @@ namespace Yabe
 
         private void m_SearchIpButton_Click(object sender, EventArgs e)
         {
-            m_result = new BacnetClient(new BacnetIpUdpProtocolTransport((int)m_PortValue.Value, Properties.Settings.Default.Udp_ExclusiveUseOfSocket, Properties.Settings.Default.Udp_DontFragment, Properties.Settings.Default.Udp_MaxPayload), (int)m_TimeoutValue.Value, (int)m_RetriesValue.Value);
+            m_result = new BacnetClient(new BacnetIpUdpProtocolTransport((int)m_PortValue.Value, Properties.Settings.Default.Udp_ExclusiveUseOfSocket, Properties.Settings.Default.Udp_DontFragment, Properties.Settings.Default.Udp_MaxPayload, Properties.Settings.Default.DefaultUdpIp), (int)m_TimeoutValue.Value, (int)m_RetriesValue.Value);
             this.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.Close();
         }
@@ -100,6 +100,36 @@ namespace Yabe
             m_result = new BacnetClient(transport, (int)m_TimeoutValue.Value, (int)m_RetriesValue.Value);
             this.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.Close();
+        }
+
+        private void SearchDialog_Load(object sender, EventArgs e)
+        {
+            //get all local endpoints for udp
+            string[] local_endpoints = GetAvailableIps();
+            m_localUdpEndpointsCombo.Items.Clear();
+            m_localUdpEndpointsCombo.Items.AddRange(local_endpoints);
+        }
+
+        public static string[] GetAvailableIps()
+        {
+            List<string> ips = new List<string>();
+            System.Net.NetworkInformation.NetworkInterface[] interfaces = System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces();
+            foreach (System.Net.NetworkInformation.NetworkInterface inf in interfaces)
+            {
+                if (!inf.IsReceiveOnly && inf.OperationalStatus == System.Net.NetworkInformation.OperationalStatus.Up && inf.SupportsMulticast && inf.NetworkInterfaceType != System.Net.NetworkInformation.NetworkInterfaceType.Loopback)
+                {
+                    System.Net.NetworkInformation.IPInterfaceProperties ipinfo = inf.GetIPProperties();
+                    if (ipinfo.GatewayAddresses == null || ipinfo.GatewayAddresses.Count == 0 || (ipinfo.GatewayAddresses.Count == 1 && ipinfo.GatewayAddresses[0].Address.ToString() == "0.0.0.0")) continue;
+                    foreach (System.Net.NetworkInformation.UnicastIPAddressInformation addr in ipinfo.UnicastAddresses)
+                    {
+                        if (addr.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                        {
+                            ips.Add(addr.Address.ToString());
+                        }
+                    }
+                }
+            }
+            return ips.ToArray();
         }
     }
 }

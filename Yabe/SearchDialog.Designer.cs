@@ -51,13 +51,15 @@
             this.m_TimeoutValue = new System.Windows.Forms.NumericUpDown();
             this.m_RetriesValue = new System.Windows.Forms.NumericUpDown();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
+            this.m_PasswordText = new System.Windows.Forms.TextBox();
+            this.label9 = new System.Windows.Forms.Label();
             this.label12 = new System.Windows.Forms.Label();
             this.m_PtpBaudRate = new System.Windows.Forms.NumericUpDown();
             this.m_AddPtpSerialButton = new System.Windows.Forms.Button();
             this.label13 = new System.Windows.Forms.Label();
             this.m_SerialPtpPortCombo = new System.Windows.Forms.ComboBox();
-            this.label9 = new System.Windows.Forms.Label();
-            this.m_PasswordText = new System.Windows.Forms.TextBox();
+            this.m_localUdpEndpointsCombo = new System.Windows.Forms.ComboBox();
+            this.label10 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.m_PortValue)).BeginInit();
             this.groupBox2.SuspendLayout();
@@ -76,20 +78,22 @@
             // 
             this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox1.Controls.Add(this.label10);
+            this.groupBox1.Controls.Add(this.m_localUdpEndpointsCombo);
             this.groupBox1.Controls.Add(this.m_AddUdpButton);
             this.groupBox1.Controls.Add(this.m_PortValue);
             this.groupBox1.Controls.Add(this.label1);
             this.groupBox1.Location = new System.Drawing.Point(12, 70);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(274, 59);
+            this.groupBox1.Size = new System.Drawing.Size(274, 82);
             this.groupBox1.TabIndex = 0;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "BACnet/IP over Udp";
             // 
             // m_AddUdpButton
             // 
-            this.m_AddUdpButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_AddUdpButton.Location = new System.Drawing.Point(208, 16);
+            this.m_AddUdpButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.m_AddUdpButton.Location = new System.Drawing.Point(208, 44);
             this.m_AddUdpButton.Name = "m_AddUdpButton";
             this.m_AddUdpButton.Size = new System.Drawing.Size(60, 23);
             this.m_AddUdpButton.TabIndex = 6;
@@ -154,7 +158,7 @@
             this.groupBox2.Controls.Add(this.m_AddSerialButton);
             this.groupBox2.Controls.Add(this.label4);
             this.groupBox2.Controls.Add(this.m_SerialPortCombo);
-            this.groupBox2.Location = new System.Drawing.Point(12, 135);
+            this.groupBox2.Location = new System.Drawing.Point(12, 158);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Size = new System.Drawing.Size(274, 160);
             this.groupBox2.TabIndex = 1;
@@ -350,12 +354,29 @@
             this.groupBox4.Controls.Add(this.m_AddPtpSerialButton);
             this.groupBox4.Controls.Add(this.label13);
             this.groupBox4.Controls.Add(this.m_SerialPtpPortCombo);
-            this.groupBox4.Location = new System.Drawing.Point(12, 301);
+            this.groupBox4.Location = new System.Drawing.Point(12, 324);
             this.groupBox4.Name = "groupBox4";
             this.groupBox4.Size = new System.Drawing.Size(274, 108);
             this.groupBox4.TabIndex = 3;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "BACnet/PTP over serial";
+            // 
+            // m_PasswordText
+            // 
+            this.m_PasswordText.Location = new System.Drawing.Point(98, 70);
+            this.m_PasswordText.Name = "m_PasswordText";
+            this.m_PasswordText.PasswordChar = '*';
+            this.m_PasswordText.Size = new System.Drawing.Size(100, 20);
+            this.m_PasswordText.TabIndex = 11;
+            // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(10, 73);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(53, 13);
+            this.label9.TabIndex = 10;
+            this.label9.Text = "Password";
             // 
             // label12
             // 
@@ -408,28 +429,30 @@
             this.m_SerialPtpPortCombo.Size = new System.Drawing.Size(100, 21);
             this.m_SerialPtpPortCombo.TabIndex = 0;
             // 
-            // label9
+            // m_localUdpEndpointsCombo
             // 
-            this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(10, 73);
-            this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(53, 13);
-            this.label9.TabIndex = 10;
-            this.label9.Text = "Password";
+            this.m_localUdpEndpointsCombo.DataBindings.Add(new System.Windows.Forms.Binding("Text", global::Yabe.Properties.Settings.Default, "DefaultUdpIp", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
+            this.m_localUdpEndpointsCombo.FormattingEnabled = true;
+            this.m_localUdpEndpointsCombo.Location = new System.Drawing.Point(98, 45);
+            this.m_localUdpEndpointsCombo.Name = "m_localUdpEndpointsCombo";
+            this.m_localUdpEndpointsCombo.Size = new System.Drawing.Size(100, 21);
+            this.m_localUdpEndpointsCombo.TabIndex = 7;
+            this.m_localUdpEndpointsCombo.Text = global::Yabe.Properties.Settings.Default.DefaultUdpIp;
             // 
-            // m_PasswordText
+            // label10
             // 
-            this.m_PasswordText.Location = new System.Drawing.Point(98, 70);
-            this.m_PasswordText.Name = "m_PasswordText";
-            this.m_PasswordText.PasswordChar = '*';
-            this.m_PasswordText.Size = new System.Drawing.Size(100, 20);
-            this.m_PasswordText.TabIndex = 11;
+            this.label10.AutoSize = true;
+            this.label10.Location = new System.Drawing.Point(10, 48);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(77, 13);
+            this.label10.TabIndex = 8;
+            this.label10.Text = "Local endpoint";
             // 
             // SearchDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(298, 421);
+            this.ClientSize = new System.Drawing.Size(298, 444);
             this.Controls.Add(this.groupBox4);
             this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.groupBox2);
@@ -440,6 +463,7 @@
             this.Name = "SearchDialog";
             this.ShowInTaskbar = false;
             this.Text = "Search";
+            this.Load += new System.EventHandler(this.SearchDialog_Load);
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.m_PortValue)).EndInit();
@@ -491,5 +515,7 @@
         private System.Windows.Forms.ComboBox m_SerialPtpPortCombo;
         private System.Windows.Forms.TextBox m_PasswordText;
         private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.Label label10;
+        private System.Windows.Forms.ComboBox m_localUdpEndpointsCombo;
     }
 }

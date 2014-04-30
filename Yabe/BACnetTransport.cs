@@ -62,6 +62,7 @@ namespace System.IO.BACnet
         private bool m_exclusive_port = false;
         private bool m_dont_fragment;
         private int m_max_payload;
+        private string m_local_endpoint;
 
         public BacnetAddressTypes Type { get { return BacnetAddressTypes.IP; } }
         public event MessageRecievedHandler MessageRecieved;
@@ -73,13 +74,14 @@ namespace System.IO.BACnet
         public byte MaxInfoFrames { get { return 0xff; } set { /* ignore */ } }     //the udp doesn't have max info frames
         public int MaxBufferLength { get { return m_max_payload; } }
 
-        public BacnetIpUdpProtocolTransport(int port, bool use_exclusive_port = false, bool dont_fragment = false, int max_payload = 1472)
+        public BacnetIpUdpProtocolTransport(int port, bool use_exclusive_port = false, bool dont_fragment = false, int max_payload = 1472, string local_endpoint_ip = "")
         {
             m_port = port;
             m_max_payload = max_payload;
             m_local_buffer = new byte[MaxBufferLength];
             m_exclusive_port = use_exclusive_port;
             m_dont_fragment = dont_fragment;
+            m_local_endpoint = local_endpoint_ip;
         }
 
         public override bool Equals(object obj)
@@ -112,6 +114,7 @@ namespace System.IO.BACnet
                     m_shared_conn.ExclusiveAddressUse = false;
                     m_shared_conn.Client.SetSocketOption(Net.Sockets.SocketOptionLevel.Socket, Net.Sockets.SocketOptionName.ReuseAddress, true);
                     System.Net.EndPoint ep = new System.Net.IPEndPoint(System.Net.IPAddress.Any, m_port);
+                    if (!string.IsNullOrEmpty(m_local_endpoint)) ep = new System.Net.IPEndPoint(Net.IPAddress.Parse(m_local_endpoint), m_port);
                     m_shared_conn.Client.Bind(ep);
                     m_shared_conn.DontFragment = m_dont_fragment;
                 }
@@ -119,13 +122,17 @@ namespace System.IO.BACnet
                 /* So this is how we'll present our selves to the world */
                 if (m_exclusive_conn == null)
                 {
-                    m_exclusive_conn = new Net.Sockets.UdpClient(0);
+                    System.Net.EndPoint ep = new Net.IPEndPoint(System.Net.IPAddress.Any, 0);
+                    if (!string.IsNullOrEmpty(m_local_endpoint)) ep = new Net.IPEndPoint(Net.IPAddress.Parse(m_local_endpoint), 0);
+                    m_exclusive_conn = new Net.Sockets.UdpClient((Net.IPEndPoint)ep);
                     m_exclusive_conn.DontFragment = m_dont_fragment;
                 }
             }
             else
             {
-                m_exclusive_conn = new Net.Sockets.UdpClient(m_port);
+                System.Net.EndPoint ep = new Net.IPEndPoint(System.Net.IPAddress.Any, m_port);
+                if (!string.IsNullOrEmpty(m_local_endpoint)) ep = new Net.IPEndPoint(Net.IPAddress.Parse(m_local_endpoint), m_port);
+                m_exclusive_conn = new Net.Sockets.UdpClient((Net.IPEndPoint)ep);
                 m_exclusive_conn.DontFragment = m_dont_fragment;
             }
         }
