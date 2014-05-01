@@ -109,38 +109,46 @@
 	- Click on the device node in the "Devices" tree. If the source_address is
 	  configured to "-1" the program will ask if you will define a new one.
 	  You must do so, in order to continue communication. 
+	  
+2.3	BACNET/PTP OVER PIPE
+	- For general usage refer to section 2.1. 
+	- In the "Search" dialog select "COM1004" in the port combo box and press
+	  "Add". This will add a PTP pipe created by the DemoServer. 
+	  The BACnet/PTP transport is meant for 1-to-1. Eg. RS232 or ... usb? So
+	  far I haven't found any others easy accessible tools that also supports
+	  it. So I haven't been able to test it. It's implemented purely by doc.
 
-2.3 OPTIONS
+2.4 OPTIONS
 	A few selected options.
 
-2.3.1 Udp_ExclusiveUseOfSocket
+2.4.1 Udp_ExclusiveUseOfSocket
 	Set this to 'true' to force single socket usage on port 0xBAC0. A value of 
 	'false' will create an extra unicast socket and allow multiple clients on
 	same ip/machine.
 
-2.3.2 Subscriptions_Lifetime
+2.4.2 Subscriptions_Lifetime
 	Subscriptions will be created with this lifetime. Eg. after 120 seconds the
 	subscription will be removed by device. Set to 0 to disable.
 	
-2.3.3 Subscriptions_IssueConfirmedNotifies
+2.4.3 Subscriptions_IssueConfirmedNotifies
 	By default notifications will be sent 'unconfirmed'. If you think your 
 	notifications are important set this to 'true' instead. 
 
-2.3.4 MSTP_DisplayFreeAddresses
+2.4.4 MSTP_DisplayFreeAddresses
 	By default a MSTP connection will display all 'free' addresses in the 
 	'Device' tree. This can help select a source_address for the program.
 	If you don't want to see the 'free' entries, set this option to 'false'
 
-2.3.5 MSTP_LogStateMachine
+2.4.5 MSTP_LogStateMachine
 	The MSTP code is able to display all state changes in log. This is very
 	verbose. It may help you understand the MSTP better though.
 	
-2.3.6 Segments_Max
+2.4.6 Segments_Max
 	This value sets 'allowed max_segments' to send to the client. The client
 	might not support segmentation though. If it gives you trouble, set this 
 	to 0 to disable.
 	
-2.3.7 DefaultDownloadSpeed
+2.4.7 DefaultDownloadSpeed
 	This value sets the method for 'file download'. (This is part of the 
 	original tests.) 
 	The default value of '0' will result in a standard 'send request, wait 
@@ -150,16 +158,16 @@
 	Value '2' will result in a 'segmented' sequence. This is the most efficient
 	for both Udp and MSTP. This is the result I sought!
 	
-2.3.8 Udp_DontFragment
+2.4.8 Udp_DontFragment
 	This will enforce (if set to 'true') no fragmentation on the udp. It ought
-	to be enforced, but it turns out that MTU is a bit tricky. (See 2.3.9)
+	to be enforced, but it turns out that MTU is a bit tricky. (See 2.4.9)
 
-2.3.9 Udp_MaxPayload
+2.4.9 Udp_MaxPayload
 	The max payload for udp seems to differ from the expectations of BACnet.
 	The most common payload is 1472. Which is 1500 when added with the 28 bytes
 	ip headers. This number is determined by your local switch/router through.
 
-2.3.10 DefaultPreferStructuredView
+2.4.10 DefaultPreferStructuredView
 	The Addendum 135d defines a 'Structured View' entry in the address space.
 	This enables a hierarchical address space. (Thank you very much.)
 	Though if you like the flat model better, set this to 'false'.
