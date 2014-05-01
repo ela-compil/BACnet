@@ -68,12 +68,15 @@
 	- Start up the DemoServer program or another BACnet device.
 	- Start Yabe.
 	- Select "Add device" under "Functions".
-	- Press the "Add" button in the "BACnet/IP" field.
+	- Press the "Add" button in the "BACnet/IP over Udp" field.
 	  The program will now add a Udp connection to the "Devices" tree and send
 	  out 3 "WhoIs" broadcasts. If there're any BACnet/IP devices in the 
 	  network they will show up in the tree. The DemoServer will show up as 
 	  something like "192.168.1.91:57049 - 389002". This is the IP, the Udp
 	  port and the device_id.
+	- If you have more than 1 ethernet card, you can also select a local 
+	  endpoint ip. (Before you click the "Add"). Either select one from 
+	  the list or write one by hand, if the interface doesn't have a gateway. 
 	- In order to explore the device address space, click on the device in
 	  the "Devices" tree.
 	  The program will fetch all "registers" or "nodes" from the device and
