@@ -6,6 +6,7 @@
  - Added Structured View object
  - Added PTP transport
  - Added optional Local endpoint for udp
+ - Object List fallback to retrieve list by index
 
 0.9.5 - 20140130
  - Added Group object
