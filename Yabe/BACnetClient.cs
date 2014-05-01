@@ -1016,9 +1016,9 @@ namespace System.IO.BACnet
             res.Dispose();
         }
 
-        public bool ReadPropertyRequest(BacnetAddress adr, BacnetObjectId object_id, BacnetPropertyIds property_id, out IList<BacnetValue> value_list, byte invoke_id = 0)
+        public bool ReadPropertyRequest(BacnetAddress adr, BacnetObjectId object_id, BacnetPropertyIds property_id, out IList<BacnetValue> value_list, byte invoke_id = 0, uint array_index = ASN1.BACNET_ARRAY_ALL)
         {
-            using (BacnetAsyncResult result = (BacnetAsyncResult)BeginReadPropertyRequest(adr, object_id, property_id, true, invoke_id))
+            using (BacnetAsyncResult result = (BacnetAsyncResult)BeginReadPropertyRequest(adr, object_id, property_id, true, invoke_id, array_index))
             {
                 for (int r = 0; r < m_retries; r++)
                 {
@@ -1036,7 +1036,7 @@ namespace System.IO.BACnet
             return false;
         }
 
-        public IAsyncResult BeginReadPropertyRequest(BacnetAddress adr, BacnetObjectId object_id, BacnetPropertyIds property_id, bool wait_for_transmit, byte invoke_id = 0)
+        public IAsyncResult BeginReadPropertyRequest(BacnetAddress adr, BacnetObjectId object_id, BacnetPropertyIds property_id, bool wait_for_transmit, byte invoke_id = 0, uint array_index = ASN1.BACNET_ARRAY_ALL)
         {
             Trace.WriteLine("Sending ReadPropertyRequest ... ", null);
             if(invoke_id == 0) invoke_id = unchecked ( m_invoke_id++);
@@ -1044,7 +1044,7 @@ namespace System.IO.BACnet
             EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);
             NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, null, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, 0);
             APDU.EncodeConfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST | (m_max_segments != BacnetMaxSegments.MAX_SEG0 ? BacnetPduTypes.SEGMENTED_RESPONSE_ACCEPTED : 0), BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROPERTY, m_max_segments, m_client.MaxAdpuLength, invoke_id, 0, 0);
-            Services.EncodeReadProperty(b, object_id, (uint)property_id);
+            Services.EncodeReadProperty(b, object_id, (uint)property_id, array_index);
 
             //send
             BacnetAsyncResult ret = new BacnetAsyncResult(this, adr, invoke_id, b.buffer, b.offset - m_client.HeaderLength, wait_for_transmit, m_transmit_timeout);

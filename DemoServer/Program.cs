@@ -146,14 +146,27 @@ namespace DemoServer
 
             if (object_id.type == BacnetObjectTypes.OBJECT_DEVICE && property_id == BacnetPropertyIds.PROP_OBJECT_LIST)
             {
-                //object list
-                BacnetValue[] list = new BacnetValue[m_storage.Objects.Length];
-                for (int i = 0; i < list.Length; i++)
+                if (array_index == 0)
                 {
-                    list[i].Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID;
-                    list[i].Value = new BacnetObjectId(m_storage.Objects[i].Type, m_storage.Objects[i].Instance);
+                    //object list count 
+                    value = new BacnetValue[] { new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT, (uint)m_storage.Objects.Length) };
                 }
-                value = list;
+                else if (array_index != System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL)
+                {
+                    //object list index 
+                    value = new BacnetValue[] { new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID, new BacnetObjectId(m_storage.Objects[array_index - 1].Type, m_storage.Objects[array_index-1].Instance)) };
+                }
+                else
+                {
+                    //object list whole
+                    BacnetValue[] list = new BacnetValue[m_storage.Objects.Length];
+                    for (int i = 0; i < list.Length; i++)
+                    {
+                        list[i].Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID;
+                        list[i].Value = new BacnetObjectId(m_storage.Objects[i].Type, m_storage.Objects[i].Instance);
+                    }
+                    value = list;
+                }
             }
             else if (object_id.type == BacnetObjectTypes.OBJECT_DEVICE && object_id.instance == m_storage.DeviceId && property_id == BacnetPropertyIds.PROP_PROTOCOL_OBJECT_TYPES_SUPPORTED)
             {

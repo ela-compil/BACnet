@@ -140,7 +140,20 @@ namespace System.IO.BACnet.Storage
             //find in storage
             Property p = FindProperty(object_id, property_id);
             if (p == null) return ErrorCodes.NotExist;
-            value = p.BacnetValue;
+
+            //get value ... check for array index
+            if (array_index == 0)
+            {
+                value = new BacnetValue[] { new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT, (uint)p.BacnetValue.Count) };
+            }
+            else if (array_index != System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL)
+            {
+                value = new BacnetValue[] { p.BacnetValue[(int)array_index-1] };
+            }
+            else
+            {
+                value = p.BacnetValue;
+            }
 
             return ErrorCodes.Good;
         }

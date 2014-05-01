@@ -599,17 +599,55 @@ namespace Yabe
             {
                 comm.Retries = 1;       //only do 1 retry
                 if (!comm.ReadPropertyRequest(adr, new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, device_id), BacnetPropertyIds.PROP_STRUCTURED_OBJECT_LIST, out ret))
+                {
+                    Trace.TraceInformation("Didn't get response from 'Structured Object List'");
                     return null;
+                }
                 return ret == null || ret.Count == 0 ? null : ret;
             }
             catch (Exception)
             {
+                Trace.TraceInformation("Got exception from 'Structured Object List'");
                 return null;
             }
             finally
             {
                 comm.Retries = old_reties;
             }
+        }
+
+        private void AddObjectListOneByOneAsync(BacnetClient comm, BacnetAddress adr, uint device_id, uint count)
+        {
+            System.Threading.ThreadPool.QueueUserWorkItem((o) =>
+                        {
+                            IList<BacnetValue> value_list;
+                            try
+                            {
+                                for (int i = 1; i <= count; i++)
+                                {
+                                    value_list = null;
+                                    if (!comm.ReadPropertyRequest(adr, new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, device_id), BacnetPropertyIds.PROP_OBJECT_LIST, out value_list, 0, (uint)i))
+                                    {
+                                        MessageBox.Show("Couldn't fetch object list index", "Communication Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                        return;
+                                    }
+
+                                    //add to tree
+                                    foreach (BacnetValue value in value_list)
+                                    {
+                                        this.Invoke((MethodInvoker)delegate
+                                        {
+                                            AddObjectEntry(comm, adr, null, (BacnetObjectId)value.Value, m_AddressSpaceTree.Nodes);
+                                        });
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                MessageBox.Show("Error during read: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                return;
+                            }
+                        });
         }
 
         private void m_DeviceTree_AfterSelect(object sender, TreeViewEventArgs e)
@@ -666,6 +704,25 @@ namespace Yabe
                         {
                             if (!comm.ReadPropertyRequest(adr, new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, device_id), BacnetPropertyIds.PROP_OBJECT_LIST, out value_list))
                             {
+                                Trace.TraceWarning("Didn't get response from 'Object List'");
+                                value_list = null;
+                            }
+                        }
+                        catch (Exception)
+                        {
+                            Trace.TraceWarning("Got exception from 'Object List'");
+                            value_list = null;
+                        }
+                    }
+
+                    //fetch list one-by-one
+                    if (value_list == null)
+                    {
+                        try
+                        {
+                            //fetch object list count
+                            if (!comm.ReadPropertyRequest(adr, new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, device_id), BacnetPropertyIds.PROP_OBJECT_LIST, out value_list, 0, 0))
+                            {
                                 MessageBox.Show(this, "Couldn't fetch objects", "Communication Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                                 return;
                             }
@@ -673,6 +730,18 @@ namespace Yabe
                         catch (Exception ex)
                         {
                             MessageBox.Show(this, "Error during read: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            return;
+                        }
+
+                        if (value_list != null && value_list.Count == 1 && value_list[0].Value is uint)
+                        {
+                            uint list_count = (uint)value_list[0].Value;
+                            AddObjectListOneByOneAsync(comm, adr, device_id, list_count);
+                            return;
+                        }
+                        else
+                        {
+                            MessageBox.Show(this, "Couldn't read 'Object List' count", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                             return;
                         }
                     }
