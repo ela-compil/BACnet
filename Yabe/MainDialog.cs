@@ -834,22 +834,23 @@ namespace Yabe
             return name;
         }
 
-        private void ReadProperty(BacnetClient comm, BacnetAddress adr, BacnetObjectId object_id, BacnetPropertyIds property_id, ref IList<BacnetPropertyValue> values)
+        private bool ReadProperty(BacnetClient comm, BacnetAddress adr, BacnetObjectId object_id, BacnetPropertyIds property_id, ref IList<BacnetPropertyValue> values, uint array_index = System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL)
         {
             BacnetPropertyValue new_entry = new BacnetPropertyValue();
-            new_entry.property = new BacnetPropertyReference((uint)property_id, System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL);
+            new_entry.property = new BacnetPropertyReference((uint)property_id, array_index);
             IList<BacnetValue> value;
             try
             {
-                if (!comm.ReadPropertyRequest(adr, object_id, property_id, out value))
-                    return;     //ignore
+                if (!comm.ReadPropertyRequest(adr, object_id, property_id, out value, 0, array_index))
+                    return false;     //ignore
             }
             catch
             {
-                return;         //ignore
+                return false;         //ignore
             }
             new_entry.value = value;
             values.Add(new_entry);
+            return true;
         }
 
         private bool ReadAllPropertiesBySingle(BacnetClient comm, BacnetAddress adr, BacnetObjectId object_id, out IList<BacnetReadAccessResult> value_list)
@@ -879,7 +880,11 @@ namespace Yabe
                     ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PROTOCOL_REVISION, ref values);
                     ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PROTOCOL_SERVICES_SUPPORTED, ref values);
                     ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PROTOCOL_OBJECT_TYPES_SUPPORTED, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_LIST, ref values);
+                    if (!ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_LIST, ref values))
+                    {
+                        //read object list count instead
+                        ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_LIST, ref values, 0);
+                    }
                     ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_MAX_APDU_LENGTH_ACCEPTED, ref values);
                     ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_SEGMENTATION_SUPPORTED, ref values);
                     ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_MAX_SEGMENTS_ACCEPTED, ref values);
