@@ -316,7 +316,7 @@ namespace Yabe
 
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            MessageBox.Show(this, "Yet Another Bacnet Explorer - Yabe\nVersion 1.0\nBy Morten Kvistgaard - Copyright 2014\n" +
+            MessageBox.Show(this, "Yet Another Bacnet Explorer - Yabe\nVersion 0.9.6\nBy Morten Kvistgaard - Copyright 2014\n" +
                 "\nReference: http://bacnet.sourceforge.net/" + 
                 "\nReference: http://www.unified-automation.com/products/development-tools/uaexpert.html" +
                 "\nReference: http://www.famfamfam.com/", "About", MessageBoxButtons.OK, MessageBoxIcon.Information);

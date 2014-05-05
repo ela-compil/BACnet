@@ -2,7 +2,10 @@
                    YABE - YET ANOTHER BACNET EXPLORER
 -------------------------------------------------------------------------------
 
-0.9.6 - 2014...
+1.0.2 - 2014...
+ - Fix version inconsistencies (installer/inprogram/db)
+
+0.9.6 - 20140504
  - Added Structured View object
  - Added PTP transport
  - Added optional Local endpoint for udp

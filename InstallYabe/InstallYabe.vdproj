@@ -61,6 +61,14 @@
         "PrivateKeyFile" = "8:"
         "TimeStampServer" = "8:"
         "InstallerBootstrapper" = "3:2"
+            "BootstrapperCfg:{63ACBE69-63AA-4F98-B2B6-99F9E24495F2}"
+            {
+            "Enabled" = "11:TRUE"
+            "PromptEnabled" = "11:TRUE"
+            "PrerequisitesLocation" = "2:1"
+            "Url" = "8:"
+            "ComponentsUrl" = "8:"
+            }
         }
         "Release"
         {
@@ -77,6 +85,14 @@
         "PrivateKeyFile" = "8:"
         "TimeStampServer" = "8:"
         "InstallerBootstrapper" = "3:2"
+            "BootstrapperCfg:{63ACBE69-63AA-4F98-B2B6-99F9E24495F2}"
+            {
+            "Enabled" = "11:TRUE"
+            "PromptEnabled" = "11:TRUE"
+            "PrerequisitesLocation" = "2:1"
+            "Url" = "8:"
+            "ComponentsUrl" = "8:"
+            }
         }
     }
     "Deployable"
@@ -193,15 +209,15 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:Yabe"
-        "ProductCode" = "8:{DD39532B-C6A3-4FA8-A6E9-6C0A2D3507EF}"
-        "PackageCode" = "8:{E088721C-4D55-4F96-BE38-A5D0A276DE85}"
+        "ProductCode" = "8:{ED1071E3-9192-4318-AA1A-B4CDEC5E0968}"
+        "PackageCode" = "8:{273A7CDB-C8E6-4BEE-8F96-1223ED51BD37}"
         "UpgradeCode" = "8:{41CD6128-9FD2-4510-B52D-BB76CDF77126}"
         "AspNetVersion" = "8:4.0.30319.0"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:TRUE"
         "InstallAllUsers" = "11:TRUE"
-        "ProductVersion" = "8:1.0.0"
+        "ProductVersion" = "8:1.0.1"
         "Manufacturer" = "8:YabeAuthors"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
@@ -743,7 +759,7 @@
         {
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_277A8381A8304F57AE894F505866BE52"
             {
-            "SourcePath" = "8:..\\DemoServer\\obj\\x86\\Debug\\BACnetServer.exe"
+            "SourcePath" = "8:..\\DemoServer\\obj\\x86\\Release\\DemoServer.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_F1EEE31BDAA246C987E29BB0BF4FFE90"
@@ -799,7 +815,7 @@
             }
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_7808C33F71DA4ED8A231D10E7B9F6C54"
             {
-            "SourcePath" = "8:..\\Yabe\\obj\\x86\\Debug\\BACNetExplorer.exe"
+            "SourcePath" = "8:..\\Yabe\\obj\\x86\\Release\\Yabe.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_F1EEE31BDAA246C987E29BB0BF4FFE90"
