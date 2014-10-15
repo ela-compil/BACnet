@@ -41,7 +41,7 @@
 	This document is subject to change.
 
 1.2 SEGMENTATION
-	I've implemented 'segmentation' as a part of my performance testing. Too
+	I've implemented 'segmentation' as a part of my performance testing. To
 	see it in action, I've added a 'HugeBlob' octet value in the DemoServer, 
 	ranging 2000 bytes. This is more than the max_adpu. 
 	The file operations are also able to use 'segmentation' if the options are
