@@ -31,6 +31,9 @@ using System.IO.BACnet;
 
 namespace System.IO.BACnet.Storage
 {
+    /// <summary>
+    /// This is a basic example of a BACNet storage. This one is XML based. It has no fancy optimizing or anything.
+    /// </summary>
     [Serializable]
     public class DeviceStorage
     {
@@ -294,6 +297,10 @@ namespace System.IO.BACnet.Storage
             return ret;
         }
 
+        /// <summary>
+        /// Store the class, as XML file
+        /// </summary>
+        /// <param name="path"></param>
         public void Save(string path)
         {
             System.Xml.Serialization.XmlSerializer s = new System.Xml.Serialization.XmlSerializer(typeof(DeviceStorage));
@@ -303,6 +310,11 @@ namespace System.IO.BACnet.Storage
             }
         }
 
+        /// <summary>
+        /// Load XML values into class
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
         public static DeviceStorage Load(string path)
         {
             if (!System.IO.File.Exists(path)) throw new Exception("No AppSettings found");
