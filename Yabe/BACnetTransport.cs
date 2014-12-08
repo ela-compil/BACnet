@@ -135,6 +135,12 @@ namespace System.IO.BACnet
                 m_exclusive_conn = new Net.Sockets.UdpClient((Net.IPEndPoint)ep);
                 m_exclusive_conn.DontFragment = m_dont_fragment;
             }
+
+            //disable 'ICMP back message'. Fix by F. Chaxel
+            const int SIO_UDP_CONNRESET = -1744830452;
+            m_exclusive_conn.Client.IOControl(SIO_UDP_CONNRESET, new byte[] { 0, 0, 0, 0 }, null);
+            //Otherwise we'd risk an exception in EndReceiveFrom, when clients die before recieving answer. 
+            //Still, we'd might want to pick up that exception, in order to remove subscriptions and such? Food for thought.
         }
 
         public void Start()
@@ -370,6 +376,9 @@ namespace System.IO.BACnet
             m_is_server = is_server;
         }
 
+        /// <summary>
+        /// Get the available byte count. (The .NET pipe interface has a few lackings. See also the "InteropAvailablePorts" function)
+        /// </summary>
         [System.Runtime.InteropServices.DllImport("kernel32.dll", EntryPoint = "PeekNamedPipe", SetLastError = true)]
         private static extern bool PeekNamedPipe(IntPtr handle, IntPtr buffer, uint nBufferSize, IntPtr bytesRead, ref uint bytesAvail, IntPtr BytesLeftThisMessage);
 
@@ -588,6 +597,9 @@ namespace System.IO.BACnet
         [System.Runtime.InteropServices.DllImport("kernel32.dll")]
         private static extern bool FindClose(IntPtr hFindFile);
 
+        /// <summary>
+        /// The built-in functions for pipe enumeration isn't perfect, I'm afraid. Hence this messy interop.
+        /// </summary>
         static string[] InteropAvailablePorts
         {
             get

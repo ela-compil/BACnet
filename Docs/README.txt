@@ -56,6 +56,7 @@
 
 1.3 CREDITS
 	The projected is created by me, Morten Kvistgaard, anno 2014. 
+	A few patches and input has been given by the community.
 	Graphics are the usual FamFamFam: http://www.famfamfam.com/
 	Serializing (most/some) is ported from project by Steve Karg:
 	http://bacnet.sourceforge.net/

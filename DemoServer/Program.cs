@@ -48,7 +48,7 @@ namespace DemoServer
             try
             {
                 //init
-                Trace.Listeners.Add(new ConsoleTraceListener());
+                Trace.Listeners.Add(new ConsoleTraceListener());    //Some of the classes are using the Trace/Debug to communicate loggin. (As they should.) So let's catch those as well.
                 m_storage = DeviceStorage.Load("DeviceStorage.xml");
                 m_storage.ChangeOfValue += new DeviceStorage.ChangeOfValueHandler(m_storage_ChangeOfValue);
                 m_storage.ReadOverride += new DeviceStorage.ReadOverrideHandler(m_storage_ReadOverride);
@@ -123,7 +123,10 @@ namespace DemoServer
                 Console.WriteLine("Press the ANY key to exit!");
                 while (!Console.KeyAvailable)
                 {
-                    System.Threading.Thread.Sleep(1000);
+                    //Endless loops of nothing are rather pointless, but I was too lazy to do anything fancy. 
+                    //And to be honest, it's not like it's sucking up a lot of system resources. 
+                    //If we'd made a GUI program or a Win32 service, we wouldn't have needed this. 
+                    System.Threading.Thread.Sleep(1000);            
                 }
                 Console.ReadKey();
             }
@@ -138,6 +141,10 @@ namespace DemoServer
             }
         }
 
+        /// <summary>
+        /// This function is for overriding some of the default responses. Meaning that it's for ugly hacks!
+        /// You'll need this kind of 'dynamic' function when working with storages that're static by nature.
+        /// </summary>
         private static void m_storage_ReadOverride(BacnetObjectId object_id, BacnetPropertyIds property_id, uint array_index, out IList<BacnetValue> value, out DeviceStorage.ErrorCodes status, out bool handled)
         {
             handled = true;
@@ -341,10 +348,16 @@ namespace DemoServer
                 this.start = DateTime.Now;
                 this.covIncrement = covIncrement;
             }
-            public uint GetTimeRemaining()
+
+            /// <summary>
+            /// Returns the remaining subscription time. Negative values will imply that the subscription has to be removed.
+            /// Value 0 *may* imply that the subscription doesn't have a timeout
+            /// </summary>
+            /// <returns></returns>
+            public int GetTimeRemaining()
             {
                 if (lifetime == 0) return 0;
-                else return (uint)(DateTime.Now - start).TotalSeconds;
+                else return (int)(DateTime.Now - start).TotalSeconds;
             }
         }
 
@@ -357,6 +370,7 @@ namespace DemoServer
                 {
                     if (entry.Value[i].GetTimeRemaining() < 0)
                     {
+                        Trace.TraceWarning("Removing old subscription: " + entry.Key.ToString());
                         entry.Value.RemoveAt(i);
                         i--;
                     }
@@ -365,7 +379,9 @@ namespace DemoServer
                     to_be_deleted.AddLast(entry.Key);
             }
             foreach (BacnetObjectId obj_id in to_be_deleted)
+            {
                 m_subscriptions.Remove(obj_id);
+            }
         }
 
         private static Subscription HandleSubscriptionRequest(BacnetClient sender, BacnetAddress adr, byte invoke_id, uint subscriberProcessIdentifier, BacnetObjectId monitoredObjectIdentifier, uint property_id, bool cancellationRequest, bool issueConfirmedNotifications, uint lifetime, float covIncrement)
@@ -404,12 +420,14 @@ namespace DemoServer
 
             //create if needed
             if (sub == null)
-                sub = new Subscription(sender, adr, subscriberProcessIdentifier, monitoredObjectIdentifier, new BacnetPropertyReference((uint)BacnetPropertyIds.PROP_ALL, System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL), issueConfirmedNotifications, lifetime, covIncrement);
-            if (subs == null)
             {
-                subs = new List<Subscription>();
+                sub = new Subscription(sender, adr, subscriberProcessIdentifier, monitoredObjectIdentifier, new BacnetPropertyReference((uint)BacnetPropertyIds.PROP_ALL, System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL), issueConfirmedNotifications, lifetime, covIncrement);
+                if (subs == null)
+                {
+                    subs = new List<Subscription>();
+                    m_subscriptions.Add(sub.monitoredObjectIdentifier, subs);
+                }
                 subs.Add(sub);
-                m_subscriptions.Add(sub.monitoredObjectIdentifier, subs);
             }
 
             //update perhaps
@@ -426,7 +444,7 @@ namespace DemoServer
             {
                 try
                 {
-                    //create 
+                    //create (will also remove old subscriptions)
                     Subscription sub = HandleSubscriptionRequest(sender, adr, invoke_id, subscriberProcessIdentifier, monitoredObjectIdentifier, (uint)BacnetPropertyIds.PROP_ALL, cancellationRequest, issueConfirmedNotifications, lifetime, 0);
 
                     //send confirm
@@ -439,7 +457,7 @@ namespace DemoServer
                                 {
                                     IList<BacnetPropertyValue> values;
                                     if(m_storage.ReadPropertyAll(sub.monitoredObjectIdentifier, out values))
-                                        if (!sender.Notify(adr, sub.subscriberProcessIdentifier, m_storage.DeviceId, sub.monitoredObjectIdentifier, sub.GetTimeRemaining(), sub.issueConfirmedNotifications, values))
+                                        if (!sender.Notify(adr, sub.subscriberProcessIdentifier, m_storage.DeviceId, sub.monitoredObjectIdentifier, (uint)sub.GetTimeRemaining(), sub.issueConfirmedNotifications, values))
                                             Trace.TraceError("Couldn't send notify");
                                 }, null);
                     }
@@ -457,7 +475,7 @@ namespace DemoServer
             {
                 try
                 {
-                    //create 
+                    //create (will also remove old subscriptions)
                     Subscription sub = HandleSubscriptionRequest(sender, adr, invoke_id, subscriberProcessIdentifier, monitoredObjectIdentifier, (uint)BacnetPropertyIds.PROP_ALL, cancellationRequest, issueConfirmedNotifications, lifetime, covIncrement);
 
                     //send confirm
@@ -475,7 +493,7 @@ namespace DemoServer
                             tmp.property = sub.monitoredProperty;
                             tmp.value = _values;
                             values.Add(tmp);
-                            if (!sender.Notify(adr, sub.subscriberProcessIdentifier, m_storage.DeviceId, sub.monitoredObjectIdentifier, sub.GetTimeRemaining(), sub.issueConfirmedNotifications, values))
+                            if (!sender.Notify(adr, sub.subscriberProcessIdentifier, m_storage.DeviceId, sub.monitoredObjectIdentifier, (uint)sub.GetTimeRemaining(), sub.issueConfirmedNotifications, values))
                                 Trace.TraceError("Couldn't send notify");
                         }, null);
                     }
@@ -513,7 +531,7 @@ namespace DemoServer
                         if (sub.monitoredProperty.propertyIdentifier == (uint)BacnetPropertyIds.PROP_ALL || sub.monitoredProperty.propertyIdentifier == (uint)property_id)
                         {
                             //send notify
-                            if (!sub.reciever.Notify(sub.reciever_address, sub.subscriberProcessIdentifier, m_storage.DeviceId, sub.monitoredObjectIdentifier, sub.GetTimeRemaining(), sub.issueConfirmedNotifications, values))
+                            if (!sub.reciever.Notify(sub.reciever_address, sub.subscriberProcessIdentifier, m_storage.DeviceId, sub.monitoredObjectIdentifier, (uint)sub.GetTimeRemaining(), sub.issueConfirmedNotifications, values))
                                 Trace.TraceError("Couldn't send notify");
                         }
                     }

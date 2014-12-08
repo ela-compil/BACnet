@@ -2,8 +2,11 @@
                    YABE - YET ANOTHER BACNET EXPLORER
 -------------------------------------------------------------------------------
 
-1.0.2 - 2014...
+1.0.2 - 2015...
  - Fix version inconsistencies (installer/inprogram/db)
+
+0.9.7 - 20141208
+ - Applied 3 patches by F. Chaxel to the DemoServer
 
 0.9.6 - 20140504
  - Added Structured View object
