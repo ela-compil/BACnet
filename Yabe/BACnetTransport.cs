@@ -135,12 +135,6 @@ namespace System.IO.BACnet
                 m_exclusive_conn = new Net.Sockets.UdpClient((Net.IPEndPoint)ep);
                 m_exclusive_conn.DontFragment = m_dont_fragment;
             }
-
-            //disable 'ICMP back message'. Fix by F. Chaxel
-            const int SIO_UDP_CONNRESET = -1744830452;
-            m_exclusive_conn.Client.IOControl(SIO_UDP_CONNRESET, new byte[] { 0, 0, 0, 0 }, null);
-            //Otherwise we'd risk an exception in EndReceiveFrom, when clients die before recieving answer. 
-            //Still, we'd might want to pick up that exception, in order to remove subscriptions and such? Food for thought.
         }
 
         public void Start()
