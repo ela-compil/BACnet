@@ -357,7 +357,7 @@ namespace DemoServer
             public int GetTimeRemaining()
             {
                 if (lifetime == 0) return 0;
-                else return (int)(DateTime.Now - start).TotalSeconds;
+                else return (int)lifetime - (int)(DateTime.Now - start).TotalSeconds;
             }
         }
 
