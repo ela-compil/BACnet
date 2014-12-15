@@ -160,10 +160,11 @@ namespace System.IO.BACnet
                 if (conn.Client == null) return;
                 int rx = conn.Client.EndReceiveFrom(asyncResult, ref ep);
 
-                //closed (can't happen in udp I think)
+                //normally this signals 'connection close'. On Udp this is just a 'ping package'
                 if (rx == 0)
                 {
-                    Trace.TraceError("Udp connection closed?");
+                    Trace.WriteLine("Udp empty package", null);
+                    StartRecieve(conn);
                     return;
                 }
 
