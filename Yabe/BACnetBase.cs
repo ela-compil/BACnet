@@ -1937,7 +1937,7 @@ namespace System.IO.BACnet.Serialize
 
         public static void Encode(EncodeBuffer buffer, BacnetNpduControls function, BacnetAddress destination, BacnetAddress source, byte hop_count, BacnetNetworkMessageTypes network_msg_type, ushort vendor_id)
         {
-            bool has_destination = destination != null && destination.net > 0 && destination.net != 0xFFFF;
+            bool has_destination = destination != null && destination.net > 0;              //patch by F. Chaxel
             bool has_source = source != null && source.net > 0 && source.net != 0xFFFF;
 
             buffer.buffer[buffer.offset++] = BACNET_PROTOCOL_VERSION;
@@ -1947,11 +1947,17 @@ namespace System.IO.BACnet.Serialize
             {
                 buffer.buffer[buffer.offset++] =(byte)((destination.net & 0xFF00) >> 8);
                 buffer.buffer[buffer.offset++] =(byte)((destination.net & 0x00FF) >> 0);
-                buffer.buffer[buffer.offset++] =(byte)destination.adr.Length;
-                if (destination.adr.Length > 0)
+
+                if (destination.net == 0xFFFF)                  //patch by F. Chaxel
+                    buffer.buffer[buffer.offset++] = 0;
+                else
                 {
-                    for (int i = 0; i < destination.adr.Length; i++)
-                        buffer.buffer[buffer.offset++] =destination.adr[i];
+                    buffer.buffer[buffer.offset++] = (byte)destination.adr.Length;
+                    if (destination.adr.Length > 0)
+                    {
+                        for (int i = 0; i < destination.adr.Length; i++)
+                            buffer.buffer[buffer.offset++] = destination.adr[i];
+                    }
                 }
             }
 
