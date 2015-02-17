@@ -283,6 +283,99 @@ namespace System.IO.BACnet.Storage
             return ErrorCodes.Good;
         }
 
+        // Write PROP_PRESENT_VALUE or PROP_RELINQUISH_DEFAULT in an object with a 16 level PROP_PRIORITY_ARRAY (BACNET_APPLICATION_TAG_NULL)
+        public ErrorCodes WriteCommandableProperty(BacnetObjectId object_id, BacnetPropertyIds property_id, BacnetValue value, uint priority)
+        {
+            if ((property_id != BacnetPropertyIds.PROP_PRESENT_VALUE) && (property_id != BacnetPropertyIds.PROP_RELINQUISH_DEFAULT))
+                return DeviceStorage.ErrorCodes.NotForMe;
+
+            Property p_presentvalue = FindProperty(object_id, BacnetPropertyIds.PROP_PRESENT_VALUE);
+            if (p_presentvalue == null)
+                return DeviceStorage.ErrorCodes.NotForMe;
+
+            Property p_relinquish = FindProperty(object_id, BacnetPropertyIds.PROP_RELINQUISH_DEFAULT);
+            if (p_relinquish == null)
+                return DeviceStorage.ErrorCodes.NotForMe;
+
+            Property p_outofservice = FindProperty(object_id, BacnetPropertyIds.PROP_OUT_OF_SERVICE);
+            if (p_outofservice == null)
+                return DeviceStorage.ErrorCodes.NotForMe;
+
+            Property p_array = FindProperty(object_id, BacnetPropertyIds.PROP_PRIORITY_ARRAY);
+            if (p_array == null)
+                return DeviceStorage.ErrorCodes.NotForMe;
+
+            DeviceStorage.ErrorCodes errorcode = DeviceStorage.ErrorCodes.GenericError;
+
+            try
+            {
+                // If PROP_OUT_OF_SERVICE=True, value is accepted as is : http://www.bacnetwiki.com/wiki/index.php?title=Priority_Array                 
+                if (((bool)p_outofservice.BacnetValue[0].Value == true) && (property_id == BacnetPropertyIds.PROP_PRESENT_VALUE))
+                {
+                    p_presentvalue.BacnetValue = new BacnetValue[1] { value };
+                    return DeviceStorage.ErrorCodes.Good;
+                }
+
+                IList<BacnetValue> valueArray = null;
+
+                //
+                //http://www.chipkin.com/changing-the-bacnet-present-value-or-why-the-present-value-doesn%E2%80%99t-change/
+                //
+                // Write Property PROP_PRESENT_VALUE : A value is placed in the PROP_PRIORITY_ARRAY
+                if (property_id == BacnetPropertyIds.PROP_PRESENT_VALUE)
+                {
+                    errorcode = DeviceStorage.ErrorCodes.Good;
+
+                    valueArray = p_array.BacnetValue;
+
+                    valueArray[(int)priority - 1] = value;
+                    p_array.BacnetValue = valueArray;
+                }
+
+                // Write Property PROP_RELINQUISH_DEFAULT : A value is removed in the PROP_PRIORITY_ARRAY
+                // a check to Null value could be made, but Yabe can send it, so any value to reset the array is accepted
+                // ... it's a little personal modification of the standard.
+                if (property_id == BacnetPropertyIds.PROP_RELINQUISH_DEFAULT)
+                {
+                    errorcode = DeviceStorage.ErrorCodes.Good;
+
+                    valueArray = p_array.BacnetValue;
+
+                    valueArray[(int)priority - 1] = new BacnetValue(null);
+                    p_array.BacnetValue = valueArray;
+                }
+
+                // Look on the priority Array to find the first value to be set in PROP_PRESENT_VALUE
+                if (errorcode == DeviceStorage.ErrorCodes.Good)
+                {
+
+                    bool done = false;
+                    for (int i = 0; i < 16; i++)
+                    {
+                        if (valueArray[i].Value != null)    // A value is OK
+                        {
+                            p_presentvalue.BacnetValue = new BacnetValue[1] { valueArray[i] };
+
+                            done = true;
+                            break;
+                        }
+                    }
+                    if (done == false)  // Nothing in the array : PROP_PRESENT_VALUE = PROP_RELINQUISH_DEFAULT
+                    {
+                        IList<BacnetValue> DefaultValue = p_relinquish.BacnetValue;
+                        p_presentvalue.BacnetValue = DefaultValue;
+                    }
+                }
+            }
+            catch
+            {
+                errorcode = DeviceStorage.ErrorCodes.GenericError;
+            }
+
+            return errorcode;
+        }
+
+
         public ErrorCodes[] WritePropertyMultiple(BacnetObjectId object_id, ICollection<BacnetPropertyValue> values)
         {
             ErrorCodes[] ret = new ErrorCodes[values.Count];

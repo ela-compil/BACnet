@@ -762,7 +762,10 @@ namespace DemoServer
             {
                 try
                 {
-                    DeviceStorage.ErrorCodes code = m_storage.WriteProperty(object_id, (BacnetPropertyIds)value.property.propertyIdentifier, value.property.propertyArrayIndex, value.value);
+                    DeviceStorage.ErrorCodes code = m_storage.WriteCommandableProperty(object_id, (BacnetPropertyIds)value.property.propertyIdentifier, value.value[0], value.priority);
+                    if (code == DeviceStorage.ErrorCodes.NotForMe)
+                        code = m_storage.WriteProperty(object_id, (BacnetPropertyIds)value.property.propertyIdentifier, value.property.propertyArrayIndex, value.value);
+
                     if (code == DeviceStorage.ErrorCodes.Good)
                         sender.SimpleAckResponse(adr, BacnetConfirmedServices.SERVICE_CONFIRMED_WRITE_PROPERTY, invoke_id);
                     else
