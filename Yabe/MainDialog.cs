@@ -1051,7 +1051,16 @@ namespace Yabe
                         }
                         else
                             b_values = new BacnetValue[0];
-                        bag.Add(new Utilities.CustomProperty(GetNiceName((BacnetPropertyIds)p_value.property.propertyIdentifier), value, value != null ? value.GetType() : typeof(string), false, "", b_values.Length > 0 ? b_values[0].Tag.ToString() : "", null, p_value.property));
+
+                        // PROP_RELINQUISH_DEFAULT can be write to null value
+                        if ((BacnetPropertyIds)p_value.property.propertyIdentifier != BacnetPropertyIds.PROP_RELINQUISH_DEFAULT)
+                            bag.Add(new Utilities.CustomProperty(GetNiceName((BacnetPropertyIds)p_value.property.propertyIdentifier), value, value != null ? value.GetType() : typeof(string), false, "", b_values.Length > 0 ? b_values[0].Tag.ToString() : "", null, p_value.property));
+                        else
+                        {
+                            Type t = new NullableConverter(value.GetType()).NullableType;
+                            bag.Add(new Utilities.CustomProperty(GetNiceName((BacnetPropertyIds)p_value.property.propertyIdentifier), value, t, false, "", b_values.Length > 0 ? b_values[0].Tag.ToString() : "", null, p_value.property));
+                        }
+
                     }
                     m_DataGrid.SelectedObject = bag;
                 }
@@ -1104,7 +1113,7 @@ namespace Yabe
                         for (int i = 0; i < arr.Length; i++)
                             b_value[i] = new BacnetValue(arr.GetValue(i));
                     }
-                    else if (new_value != null)
+                    else
                     {
                         b_value = new BacnetValue[1];
                         b_value[0] = new BacnetValue(new_value);

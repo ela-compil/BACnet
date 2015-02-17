@@ -286,7 +286,7 @@ namespace System.IO.BACnet.Storage
         // Write PROP_PRESENT_VALUE or PROP_RELINQUISH_DEFAULT in an object with a 16 level PROP_PRIORITY_ARRAY (BACNET_APPLICATION_TAG_NULL)
         public ErrorCodes WriteCommandableProperty(BacnetObjectId object_id, BacnetPropertyIds property_id, BacnetValue value, uint priority)
         {
-            if ((property_id != BacnetPropertyIds.PROP_PRESENT_VALUE) && (property_id != BacnetPropertyIds.PROP_RELINQUISH_DEFAULT))
+            if (!((property_id == BacnetPropertyIds.PROP_PRESENT_VALUE) || ((property_id == BacnetPropertyIds.PROP_RELINQUISH_DEFAULT) && (value.Value == null))))
                 return DeviceStorage.ErrorCodes.NotForMe;
 
             Property p_presentvalue = FindProperty(object_id, BacnetPropertyIds.PROP_PRESENT_VALUE);
