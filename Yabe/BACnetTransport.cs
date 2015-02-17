@@ -58,7 +58,7 @@ namespace System.IO.BACnet
         private System.Net.Sockets.UdpClient m_shared_conn;
         private System.Net.Sockets.UdpClient m_exclusive_conn;
         private int m_port;
-        private byte[] m_local_buffer;
+
         private bool m_exclusive_port = false;
         private bool m_dont_fragment;
         private int m_max_payload;
@@ -78,7 +78,6 @@ namespace System.IO.BACnet
         {
             m_port = port;
             m_max_payload = max_payload;
-            m_local_buffer = new byte[MaxBufferLength];
             m_exclusive_port = use_exclusive_port;
             m_dont_fragment = dont_fragment;
             m_local_endpoint = local_endpoint_ip;
@@ -103,6 +102,7 @@ namespace System.IO.BACnet
 
         private void Open()
         {
+
             if (!m_exclusive_port)
             {
                 /* We need a shared broadcast "listen" port. This is the 0xBAC0 port */
@@ -137,34 +137,48 @@ namespace System.IO.BACnet
             }
         }
 
+        private void Close()
+        {
+            m_exclusive_conn.Close();
+        }
+
         public void Start()
         {
             Open();
-            if (m_shared_conn != null) StartRecieve(m_shared_conn);
-            StartRecieve(m_exclusive_conn);
+            
+            if (m_shared_conn != null) 
+                m_shared_conn.BeginReceive(OnReceiveData, m_shared_conn);
+
+            if (m_exclusive_conn != null) 
+                m_exclusive_conn.BeginReceive(OnReceiveData, m_exclusive_conn);
+
         }
 
-        private void StartRecieve(System.Net.Sockets.UdpClient conn)
+        private void OnReceiveData(IAsyncResult asyncResult)
         {
-            System.Net.EndPoint ep = new System.Net.IPEndPoint(System.Net.IPAddress.Any, 0);
-            conn.Client.BeginReceiveFrom(m_local_buffer, 0, m_local_buffer.Length, Net.Sockets.SocketFlags.None, ref ep, OnRecieveData, conn);
-        }
-
-        private void OnRecieveData(IAsyncResult asyncResult)
-        {
+            System.Net.Sockets.UdpClient conn = (System.Net.Sockets.UdpClient)asyncResult.AsyncState;
             try
             {
-                if (m_exclusive_conn == null) return;
-                System.Net.EndPoint ep = new Net.IPEndPoint(System.Net.IPAddress.Any, 0);
-                System.Net.Sockets.UdpClient conn = (System.Net.Sockets.UdpClient)asyncResult.AsyncState;
-                if (conn.Client == null) return;
-                int rx = conn.Client.EndReceiveFrom(asyncResult, ref ep);
+                System.Net.IPEndPoint ep = new Net.IPEndPoint(System.Net.IPAddress.Any, 0);
+                byte[] local_buffer;
+                int rx = 0;
 
-                //normally this signals 'connection close'. On Udp this is just a 'ping package'
-                if (rx == 0)
+                try
                 {
-                    Trace.WriteLine("Udp empty package", null);
-                    StartRecieve(conn);
+                    local_buffer = conn.EndReceive(asyncResult, ref ep);
+                    rx = local_buffer.Length;
+                }
+                catch (Exception) // ICMP port unreachable
+                {
+                    //restart data receive
+                    conn.BeginReceive(OnReceiveData, conn);
+                    return;
+                }
+
+                if (rx == 0)    // Empty frame : port scanner maybe
+                {
+                    //restart data receive
+                    conn.BeginReceive(OnReceiveData, conn);
                     return;
                 }
 
@@ -175,14 +189,14 @@ namespace System.IO.BACnet
                     Convert((System.Net.IPEndPoint)ep, out remote_address);
                     BacnetBvlcFunctions function;
                     int msg_length;
-                    if (rx < BVLC.BVLC_HEADER_LENGTH || BVLC.Decode(m_local_buffer, 0, out function, out msg_length) < 0)
+                    if (rx < BVLC.BVLC_HEADER_LENGTH || BVLC.Decode(local_buffer, 0, out function, out msg_length) < 0)
                     {
                         Trace.TraceWarning("Some garbage data got in");
                     }
                     else
                     {
                         //send to upper layers
-                        if (MessageRecieved != null) MessageRecieved(this, m_local_buffer, BVLC.BVLC_HEADER_LENGTH, rx - BVLC.BVLC_HEADER_LENGTH, remote_address);
+                        if (MessageRecieved != null) MessageRecieved(this, local_buffer, BVLC.BVLC_HEADER_LENGTH, rx - BVLC.BVLC_HEADER_LENGTH, remote_address);
                     }
                 }
                 catch (Exception ex)
@@ -191,13 +205,15 @@ namespace System.IO.BACnet
                 }
                 finally
                 {
-                    //restart data recieve
-                    StartRecieve(conn);
+                    //restart data receive
+                    conn.BeginReceive(OnReceiveData, conn);
                 }
             }
             catch (Exception ex)
             {
                 Trace.TraceError("Exception in Ip OnRecieveData: " + ex.Message);
+                //restart data receive
+                conn.BeginReceive(OnReceiveData, conn);
             }
         }
 

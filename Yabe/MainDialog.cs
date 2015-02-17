@@ -1119,6 +1119,7 @@ namespace Yabe
                 //write
                 try
                 {
+                    comm.WritePriority = Properties.Settings.Default.DefaultWritePriority;
                     if (!comm.WritePropertyRequest(adr, object_id, (BacnetPropertyIds)property.propertyIdentifier, b_value))
                     {
                         MessageBox.Show(this, "Couldn't write property", "Communication Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);

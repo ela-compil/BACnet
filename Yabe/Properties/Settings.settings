@@ -80,5 +80,8 @@
     <Setting Name="DefaultUdpIp" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
+    <Setting Name="DefaultWritePriority" Type="System.UInt32" Scope="User">
+      <Value Profile="(Default)">16</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

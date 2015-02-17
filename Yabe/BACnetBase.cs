@@ -1140,6 +1140,10 @@ namespace System.IO.BACnet
         public UInt16 net;
         public byte[] adr;
         public BacnetAddressTypes type;
+
+        // Modif FC
+        public BacnetAddress RoutedSource=null;
+
         public BacnetAddress(BacnetAddressTypes type, UInt16 net, byte[] adr)
         {
             this.type = type;
@@ -1168,6 +1172,7 @@ namespace System.IO.BACnet
                     return base.ToString();
             }
         }
+
         public override bool Equals(object obj)
         {
             if (!(obj is BacnetAddress)) return false;
@@ -1179,7 +1184,13 @@ namespace System.IO.BACnet
             {
                 for (int i = 0; i < adr.Length; i++)
                     if (adr[i] != d.adr[i]) return false;
-                return true;
+
+                // Modif FC
+                if ((RoutedSource == null) && (d.RoutedSource != null))
+                    return false;                  
+                if ((d.RoutedSource==null)&&(RoutedSource == null)) return true;
+                return RoutedSource.Equals(d.RoutedSource);
+
             }
         }
     }
@@ -1937,7 +1948,8 @@ namespace System.IO.BACnet.Serialize
 
         public static void Encode(EncodeBuffer buffer, BacnetNpduControls function, BacnetAddress destination, BacnetAddress source, byte hop_count, BacnetNetworkMessageTypes network_msg_type, ushort vendor_id)
         {
-            bool has_destination = destination != null && destination.net > 0;              //patch by F. Chaxel
+            // Modif FC
+            bool has_destination = destination != null && destination.net > 0; // && destination.net != 0xFFFF;
             bool has_source = source != null && source.net > 0 && source.net != 0xFFFF;
 
             buffer.buffer[buffer.offset++] = BACNET_PROTOCOL_VERSION;
@@ -1964,12 +1976,18 @@ namespace System.IO.BACnet.Serialize
             if (has_source)
             {
                 buffer.buffer[buffer.offset++] =(byte)((source.net & 0xFF00) >> 8);
-                buffer.buffer[buffer.offset++] =(byte)((source.net & 0x00FF) >> 0);
-                buffer.buffer[buffer.offset++] =(byte)source.adr.Length;
-                if (source.adr.Length > 0)
+                buffer.buffer[buffer.offset++] = (byte)((source.net & 0x00FF) >> 0);
+                // Modif FC
+                if (destination.net == 0xFFFF)
+                    buffer.buffer[buffer.offset++] = 0;
+                else
                 {
-                    for (int i = 0; i < source.adr.Length; i++)
-                        buffer.buffer[buffer.offset++] =source.adr[i];
+                    buffer.buffer[buffer.offset++] = (byte)destination.adr.Length;
+                    if (destination.adr.Length > 0)
+                    {
+                        for (int i = 0; i < destination.adr.Length; i++)
+                            buffer.buffer[buffer.offset++] = destination.adr[i];
+                    }
                 }
             }
 
@@ -1978,11 +1996,13 @@ namespace System.IO.BACnet.Serialize
                 buffer.buffer[buffer.offset++] = hop_count;
             }
 
+            /*
             //display warning
             if (has_destination || has_source)
             {
                 System.Diagnostics.Trace.TraceWarning("NPDU size is more than 4. This will give an error in the current max_apdu calculation");
             }
+            */
 
             if ((function & BacnetNpduControls.NetworkLayerMessage) > 0)
             {
@@ -2566,7 +2586,8 @@ namespace System.IO.BACnet.Serialize
         {
             if (value.Value == null)
             {
-                /* don't encode anything */
+                // Modif FC
+                buffer.Add((byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_NULL);  
                 return;
             }
 
@@ -6040,7 +6061,7 @@ namespace System.IO.BACnet.Serialize
             /* Tag 3: opening context tag */
             if (!ASN1.decode_is_opening_tag_number(buffer, offset + len, 3))
                 return -1;
-            offset++;
+            len++;
             
             //data
             List<BacnetValue> _value_list = new List<BacnetValue>();
