@@ -1057,8 +1057,9 @@ namespace Yabe
                             bag.Add(new Utilities.CustomProperty(GetNiceName((BacnetPropertyIds)p_value.property.propertyIdentifier), value, value != null ? value.GetType() : typeof(string), false, "", b_values.Length > 0 ? b_values[0].Tag.ToString() : "", null, p_value.property));
                         else
                         {
-                            Type t = new NullableConverter(value.GetType()).NullableType;
-                            bag.Add(new Utilities.CustomProperty(GetNiceName((BacnetPropertyIds)p_value.property.propertyIdentifier), value, t, false, "", b_values.Length > 0 ? b_values[0].Tag.ToString() : "", null, p_value.property));
+                            // change to the related nullable type
+                            Type t = Type.GetType("System.Nullable`1[" + value.GetType().FullName + "]");
+                            bag.Add(new Utilities.CustomProperty(GetNiceName((BacnetPropertyIds)p_value.property.propertyIdentifier), value, t != null ? t : typeof(string), false, "", b_values.Length > 0 ? b_values[0].Tag.ToString() : "", null, p_value.property));
                         }
 
                     }
