@@ -474,7 +474,10 @@ namespace System.IO.BACnet.Storage
             switch (type)
             {
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_NULL:
-                    return new BacnetValue(type, null);
+                    if (value == "")
+                        return new BacnetValue(type, null); // Modif FC
+                    else
+                        return new BacnetValue(value);
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_BOOLEAN:
                     return new BacnetValue(type, bool.Parse(value));
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT:
@@ -513,7 +516,7 @@ namespace System.IO.BACnet.Storage
             switch (type)
             {
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_NULL:
-                    return "";
+                    return value.ToString(); // Modif FC
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_REAL:
                     return ((float)value.Value).ToString(System.Globalization.CultureInfo.InvariantCulture);
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_DOUBLE:
