@@ -1134,7 +1134,14 @@ namespace Yabe
                     else
                     {
                         b_value = new BacnetValue[1];
-                        b_value[0] = new BacnetValue(new_value);
+                        // Modif FC
+                        // enumerated is confuse by Int ou Uint in the basic BacnetValue constructor, 
+                        if ((c.CustomProperty.Description == "BACNET_APPLICATION_TAG_ENUMERATED") && (new_value != null))
+                        {
+                            b_value[0] = new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED, new_value);
+                        }
+                        else
+                            b_value[0] = new BacnetValue(new_value);
                     }
                 }
                 catch (Exception ex)
