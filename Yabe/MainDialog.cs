@@ -1052,14 +1052,22 @@ namespace Yabe
                         else
                             b_values = new BacnetValue[0];
 
-                        // PROP_RELINQUISH_DEFAULT can be write to null value
-                        if ((BacnetPropertyIds)p_value.property.propertyIdentifier != BacnetPropertyIds.PROP_RELINQUISH_DEFAULT)
-                            bag.Add(new Utilities.CustomProperty(GetNiceName((BacnetPropertyIds)p_value.property.propertyIdentifier), value, value != null ? value.GetType() : typeof(string), false, "", b_values.Length > 0 ? b_values[0].Tag.ToString() : "", null, p_value.property));
-                        else
+                        switch ((BacnetPropertyIds)p_value.property.propertyIdentifier)
                         {
-                            // change to the related nullable type
-                            Type t = Type.GetType("System.Nullable`1[" + value.GetType().FullName + "]");
-                            bag.Add(new Utilities.CustomProperty(GetNiceName((BacnetPropertyIds)p_value.property.propertyIdentifier), value, t != null ? t : typeof(string), false, "", b_values.Length > 0 ? b_values[0].Tag.ToString() : "", null, p_value.property));
+                            // PROP_RELINQUISH_DEFAULT can be write to null value
+                            case BacnetPropertyIds.PROP_RELINQUISH_DEFAULT:
+                                // change to the related nullable type
+                                Type t = Type.GetType("System.Nullable`1[" + value.GetType().FullName + "]");
+                                bag.Add(new Utilities.CustomProperty(GetNiceName((BacnetPropertyIds)p_value.property.propertyIdentifier), value, t != null ? t : typeof(string), false, "", b_values.Length > 0 ? b_values[0].Tag.ToString() : "", null, p_value.property));
+                                break;
+                            // PROP_UNITS : Unit nice name
+                            case BacnetPropertyIds.PROP_UNITS:
+                                string str = GetNiceUnitName((BacnetUnitsId)Convert.ToInt32(value));
+                                bag.Add(new Utilities.CustomProperty(GetNiceName((BacnetPropertyIds)p_value.property.propertyIdentifier), str, value != null ? value.GetType() : typeof(string), false, "", b_values.Length > 0 ? b_values[0].Tag.ToString() : "", null, p_value.property));
+                                break;
+                            default:
+                                bag.Add(new Utilities.CustomProperty(GetNiceName((BacnetPropertyIds)p_value.property.propertyIdentifier), value, value != null ? value.GetType() : typeof(string), false, "", b_values.Length > 0 ? b_values[0].Tag.ToString() : "", null, p_value.property));
+                                break;
                         }
 
                     }
@@ -1070,6 +1078,15 @@ namespace Yabe
             {
                 this.Cursor = Cursors.Default;
             }
+        }
+
+        private static string GetNiceUnitName(BacnetUnitsId Unit)
+        {
+            string unitStr = Unit.ToString();
+            if (unitStr.StartsWith("UNITS_")) unitStr = unitStr.Substring(6);
+            unitStr = unitStr.Replace('_', ' ');
+            unitStr = System.Threading.Thread.CurrentThread.CurrentCulture.TextInfo.ToTitleCase(unitStr.ToLower());
+            return unitStr;
         }
 
         private void m_AddressSpaceTree_AfterSelect(object sender, TreeViewEventArgs e)
