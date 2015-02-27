@@ -28,6 +28,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO.BACnet;
 
 namespace Utilities
 {
@@ -208,10 +209,12 @@ namespace Utilities
         private object m_tag;
         private DynamicEnum m_options;
         private string m_category;
-        private string m_description;
+        // Modif FC : change type
+        private BacnetApplicationTags? m_description;
 
-        public CustomProperty(string name, object value, Type type, bool read_only, string category = "", string description = "", DynamicEnum options = null, object tag = null)
-		{
+        // Modif FC : constructor
+        public CustomProperty(string name, object value, Type type, bool read_only, string category = "", BacnetApplicationTags? description = null, DynamicEnum options = null, object tag = null)
+        {
 			this.m_name = name;
             this.m_old_value = value;
 			this.m_value = value;
@@ -238,7 +241,14 @@ namespace Utilities
             get { return m_category; }
         }
 
+        // Modif FC
         public string Description
+        {
+            get { return m_description == null ? null : m_description.ToString(); }
+        }
+
+        // Modif FC : added
+        public BacnetApplicationTags? bacnetApplicationTags
         {
             get { return m_description; }
         }

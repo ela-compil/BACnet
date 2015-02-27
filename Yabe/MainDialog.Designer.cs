@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.TreeNode treeNode1 = new System.Windows.Forms.TreeNode("Devices");
+            System.Windows.Forms.TreeNode treeNode2 = new System.Windows.Forms.TreeNode("Devices");
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainDialog));
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.m_SearchToolButton = new System.Windows.Forms.ToolStripButton();
@@ -42,7 +42,9 @@
             this.removeDeviceToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripSeparator();
             this.sendWhoIsToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.foreignDeviceRegistrationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportDeviceDBToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.exportDeviceEDEFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.timeSynchronizeToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.communicationControlToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripSeparator();
@@ -180,7 +182,9 @@
             this.removeDeviceToolStripMenuItem,
             this.toolStripMenuItem3,
             this.sendWhoIsToolStripMenuItem1,
+            this.foreignDeviceRegistrationToolStripMenuItem,
             this.exportDeviceDBToolStripMenuItem1,
+            this.exportDeviceEDEFileToolStripMenuItem,
             this.timeSynchronizeToolStripMenuItem1,
             this.communicationControlToolStripMenuItem1,
             this.toolStripMenuItem2,
@@ -195,7 +199,7 @@
             // 
             this.addDevicesearchToolStripMenuItem.Image = global::Yabe.Properties.Resources.add;
             this.addDevicesearchToolStripMenuItem.Name = "addDevicesearchToolStripMenuItem";
-            this.addDevicesearchToolStripMenuItem.Size = new System.Drawing.Size(167, 22);
+            this.addDevicesearchToolStripMenuItem.Size = new System.Drawing.Size(218, 22);
             this.addDevicesearchToolStripMenuItem.Text = "Add device";
             this.addDevicesearchToolStripMenuItem.Click += new System.EventHandler(this.addDevicesearchToolStripMenuItem_Click);
             // 
@@ -203,36 +207,52 @@
             // 
             this.removeDeviceToolStripMenuItem.Image = global::Yabe.Properties.Resources.cross;
             this.removeDeviceToolStripMenuItem.Name = "removeDeviceToolStripMenuItem";
-            this.removeDeviceToolStripMenuItem.Size = new System.Drawing.Size(167, 22);
+            this.removeDeviceToolStripMenuItem.Size = new System.Drawing.Size(218, 22);
             this.removeDeviceToolStripMenuItem.Text = "Remove device";
             this.removeDeviceToolStripMenuItem.Click += new System.EventHandler(this.removeDeviceToolStripMenuItem_Click);
             // 
             // toolStripMenuItem3
             // 
             this.toolStripMenuItem3.Name = "toolStripMenuItem3";
-            this.toolStripMenuItem3.Size = new System.Drawing.Size(164, 6);
+            this.toolStripMenuItem3.Size = new System.Drawing.Size(215, 6);
             // 
             // sendWhoIsToolStripMenuItem1
             // 
             this.sendWhoIsToolStripMenuItem1.Image = global::Yabe.Properties.Resources.magnifier;
             this.sendWhoIsToolStripMenuItem1.Name = "sendWhoIsToolStripMenuItem1";
-            this.sendWhoIsToolStripMenuItem1.Size = new System.Drawing.Size(167, 22);
+            this.sendWhoIsToolStripMenuItem1.Size = new System.Drawing.Size(218, 22);
             this.sendWhoIsToolStripMenuItem1.Text = "Send WhoIs";
             this.sendWhoIsToolStripMenuItem1.Click += new System.EventHandler(this.sendWhoIsToolStripMenuItem1_Click);
+            // 
+            // foreignDeviceRegistrationToolStripMenuItem
+            // 
+            this.foreignDeviceRegistrationToolStripMenuItem.Image = global::Yabe.Properties.Resources.world;
+            this.foreignDeviceRegistrationToolStripMenuItem.Name = "foreignDeviceRegistrationToolStripMenuItem";
+            this.foreignDeviceRegistrationToolStripMenuItem.Size = new System.Drawing.Size(218, 22);
+            this.foreignDeviceRegistrationToolStripMenuItem.Text = "Foreign Device Registration";
+            this.foreignDeviceRegistrationToolStripMenuItem.Click += new System.EventHandler(this.foreignDeviceRegistrationToolStripMenuItem_Click);
             // 
             // exportDeviceDBToolStripMenuItem1
             // 
             this.exportDeviceDBToolStripMenuItem1.Image = global::Yabe.Properties.Resources.database;
             this.exportDeviceDBToolStripMenuItem1.Name = "exportDeviceDBToolStripMenuItem1";
-            this.exportDeviceDBToolStripMenuItem1.Size = new System.Drawing.Size(167, 22);
+            this.exportDeviceDBToolStripMenuItem1.Size = new System.Drawing.Size(218, 22);
             this.exportDeviceDBToolStripMenuItem1.Text = "Export device DB";
             this.exportDeviceDBToolStripMenuItem1.Click += new System.EventHandler(this.exportDeviceDBToolStripMenuItem1_Click);
+            // 
+            // exportDeviceEDEFileToolStripMenuItem
+            // 
+            this.exportDeviceEDEFileToolStripMenuItem.Image = global::Yabe.Properties.Resources.database;
+            this.exportDeviceEDEFileToolStripMenuItem.Name = "exportDeviceEDEFileToolStripMenuItem";
+            this.exportDeviceEDEFileToolStripMenuItem.Size = new System.Drawing.Size(218, 22);
+            this.exportDeviceEDEFileToolStripMenuItem.Text = "Export Device EDE File";
+            this.exportDeviceEDEFileToolStripMenuItem.Click += new System.EventHandler(this.exportDeviceEDEFileToolStripMenuItem_Click);
             // 
             // timeSynchronizeToolStripMenuItem1
             // 
             this.timeSynchronizeToolStripMenuItem1.Image = global::Yabe.Properties.Resources.clock;
             this.timeSynchronizeToolStripMenuItem1.Name = "timeSynchronizeToolStripMenuItem1";
-            this.timeSynchronizeToolStripMenuItem1.Size = new System.Drawing.Size(167, 22);
+            this.timeSynchronizeToolStripMenuItem1.Size = new System.Drawing.Size(218, 22);
             this.timeSynchronizeToolStripMenuItem1.Text = "Time synchronize";
             this.timeSynchronizeToolStripMenuItem1.Click += new System.EventHandler(this.timeSynchronizeToolStripMenuItem1_Click);
             // 
@@ -240,20 +260,20 @@
             // 
             this.communicationControlToolStripMenuItem1.Image = global::Yabe.Properties.Resources.transmit;
             this.communicationControlToolStripMenuItem1.Name = "communicationControlToolStripMenuItem1";
-            this.communicationControlToolStripMenuItem1.Size = new System.Drawing.Size(167, 22);
+            this.communicationControlToolStripMenuItem1.Size = new System.Drawing.Size(218, 22);
             this.communicationControlToolStripMenuItem1.Text = "Device control";
             this.communicationControlToolStripMenuItem1.Click += new System.EventHandler(this.communicationControlToolStripMenuItem1_Click);
             // 
             // toolStripMenuItem2
             // 
             this.toolStripMenuItem2.Name = "toolStripMenuItem2";
-            this.toolStripMenuItem2.Size = new System.Drawing.Size(164, 6);
+            this.toolStripMenuItem2.Size = new System.Drawing.Size(215, 6);
             // 
             // downloadFileToolStripMenuItem1
             // 
             this.downloadFileToolStripMenuItem1.Image = global::Yabe.Properties.Resources.note;
             this.downloadFileToolStripMenuItem1.Name = "downloadFileToolStripMenuItem1";
-            this.downloadFileToolStripMenuItem1.Size = new System.Drawing.Size(167, 22);
+            this.downloadFileToolStripMenuItem1.Size = new System.Drawing.Size(218, 22);
             this.downloadFileToolStripMenuItem1.Text = "Download File";
             this.downloadFileToolStripMenuItem1.Click += new System.EventHandler(this.downloadFileToolStripMenuItem1_Click);
             // 
@@ -261,7 +281,7 @@
             // 
             this.uploadFileToolStripMenuItem1.Image = global::Yabe.Properties.Resources.note;
             this.uploadFileToolStripMenuItem1.Name = "uploadFileToolStripMenuItem1";
-            this.uploadFileToolStripMenuItem1.Size = new System.Drawing.Size(167, 22);
+            this.uploadFileToolStripMenuItem1.Size = new System.Drawing.Size(218, 22);
             this.uploadFileToolStripMenuItem1.Text = "Upload File";
             this.uploadFileToolStripMenuItem1.Click += new System.EventHandler(this.uploadFileToolStripMenuItem1_Click);
             // 
@@ -269,7 +289,7 @@
             // 
             this.subscribeToolStripMenuItem1.Image = global::Yabe.Properties.Resources.eye;
             this.subscribeToolStripMenuItem1.Name = "subscribeToolStripMenuItem1";
-            this.subscribeToolStripMenuItem1.Size = new System.Drawing.Size(167, 22);
+            this.subscribeToolStripMenuItem1.Size = new System.Drawing.Size(218, 22);
             this.subscribeToolStripMenuItem1.Text = "Subscribe";
             this.subscribeToolStripMenuItem1.Click += new System.EventHandler(this.subscribeToolStripMenuItem1_Click);
             // 
@@ -378,10 +398,10 @@
             this.m_DeviceTree.ImageList = this.m_ImageList;
             this.m_DeviceTree.Location = new System.Drawing.Point(0, 13);
             this.m_DeviceTree.Name = "m_DeviceTree";
-            treeNode1.Name = "Node0";
-            treeNode1.Text = "Devices";
+            treeNode2.Name = "Node0";
+            treeNode2.Text = "Devices";
             this.m_DeviceTree.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
-            treeNode1});
+            treeNode2});
             this.m_DeviceTree.SelectedImageIndex = 0;
             this.m_DeviceTree.ShowRootLines = false;
             this.m_DeviceTree.Size = new System.Drawing.Size(164, 174);
@@ -739,7 +759,6 @@
         private System.Windows.Forms.ToolStripButton m_RemoveToolButton;
         private System.Windows.Forms.ToolStripMenuItem quitToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem addDevicesearchToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem removeDeviceToolStripMenuItem;
         private System.Windows.Forms.ImageList m_ImageList;
         private System.Windows.Forms.ContextMenuStrip m_DeviceTreeMenuStrip;
@@ -774,6 +793,9 @@
         private System.Windows.Forms.ToolStripMenuItem timeSynchronizeToolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem communicationControlToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem communicationControlToolStripMenuItem1;
+        private System.Windows.Forms.ToolStripMenuItem exportDeviceEDEFileToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem addDevicesearchToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem foreignDeviceRegistrationToolStripMenuItem;
     }
 }
 

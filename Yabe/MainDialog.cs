@@ -33,6 +33,7 @@ using System.Text;
 using System.Windows.Forms;
 using System.Diagnostics;
 using System.IO.BACnet;
+using System.IO;
 
 namespace Yabe
 {
@@ -1052,21 +1053,22 @@ namespace Yabe
                         else
                             b_values = new BacnetValue[0];
 
+                        // Modif FC
                         switch ((BacnetPropertyIds)p_value.property.propertyIdentifier)
                         {
                             // PROP_RELINQUISH_DEFAULT can be write to null value
                             case BacnetPropertyIds.PROP_RELINQUISH_DEFAULT:
                                 // change to the related nullable type
                                 Type t = Type.GetType("System.Nullable`1[" + value.GetType().FullName + "]");
-                                bag.Add(new Utilities.CustomProperty(GetNiceName((BacnetPropertyIds)p_value.property.propertyIdentifier), value, t != null ? t : typeof(string), false, "", b_values.Length > 0 ? b_values[0].Tag.ToString() : "", null, p_value.property));
+                                bag.Add(new Utilities.CustomProperty(GetNiceName((BacnetPropertyIds)p_value.property.propertyIdentifier), value, t != null ? t : typeof(string), false, "", b_values.Length > 0 ? b_values[0].Tag : (BacnetApplicationTags?)null, null, p_value.property));
                                 break;
                             // PROP_UNITS : Unit nice name
                             case BacnetPropertyIds.PROP_UNITS:
                                 string str = GetNiceUnitName((BacnetUnitsId)Convert.ToInt32(value));
-                                bag.Add(new Utilities.CustomProperty(GetNiceName((BacnetPropertyIds)p_value.property.propertyIdentifier), str, value != null ? value.GetType() : typeof(string), false, "", b_values.Length > 0 ? b_values[0].Tag.ToString() : "", null, p_value.property));
+                                bag.Add(new Utilities.CustomProperty(GetNiceName((BacnetPropertyIds)p_value.property.propertyIdentifier), str, value != null ? value.GetType() : typeof(string), false, "", b_values.Length > 0 ? b_values[0].Tag : (BacnetApplicationTags?)null, null, p_value.property));
                                 break;
                             default:
-                                bag.Add(new Utilities.CustomProperty(GetNiceName((BacnetPropertyIds)p_value.property.propertyIdentifier), value, value != null ? value.GetType() : typeof(string), false, "", b_values.Length > 0 ? b_values[0].Tag.ToString() : "", null, p_value.property));
+                                bag.Add(new Utilities.CustomProperty(GetNiceName((BacnetPropertyIds)p_value.property.propertyIdentifier), value, value != null ? value.GetType() : typeof(string), false, "", b_values.Length > 0 ? b_values[0].Tag : (BacnetApplicationTags?)null, null, p_value.property));
                                 break;
                         }
 
@@ -1133,15 +1135,11 @@ namespace Yabe
                     }
                     else
                     {
-                        b_value = new BacnetValue[1];
-                        // Modif FC
-                        // enumerated is confuse by Int ou Uint in the basic BacnetValue constructor, 
-                        if ((c.CustomProperty.Description == "BACNET_APPLICATION_TAG_ENUMERATED") && (new_value != null))
                         {
-                            b_value[0] = new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED, new_value);
+                            // Modif FC
+                            b_value = new BacnetValue[1];
+                            b_value[0] = new BacnetValue((BacnetApplicationTags)c.CustomProperty.bacnetApplicationTags, new_value);
                         }
-                        else
-                            b_value[0] = new BacnetValue(new_value);
                     }
                 }
                 catch (Exception ex)
@@ -1801,5 +1799,117 @@ namespace Yabe
         {
             communicationControlToolStripMenuItem_Click(this, null);
         }
+        // Modif FC
+        // base on http://www.big-eu.org/fileadmin/downloads/EDE2_2_Templates.zip
+        // This will download all values from a given device and store it in an EDE csv format,
+        private void exportDeviceEDEFileToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            //fetch end point
+            BacnetClient comm = null;
+            BacnetAddress adr;
+            uint device_id;
+            try
+            {
+                if (m_DeviceTree.SelectedNode == null) return;
+                else if (m_DeviceTree.SelectedNode.Tag == null) return;
+                else if (!(m_DeviceTree.SelectedNode.Tag is KeyValuePair<BacnetAddress, uint>)) return;
+                KeyValuePair<BacnetAddress, uint> entry = (KeyValuePair<BacnetAddress, uint>)m_DeviceTree.SelectedNode.Tag;
+                adr = entry.Key;
+                device_id = entry.Value;
+                comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag;
+            }
+            finally
+            {
+                if (comm == null) MessageBox.Show(this, "Please select a device node", "Wrong node", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+
+            //select file to store
+            SaveFileDialog dlg = new SaveFileDialog();
+            dlg.Filter = "csv|*.csv";
+            if (dlg.ShowDialog(this) != System.Windows.Forms.DialogResult.OK) return;
+
+            this.Cursor = Cursors.WaitCursor;
+            Application.DoEvents();
+            try
+            {
+                StreamWriter Sw = new StreamWriter(dlg.FileName);
+
+                Sw.WriteLine("# Proposal_Engineering-Data-Exchange - B.I.G.-EU");
+                Sw.WriteLine("PROJECT_NAME");
+                Sw.WriteLine("VERSION_OF_REFERENCEFILE");
+                Sw.WriteLine("TIMESTAMP_OF_LAST_CHANGE;" + DateTime.Now.ToShortDateString());
+                Sw.WriteLine("AUTHOR_OF_LAST_CHANGE;YABE Yet Another Bacnet Explorer");
+                Sw.WriteLine("VERSION_OF_LAYOUT;2.2");
+                Sw.WriteLine("#mandatory;mandator;mandatory;mandatory;mandatory;optional;optional;optional;optional;optional;optional;optional;optional;optional;optional;optional");
+                Sw.WriteLine("# keyname;device obj.-instance;object-name;object-type;object-instance;description;present-value-default;min-present-value;max-present-value;settable;supports COV;hi-limit;low-limit;state-text-reference;unit-code;vendor-specific-addres");
+                //get all objects
+                IList<BacnetValue> value_list;
+                comm.ReadPropertyRequest(adr, new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, device_id), BacnetPropertyIds.PROP_OBJECT_LIST, out value_list);
+                LinkedList<BacnetObjectId> object_list = new LinkedList<BacnetObjectId>();
+                foreach (BacnetValue value in value_list)
+                {
+                    BacnetObjectId Bacobj = (BacnetObjectId)value.Value;
+
+                    IList<BacnetReadAccessResult> multi_value_list;
+                    BacnetPropertyReference[] properties = new BacnetPropertyReference[] { new BacnetPropertyReference((uint)BacnetPropertyIds.PROP_ALL, System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL) };
+                    comm.ReadPropertyMultipleRequest(adr, (BacnetObjectId)value.Value, properties, out multi_value_list);
+
+                    BacnetReadAccessResult br = multi_value_list[0];
+
+                    string Identifier = "";
+                    string Description = "";
+                    string UnitCode = "";
+
+                    foreach (BacnetPropertyValue pv in br.values)
+                    {
+                        if ((BacnetPropertyIds)pv.property.propertyIdentifier == BacnetPropertyIds.PROP_OBJECT_NAME)
+                            Identifier = pv.value[0].Value.ToString();
+                        if ((BacnetPropertyIds)pv.property.propertyIdentifier == BacnetPropertyIds.PROP_DESCRIPTION)
+                            Description = pv.value[0].Value.ToString(); ;
+                        if ((BacnetPropertyIds)pv.property.propertyIdentifier == BacnetPropertyIds.PROP_UNITS)
+                            UnitCode = pv.value[0].Value.ToString(); ;
+                    }
+
+                    Sw.WriteLine(value.ToString() + ";" + device_id.ToString() + ";" + Identifier + ";" + ((int)Bacobj.type).ToString() + ";" + Bacobj.instance.ToString() + ";" + Description + ";;;;;;;;;" + UnitCode);
+
+                }
+
+                Sw.Close();
+
+                //display
+                MessageBox.Show(this, "Done", "Export done", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, "Error during export: " + ex.Message, "Export Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                this.Cursor = Cursors.Default;
+            }
+        }
+
+        private void foreignDeviceRegistrationToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            //fetch end point
+            BacnetClient comm = null;
+            try
+            {
+                if (m_DeviceTree.SelectedNode == null) return;
+                else if (m_DeviceTree.SelectedNode.Tag == null) return;
+                else if (!(m_DeviceTree.SelectedNode.Tag is BacnetClient)) return;
+                comm = (BacnetClient)m_DeviceTree.SelectedNode.Tag;
+            }
+            finally
+            {
+
+                if (comm == null) MessageBox.Show(this, "Please select an \"IP transport\" node first", "Wrong node", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+
+            Form F = new ForeignRegistry(comm);
+            F.ShowDialog();
+        }
+
+
     }
 }

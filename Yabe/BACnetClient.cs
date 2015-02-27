@@ -704,6 +704,61 @@ namespace System.IO.BACnet
             }
         }
 
+        // Modif FC
+        public void RegisterAsForeignDevice(String BBMD_IP, short TTL, int Port = 0xbac0)
+        {
+            if (!(m_client is BacnetIpUdpProtocolTransport))
+            {
+                Trace.TraceWarning("Wrong Transport : IP only");
+                return;
+            }
+
+            try
+            {
+                System.Net.IPEndPoint ep = new Net.IPEndPoint(Net.IPAddress.Parse(BBMD_IP), Port);
+
+                EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);
+                BVLC.Encode(b.buffer, 0, BacnetBvlcFunctions.BVLC_REGISTER_FOREIGN_DEVICE, 6);
+                b.buffer[4] = (byte)((TTL & 0xFF00) >> 8);
+                b.buffer[5] = (byte)(TTL & 0xFF);
+
+                Trace.WriteLine("Sending Register as a Foreign Device ... ", null);
+                (m_client as BacnetIpUdpProtocolTransport).Send(b.buffer, 6, ep);
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError("Error on RegisterAsForeignDevice" + ex.Message);
+            }
+        }
+
+        public void RemoteWhoIs(String BBMD_IP, int Port = 0xbac0, int low_limit = -1, int high_limit = -1)
+        {
+            if (!(m_client is BacnetIpUdpProtocolTransport))
+            {
+                Trace.TraceWarning("Wrong Transport : IP only");
+                return;
+            }
+
+            try
+            {
+                System.Net.IPEndPoint ep = new Net.IPEndPoint(Net.IPAddress.Parse(BBMD_IP), Port);
+
+                EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);
+                BacnetAddress broadcast = m_client.GetBroadcastAddress();
+                NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, broadcast, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, 0);
+                APDU.EncodeUnconfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_WHO_IS);
+                Services.EncodeWhoIsBroadcast(b, low_limit, high_limit);
+                BVLC.Encode(b.buffer, 0, BacnetBvlcFunctions.BVLC_DISTRIBUTE_BROADCAST_TO_NETWORK, b.offset);
+
+                Trace.WriteLine("Sending Whois to remote BBMD ", null);
+                (m_client as BacnetIpUdpProtocolTransport).Send(b.buffer, b.offset, ep);
+            }
+            catch (Exception ex)
+            {
+                Trace.TraceError("Sending Whois to remote BBMD " + ex.Message);
+            }
+
+        }
         public void WhoIs(int low_limit = -1, int high_limit = -1)
         {
             Trace.WriteLine("Sending WhoIs ... ", null);

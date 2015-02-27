@@ -62,6 +62,12 @@
     </Compile>
     <Compile Include="DynamicPropertyGridContainer.cs" />
     <Compile Include="FileTransfers.cs" />
+    <Compile Include="ForeignRegistry.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ForeignRegistry.designer.cs">
+      <DependentUpon>ForeignRegistry.cs</DependentUpon>
+    </Compile>
     <Compile Include="MainDialog.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -96,6 +102,9 @@
     </Compile>
     <EmbeddedResource Include="DeviceCommunicationControlDialog.resx">
       <DependentUpon>DeviceCommunicationControlDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ForeignRegistry.resx">
+      <DependentUpon>ForeignRegistry.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="MainDialog.resx">
       <DependentUpon>MainDialog.cs</DependentUpon>
@@ -148,6 +157,7 @@
     <None Include="Resources\information.png" />
     <None Include="Resources\application_form.png" />
     <None Include="Resources\transmit.png" />
+    <None Include="Resources\world.png" />
     <Content Include="Search.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

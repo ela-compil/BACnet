@@ -5,8 +5,9 @@
 1.0.2 - 2015...
  - Fix version inconsistencies (installer/inprogram/db)
 
-0.9.7 - 20141208
- - Applied 3 patches by F. Chaxel to the DemoServer
+0.9.7 - 20150227
+ - Applied many patches by F. Chaxel
+ - Foreign Device Registration added by F. Chaxel
 
 0.9.6 - 20140504
  - Added Structured View object

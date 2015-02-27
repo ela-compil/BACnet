@@ -195,8 +195,32 @@ namespace System.IO.BACnet
                     }
                     else
                     {
-                        //send to upper layers
-                        if (MessageRecieved != null) MessageRecieved(this, local_buffer, BVLC.BVLC_HEADER_LENGTH, rx - BVLC.BVLC_HEADER_LENGTH, remote_address);
+                        // Basic Header lenght
+                        int HEADER_LENGTH = BVLC.BVLC_HEADER_LENGTH;
+
+                        // response to BVLC_REGISTER_FOREIGN_DEVICE (could be BVLC_DISTRIBUTE_BROADCAST_TO_NETWORK ... but we are not a BBMD, don't care)
+                        if (function == BacnetBvlcFunctions.BVLC_RESULT)
+                        {
+                            Trace.WriteLine("Receive Register as Foreign Device Response");
+                        }
+
+                        // a BVLC_FORWARDED_NPDU frame by a BBMD, change the remote_address to the original one (stored in the BVLC header) 
+                        // we don't care about the BBMD address
+                        if (function == BacnetBvlcFunctions.BVLC_FORWARDED_NPDU)
+                        {
+                            long ip = ((long)local_buffer[7] << 24) + ((long)local_buffer[6] << 16) + ((long)local_buffer[5] << 8) + (long)local_buffer[4];
+                            int port = (local_buffer[8] << 8) + local_buffer[9];    // 0xbac0 maybe
+                            ep = new Net.IPEndPoint(ip, port);
+
+                            Convert((System.Net.IPEndPoint)ep, out remote_address);
+
+                            // BVLC_FORWARDED_NPDU Header lenght
+                            HEADER_LENGTH = 10;
+                        }
+
+                        if ((function == BacnetBvlcFunctions.BVLC_ORIGINAL_UNICAST_NPDU) || (function == BacnetBvlcFunctions.BVLC_ORIGINAL_BROADCAST_NPDU) || (function == BacnetBvlcFunctions.BVLC_FORWARDED_NPDU))
+                            //send to upper layers
+                            if (MessageRecieved != null) MessageRecieved(this, local_buffer, HEADER_LENGTH, rx - HEADER_LENGTH, remote_address);
                     }
                 }
                 catch (Exception ex)
@@ -231,6 +255,12 @@ namespace System.IO.BACnet
                 ret += buffer[i].ToString("X2");
 
             return ret;
+        }
+
+        // Modif FC : used for BBMD communication
+        public int Send(byte[] buffer, int data_length, System.Net.IPEndPoint ep)
+        {
+            return m_exclusive_conn.Send(buffer, data_length, ep);
         }
 
         public int Send(byte[] buffer, int offset, int data_length, BacnetAddress address, bool wait_for_transmission, int timeout)
