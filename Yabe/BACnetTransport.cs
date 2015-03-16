@@ -237,7 +237,8 @@ namespace System.IO.BACnet
             {
                 Trace.TraceError("Exception in Ip OnRecieveData: " + ex.Message);
                 //restart data receive
-                conn.BeginReceive(OnReceiveData, conn);
+                if (conn.Client != null)
+                    conn.BeginReceive(OnReceiveData, conn);
             }
         }
 
@@ -1324,6 +1325,75 @@ namespace System.IO.BACnet
         public delegate void FrameRecievedHandler(BacnetMstpProtocolTransport sender, BacnetMstpFrameTypes frame_type, byte destination_address, byte source_address, int msg_length);
         public event MessageRecievedHandler MessageRecieved;
         public event FrameRecievedHandler FrameRecieved;
+
+        #region " Sniffer mode "
+
+        // Used in Sniffer only mode
+        public delegate void RawMessageReceivedHandler(byte[] buffer, int offset, int lenght);
+        public event RawMessageReceivedHandler RawMessageRecieved;
+
+        public void Start_SpyMode()
+        {
+            if (m_port == null) return;
+            m_port.Open();
+
+            Threading.Thread th = new Threading.Thread(mstp_thread_sniffer);
+            th.IsBackground = true;
+            th.Start();
+
+        }
+
+        // Just Sniffer mode, no Bacnet activity generated here
+        // Modif FC
+        private void mstp_thread_sniffer()
+        {
+            for (; ; )
+            {
+                BacnetMstpFrameTypes frame_type;
+                byte destination_address;
+                byte source_address;
+                int msg_length;
+
+                try
+                {
+                    GetMessageStatus status = GetNextMessage(T_NO_TOKEN, out  frame_type, out  destination_address, out  source_address, out  msg_length);
+
+                    if (status == GetMessageStatus.ConnectionClose)
+                    {
+                        m_port = null;
+                        return;
+                    }
+                    else if (status == GetMessageStatus.Good)
+                    {
+                        // frame event client ?
+                        if (RawMessageRecieved != null)
+                        {
+
+                            int length = msg_length + MSTP.MSTP_HEADER_LENGTH + (msg_length > 0 ? 2 : 0);
+
+                            // Array copy
+                            // after that it could be put asynchronously another time in the Main message loop
+                            // without any problem
+                            byte[] packet = new byte[length];
+                            Array.Copy(m_local_buffer, 0, packet, 0, length);
+
+                            // No need to use the thread pool, if the pipe is too slow
+                            // frames task list will grow infinitly
+                            RawMessageRecieved(packet, 0, length);
+                        }
+
+                        RemoveCurrentMessage(msg_length);
+                    }
+                }
+                catch
+                {
+                    m_port = null;
+                }
+            }
+        }
+
+
+        #endregion
 
         public BacnetMstpProtocolTransport(IBacnetSerialTransport transport, short source_address = -1, byte max_master = 127, byte max_info_frames = 1)
         {

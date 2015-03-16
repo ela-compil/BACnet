@@ -286,7 +286,8 @@ namespace System.IO.BACnet.Storage
         // Write PROP_PRESENT_VALUE or PROP_RELINQUISH_DEFAULT in an object with a 16 level PROP_PRIORITY_ARRAY (BACNET_APPLICATION_TAG_NULL)
         public ErrorCodes WriteCommandableProperty(BacnetObjectId object_id, BacnetPropertyIds property_id, BacnetValue value, uint priority)
         {
-            if (!((property_id == BacnetPropertyIds.PROP_PRESENT_VALUE) || ((property_id == BacnetPropertyIds.PROP_RELINQUISH_DEFAULT) && (value.Value == null))))
+
+            if (!(property_id == BacnetPropertyIds.PROP_PRESENT_VALUE))
                 return DeviceStorage.ErrorCodes.NotForMe;
 
             Property p_presentvalue = FindProperty(object_id, BacnetPropertyIds.PROP_PRESENT_VALUE);
@@ -327,21 +328,10 @@ namespace System.IO.BACnet.Storage
                     errorcode = DeviceStorage.ErrorCodes.Good;
 
                     valueArray = p_array.BacnetValue;
-
-                    valueArray[(int)priority - 1] = value;
-                    p_array.BacnetValue = valueArray;
-                }
-
-                // Write Property PROP_RELINQUISH_DEFAULT : A value is removed in the PROP_PRIORITY_ARRAY
-                // a check to Null value could be made, but Yabe can send it, so any value to reset the array is accepted
-                // ... it's a little personal modification of the standard.
-                if (property_id == BacnetPropertyIds.PROP_RELINQUISH_DEFAULT)
-                {
-                    errorcode = DeviceStorage.ErrorCodes.Good;
-
-                    valueArray = p_array.BacnetValue;
-
-                    valueArray[(int)priority - 1] = new BacnetValue(null);
+                    if (value.Value == null)
+                        valueArray[(int)priority - 1] = new BacnetValue(null);
+                    else
+                        valueArray[(int)priority - 1] = value;
                     p_array.BacnetValue = valueArray;
                 }
 
@@ -374,6 +364,7 @@ namespace System.IO.BACnet.Storage
 
             return errorcode;
         }
+
 
 
         public ErrorCodes[] WritePropertyMultiple(BacnetObjectId object_id, ICollection<BacnetPropertyValue> values)

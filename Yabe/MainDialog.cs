@@ -1057,9 +1057,14 @@ namespace Yabe
                         switch ((BacnetPropertyIds)p_value.property.propertyIdentifier)
                         {
                             // PROP_RELINQUISH_DEFAULT can be write to null value
-                            case BacnetPropertyIds.PROP_RELINQUISH_DEFAULT:
+                            case BacnetPropertyIds.PROP_PRESENT_VALUE:
                                 // change to the related nullable type
-                                Type t = Type.GetType("System.Nullable`1[" + value.GetType().FullName + "]");
+                                Type t = value.GetType();
+                                try
+                                {
+                                    t = Type.GetType("System.Nullable`1[" + value.GetType().FullName + "]");
+                                }
+                                catch { }
                                 bag.Add(new Utilities.CustomProperty(GetNiceName((BacnetPropertyIds)p_value.property.propertyIdentifier), value, t != null ? t : typeof(string), false, "", b_values.Length > 0 ? b_values[0].Tag : (BacnetApplicationTags?)null, null, p_value.property));
                                 break;
                             // PROP_UNITS : Unit nice name

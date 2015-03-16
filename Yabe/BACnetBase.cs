@@ -1339,7 +1339,7 @@ namespace System.IO.BACnet
             string ret = "";
             for (int i = 0; i < bits_used; i++)
             {
-                ret = ((value[i/8] & (i%8+1)) > 0 ? "1" : "0") + ret;
+                ret = ret + ((value[i / 8] & (1 << (i % 8))) > 0 ? "1" : "0");
             }
             return ret;
         }
