@@ -1059,9 +1059,10 @@ namespace Yabe
                             // PROP_RELINQUISH_DEFAULT can be write to null value
                             case BacnetPropertyIds.PROP_PRESENT_VALUE:
                                 // change to the related nullable type
-                                Type t = value.GetType();
+                                Type t = null;
                                 try
                                 {
+                                    t = value.GetType();
                                     t = Type.GetType("System.Nullable`1[" + value.GetType().FullName + "]");
                                 }
                                 catch { }

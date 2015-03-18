@@ -1372,10 +1372,10 @@ namespace System.IO.BACnet
             if (!string.IsNullOrEmpty(str))
             {
                 ret.bits_used = (byte)str.Length;
-                for (int i = ret.bits_used-1, bit = 0; i >= 0; i--, bit++)
+                for (int i = 0; i < ret.bits_used; i++)
                 {
                     bool is_set = str[i] == '1';
-                    if (is_set) ret.value[bit / 8] |= (byte)(1 << (bit % 8));
+                    if (is_set) ret.value[i / 8] |= (byte)(1 << (i % 8));
                 }
             }
 

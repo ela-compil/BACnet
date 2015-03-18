@@ -30,5 +30,11 @@ namespace Yabe
         {
             client.RemoteWhoIs(BBMD_IP.Text);
         }
+
+        private void BBMD_IP_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Enter)
+                sendFDR_Click(null, null);
+        }
     }
 }

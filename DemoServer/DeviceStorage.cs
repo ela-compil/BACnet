@@ -28,6 +28,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.IO.BACnet;
+using System.Reflection;
 
 namespace System.IO.BACnet.Storage
 {
@@ -115,7 +116,7 @@ namespace System.IO.BACnet.Storage
             IList<BacnetValue> value;
             if (ReadProperty(object_id, property_id, System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL, out value) == ErrorCodes.Good)
             {
-                if(value == null || value.Count < 1)
+                if (value == null || value.Count < 1)
                     return 0;
                 return (int)Convert.ChangeType(value[0].Value, typeof(int));
             }
@@ -151,7 +152,7 @@ namespace System.IO.BACnet.Storage
             }
             else if (array_index != System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL)
             {
-                value = new BacnetValue[] { p.BacnetValue[(int)array_index-1] };
+                value = new BacnetValue[] { p.BacnetValue[(int)array_index - 1] };
             }
             else
             {
@@ -214,7 +215,7 @@ namespace System.IO.BACnet.Storage
                 return;
 
             //write
-            BacnetValue[] write_values = new BacnetValue[]{new BacnetValue(read_values[0].Tag, Convert.ChangeType(value, read_values[0].Value.GetType()))};
+            BacnetValue[] write_values = new BacnetValue[] { new BacnetValue(read_values[0].Tag, Convert.ChangeType(value, read_values[0].Value.GetType())) };
             WriteProperty(object_id, property_id, System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL, write_values);
         }
 
@@ -237,7 +238,7 @@ namespace System.IO.BACnet.Storage
             Property p = FindProperty(object_id, property_id);
             if (p == null)
             {
-                if(!add_if_not_exits) return ErrorCodes.NotExist;
+                if (!add_if_not_exits) return ErrorCodes.NotExist;
 
                 //add obj
                 Object obj = FindObject(object_id);
@@ -248,7 +249,7 @@ namespace System.IO.BACnet.Storage
                     obj.Instance = object_id.instance;
                     Object[] arr = Objects;
                     Array.Resize<Object>(ref arr, arr.Length + 1);
-                    arr[arr.Length -1] = obj;
+                    arr[arr.Length - 1] = obj;
                     Objects = arr;
                 }
 
@@ -397,25 +398,52 @@ namespace System.IO.BACnet.Storage
         /// <summary>
         /// Load XML values into class
         /// </summary>
-        /// <param name="path"></param>
+        /// <param name="path">Embedded or external file</param>
+        /// <param name="Deviceid">Optional deviceId other than the one in the Xml file</param>
         /// <returns></returns>
-        public static DeviceStorage Load(string path)
+        public static DeviceStorage Load(string path, uint? Deviceid = null)
         {
-            if (!System.IO.File.Exists(path)) throw new Exception("No AppSettings found");
-            System.Xml.Serialization.XmlSerializer s = new System.Xml.Serialization.XmlSerializer(typeof(DeviceStorage));
-            using (System.IO.FileStream fs = new System.IO.FileStream(path, System.IO.FileMode.Open, System.IO.FileAccess.Read))
+            Assembly _assembly;
+            StreamReader _textStreamReader;
+
+            _assembly = Assembly.GetExecutingAssembly();
+            try
             {
-                DeviceStorage ret = (DeviceStorage)s.Deserialize(fs);
+                // check if the xml file is an embedded resource
+                _textStreamReader = new StreamReader(_assembly.GetManifestResourceStream(path));
+            }
+            catch
+            {
+                // if not check the external file
+                if (!System.IO.File.Exists(path)) throw new Exception("No AppSettings found");
+                _textStreamReader = new StreamReader(path);
+            }
+
+            System.Xml.Serialization.XmlSerializer s = new System.Xml.Serialization.XmlSerializer(typeof(DeviceStorage));
+            using (_textStreamReader)
+            {
+                DeviceStorage ret = (DeviceStorage)s.Deserialize(_textStreamReader);
 
                 //set device_id
                 Object obj = ret.FindObject(BacnetObjectTypes.OBJECT_DEVICE);
                 if (obj != null)
                     ret.DeviceId = obj.Instance;
 
+                // use the deviceId in the Xml file or another one
+                if (Deviceid.HasValue)
+                {
+                    ret.DeviceId = Deviceid.Value;
+                    if (obj != null)
+                    {
+                        // change the value
+                        obj.Instance = Deviceid.Value;
+                        IList<BacnetValue> val = new BacnetValue[1] { new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID, "OBJECT_DEVICE:" + Deviceid.Value.ToString()) };
+                        ret.WriteProperty(new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, System.IO.BACnet.Serialize.ASN1.BACNET_MAX_INSTANCE), BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, 1, val, true);
+                    }
+                }
                 return ret;
             }
         }
-        
     }
 
     [Serializable]

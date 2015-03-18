@@ -42,6 +42,7 @@
             this.BBMD_IP.Name = "BBMD_IP";
             this.BBMD_IP.Size = new System.Drawing.Size(114, 20);
             this.BBMD_IP.TabIndex = 0;
+            this.BBMD_IP.KeyDown += new System.Windows.Forms.KeyEventHandler(this.BBMD_IP_KeyDown);
             // 
             // label1
             // 
