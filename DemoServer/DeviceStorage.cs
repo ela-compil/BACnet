@@ -109,6 +109,7 @@ namespace System.IO.BACnet.Storage
             GenericError = -1,
             NotExist = -2,
             NotForMe = -3,
+            WriteAccessDenied = -4
         }
 
         public int ReadPropertyValue(BacnetObjectId object_id, BacnetPropertyIds property_id)

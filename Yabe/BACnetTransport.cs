@@ -59,6 +59,8 @@ namespace System.IO.BACnet
         private System.Net.Sockets.UdpClient m_exclusive_conn;
         private int m_port;
 
+        private BVLC bvlc;
+
         private bool m_exclusive_port = false;
         private bool m_dont_fragment;
         private int m_max_payload;
@@ -74,6 +76,11 @@ namespace System.IO.BACnet
         public byte MaxInfoFrames { get { return 0xff; } set { /* ignore */ } }     //the udp doesn't have max info frames
         public int MaxBufferLength { get { return m_max_payload; } }
 
+        public BVLC Bvlc
+        {
+            get { return bvlc; }
+        }
+
         public BacnetIpUdpProtocolTransport(int port, bool use_exclusive_port = false, bool dont_fragment = false, int max_payload = 1472, string local_endpoint_ip = "")
         {
             m_port = port;
@@ -81,6 +88,7 @@ namespace System.IO.BACnet
             m_exclusive_port = use_exclusive_port;
             m_dont_fragment = dont_fragment;
             m_local_endpoint = local_endpoint_ip;
+
         }
 
         public override bool Equals(object obj)
@@ -132,9 +140,13 @@ namespace System.IO.BACnet
             {
                 System.Net.EndPoint ep = new Net.IPEndPoint(System.Net.IPAddress.Any, m_port);
                 if (!string.IsNullOrEmpty(m_local_endpoint)) ep = new Net.IPEndPoint(Net.IPAddress.Parse(m_local_endpoint), m_port);
-                m_exclusive_conn = new Net.Sockets.UdpClient((Net.IPEndPoint)ep);
+                m_exclusive_conn = new Net.Sockets.UdpClient();
+                m_exclusive_conn.ExclusiveAddressUse = true;
+                m_exclusive_conn.Client.Bind((Net.IPEndPoint)ep);
                 m_exclusive_conn.DontFragment = m_dont_fragment;
             }
+
+            bvlc = new BVLC(this);
         }
 
         private void Close()
@@ -189,14 +201,20 @@ namespace System.IO.BACnet
                     Convert((System.Net.IPEndPoint)ep, out remote_address);
                     BacnetBvlcFunctions function;
                     int msg_length;
-                    if (rx < BVLC.BVLC_HEADER_LENGTH || BVLC.Decode(local_buffer, 0, out function, out msg_length) < 0)
+                    if (rx < BVLC.BVLC_HEADER_LENGTH)
                     {
                         Trace.TraceWarning("Some garbage data got in");
                     }
                     else
                     {
                         // Basic Header lenght
-                        int HEADER_LENGTH = BVLC.BVLC_HEADER_LENGTH;
+                        int HEADER_LENGTH = bvlc.Decode(local_buffer, 0, out function, out msg_length, ep);
+
+                        if (HEADER_LENGTH == -1)
+                        {
+                            Trace.WriteLine("Unknow BVLC Header");
+                            return;
+                        }
 
                         // response to BVLC_REGISTER_FOREIGN_DEVICE (could be BVLC_DISTRIBUTE_BROADCAST_TO_NETWORK ... but we are not a BBMD, don't care)
                         if (function == BacnetBvlcFunctions.BVLC_RESULT)
@@ -214,8 +232,6 @@ namespace System.IO.BACnet
 
                             Convert((System.Net.IPEndPoint)ep, out remote_address);
 
-                            // BVLC_FORWARDED_NPDU Header lenght
-                            HEADER_LENGTH = 10;
                         }
 
                         if ((function == BacnetBvlcFunctions.BVLC_ORIGINAL_UNICAST_NPDU) || (function == BacnetBvlcFunctions.BVLC_ORIGINAL_BROADCAST_NPDU) || (function == BacnetBvlcFunctions.BVLC_FORWARDED_NPDU))
@@ -261,7 +277,14 @@ namespace System.IO.BACnet
         // Modif FC : used for BBMD communication
         public int Send(byte[] buffer, int data_length, System.Net.IPEndPoint ep)
         {
-            return m_exclusive_conn.Send(buffer, data_length, ep);
+            try
+            {
+                return m_exclusive_conn.Send(buffer, data_length, ep);
+            }
+            catch
+            {
+                return 0;
+            }
         }
 
         public int Send(byte[] buffer, int offset, int data_length, BacnetAddress address, bool wait_for_transmission, int timeout)
@@ -270,17 +293,24 @@ namespace System.IO.BACnet
 
             //add header
             int full_length = data_length + HeaderLength;
-            BVLC.Encode(buffer, offset - BVLC.BVLC_HEADER_LENGTH, address.net == 0xFFFF ? BacnetBvlcFunctions.BVLC_ORIGINAL_BROADCAST_NPDU : BacnetBvlcFunctions.BVLC_ORIGINAL_UNICAST_NPDU, full_length);
+            bvlc.Encode(buffer, offset - BVLC.BVLC_HEADER_LENGTH, address.net == 0xFFFF ? BacnetBvlcFunctions.BVLC_ORIGINAL_BROADCAST_NPDU : BacnetBvlcFunctions.BVLC_ORIGINAL_UNICAST_NPDU, full_length);
 
             //create end point
             System.Net.IPEndPoint ep;
             Convert(address, out ep);
 
-            //send
-            return m_exclusive_conn.Send(buffer, full_length, ep);    //broadcasts are transported from our local unicast socket also
+            try
+            {
+                //send
+                return m_exclusive_conn.Send(buffer, full_length, ep);    //broadcasts are transported from our local unicast socket also
+            }
+            catch
+            {
+                return 0;
+            }
         }
 
-        private static void Convert(System.Net.IPEndPoint ep, out BacnetAddress addr)
+        public static void Convert(System.Net.IPEndPoint ep, out BacnetAddress addr)
         {
             byte[] tmp1 = ep.Address.GetAddressBytes();
             byte[] tmp2 = BitConverter.GetBytes((ushort)ep.Port);
@@ -290,7 +320,7 @@ namespace System.IO.BACnet
             addr = new BacnetAddress(BacnetAddressTypes.IP, 0, tmp1);
         }
 
-        private static void Convert(BacnetAddress addr, out System.Net.IPEndPoint ep)
+        public static void Convert(BacnetAddress addr, out System.Net.IPEndPoint ep)
         {
             long ip_address = BitConverter.ToUInt32(addr.adr, 0);
             ushort port = (ushort)((addr.adr[4] << 8) | (addr.adr[5] << 0));
@@ -304,6 +334,15 @@ namespace System.IO.BACnet
             Convert(ep, out broadcast);
             broadcast.net = 0xFFFF;
             return broadcast;
+        }
+
+        public System.Net.IPEndPoint LocalEndPoint
+        {
+            get
+            {
+                // give 0.0.0.0:xxxx if the socket is open with System.Net.IPAddress.Any
+                return (System.Net.IPEndPoint)m_exclusive_conn.Client.LocalEndPoint;
+            }
         }
 
         public void Dispose()

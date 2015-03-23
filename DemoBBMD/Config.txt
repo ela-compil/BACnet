@@ -1,0 +1,7 @@
+﻿// BBMD Peer List
+// IP ; Mask ; Port in decimal
+// One entry per line
+// first char must be / for comment
+// No blank line
+172.20.54.222;255.255.255.255;47808
+192.168.0.12;255.255.255.255;47808
