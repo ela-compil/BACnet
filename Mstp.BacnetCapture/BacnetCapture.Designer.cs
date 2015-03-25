@@ -45,6 +45,7 @@
             this.checkMaster = new System.Windows.Forms.CheckBox();
             this.checkTest = new System.Windows.Forms.CheckBox();
             this.checkData = new System.Windows.Forms.CheckBox();
+            this.label6 = new System.Windows.Forms.Label();
             this.treeView = new Mstp.BacnetCapture.BufferedTreeView();
             ((System.ComponentModel.ISupportInitialize)(this.checksbox)).BeginInit();
             this.SuspendLayout();
@@ -71,7 +72,7 @@
             // comboPort
             // 
             this.comboPort.FormattingEnabled = true;
-            this.comboPort.Location = new System.Drawing.Point(77, 70);
+            this.comboPort.Location = new System.Drawing.Point(77, 85);
             this.comboPort.Name = "comboPort";
             this.comboPort.Size = new System.Drawing.Size(86, 21);
             this.comboPort.TabIndex = 2;
@@ -79,7 +80,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(12, 73);
+            this.label2.Location = new System.Drawing.Point(12, 88);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(61, 13);
             this.label2.TabIndex = 3;
@@ -88,7 +89,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(276, 73);
+            this.label3.Location = new System.Drawing.Point(276, 88);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(44, 13);
             this.label3.TabIndex = 5;
@@ -131,7 +132,7 @@
             "57600",
             "76800",
             "115200"});
-            this.comboSpeed.Location = new System.Drawing.Point(329, 70);
+            this.comboSpeed.Location = new System.Drawing.Point(329, 85);
             this.comboSpeed.Name = "comboSpeed";
             this.comboSpeed.Size = new System.Drawing.Size(63, 21);
             this.comboSpeed.TabIndex = 11;
@@ -204,6 +205,15 @@
             this.checkData.UseVisualStyleBackColor = false;
             this.checkData.CheckedChanged += new System.EventHandler(this.checkedFiltresValue_Changed);
             // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(74, 51);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(266, 13);
+            this.label6.TabIndex = 18;
+            this.label6.Text = "Wireshark -> Menu Capture Option, Manage Interfaces";
+            // 
             // treeView
             // 
             this.treeView.ImageIndex = 0;
@@ -214,11 +224,12 @@
             this.treeView.Size = new System.Drawing.Size(271, 244);
             this.treeView.TabIndex = 10;
             // 
-            // Form1
+            // BacnetCapture
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(404, 626);
+            this.Controls.Add(this.label6);
             this.Controls.Add(this.checkData);
             this.Controls.Add(this.checkTest);
             this.Controls.Add(this.checkMaster);
@@ -236,7 +247,7 @@
             this.Controls.Add(this.label1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
-            this.Name = "Form1";
+            this.Name = "BacnetCapture";
             this.Text = "Wireshark Mstp.BacnetCapture";
             this.Load += new System.EventHandler(this.Form1_Load);
             this.Resize += new System.EventHandler(this.Form1_Resize);
@@ -264,6 +275,7 @@
         private System.Windows.Forms.CheckBox checkTest;
         private System.Windows.Forms.CheckBox checkData;
         private BufferedTreeView treeView;
+        private System.Windows.Forms.Label label6;
     }
 }
 

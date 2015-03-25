@@ -1360,6 +1360,45 @@ namespace Yabe
             MessageBox.Show(this, "Done", "Done", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
+        // en cours
+        private void showTrendLogToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                //fetch end point
+                BacnetClient comm = null;
+                BacnetAddress adr;
+                try
+                {
+                    if (m_DeviceTree.SelectedNode == null) return;
+                    else if (m_DeviceTree.SelectedNode.Tag == null) return;
+                    else if (!(m_DeviceTree.SelectedNode.Tag is KeyValuePair<BacnetAddress, uint>)) return;
+                    KeyValuePair<BacnetAddress, uint> entry = (KeyValuePair<BacnetAddress, uint>)m_DeviceTree.SelectedNode.Tag;
+                    adr = entry.Key;
+                    comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag;
+                }
+                finally
+                {
+                    if (comm == null) MessageBox.Show(this, "This is not a valid node", "Wrong node", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+
+                //fetch object_id
+                if (
+                    m_AddressSpaceTree.SelectedNode == null ||
+                    !(m_AddressSpaceTree.SelectedNode.Tag is BacnetObjectId) ||
+                    !(((BacnetObjectId)m_AddressSpaceTree.SelectedNode.Tag).type == BacnetObjectTypes.OBJECT_TRENDLOG))
+                {
+                    MessageBox.Show(this, "The marked object is not a TrendLog", "Not a TrendLog", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    return;
+                }
+                BacnetObjectId object_id = (BacnetObjectId)m_AddressSpaceTree.SelectedNode.Tag;
+
+                new TrendLogDisplay(comm, adr, object_id).ShowDialog();
+
+            }
+            catch {}
+        }
+
         private void m_AddressSpaceTree_ItemDrag(object sender, ItemDragEventArgs e)
         {
             m_AddressSpaceTree.DoDragDrop(e.Item, DragDropEffects.Move);
@@ -1712,6 +1751,11 @@ namespace Yabe
             downloadFileToolStripMenuItem_Click(this, null);
         }
 
+        private void showTrendLogToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            showTrendLogToolStripMenuItem_Click(null, null);
+        }
+
         private void uploadFileToolStripMenuItem1_Click(object sender, EventArgs e)
         {
             uploadFileToolStripMenuItem_Click(this, null);
@@ -1915,7 +1959,6 @@ namespace Yabe
             Form F = new ForeignRegistry(comm);
             F.ShowDialog();
         }
-
 
     }
 }

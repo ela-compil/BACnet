@@ -690,7 +690,6 @@ namespace System.IO.BACnet
         UNITS_MINUTES_PER_DEGREE_KELVIN = 236,
     }
 
-
     public enum BacnetMaxSegments : byte
     {
         MAX_SEG0 = 0,
@@ -6109,6 +6108,56 @@ namespace System.IO.BACnet.Serialize
                 /* Context 6 Sequence number of first item */
                 ASN1.encode_context_unsigned(buffer, 6, FirstSequence);
             }
+        }
+        // FC
+        public static uint DecodeReadRangeAcknowledge(byte[] buffer, int offset, int apdu_len, out byte[] RangeBuffer)
+        {
+            int len = 0;
+            ushort type = 0;
+            byte tag_number;
+            uint len_value_type = 0;
+
+            BacnetObjectId object_id;
+            BacnetPropertyReference property;
+            BacnetBitString ResultFlag;
+            uint ItemCount;
+
+            RangeBuffer = null;
+
+            /* Tag 0: Object ID          */
+            if (!ASN1.decode_is_context_tag(buffer, offset + len, 0))
+                return 0;
+            len++;
+            len += ASN1.decode_object_id(buffer, offset + len, out type, out object_id.instance);
+            object_id.type = (BacnetObjectTypes)type;
+
+            /* Tag 1: Property ID */
+            len +=ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value_type);
+            if (tag_number != 1)
+                return 0;
+            len += ASN1.decode_enumerated(buffer, offset + len, len_value_type, out property.propertyIdentifier);
+
+            /* Tag 2: Optional Array Index or Tag 3:  BACnet Result Flags */
+            len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value_type);
+            if ((tag_number == 2) && (len < apdu_len))
+                len += ASN1.decode_unsigned(buffer, offset + len, len_value_type, out property.propertyArrayIndex);
+            else
+                /* Tag 3:  BACnet Result Flags */
+                len += ASN1.decode_bitstring(buffer, offset + len, (uint)2, out ResultFlag);
+
+            /* Tag 4 Item Count */
+            len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value_type);
+            len += ASN1.decode_unsigned(buffer, offset + len, len_value_type, out ItemCount);
+
+            if (!(ASN1.decode_is_opening_tag(buffer, offset + len)))
+                return 0;
+            len += 1;
+
+            RangeBuffer = new byte[buffer.Length - offset - len - 1];
+
+            Array.Copy(buffer, offset + len, RangeBuffer, 0, RangeBuffer.Length);
+
+            return ItemCount;
         }
 
         public static void EncodeReadProperty(EncodeBuffer buffer, BacnetObjectId object_id, uint property_id, uint array_index = ASN1.BACNET_ARRAY_ALL)

@@ -966,6 +966,64 @@ namespace System.IO.BACnet
             file_buffer_offset = -1;
             return false;
         }
+        // Fc
+        public IAsyncResult BeginReadRangeRequest(BacnetAddress adr, BacnetObjectId object_id,  uint idxBegin, uint Quantity, bool wait_for_transmit, byte invoke_id = 0)
+        {
+            Trace.WriteLine("Sending ReadRangeRequest ... ", null);
+            if (invoke_id == 0) invoke_id = unchecked(m_invoke_id++);
+
+            //encode
+            EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, adr.RoutedSource, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, 0);
+            APDU.EncodeConfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST | (m_max_segments != BacnetMaxSegments.MAX_SEG0 ? BacnetPduTypes.SEGMENTED_RESPONSE_ACCEPTED : 0), BacnetConfirmedServices.SERVICE_CONFIRMED_READ_RANGE, m_max_segments, m_client.MaxAdpuLength, invoke_id, 0, 0);
+            Services.EncodeReadRange(b, object_id, (uint)BacnetPropertyIds.PROP_LOG_BUFFER, ASN1.BACNET_ARRAY_ALL, Services.BacnetReadRangeRequestTypes.RR_BY_POSITION, idxBegin, DateTime.Now, (int)Quantity);           
+            //send
+            BacnetAsyncResult ret = new BacnetAsyncResult(this, adr, invoke_id, b.buffer, b.offset - m_client.HeaderLength, wait_for_transmit, m_transmit_timeout);
+            ret.Resend();
+
+            return ret;
+
+        }
+        // Fc
+        public void EndReadRangeRequest(IAsyncResult result, out byte[] trendbuffer, out uint ItemCount, out Exception ex)
+        {
+            BacnetAsyncResult res = (BacnetAsyncResult)result;
+            ItemCount = 0;
+            trendbuffer = null;
+
+            ex = res.Error;
+            if (ex == null && !res.WaitForDone(40*1000))
+                ex = new Exception("Wait Timeout");
+
+            if (ex == null)
+            {
+                ItemCount = Services.DecodeReadRangeAcknowledge(res.Result, 0, res.Result.Length, out trendbuffer);
+                if (ItemCount == 0)
+                    ex = new Exception("Decode");
+            }
+
+            res.Dispose();
+        }
+        // Fc
+        public bool ReadRangeRequest(BacnetAddress adr, BacnetObjectId object_id, uint idxBegin, ref uint Quantity, out byte[] Range, byte invoke_id = 0)
+        {
+            Range = null;
+            using (BacnetAsyncResult result = (BacnetAsyncResult)BeginReadRangeRequest(adr, object_id, idxBegin, Quantity, true, invoke_id))
+            {
+                for (int r = 0; r < m_retries; r++)
+                {
+                    if (result.WaitForDone(m_timeout))
+                    {
+                        Exception ex;
+                        EndReadRangeRequest(result, out Range, out Quantity, out ex); // quantity read could be less than demanded
+                        if (ex != null) throw ex;
+                        else return true;
+                    }
+                    result.Resend();
+                }
+            }
+            return false;
+        }
 
         public bool SubscribeCOVRequest(BacnetAddress adr, BacnetObjectId object_id, uint subscribe_id, bool cancel, bool issue_confirmed_notifications, uint lifetime, byte invoke_id = 0)
         {
