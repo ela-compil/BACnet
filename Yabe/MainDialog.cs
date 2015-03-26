@@ -1386,7 +1386,8 @@ namespace Yabe
                 if (
                     m_AddressSpaceTree.SelectedNode == null ||
                     !(m_AddressSpaceTree.SelectedNode.Tag is BacnetObjectId) ||
-                    !(((BacnetObjectId)m_AddressSpaceTree.SelectedNode.Tag).type == BacnetObjectTypes.OBJECT_TRENDLOG))
+                    !((((BacnetObjectId)m_AddressSpaceTree.SelectedNode.Tag).type == BacnetObjectTypes.OBJECT_TREND_LOG_MULTIPLE) ||
+                    (((BacnetObjectId)m_AddressSpaceTree.SelectedNode.Tag).type == BacnetObjectTypes.OBJECT_TRENDLOG)))
                 {
                     MessageBox.Show(this, "The marked object is not a TrendLog", "Not a TrendLog", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
                     return;

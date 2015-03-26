@@ -38,16 +38,17 @@ using ZedGraph;
 using System.IO;
 
 namespace Yabe
-{    
+{
     public partial class TrendLogDisplay : Form
     {
         int Logsize;
-        PointPairList Pointslist = new PointPairList();
+        PointPairList[] Pointslists;
         BacnetClient comm; BacnetAddress adr; BacnetObjectId object_id;
         // Number of record read per ReadRange request
-        // 60 is a good value for quite full Udp/Ipv4/Ethernet packets
+        // 60 is a good value with 1 curve for quite full Udp/Ipv4/Ethernet packets
         // otherwise it could be rejected, or fragmented by Ip, or ...
-        const int NbRecordByStep = 60;  
+        int NbRecordByStep = 65;
+        int CurvesNumber = 1;
 
         public TrendLogDisplay(BacnetClient comm, BacnetAddress adr, BacnetObjectId object_id)
         {
@@ -64,10 +65,19 @@ namespace Yabe
             ReadCurveName(comm, adr, object_id);
             m_zedGraphCtl.GraphPane.Title.Text = ReadCurveName(comm, adr, object_id);
 
+            // get the number of Trend in the Log, 1 for basic TrendLog
+            if (object_id.type == BacnetObjectTypes.OBJECT_TREND_LOG_MULTIPLE)
+                CurvesNumber = ReadNumberofCurves(comm, adr, object_id);
+
             m_zedGraphCtl.ContextMenuBuilder += new ZedGraphControl.ContextMenuBuilderEventHandler(m_zedGraphCtl_ContextMenuBuilder);
 
-            if (Logsize != 0)
+            if ((Logsize != 0) && (CurvesNumber != 0))
             {
+                Pointslists = new PointPairList[CurvesNumber];
+                for (int i = 0; i < CurvesNumber; i++)
+                    Pointslists[i] = new PointPairList();
+
+                NbRecordByStep = NbRecordByStep - 5 * CurvesNumber;
 
                 this.UseWaitCursor = true;
 
@@ -97,9 +107,12 @@ namespace Yabe
 
         private void UpdateEnd(bool state)
         {
-            // Even if an error occurs, maybe some values are OK
-            LineItem l = m_zedGraphCtl.GraphPane.AddCurve("", Pointslist, Color.Red, SymbolType.None);
-            l.Line.Width = 2;
+            for (int i = 0; i < CurvesNumber; i++)
+            {
+                // Even if an error occurs, maybe some values are OK
+                LineItem l = m_zedGraphCtl.GraphPane.AddCurve("", Pointslists[i], Color.Red, SymbolType.None);
+                l.Line.Width = 2;
+            }
             m_zedGraphCtl.RestoreScale(m_zedGraphCtl.GraphPane);
 
             this.UseWaitCursor = false;
@@ -146,6 +159,22 @@ namespace Yabe
                 return "";
             }
         }
+        // Only for MULTIPLE TREND LOG
+        private int ReadNumberofCurves(BacnetClient comm, BacnetAddress adr, BacnetObjectId object_id)
+        {
+            IList<BacnetValue> value;
+            try
+            {
+                if (!comm.ReadPropertyRequest(adr, object_id, BacnetPropertyIds.PROP_LOG_DEVICE_OBJECT_PROPERTY, out value))
+                    return 0;
+                return (value == null ? 0 : value.Count);
+
+            }
+            catch
+            {
+                return 0;
+            }
+        }
 
         //
         // Download the TrendLog in many blocks of NbRecordByStep values
@@ -156,7 +185,7 @@ namespace Yabe
         {
             // I'm a rookie with lambda expressions, but I like it !
             // It's the way data as to be given to me by the TrendLogDecoder
-            Action<DateTime, double> DataStorage = (timestamp, val) => Pointslist.Add(new XDate(timestamp), val);
+            Action<int, DateTime, double> DataStorage = (idx, timestamp, val) => Pointslists[idx].Add(new XDate(timestamp), val);
 
             try
             {
@@ -165,7 +194,7 @@ namespace Yabe
                 do
                 {
                     byte[] TrendBuffer;
-                    uint ItemCount = (uint)Math.Min(NbRecordByStep, Logsize - i+1);
+                    uint ItemCount = (uint)Math.Min(NbRecordByStep, Logsize - i + 1);
 
                     if ((comm.ReadRangeRequest(adr, object_id, (uint)i, ref ItemCount, out TrendBuffer) == false) || (ItemCount == 0))
                     {
@@ -173,7 +202,7 @@ namespace Yabe
                         return;
                     }
 
-                    if (TrendLogDecoder.DecodeTrendBuffer(TrendBuffer, ItemCount, DataStorage) != ItemCount)
+                    if (TrendLogDecoder.DecodeTrendBuffer(TrendBuffer, ItemCount, CurvesNumber, DataStorage) != ItemCount)
                     {
                         BeginInvoke(new Action<bool>(UpdateEnd), false);
                         return;
@@ -184,7 +213,7 @@ namespace Yabe
 
                     i += (int)ItemCount;
 
-                } while ((i+1) < Logsize) ;
+                } while ((i + 1) < Logsize);
                 //} while (false);  // test purpose only first block 
 
                 BeginInvoke(new Action<bool>(UpdateEnd), true);
@@ -230,19 +259,30 @@ namespace Yabe
             {
             }
         }
+        // Only the first trend is used for X axis and number of values
+        // But maybe in multitrendlog some values are in error while other not
+        // so each curves does not have the same number of values
+        //   ... not taken into not account here !
         private void WriteCSVToStream(StreamWriter CSVWriter)
         {
             //First line is for Headers, X and Y Axis
-            CSVWriter.WriteLine("Date/Time;Values");
+            CSVWriter.Write("Date/Time");
+            for (int i = 0; i < Pointslists.Length; i++)
+                CSVWriter.Write(";Values");
+            CSVWriter.WriteLine();
 
             //subsequent lines are having data
-            for (int i = 0; i < Pointslist.Count; i++)
+            for (int i = 0; i < Pointslists[0].Count; i++)
             {
-                XDate d = new XDate(Pointslist[i].X);
+                XDate d = new XDate(Pointslists[0][i].X);
                 DateTime dt = d;    // to get the second
-                CSVWriter.WriteLine(dt.ToString() + ";" + Pointslist[i].Y);
+                CSVWriter.Write(dt.ToString());
+                for (int cv = 0; cv < Pointslists.Length; cv++)
+                    CSVWriter.Write(";" + Pointslists[cv][i].Y);
+                CSVWriter.WriteLine();
             }
-        } 
+
+        }
         #endregion
 
     }
@@ -268,12 +308,12 @@ namespace Yabe
     {
         //
         // Decode the TrendLog buffer 
-        // and fill the ZedGraph PointList to draw the curve
-        // It's not linked to Zedgraph. Give another Action<DateTime, double> 
-        // like a call to Add to a List<KeyValuePair<DateTime, double>>
+        // and fill the ZedGraph PointList to draw the curve(s)
+        // It's not linked to Zedgraph. Give another Action<int, DateTime, double> 
+        // like a call to Add to an array of List<KeyValuePair<DateTime, double>>
         // or other to get back the values
         //
-        public static uint DecodeTrendBuffer(byte[] buffer, uint ItemCount, Action<DateTime, double> StoreValue)
+        public static uint DecodeTrendBuffer(byte[] buffer, uint ItemCount, int NbCurves, Action<int, DateTime, double> StoreValue)
         {
             int offset = 0;
             byte tagnumber = 0;
@@ -306,61 +346,66 @@ namespace Yabe
                 byte ContextTagType = 0;
                 uint TagLenght = 0;
 
-                offset += ASN1.decode_tag_number_and_value(buffer, offset, out ContextTagType, out TagLenght);
-
-                switch ((BacnetTrendLogValueType)ContextTagType)
+                // Not test for TrendLogMultiple
+                // Seems to be encoded like this somewhere in an Ashrae document
+                for (int CurveNumber = 0; CurveNumber < NbCurves; CurveNumber++)
                 {
-                    case BacnetTrendLogValueType.TL_TYPE_STATUS:
-                        BacnetBitString StatusFlags;
-                        offset += ASN1.decode_bitstring(buffer, offset, TagLenght, out StatusFlags);
-                        break;  // don't handle this, but no error
-                    case BacnetTrendLogValueType.TL_TYPE_BOOL:
-                        StoreValue(dt, buffer[offset++]);
-                        break;
-                    case BacnetTrendLogValueType.TL_TYPE_REAL:
-                    case BacnetTrendLogValueType.TL_TYPE_DELTA:
-                        if (TagLenght == 4)
-                        {
-                            float ValR;
-                            offset += ASN1.decode_real(buffer, offset, out ValR);
-                            StoreValue(dt, ValR); // here it's equivalent to Pointslist.Add(new XDate(dt), ValR);
-                        }
-                        else  // not sure double can exist here
-                        {
-                            double ValD;
-                            offset += ASN1.decode_double(buffer, offset, out ValD);
-                            StoreValue(dt, ValD);
-                        }
-                        break;
-                    case BacnetTrendLogValueType.TL_TYPE_ENUM:
-                        uint ValEnum;
-                        offset += ASN1.decode_enumerated(buffer, offset, TagLenght, out ValEnum);
-                        StoreValue(dt, ValEnum);
-                        break;
-                    case BacnetTrendLogValueType.TL_TYPE_SIGN:
-                        int ValS;
-                        offset += ASN1.decode_signed(buffer, offset, TagLenght, out ValS);
-                        StoreValue(dt, ValS);
-                        break;
-                    case BacnetTrendLogValueType.TL_TYPE_UNSIGN:
-                        uint ValU;
-                        offset += ASN1.decode_unsigned(buffer, offset, TagLenght, out ValU);
-                        StoreValue(dt, ValU);
-                        break;
-                    case BacnetTrendLogValueType.TL_TYPE_ERROR:
-                        uint Errcode;
-                        offset += ASN1.decode_enumerated(buffer, offset, (uint)2, out Errcode);
-                        offset += ASN1.decode_enumerated(buffer, offset, (uint)2, out Errcode);
-                        offset++;
-                        break;  // don't handle this, but no error
-                    case BacnetTrendLogValueType.TL_TYPE_NULL:
-                        offset++;
-                        break;  // don't handle this, but no error
-                    // No way to handle these data types
-                    case BacnetTrendLogValueType.TL_TYPE_ANY:
-                    case BacnetTrendLogValueType.TL_TYPE_BITS:
-                    default:
-                        return 0;
+                    offset += ASN1.decode_tag_number_and_value(buffer, offset, out ContextTagType, out TagLenght);
+
+                    switch ((BacnetTrendLogValueType)ContextTagType)
+                    {
+                        case BacnetTrendLogValueType.TL_TYPE_STATUS:
+                            BacnetBitString StatusFlags;
+                            offset += ASN1.decode_bitstring(buffer, offset, TagLenght, out StatusFlags);
+                            break;  // don't handle this, but no error
+                        case BacnetTrendLogValueType.TL_TYPE_BOOL:
+                            StoreValue(CurveNumber, dt, buffer[offset++]);
+                            break;
+                        case BacnetTrendLogValueType.TL_TYPE_REAL:
+                        case BacnetTrendLogValueType.TL_TYPE_DELTA:
+                            if (TagLenght == 4)
+                            {
+                                float ValR;
+                                offset += ASN1.decode_real(buffer, offset, out ValR);
+                                StoreValue(CurveNumber, dt, ValR); // here it's equivalent to Pointslist.Add(new XDate(dt), ValR);
+                            }
+                            else  // not sure double can exist here
+                            {
+                                double ValD;
+                                offset += ASN1.decode_double(buffer, offset, out ValD);
+                                StoreValue(CurveNumber, dt, ValD);
+                            }
+                            break;
+                        case BacnetTrendLogValueType.TL_TYPE_ENUM:
+                            uint ValEnum;
+                            offset += ASN1.decode_enumerated(buffer, offset, TagLenght, out ValEnum);
+                            StoreValue(CurveNumber, dt, ValEnum);
+                            break;
+                        case BacnetTrendLogValueType.TL_TYPE_SIGN:
+                            int ValS;
+                            offset += ASN1.decode_signed(buffer, offset, TagLenght, out ValS);
+                            StoreValue(CurveNumber, dt, ValS);
+                            break;
+                        case BacnetTrendLogValueType.TL_TYPE_UNSIGN:
+                            uint ValU;
+                            offset += ASN1.decode_unsigned(buffer, offset, TagLenght, out ValU);
+                            StoreValue(CurveNumber, dt, ValU);
+                            break;
+                        case BacnetTrendLogValueType.TL_TYPE_ERROR:
+                            uint Errcode;
+                            offset += ASN1.decode_enumerated(buffer, offset, (uint)2, out Errcode);
+                            offset += ASN1.decode_enumerated(buffer, offset, (uint)2, out Errcode);
+                            offset++;
+                            break;  // don't handle this, but no error
+                        case BacnetTrendLogValueType.TL_TYPE_NULL:
+                            offset++;
+                            break;  // don't handle this, but no error
+                        // No way to handle these data types
+                        case BacnetTrendLogValueType.TL_TYPE_ANY:
+                        case BacnetTrendLogValueType.TL_TYPE_BITS:
+                        default:
+                            return 0;
+                    }
                 }
 
                 if (!(ASN1.decode_is_closing_tag(buffer, offset)))
