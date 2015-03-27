@@ -41,6 +41,7 @@
             this.m_progressBar.Name = "m_progressBar";
             this.m_progressBar.Size = new System.Drawing.Size(222, 23);
             this.m_progressBar.TabIndex = 0;
+            this.m_progressBar.Click += new System.EventHandler(this.m_progressBar_Click);
             // 
             // m_zedGraphCtl
             // 

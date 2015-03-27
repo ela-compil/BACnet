@@ -44,16 +44,22 @@ namespace Yabe
         int Logsize;
         PointPairList[] Pointslists;
         BacnetClient comm; BacnetAddress adr; BacnetObjectId object_id;
-        // Number of record read per ReadRange request
-        // 60 is a good value with 1 curve for quite full Udp/Ipv4/Ethernet packets
+        // Number of records read per ReadRange request
+        // 60 is a good value for quite full Udp/Ipv4/Ethernet packets
         // otherwise it could be rejected, or fragmented by Ip, or ...
-        int NbRecordByStep = 65;
+        int NbRecordsByStep = 60;
         int CurvesNumber = 1;
+
+        bool StopDownload = false;
 
         public TrendLogDisplay(BacnetClient comm, BacnetAddress adr, BacnetObjectId object_id)
         {
 
             InitializeComponent();
+
+            ToolTip ToolTip1 = new ToolTip();
+            ToolTip1.SetToolTip(m_progressBar, "Click here to stop download");            
+            
             m_zedGraphCtl.GraphPane.XAxis.Type = AxisType.Date;
             m_zedGraphCtl.GraphPane.XAxis.Title.Text = "Date/Time";
             m_zedGraphCtl.GraphPane.YAxis.Title.Text = "Values";
@@ -70,6 +76,7 @@ namespace Yabe
                 CurvesNumber = ReadNumberofCurves(comm, adr, object_id);
 
             m_zedGraphCtl.ContextMenuBuilder += new ZedGraphControl.ContextMenuBuilderEventHandler(m_zedGraphCtl_ContextMenuBuilder);
+            m_zedGraphCtl.PointValueEvent += new ZedGraphControl.PointValueHandler(m_zedGraphCtl_PointValueEvent);
 
             if ((Logsize != 0) && (CurvesNumber != 0))
             {
@@ -77,11 +84,11 @@ namespace Yabe
                 for (int i = 0; i < CurvesNumber; i++)
                     Pointslists[i] = new PointPairList();
 
-                NbRecordByStep = NbRecordByStep - 5 * CurvesNumber;
+                NbRecordsByStep = NbRecordsByStep - 5 * CurvesNumber;
 
                 this.UseWaitCursor = true;
 
-                // Start download in thread
+                // Start downloads in thread
                 this.comm = comm;
                 this.adr = adr;
                 this.object_id = object_id;
@@ -96,6 +103,12 @@ namespace Yabe
             }
         }
 
+        // Stop download
+        private void m_progressBar_Click(object sender, EventArgs e)
+        {
+            StopDownload = true;
+        }
+
         private void UpdateProgress(int ValueAdd)
         {
             this.UseWaitCursor = false; // no more needed, progress bar is moving
@@ -107,11 +120,13 @@ namespace Yabe
 
         private void UpdateEnd(bool state)
         {
+            ColorSymbolRotator color = new ColorSymbolRotator();
+
+            // Even if an error occurs during downloads, maybe some values are OK
             for (int i = 0; i < CurvesNumber; i++)
             {
-                // Even if an error occurs, maybe some values are OK
-                LineItem l = m_zedGraphCtl.GraphPane.AddCurve("", Pointslists[i], Color.Red, SymbolType.None);
-                l.Line.Width = 2;
+                LineItem l = m_zedGraphCtl.GraphPane.AddCurve("", Pointslists[i], color.NextColor, SymbolType.None);
+                l.Line.Width = 1;
             }
             m_zedGraphCtl.RestoreScale(m_zedGraphCtl.GraphPane);
 
@@ -119,7 +134,7 @@ namespace Yabe
             m_progressBar.Visible = false;
 
             if (state == false)
-                m_progresslabel.Text = "Error loading Trend";
+                m_progresslabel.Text = "Error loading trend";
             else
                 m_progresslabel.Visible = false;
         }
@@ -178,7 +193,7 @@ namespace Yabe
 
         //
         // Download the TrendLog in many blocks of NbRecordByStep values
-        // it could be a (light) problem with sliding windows logs with high speed 
+        // it could be a (ligh) problem with sliding windows logs with high speed 
         // modification : it will lost some values and duplicate some others.
         //
         private void DownloadFullTrendLog()
@@ -186,17 +201,22 @@ namespace Yabe
             // I'm a rookie with lambda expressions, but I like it !
             // It's the way data as to be given to me by the TrendLogDecoder
             Action<int, DateTime, double> DataStorage = (idx, timestamp, val) => Pointslists[idx].Add(new XDate(timestamp), val);
+            
+            uint ItemCount;
+            int Idx;
 
             try
             {
                 // First index is 1
-                int i = 1;
+                Idx = 1;
                 do
                 {
                     byte[] TrendBuffer;
-                    uint ItemCount = (uint)Math.Min(NbRecordByStep, Logsize - i + 1);
+                    ItemCount = (uint)Math.Min(NbRecordsByStep, Logsize - Idx + 1);
+                    if (Idx == 951)
+                        Idx = 951;
 
-                    if ((comm.ReadRangeRequest(adr, object_id, (uint)i, ref ItemCount, out TrendBuffer) == false) || (ItemCount == 0))
+                    if ((comm.ReadRangeRequest(adr, object_id, (uint)Idx, ref ItemCount, out TrendBuffer) == false) || (ItemCount == 0))
                     {
                         BeginInvoke(new Action<bool>(UpdateEnd), false);
                         return;
@@ -211,10 +231,9 @@ namespace Yabe
                     // Update progress bar
                     BeginInvoke(new Action<int>(UpdateProgress), (int)ItemCount);
 
-                    i += (int)ItemCount;
+                    Idx += (int)ItemCount;
 
-                } while ((i + 1) < Logsize);
-                //} while (false);  // test purpose only first block 
+                } while (((Idx + 1) < Logsize)&&(StopDownload==false));
 
                 BeginInvoke(new Action<bool>(UpdateEnd), true);
             }
@@ -228,6 +247,20 @@ namespace Yabe
                 catch { }
             }
 
+        }
+
+        // With the original Zedgraph.dll it's blinking. Default tooltip also.
+        // Well known problem with existing patch.
+        // http://sourceforge.net/p/zedgraph/patches/20/ Patch applied in the attached zedgraph library
+        string m_zedGraphCtl_PointValueEvent(ZedGraphControl sender, GraphPane pane, CurveItem curve, int iPt)
+        {
+            PointPair pt = curve[iPt];
+            XDate d = new XDate(pt.X);
+            DateTime dt = d;
+            if ((pt.Y>1)||(pt.Y<-1))
+                return "Date : "+dt.ToString() + "\nValue : " + pt.Y.ToString("f2"); // two decimal numbers
+            else
+                return "Date : " + dt.ToString() + "\nValue : " + pt.Y.ToString(); // full number display
         }
 
         #region ZedGraphCSVExport
@@ -260,9 +293,6 @@ namespace Yabe
             }
         }
         // Only the first trend is used for X axis and number of values
-        // But maybe in multitrendlog some values are in error while other not
-        // so each curves does not have the same number of values
-        //   ... not taken into not account here !
         private void WriteCSVToStream(StreamWriter CSVWriter)
         {
             //First line is for Headers, X and Y Axis
@@ -278,7 +308,13 @@ namespace Yabe
                 DateTime dt = d;    // to get the second
                 CSVWriter.Write(dt.ToString());
                 for (int cv = 0; cv < Pointslists.Length; cv++)
-                    CSVWriter.Write(";" + Pointslists[cv][i].Y);
+                {
+                    double val = Pointslists[cv][i].Y;
+                    if (d != double.NaN)
+                        CSVWriter.Write(";" + Pointslists[cv][i].Y);
+                    else
+                        CSVWriter.Write(";");
+                }
                 CSVWriter.WriteLine();
             }
 
@@ -311,7 +347,7 @@ namespace Yabe
         // and fill the ZedGraph PointList to draw the curve(s)
         // It's not linked to Zedgraph. Give another Action<int, DateTime, double> 
         // like a call to Add to an array of List<KeyValuePair<DateTime, double>>
-        // or other to get back the values
+        // or other to get back the values. If a value is null or in error, double.NaN is provided
         //
         public static uint DecodeTrendBuffer(byte[] buffer, uint ItemCount, int NbCurves, Action<int, DateTime, double> StoreValue)
         {
@@ -357,7 +393,8 @@ namespace Yabe
                         case BacnetTrendLogValueType.TL_TYPE_STATUS:
                             BacnetBitString StatusFlags;
                             offset += ASN1.decode_bitstring(buffer, offset, TagLenght, out StatusFlags);
-                            break;  // don't handle this, but no error
+                            StoreValue(CurveNumber, dt, double.NaN); // this is a discontinuity in the curve
+                            break;  
                         case BacnetTrendLogValueType.TL_TYPE_BOOL:
                             StoreValue(CurveNumber, dt, buffer[offset++]);
                             break;
@@ -395,11 +432,14 @@ namespace Yabe
                             uint Errcode;
                             offset += ASN1.decode_enumerated(buffer, offset, (uint)2, out Errcode);
                             offset += ASN1.decode_enumerated(buffer, offset, (uint)2, out Errcode);
+                            byte b = buffer[offset];
                             offset++;
-                            break;  // don't handle this, but no error
+                            StoreValue(CurveNumber, dt, double.NaN); // this is a discontinuity in the curve
+                            break;  
                         case BacnetTrendLogValueType.TL_TYPE_NULL:
                             offset++;
-                            break;  // don't handle this, but no error
+                            StoreValue(CurveNumber, dt, double.NaN); // this is a discontinuity in the curve
+                            break; 
                         // No way to handle these data types
                         case BacnetTrendLogValueType.TL_TYPE_ANY:
                         case BacnetTrendLogValueType.TL_TYPE_BITS:
