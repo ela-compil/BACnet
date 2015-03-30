@@ -236,7 +236,7 @@ namespace System.IO.BACnet
 
                         if ((function == BacnetBvlcFunctions.BVLC_ORIGINAL_UNICAST_NPDU) || (function == BacnetBvlcFunctions.BVLC_ORIGINAL_BROADCAST_NPDU) || (function == BacnetBvlcFunctions.BVLC_FORWARDED_NPDU))
                             //send to upper layers
-                            if (MessageRecieved != null) MessageRecieved(this, local_buffer, HEADER_LENGTH, rx - HEADER_LENGTH, remote_address);
+                            if ((MessageRecieved != null)  &&(rx>HEADER_LENGTH)) MessageRecieved(this, local_buffer, HEADER_LENGTH, rx - HEADER_LENGTH, remote_address);
                     }
                 }
                 catch (Exception ex)

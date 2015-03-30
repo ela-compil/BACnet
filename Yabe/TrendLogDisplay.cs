@@ -63,6 +63,11 @@ namespace Yabe
             m_zedGraphCtl.GraphPane.XAxis.Type = AxisType.Date;
             m_zedGraphCtl.GraphPane.XAxis.Title.Text = "Date/Time";
             m_zedGraphCtl.GraphPane.YAxis.Title.Text = "Values";
+            m_zedGraphCtl.GraphPane.XAxis.MajorGrid.IsVisible = true;
+            m_zedGraphCtl.GraphPane.YAxis.MajorGrid.IsVisible = true;
+            m_zedGraphCtl.GraphPane.XAxis.MajorGrid.Color = Color.Gray;
+            m_zedGraphCtl.GraphPane.YAxis.MajorGrid.Color = Color.Gray;
+            m_zedGraphCtl.IsAntiAlias = true;
 
             Logsize = ReadRangeSize(comm, adr, object_id);
             m_progresslabel.Text = "Downloads of " + Logsize + " records in progress (0%)";
@@ -126,8 +131,10 @@ namespace Yabe
             for (int i = 0; i < CurvesNumber; i++)
             {
                 LineItem l = m_zedGraphCtl.GraphPane.AddCurve("", Pointslists[i], color.NextColor, SymbolType.None);
-                l.Line.Width = 1;
+                l.Line.Width = 2;
             }
+            m_zedGraphCtl.GraphPane.Chart.Fill = new Fill(Color.White, Color.FromArgb(255, 255, 190), 45F);
+
             m_zedGraphCtl.RestoreScale(m_zedGraphCtl.GraphPane);
 
             this.UseWaitCursor = false;
@@ -257,10 +264,15 @@ namespace Yabe
             PointPair pt = curve[iPt];
             XDate d = new XDate(pt.X);
             DateTime dt = d;
-            if ((pt.Y>1)||(pt.Y<-1))
-                return "Date : "+dt.ToString() + "\nValue : " + pt.Y.ToString("f2"); // two decimal numbers
-            else
-                return "Date : " + dt.ToString() + "\nValue : " + pt.Y.ToString(); // full number display
+
+            // auto adjustable digit precision, quite a copyright here :=)
+            String ValStr = "0";
+            if (pt.Y != 0)
+            {
+                int resolution = (int)Math.Max(0, Math.Ceiling(4 - Math.Log10(Math.Abs(pt.Y))));
+                ValStr = Math.Round(pt.Y, resolution).ToString();
+            }
+            return "Date : "+dt.ToString() + "\nValue : " + ValStr; 
         }
 
         #region ZedGraphCSVExport

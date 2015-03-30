@@ -39,7 +39,7 @@
             // 
             this.m_progressBar.Location = new System.Drawing.Point(185, 127);
             this.m_progressBar.Name = "m_progressBar";
-            this.m_progressBar.Size = new System.Drawing.Size(222, 23);
+            this.m_progressBar.Size = new System.Drawing.Size(231, 23);
             this.m_progressBar.TabIndex = 0;
             this.m_progressBar.Click += new System.EventHandler(this.m_progressBar_Click);
             // 
@@ -62,9 +62,9 @@
             // m_progresslabel
             // 
             this.m_progresslabel.BackColor = System.Drawing.SystemColors.Window;
-            this.m_progresslabel.Location = new System.Drawing.Point(159, 107);
+            this.m_progresslabel.Location = new System.Drawing.Point(185, 103);
             this.m_progresslabel.Name = "m_progresslabel";
-            this.m_progresslabel.Size = new System.Drawing.Size(274, 17);
+            this.m_progresslabel.Size = new System.Drawing.Size(231, 21);
             this.m_progresslabel.TabIndex = 2;
             this.m_progresslabel.Text = "Downloads in Progress (0%)";
             this.m_progresslabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;

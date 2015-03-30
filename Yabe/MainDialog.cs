@@ -60,6 +60,7 @@ namespace Yabe
             InitializeComponent();
             Trace.Listeners.Add(new MyTraceListener(this));
             m_DeviceTree.ExpandAll();
+            m_DeviceTree.ShowNodeToolTips = true;
 
             //load splitter setup
             try
@@ -352,7 +353,7 @@ namespace Yabe
                         break;
                 }
                 node.SelectedImageIndex = node.ImageIndex;
-                m_DeviceTree.ExpandAll();
+                m_DeviceTree.ExpandAll(); m_DeviceTree.SelectedNode = node;
 
                 try
                 {
@@ -750,7 +751,27 @@ namespace Yabe
                     //add to tree
                     foreach (BacnetValue value in value_list)
                     {
-                        AddObjectEntry(comm, adr, null, (BacnetObjectId)value.Value, m_AddressSpaceTree.Nodes);
+                        BacnetObjectId bobj_id = (BacnetObjectId)value.Value;
+                        AddObjectEntry(comm, adr, null, bobj_id, m_AddressSpaceTree.Nodes);
+                        
+                        // Add FC
+                        // If the Device name not set, try to update it
+                        if (bobj_id.type == BacnetObjectTypes.OBJECT_DEVICE)
+                        {
+                            if (!e.Node.Text.EndsWith(" "))   // already update with the device name
+                            {
+                                IList<BacnetValue> values;
+                                if (comm.ReadPropertyRequest(adr, bobj_id, BacnetPropertyIds.PROP_OBJECT_NAME, out values))
+                                {
+                                    try
+                                    {
+                                        e.Node.ToolTipText = e.Node.Text;   // IP or MSTP node id -> in the Tooltip
+                                        e.Node.Text = values[0].ToString() + " ["+device_id.ToString()+"] ";  // change @ by the Name                                       
+                                    }
+                                    catch { }
+                                }
+                            }
+                         }                         
                     }
                 }
                 finally
@@ -1078,6 +1099,10 @@ namespace Yabe
                                 break;
                         }
 
+                        // Add Prop Name to PropId into the Treenode 
+                        if (p_value.property.propertyIdentifier == (byte)BacnetPropertyIds.PROP_OBJECT_NAME)                        
+                            if (!selected_node.Text.EndsWith(" "))
+                                selected_node.Text = selected_node.Text+" : "+value.ToString()+" "; 
                     }
                     m_DataGrid.SelectedObject = bag;
                 }
