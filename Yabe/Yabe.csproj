@@ -85,6 +85,12 @@
       <DependentUpon>ProgressDialog.cs</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ScheduleDisplay.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ScheduleDisplay.Designer.cs">
+      <DependentUpon>ScheduleDisplay.cs</DependentUpon>
+    </Compile>
     <Compile Include="TrendLogDisplay.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -131,6 +137,9 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
+    <EmbeddedResource Include="ScheduleDisplay.resx">
+      <DependentUpon>ScheduleDisplay.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="TrendLogDisplay.resx">
       <DependentUpon>TrendLogDisplay.cs</DependentUpon>
     </EmbeddedResource>
@@ -171,6 +180,7 @@
     <None Include="Resources\transmit.png" />
     <None Include="Resources\world.png" />
     <None Include="Resources\chart_line.png" />
+    <None Include="Resources\calendar_view_week.png" />
     <Content Include="Search.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

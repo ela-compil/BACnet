@@ -134,7 +134,7 @@ namespace System.IO.BACnet
             return m_client.ToString();
         }
 
-        private EncodeBuffer GetEncodeBuffer(int start_offset)
+        public EncodeBuffer GetEncodeBuffer(int start_offset)
         {
             return new EncodeBuffer(new byte[m_client.MaxBufferLength], start_offset);
         }

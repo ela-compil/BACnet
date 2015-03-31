@@ -52,6 +52,7 @@
             this.uploadFileToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.subscribeToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.showTrendLogToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.showScheduleToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -77,6 +78,7 @@
             this.uploadFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.subscribeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showTrendLogToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.showScheduleToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.label3 = new System.Windows.Forms.Label();
             this.m_SplitContainerRight = new System.Windows.Forms.SplitContainer();
             this.tabControl1 = new System.Windows.Forms.TabControl();
@@ -193,7 +195,8 @@
             this.downloadFileToolStripMenuItem1,
             this.uploadFileToolStripMenuItem1,
             this.subscribeToolStripMenuItem1,
-            this.showTrendLogToolStripMenuItem});
+            this.showTrendLogToolStripMenuItem,
+            this.showScheduleToolStripMenuItem});
             this.searchToolStripMenuItem.Name = "searchToolStripMenuItem";
             this.searchToolStripMenuItem.Size = new System.Drawing.Size(71, 20);
             this.searchToolStripMenuItem.Text = "Functions";
@@ -303,6 +306,14 @@
             this.showTrendLogToolStripMenuItem.Size = new System.Drawing.Size(218, 22);
             this.showTrendLogToolStripMenuItem.Text = "Show TrendLog";
             this.showTrendLogToolStripMenuItem.Click += new System.EventHandler(this.showTrendLogToolStripMenuItem1_Click);
+            // 
+            // showScheduleToolStripMenuItem
+            // 
+            this.showScheduleToolStripMenuItem.Image = global::Yabe.Properties.Resources.calendar_view_week;
+            this.showScheduleToolStripMenuItem.Name = "showScheduleToolStripMenuItem";
+            this.showScheduleToolStripMenuItem.Size = new System.Drawing.Size(218, 22);
+            this.showScheduleToolStripMenuItem.Text = "Show Schedule";
+            this.showScheduleToolStripMenuItem.Click += new System.EventHandler(this.showScheduleToolStripMenuItem1_Click);
             // 
             // optionsToolStripMenuItem
             // 
@@ -532,9 +543,10 @@
             this.downloadFileToolStripMenuItem,
             this.uploadFileToolStripMenuItem,
             this.subscribeToolStripMenuItem,
-            this.showTrendLogToolStripMenuItem1});
+            this.showTrendLogToolStripMenuItem1,
+            this.showScheduleToolStripMenuItem1});
             this.m_AddressSpaceMenuStrip.Name = "m_AddressSpaceMenuStrip";
-            this.m_AddressSpaceMenuStrip.Size = new System.Drawing.Size(158, 92);
+            this.m_AddressSpaceMenuStrip.Size = new System.Drawing.Size(158, 114);
             // 
             // downloadFileToolStripMenuItem
             // 
@@ -567,6 +579,14 @@
             this.showTrendLogToolStripMenuItem1.Size = new System.Drawing.Size(157, 22);
             this.showTrendLogToolStripMenuItem1.Text = "Show TrendLog";
             this.showTrendLogToolStripMenuItem1.Click += new System.EventHandler(this.showTrendLogToolStripMenuItem_Click);
+            // 
+            // showScheduleToolStripMenuItem1
+            // 
+            this.showScheduleToolStripMenuItem1.Image = global::Yabe.Properties.Resources.calendar_view_week;
+            this.showScheduleToolStripMenuItem1.Name = "showScheduleToolStripMenuItem1";
+            this.showScheduleToolStripMenuItem1.Size = new System.Drawing.Size(157, 22);
+            this.showScheduleToolStripMenuItem1.Text = "Show Schedule";
+            this.showScheduleToolStripMenuItem1.Click += new System.EventHandler(this.showScheduleToolStripMenuItem_Click);
             // 
             // label3
             // 
@@ -818,6 +838,8 @@
         private System.Windows.Forms.ToolStripMenuItem foreignDeviceRegistrationToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showTrendLogToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showTrendLogToolStripMenuItem1;
+        private System.Windows.Forms.ToolStripMenuItem showScheduleToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem showScheduleToolStripMenuItem1;
     }
 }
 

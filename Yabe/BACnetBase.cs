@@ -1143,7 +1143,8 @@ namespace System.IO.BACnet
                 else if (t == typeof(BacnetObjectId))
                     Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID;
                 else
-                    throw new NotImplementedException("This type (" + t.Name + ") is not yet implemented");
+                    Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC_ENCODED;
+                    //throw new NotImplementedException("This type (" + t.Name + ") is not yet implemented");
             }
         }
         public override string ToString()

@@ -335,7 +335,11 @@ namespace Yabe
             if (dlg.ShowDialog(this) == System.Windows.Forms.DialogResult.OK)
             {
                 BacnetClient comm = dlg.Result;
-                m_devices.Add(comm, new BacnetDeviceLine(comm));
+                try
+                {
+                    m_devices.Add(comm, new BacnetDeviceLine(comm));
+                }
+                catch { return ; }
 
                 //add to tree
                 TreeNode node = m_DeviceTree.Nodes[0].Nodes.Add(comm.ToString());
@@ -1424,6 +1428,44 @@ namespace Yabe
             }
             catch {}
         }
+        // en cours
+        private void showScheduleToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                //fetch end point
+                BacnetClient comm = null;
+                BacnetAddress adr;
+                try
+                {
+                    if (m_DeviceTree.SelectedNode == null) return;
+                    else if (m_DeviceTree.SelectedNode.Tag == null) return;
+                    else if (!(m_DeviceTree.SelectedNode.Tag is KeyValuePair<BacnetAddress, uint>)) return;
+                    KeyValuePair<BacnetAddress, uint> entry = (KeyValuePair<BacnetAddress, uint>)m_DeviceTree.SelectedNode.Tag;
+                    adr = entry.Key;
+                    comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag;
+                }
+                finally
+                {
+                    if (comm == null) MessageBox.Show(this, "This is not a valid node", "Wrong node", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+
+                //fetch object_id
+                if (
+                    m_AddressSpaceTree.SelectedNode == null ||
+                    !(m_AddressSpaceTree.SelectedNode.Tag is BacnetObjectId) ||
+                    (((BacnetObjectId)m_AddressSpaceTree.SelectedNode.Tag).type != BacnetObjectTypes.OBJECT_SCHEDULE))
+                {
+                    MessageBox.Show(this, "The marked object is not a Schedule", "Not a Schedule", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    return;
+                }
+                BacnetObjectId object_id = (BacnetObjectId)m_AddressSpaceTree.SelectedNode.Tag;
+
+                new ScheduleDisplay(comm, adr, object_id).ShowDialog();
+
+            }
+            catch { }
+        }
 
         private void m_AddressSpaceTree_ItemDrag(object sender, ItemDragEventArgs e)
         {
@@ -1780,6 +1822,11 @@ namespace Yabe
         private void showTrendLogToolStripMenuItem1_Click(object sender, EventArgs e)
         {
             showTrendLogToolStripMenuItem_Click(null, null);
+        }
+
+        private void showScheduleToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            showScheduleToolStripMenuItem_Click(null, null);
         }
 
         private void uploadFileToolStripMenuItem1_Click(object sender, EventArgs e)
