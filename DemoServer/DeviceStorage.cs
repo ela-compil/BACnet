@@ -489,7 +489,7 @@ namespace System.IO.BACnet.Storage
         [System.Xml.Serialization.XmlElement]
         public string[] Value { get; set; }
 
-        private BacnetValue DeserializeValue(string value, BacnetApplicationTags type)
+        public static BacnetValue DeserializeValue(string value, BacnetApplicationTags type)
         {
             switch (type)
             {
@@ -509,9 +509,23 @@ namespace System.IO.BACnet.Storage
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_DOUBLE:
                     return new BacnetValue(type, double.Parse(value, System.Globalization.CultureInfo.InvariantCulture));
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_OCTET_STRING:
-                    return new BacnetValue(type, Convert.FromBase64String(value));
+                    try
+                    {
+                        return new BacnetValue(type, Convert.FromBase64String(value));
+                    }
+                    catch
+                    {
+                        return new BacnetValue(type, value);
+                    }
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC_DECODED:
-                    return new BacnetValue(type, Convert.FromBase64String(value));
+                    try
+                    {
+                        return new BacnetValue(type, Convert.FromBase64String(value));
+                    }
+                    catch
+                    {
+                        return new BacnetValue(type, value);
+                    }
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_CHARACTER_STRING:
                     return new BacnetValue(type, value);
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_BIT_STRING:
@@ -531,7 +545,7 @@ namespace System.IO.BACnet.Storage
             }
         }
 
-        private string SerializeValue(BacnetValue value, BacnetApplicationTags type)
+        public static string SerializeValue(BacnetValue value, BacnetApplicationTags type)
         {
             switch (type)
             {

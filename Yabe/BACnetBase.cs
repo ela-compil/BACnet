@@ -3355,6 +3355,12 @@ namespace System.IO.BACnet.Serialize
 
         public static void encode_bacnet_date(EncodeBuffer buffer, DateTime value)
         {
+            if (value == new DateTime(1, 1, 1)) // this is the way decode do for 'Date any' = DateTime(0)
+            {
+                buffer.Add(0xFF); buffer.Add(0xFF); buffer.Add(0xFF); buffer.Add(0xFF);
+                return;
+            }
+
             /* allow 2 digit years */
             if (value.Year >= 1900)
                 buffer.Add((byte)(value.Year - 1900));

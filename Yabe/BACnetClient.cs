@@ -1307,6 +1307,94 @@ namespace System.IO.BACnet
             res.Dispose();
         }
 
+        // Fc
+        // Read or Write without APDU Data encoding nor Decoding (just Request type, Object id and Property id)
+        // Data is given by the caller starting with the Tag 3 (or maybe another one), and ending with it
+        // return buffer start also with the Tag 3
+        public bool RawEncodedDecodedPropertyConfirmedRequest(BacnetAddress adr, BacnetObjectId object_id, BacnetPropertyIds property_id, BacnetConfirmedServices service_id, ref byte[] InOutBuffer, byte invoke_id = 0)
+        {
+            using (BacnetAsyncResult result = (BacnetAsyncResult)BeginRawEncodedDecodedPropertyConfirmedRequest(adr, object_id, property_id, service_id, InOutBuffer, true, invoke_id))
+            {
+                for (int r = 0; r < m_retries; r++)
+                {
+                    if (result.WaitForDone(m_timeout))
+                    {
+                        Exception ex;
+                        EndRawEncodedDecodedPropertyConfirmedRequest(result, service_id, out InOutBuffer, out ex);
+                        if (ex != null) throw ex;
+                        else return true;
+                    }
+                    result.Resend();
+                }
+            }
+            InOutBuffer = null;
+            return false;
+        }
+        // Fc
+        public IAsyncResult BeginRawEncodedDecodedPropertyConfirmedRequest(BacnetAddress adr, BacnetObjectId object_id, BacnetPropertyIds property_id, BacnetConfirmedServices service_id, byte[] InOutBuffer, bool wait_for_transmit, byte invoke_id = 0)
+        {
+            Trace.WriteLine("Sending RawEncodedRequest ... ", null);
+            if (invoke_id == 0) invoke_id = unchecked(m_invoke_id++);
+
+            EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, 0);
+            APDU.EncodeConfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST | (m_max_segments != BacnetMaxSegments.MAX_SEG0 ? BacnetPduTypes.SEGMENTED_RESPONSE_ACCEPTED : 0), service_id , m_max_segments, m_client.MaxAdpuLength, invoke_id, 0, 0);
+
+            ASN1.encode_context_object_id(b, 0, object_id.type, object_id.instance);
+            ASN1.encode_context_enumerated(b, 1, (byte)property_id);
+
+            // No content encoding to do
+            if (InOutBuffer!=null)
+                b.Add(InOutBuffer, InOutBuffer.Length);
+
+            //send
+            BacnetAsyncResult ret = new BacnetAsyncResult(this, adr, invoke_id, b.buffer, b.offset - m_client.HeaderLength, wait_for_transmit, m_transmit_timeout);
+            ret.Resend();
+
+            return ret;
+        }
+        // Fc
+        public void EndRawEncodedDecodedPropertyConfirmedRequest(IAsyncResult result, BacnetConfirmedServices service_id, out byte[] InOutBuffer, out Exception ex)
+        {
+            BacnetAsyncResult res = (BacnetAsyncResult)result;
+            ex = res.Error;
+            if (ex == null && !res.WaitForDone(m_timeout))
+                ex = new Exception("Wait Timeout");
+
+            InOutBuffer = null;
+
+            if (ex == null)
+            {
+                if (service_id == BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROPERTY)
+                {
+                    //decode
+                    BacnetObjectId response_object_id;
+                    BacnetPropertyReference response_property;
+                    int offset = 0; int len = 0;
+                    byte[] buffer = res.Result; byte tag_number; uint len_value_type;
+
+                    ex = new Exception("Decode");
+
+                    if (!ASN1.decode_is_context_tag(buffer, offset, 0))
+                        return;
+                    len = 1;
+                    len += ASN1.decode_object_id(buffer, offset + len, out response_object_id.type, out response_object_id.instance);
+                    /* Tag 1: Property ID */
+                    len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value_type);
+                    if (tag_number != 1)
+                        return;
+                    len += ASN1.decode_enumerated(buffer, offset + len, len_value_type, out response_property.propertyIdentifier);
+
+                    InOutBuffer = new byte[buffer.Length - len];
+                    Array.Copy(buffer, len, InOutBuffer, 0, InOutBuffer.Length);
+
+                    ex = null;
+                }
+            }
+
+            res.Dispose();
+        }
+
         public bool DeviceCommunicationControlRequest(BacnetAddress adr, uint timeDuration, uint enable_disable, string password, byte invoke_id = 0)
         {
             using (BacnetAsyncResult result = (BacnetAsyncResult)BeginDeviceCommunicationControlRequest(adr, timeDuration, enable_disable, password, true, invoke_id))
