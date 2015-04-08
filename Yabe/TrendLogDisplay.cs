@@ -68,6 +68,9 @@ namespace Yabe
             m_zedGraphCtl.GraphPane.XAxis.MajorGrid.Color = Color.Gray;
             m_zedGraphCtl.GraphPane.YAxis.MajorGrid.Color = Color.Gray;
             m_zedGraphCtl.IsAntiAlias = true;
+            // Zedgraph patch made to use the false IsAntiAlias default value for textRendering :
+            // antiaslias is clean for curves but not for the text
+            // to set antialias for fonts ZedGraph.FontSpec.Default.IsAntiAlias=true can be used
 
             Logsize = ReadRangeSize(comm, adr, object_id);
             m_progresslabel.Text = "Downloads of " + Logsize + " records in progress (0%)";
@@ -411,12 +414,11 @@ namespace Yabe
                             StoreValue(CurveNumber, dt, buffer[offset++]);
                             break;
                         case BacnetTrendLogValueType.TL_TYPE_REAL:
-                        case BacnetTrendLogValueType.TL_TYPE_DELTA:
                             if (TagLenght == 4)
                             {
                                 float ValR;
                                 offset += ASN1.decode_real(buffer, offset, out ValR);
-                                StoreValue(CurveNumber, dt, ValR); // here it's equivalent to Pointslist.Add(new XDate(dt), ValR);
+                                StoreValue(CurveNumber, dt, ValR);
                             }
                             else  // not sure double can exist here
                             {
@@ -451,8 +453,14 @@ namespace Yabe
                         case BacnetTrendLogValueType.TL_TYPE_NULL:
                             offset++;
                             StoreValue(CurveNumber, dt, double.NaN); // this is a discontinuity in the curve
-                            break; 
-                        // No way to handle these data types
+                            break;
+                        // Time change (Automatic or Synch time) Delta in seconds
+                        case BacnetTrendLogValueType.TL_TYPE_DELTA:
+                            float ValDelta;
+                            offset += ASN1.decode_real(buffer, offset, out ValDelta);  
+                            StoreValue(CurveNumber, dt, double.NaN); // this is certainly a discontinuity in the curve
+                            break;
+                        // No way to handle these data types, sure it's the end of this download !
                         case BacnetTrendLogValueType.TL_TYPE_ANY:
                         case BacnetTrendLogValueType.TL_TYPE_BITS:
                         default:

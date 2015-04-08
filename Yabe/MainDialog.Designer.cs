@@ -425,6 +425,7 @@
             this.m_DeviceTree.Nodes.AddRange(new System.Windows.Forms.TreeNode[] {
             treeNode1});
             this.m_DeviceTree.SelectedImageIndex = 0;
+            this.m_DeviceTree.ShowNodeToolTips = true;
             this.m_DeviceTree.ShowRootLines = false;
             this.m_DeviceTree.Size = new System.Drawing.Size(164, 174);
             this.m_DeviceTree.TabIndex = 0;
@@ -532,6 +533,7 @@
             this.m_AddressSpaceTree.Location = new System.Drawing.Point(0, 13);
             this.m_AddressSpaceTree.Name = "m_AddressSpaceTree";
             this.m_AddressSpaceTree.SelectedImageIndex = 0;
+            this.m_AddressSpaceTree.ShowNodeToolTips = true;
             this.m_AddressSpaceTree.Size = new System.Drawing.Size(164, 208);
             this.m_AddressSpaceTree.TabIndex = 0;
             this.m_AddressSpaceTree.ItemDrag += new System.Windows.Forms.ItemDragEventHandler(this.m_AddressSpaceTree_ItemDrag);

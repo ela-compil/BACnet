@@ -60,7 +60,6 @@ namespace Yabe
             InitializeComponent();
             Trace.Listeners.Add(new MyTraceListener(this));
             m_DeviceTree.ExpandAll();
-            m_DeviceTree.ShowNodeToolTips = true;
 
             //load splitter setup
             try
@@ -584,7 +583,7 @@ namespace Yabe
         private void AddObjectEntry(BacnetClient comm, BacnetAddress adr, string name, BacnetObjectId object_id, TreeNodeCollection nodes)
         {
             if (string.IsNullOrEmpty(name)) name = object_id.ToString();
-            TreeNode node = nodes.Add(name);
+            TreeNode node = nodes.Add(name.Substring(7));
             node.Tag = object_id;
 
             //icon
@@ -751,18 +750,18 @@ namespace Yabe
                             return;
                         }
                     }
-
+                    
                     //add to tree
                     foreach (BacnetValue value in value_list)
                     {
                         BacnetObjectId bobj_id = (BacnetObjectId)value.Value;
-                        AddObjectEntry(comm, adr, null, bobj_id, m_AddressSpaceTree.Nodes);
+                        AddObjectEntry(comm, adr, null, bobj_id, m_AddressSpaceTree.Nodes);//AddObjectEntry(comm, adr, null, bobj_id, e.Node.Nodes);
                         
                         // Add FC
                         // If the Device name not set, try to update it
                         if (bobj_id.type == BacnetObjectTypes.OBJECT_DEVICE)
                         {
-                            if (!e.Node.Text.EndsWith(" "))   // already update with the device name
+                            if (e.Node.ToolTipText=="")   // already update with the device name
                             {
                                 IList<BacnetValue> values;
                                 if (comm.ReadPropertyRequest(adr, bobj_id, BacnetPropertyIds.PROP_OBJECT_NAME, out values))
@@ -1103,10 +1102,13 @@ namespace Yabe
                                 break;
                         }
 
-                        // Add Prop Name to PropId into the Treenode 
-                        if (p_value.property.propertyIdentifier == (byte)BacnetPropertyIds.PROP_OBJECT_NAME)                        
-                            if (!selected_node.Text.EndsWith(" "))
-                                selected_node.Text = selected_node.Text+" : "+value.ToString()+" "; 
+                        // The Prop Name replace the PropId into the Treenode 
+                        if (p_value.property.propertyIdentifier == (byte)BacnetPropertyIds.PROP_OBJECT_NAME)
+                            if (selected_node.ToolTipText=="")  // Tooltip not set is not null, strange !
+                            {
+                                selected_node.ToolTipText = selected_node.Text;
+                                selected_node.Text = value.ToString();
+                            }
                     }
                     m_DataGrid.SelectedObject = bag;
                 }
