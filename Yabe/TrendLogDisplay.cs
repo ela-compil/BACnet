@@ -303,7 +303,7 @@ namespace Yabe
                 WriteCSVToStream(CSVWriter);
                 CSVWriter.Close();
             }
-            catch (Exception ex)
+            catch (Exception)
             {
             }
         }
