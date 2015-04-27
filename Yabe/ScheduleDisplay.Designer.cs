@@ -41,7 +41,7 @@
             this.deleteToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.addToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.imageList = new System.Windows.Forms.ImageList(this.components);
-            this.Update = new System.Windows.Forms.Button();
+            this.UpdateButton = new System.Windows.Forms.Button();
             this.StartDatePicker = new System.Windows.Forms.Button();
             this.EndDatePicker = new System.Windows.Forms.Button();
             this.label4 = new System.Windows.Forms.Label();
@@ -142,16 +142,16 @@
             this.imageList.TransparentColor = System.Drawing.Color.Transparent;
             this.imageList.Images.SetKeyName(0, "time_go.png");
             // 
-            // Update
+            // UpdateButton
             // 
-            this.Update.AutoSize = true;
-            this.Update.Location = new System.Drawing.Point(179, 408);
-            this.Update.Name = "Update";
-            this.Update.Size = new System.Drawing.Size(128, 28);
-            this.Update.TabIndex = 8;
-            this.Update.Text = "Update && Read back";
-            this.Update.UseVisualStyleBackColor = true;
-            this.Update.Click += new System.EventHandler(this.Update_Click);
+            this.UpdateButton.AutoSize = true;
+            this.UpdateButton.Location = new System.Drawing.Point(179, 408);
+            this.UpdateButton.Name = "UpdateButton";
+            this.UpdateButton.Size = new System.Drawing.Size(128, 28);
+            this.UpdateButton.TabIndex = 8;
+            this.UpdateButton.Text = "Update && Read back";
+            this.UpdateButton.UseVisualStyleBackColor = true;
+            this.UpdateButton.Click += new System.EventHandler(this.Update_Click);
             // 
             // StartDatePicker
             // 
@@ -192,7 +192,7 @@
             this.Controls.Add(this.label4);
             this.Controls.Add(this.EndDatePicker);
             this.Controls.Add(this.StartDatePicker);
-            this.Controls.Add(this.Update);
+            this.Controls.Add(this.UpdateButton);
             this.Controls.Add(this.Schedule);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.TxtEndDate);
@@ -217,7 +217,7 @@
         private System.Windows.Forms.TextBox TxtEndDate;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.TreeView Schedule;
-        private System.Windows.Forms.Button Update;
+        private System.Windows.Forms.Button UpdateButton;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip;
         private System.Windows.Forms.ToolStripMenuItem modifyToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem deleteToolStripMenuItem;
