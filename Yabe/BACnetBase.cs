@@ -4577,6 +4577,9 @@ namespace System.IO.BACnet.Serialize
                 List<BacnetValue> list = new List<BacnetValue>();
 
                 decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value_type);
+                // If an opening tag is not present, no loop to get the values
+                bool MultiplValue=IS_OPENING_TAG(buffer[offset + len]);
+
                 while (((len + offset) <= max_offset) && !IS_CLOSING_TAG(buffer[offset + len]))
                 {
                     tag_len = decode_tag_number_and_value(buffer, offset + len, out sub_tag_number, out len_value_type);
@@ -4617,6 +4620,9 @@ namespace System.IO.BACnet.Serialize
                             len += tag_len + (int)len_value_type;
                         }
                     }
+
+                    if (MultiplValue == false)
+                        break;
                 }
                 if ((len + offset) > max_offset) return -1;
 
