@@ -2,12 +2,13 @@
                    YABE - YET ANOTHER BACNET EXPLORER
 -------------------------------------------------------------------------------
 
-1.0.2 - 2015...
+1.0.3 - 2015...
  - Fix version inconsistencies (installer/inprogram/db)
 
-0.9.7 - 20150227
+0.9.7 - 20150427
  - Applied many patches by F. Chaxel
  - Foreign Device Registration added by F. Chaxel
+ - Schedule Dialog by F. Chaxel
 
 0.9.6 - 20140504
  - Added Structured View object
