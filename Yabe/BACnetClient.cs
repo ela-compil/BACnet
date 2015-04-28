@@ -163,6 +163,8 @@ namespace System.IO.BACnet
         public event AtomicReadFileRequestHandler OnAtomicReadFileRequest;
         public delegate void SubscribeCOVRequestHandler(BacnetClient sender, BacnetAddress adr, byte invoke_id, uint subscriberProcessIdentifier, BacnetObjectId monitoredObjectIdentifier, bool cancellationRequest, bool issueConfirmedNotifications, uint lifetime, BacnetMaxSegments max_segments);
         public event SubscribeCOVRequestHandler OnSubscribeCOV;
+        public delegate void EventNotificationCallbackHandler(BacnetClient sender, BacnetAddress adr, BacnetEventNotificationData EventData);
+        public event EventNotificationCallbackHandler OnEventNotify;
         public delegate void SubscribeCOVPropertyRequestHandler(BacnetClient sender, BacnetAddress adr, byte invoke_id, uint subscriberProcessIdentifier, BacnetObjectId monitoredObjectIdentifier, BacnetPropertyReference monitoredProperty, bool cancellationRequest, bool issueConfirmedNotifications, uint lifetime, float covIncrement, BacnetMaxSegments max_segments);
         public event SubscribeCOVPropertyRequestHandler OnSubscribeCOVProperty;
         public delegate void DeviceCommunicationControlRequestHandler(BacnetClient sender, BacnetAddress adr, byte invoke_id, uint time_duration, uint enable_disable, string password, BacnetMaxSegments max_segments);
@@ -299,6 +301,16 @@ namespace System.IO.BACnet
                     else
                         Trace.TraceWarning("Couldn't decode ReinitializeDevice");
                 }
+                else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_EVENT_NOTIFICATION && OnEventNotify != null) // F. Chaxel
+                {
+                    BacnetEventNotificationData EventData;
+                    if (Services.DecodeEventNotifyData(buffer, offset, length, out EventData) >= 0)
+                    {
+                        OnEventNotify(this, adr, EventData);
+                    }
+                    else
+                        Trace.TraceWarning("Couldn't decode Event/Alarm Notification");
+                }
             }
             catch (Exception ex)
             {
@@ -372,6 +384,16 @@ namespace System.IO.BACnet
                         OnTimeSynchronize(this, adr, dateTime, true);
                     else
                         Trace.TraceWarning("Couldn't decode TimeSynchronize");
+                }
+                else if (service == BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_EVENT_NOTIFICATION && OnEventNotify!=null) // F. Chaxel
+                {
+                    BacnetEventNotificationData EventData;
+                    if (Services.DecodeEventNotifyData(buffer, offset, length, out EventData) >= 0)
+                    {
+                        OnEventNotify(this, adr, EventData);
+                    }
+                    else
+                        Trace.TraceWarning("Couldn't decode Event/Alarm Notification");
                 }
             }
             catch (Exception ex)

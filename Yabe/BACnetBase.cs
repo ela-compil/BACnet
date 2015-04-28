@@ -4622,7 +4622,10 @@ namespace System.IO.BACnet.Serialize
                     }
 
                     if (MultiplValue == false)
-                        break;
+                    {
+                        value = list[0];
+                        return len;
+                    }
                 }
                 if ((len + offset) > max_offset) return -1;
 
@@ -5696,6 +5699,147 @@ namespace System.IO.BACnet.Serialize
             return len;
         }
 
+        // F Chaxel
+        public static int DecodeEventNotifyData(byte[] buffer, int offset, int apdu_len, out BacnetEventNotificationData EventData)
+        {
+            int len = 0;
+            uint len_value;
+            byte tag_number;
+
+            EventData = new BacnetEventNotificationData();
+
+            /* tag 0 - processIdentifier */
+            if (ASN1.decode_is_context_tag(buffer, offset + len, 0))
+            {
+                len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value);
+                len += ASN1.decode_unsigned(buffer, offset + len, len_value, out EventData.processIdentifier);
+            }
+            else
+                return -1;
+
+            /*  tag 1 - initiatingObjectIdentifier */
+            if (ASN1.decode_is_context_tag(buffer, offset + len, 1))
+            {
+                len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value);
+                len += ASN1.decode_object_id(buffer, offset + len, out EventData.initiatingObjectIdentifier.type, out EventData.initiatingObjectIdentifier.instance);
+            }
+            else
+                return -1;
+
+            /*  tag 2 - eventObjectIdentifier */
+            if (ASN1.decode_is_context_tag(buffer, offset + len, 2))
+            {
+                len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value);
+                len += ASN1.decode_object_id(buffer, offset + len, out EventData.eventObjectIdentifier.type, out EventData.eventObjectIdentifier.instance);
+            }
+            else
+                return -1;
+
+            /*  tag 3 - timeStamp */
+            if (ASN1.decode_is_context_tag(buffer, offset + len, 3))
+            {   DateTime date;
+                DateTime time;
+
+                len+=2; // opening Tag 3 then 2
+
+                len += ASN1.decode_application_date(buffer, offset+len, out date);
+                len += ASN1.decode_application_time(buffer, offset+len, out time);
+                EventData.timeStamp.Time= new DateTime(date.Year, date.Month, date.Day, time.Hour, time.Minute, time.Second, time.Millisecond);
+
+                len+=2; // closing tag 2 then 3
+            }
+            else
+                return -1;
+
+            /* tag 4 - noticicationClass */
+            if (ASN1.decode_is_context_tag(buffer, offset + len, 4))
+            {
+                len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value);
+                len += ASN1.decode_unsigned(buffer, offset + len, len_value, out EventData.notificationClass);
+            }
+            else
+                return -1;
+
+            /* tag 5 - priority */
+            if (ASN1.decode_is_context_tag(buffer, offset + len, 5))
+            {
+                uint priority;
+
+                len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value);
+                len += ASN1.decode_unsigned(buffer, offset + len, len_value, out priority);
+                if (priority>0xFF) return -1;
+                EventData.priority = (byte)priority;
+            }
+            else
+                return -1;
+
+            /* tag 6 - eventType */
+            if (ASN1.decode_is_context_tag(buffer, offset + len, 6))
+            {
+                uint eventType;
+                len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value);
+                len += ASN1.decode_enumerated(buffer, offset + len, len_value, out eventType);
+                EventData.eventType = (BacnetEventNotificationData.BacnetEventTypes)eventType;
+            }
+            else
+                return -1;
+
+            /* optional tag 7 - messageText  : never tested */
+            if (ASN1.decode_is_context_tag(buffer,offset+len,7))
+            {
+                // max_lenght 20000 sound like a joke
+                len += ASN1.decode_context_character_string(buffer, offset + len, 20000, 7, out EventData.messageText);
+            }
+
+            /* tag 8 - notifyType */
+            if (ASN1.decode_is_context_tag(buffer, offset + len, 8))
+            {
+                uint notifyType;
+                len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value);
+                len += ASN1.decode_enumerated(buffer, offset + len, len_value, out notifyType);
+                EventData.notifyType = (BacnetEventNotificationData.BacnetNotifyTypes)notifyType;
+            }
+            else
+                return -1;
+
+            switch (EventData.notifyType)
+            {
+                case BacnetEventNotificationData.BacnetNotifyTypes.NOTIFY_ALARM:
+                case BacnetEventNotificationData.BacnetNotifyTypes.NOTIFY_EVENT:
+                    /* tag 9 - ackRequired */
+                    byte val;
+                    uint fromstate;
+
+                    len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value);
+                    len += ASN1.decode_unsigned8(buffer, offset + len, out val);
+                    EventData.ackRequired = Convert.ToBoolean(val);
+
+                    /* tag 10 - fromState */
+                    len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value);
+                    len += ASN1.decode_enumerated(buffer, offset + len, len_value, out fromstate);
+                    EventData.fromState = (BacnetEventNotificationData.BacnetEventStates)fromstate;
+                    break;
+                default:
+                    break;
+            }
+
+            /* tag 11 - toState */
+            if (ASN1.decode_is_context_tag(buffer, offset + len, 11))
+            {
+                uint toState;
+                len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value);
+                len += ASN1.decode_enumerated(buffer, offset + len, len_value, out toState);
+                EventData.toState = (BacnetEventNotificationData.BacnetEventStates)toState;
+            }
+            else
+                return -1;
+
+            // some work to do for Tag 12
+            // somebody want to do it ?
+
+            return len;
+
+        }
         private static void EncodeEventNotifyData(EncodeBuffer buffer, BacnetEventNotificationData data)
         {
             /* tag 0 - processIdentifier */

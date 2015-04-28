@@ -108,6 +108,49 @@ namespace Yabe
             itm.SubItems[4].Text = DateTime.Now.ToString("HH:mm:ss");
         }
 
+        private string EventTypeNiceName(BacnetEventNotificationData.BacnetEventStates state)
+        {
+            return state.ToString().Substring(12);
+        }
+        private void OnEventNotify(BacnetClient sender, BacnetAddress adr, BacnetEventNotificationData EventData)
+        {
+            if (InvokeRequired)
+            {
+                BeginInvoke(new BacnetClient.EventNotificationCallbackHandler(OnEventNotify), new object[] { sender, adr, EventData });
+                return;
+            }
+
+            string sub_key = adr.ToString() + ":" + EventData.initiatingObjectIdentifier.type + ":" + EventData.initiatingObjectIdentifier.instance + ":" + EventData.eventObjectIdentifier.type + ":" + EventData.eventObjectIdentifier.instance;
+           
+            ListViewItem itm=null;
+            // find the Event in the View
+            foreach (ListViewItem l in m_SubscriptionView.Items)
+            {
+                if (l.Tag.ToString() == sub_key)
+                {
+                    itm = l;
+                    break;
+                }
+            }
+
+            if (itm == null)
+            {
+                itm = m_SubscriptionView.Items.Add(adr.ToString());
+                itm.Tag = sub_key;
+                itm.SubItems.Add(EventData.initiatingObjectIdentifier.instance.ToString());
+                itm.SubItems.Add(EventData.eventObjectIdentifier.type + ":" + EventData.eventObjectIdentifier.instance);   //name
+                itm.SubItems.Add(EventTypeNiceName(EventData.fromState) + " to " + EventTypeNiceName(EventData.toState));
+                itm.SubItems.Add(EventData.timeStamp.Time.ToString("HH:mm:ss"));   //time
+                itm.SubItems.Add(EventData.notifyType.ToString());   //status
+            }
+            else
+            {
+                itm.SubItems[3].Text = EventTypeNiceName(EventData.fromState) + " to " + EventTypeNiceName(EventData.toState);
+                itm.SubItems[4].Text = EventData.timeStamp.Time.ToString("HH:mm:ss");   //time
+                itm.SubItems[5].Text = EventData.notifyType.ToString();   //status
+            }
+        }
+
         private void OnCOVNotification(BacnetClient sender, BacnetAddress adr, byte invoke_id, uint subscriberProcessIdentifier, BacnetObjectId initiatingDeviceIdentifier, BacnetObjectId monitoredObjectIdentifier, uint timeRemaining, bool need_confirm, ICollection<BacnetPropertyValue> values, BacnetMaxSegments max_segments)
         {
             string sub_key = adr.ToString() + ":" + initiatingDeviceIdentifier.instance + ":" + subscriberProcessIdentifier;
@@ -367,6 +410,7 @@ namespace Yabe
                     comm.MaxSegments = BacnetClient.GetSegmentsCount(Properties.Settings.Default.Segments_Max);
                     comm.OnIam += new BacnetClient.IamHandler(OnIam);
                     comm.OnCOVNotification += new BacnetClient.COVNotificationHandler(OnCOVNotification);
+                    comm.OnEventNotify += new BacnetClient.EventNotificationCallbackHandler(OnEventNotify);
                     comm.Start();
 
                     //start search
@@ -1613,27 +1657,30 @@ namespace Yabe
             if (m_SubscriptionView.SelectedItems.Count == 1)
             {
                 ListViewItem itm = m_SubscriptionView.SelectedItems[0];
-                Subscribtion sub = (Subscribtion)itm.Tag;
-                if (m_subscription_index.ContainsKey(sub.sub_key))
+                if (itm.Tag is Subscribtion)    // It's a subscription or not (Event/Alarm)
                 {
-                    //remove from device
-                    try
+                    Subscribtion sub = (Subscribtion)itm.Tag;
+                    if (m_subscription_index.ContainsKey(sub.sub_key))
                     {
-                        if (!sub.comm.SubscribeCOVRequest(sub.adr, sub.object_id, sub.subscribe_id, true, false, 0))
+                        //remove from device
+                        try
                         {
-                            MessageBox.Show(this, "Couldn't unsubscribe", "Communication Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                            return;
+                            if (!sub.comm.SubscribeCOVRequest(sub.adr, sub.object_id, sub.subscribe_id, true, false, 0))
+                            {
+                                MessageBox.Show(this, "Couldn't unsubscribe", "Communication Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                return;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show(this, "Couldn't delete subscribtion: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         }
                     }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show(this, "Couldn't delete subscribtion: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-
                     //remove from interface
                     m_SubscriptionView.Items.Remove(itm);
                     m_subscription_index.Remove(sub.sub_key);
                 }
+                m_SubscriptionView.Items.Remove(itm);
             }
         }
 
