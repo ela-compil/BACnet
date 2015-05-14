@@ -708,7 +708,13 @@ namespace System.IO.BACnet
                     // Modif FC
                     remote_address.RoutedSource = source;
 
-                    if (npdu_len >= 0)
+                    if ((npdu_function & BacnetNpduControls.NetworkLayerMessage) == BacnetNpduControls.NetworkLayerMessage)
+                    {
+                        Trace.TraceInformation("Network Layer message received");
+                        return; // Network Layer message discarded
+                    }
+
+                    if (npdu_len > 0) 
                     {
                         offset += npdu_len;
                         msg_length -= npdu_len;
@@ -716,7 +722,8 @@ namespace System.IO.BACnet
                         apdu_type = APDU.GetDecodedType(buffer, offset);
 
                         //APDU
-                        ProcessApdu(remote_address, apdu_type, buffer, offset, msg_length);
+                        if (msg_length > 0)
+                            ProcessApdu(remote_address, apdu_type, buffer, offset, msg_length);
                     }
                 }
             }

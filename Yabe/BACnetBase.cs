@@ -2469,6 +2469,8 @@ namespace System.IO.BACnet.Serialize
                 {
                     vendor_id = (ushort)((buffer[offset++] << 8) | (buffer[offset++] << 0));
                 }
+                else if (network_msg_type == BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK)
+                    offset += 2;  // Don't care about destination network adress
             }
 
             if (buffer[org_offset + 0] != BACNET_PROTOCOL_VERSION) return -1;
