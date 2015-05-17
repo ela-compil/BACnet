@@ -34,6 +34,7 @@ using System.Windows.Forms;
 using System.Diagnostics;
 using System.IO.BACnet;
 using System.IO;
+using System.IO.BACnet.Storage;
 
 namespace Yabe
 {
@@ -42,6 +43,8 @@ namespace Yabe
         private Dictionary<BacnetClient, BacnetDeviceLine> m_devices = new Dictionary<BacnetClient, BacnetDeviceLine>();
         private Dictionary<string, ListViewItem> m_subscription_index = new Dictionary<string, ListViewItem>();
         private uint m_next_subscription_id = 0;
+
+        private static DeviceStorage m_storage;
 
         private class BacnetDeviceLine
         {
@@ -322,6 +325,68 @@ namespace Yabe
             return null;
         }
 
+        // Only the see Yabe on the net
+        void OnWhoIs(BacnetClient sender, BacnetAddress adr, int low_limit, int high_limit)
+        {
+            uint myId =(uint) Properties.Settings.Default.YabeDeviceId;
+
+            if (low_limit != -1 && myId < low_limit) return;
+            else if (high_limit != -1 && myId > high_limit) return;
+            sender.Iam(myId, new BacnetSegmentations());
+        }
+
+        private void OnReadPropertyRequest(BacnetClient sender, BacnetAddress adr, byte invoke_id, BacnetObjectId object_id, BacnetPropertyReference property, BacnetMaxSegments max_segments)
+        {
+            lock (m_storage)
+            {
+                try
+                {
+                    IList<BacnetValue> value;
+                    DeviceStorage.ErrorCodes code = m_storage.ReadProperty(object_id, (BacnetPropertyIds)property.propertyIdentifier, property.propertyArrayIndex, out value);
+                    if (code == DeviceStorage.ErrorCodes.Good)
+                        sender.ReadPropertyResponse(adr, invoke_id, sender.GetSegmentBuffer(max_segments), object_id, property, value);
+                    else
+                        sender.ErrorResponse(adr, BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROPERTY, invoke_id, BacnetErrorClasses.ERROR_CLASS_DEVICE, BacnetErrorCodes.ERROR_CODE_OTHER);
+                }
+                catch (Exception)
+                {
+                    sender.ErrorResponse(adr, BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROPERTY, invoke_id, BacnetErrorClasses.ERROR_CLASS_DEVICE, BacnetErrorCodes.ERROR_CODE_OTHER);
+                }
+            }
+        }
+        private static void OnReadPropertyMultipleRequest(BacnetClient sender, BacnetAddress adr, byte invoke_id, IList<BacnetReadAccessSpecification> properties, BacnetMaxSegments max_segments)
+        {
+            lock (m_storage)
+            {
+                try
+                {
+                    IList<BacnetPropertyValue> value;
+                    List<BacnetReadAccessResult> values = new List<BacnetReadAccessResult>();
+                    foreach (BacnetReadAccessSpecification p in properties)
+                    {
+                        if (p.propertyReferences.Count == 1 && p.propertyReferences[0].propertyIdentifier == (uint)BacnetPropertyIds.PROP_ALL)
+                        {
+                            if (!m_storage.ReadPropertyAll(p.objectIdentifier, out value))
+                            {
+                                sender.ErrorResponse(adr, BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROP_MULTIPLE, invoke_id, BacnetErrorClasses.ERROR_CLASS_OBJECT, BacnetErrorCodes.ERROR_CODE_UNKNOWN_OBJECT);
+                                return;
+                            }
+                        }
+                        else
+                            m_storage.ReadPropertyMultiple(p.objectIdentifier, p.propertyReferences, out value);
+                        values.Add(new BacnetReadAccessResult(p.objectIdentifier, value));
+                    }
+
+                    sender.ReadPropertyMultipleResponse(adr, invoke_id, sender.GetSegmentBuffer(max_segments), values);
+
+                }
+                catch (Exception)
+                {
+                    sender.ErrorResponse(adr, BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROP_MULTIPLE, invoke_id, BacnetErrorClasses.ERROR_CLASS_DEVICE, BacnetErrorCodes.ERROR_CODE_OTHER);
+                }
+            }
+        }
+
         void OnIam(BacnetClient sender, BacnetAddress adr, uint device_id, uint max_apdu, BacnetSegmentations segmentation, ushort vendor_id)
         {
             KeyValuePair<BacnetAddress, uint> new_entry = new KeyValuePair<BacnetAddress, uint>(adr, device_id);
@@ -363,7 +428,8 @@ namespace Yabe
             MessageBox.Show(this, "Yet Another Bacnet Explorer - Yabe\nVersion " + this.GetType().Assembly.GetName().Version + "\nBy Morten Kvistgaard - Copyright 2014\n" +
                 "\nReference: http://bacnet.sourceforge.net/" + 
                 "\nReference: http://www.unified-automation.com/products/development-tools/uaexpert.html" +
-                "\nReference: http://www.famfamfam.com/", "About", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                "\nReference: http://www.famfamfam.com/"+
+                "\nReference: http://sourceforge.net/projects/zedgraph/", "About", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void quitToolStripMenuItem_Click(object sender, EventArgs e)
@@ -408,7 +474,27 @@ namespace Yabe
                     comm.Retries = (int)Properties.Settings.Default.DefaultRetries;
                     comm.Timeout = (int)Properties.Settings.Default.DefaultTimeout;
                     comm.MaxSegments = BacnetClient.GetSegmentsCount(Properties.Settings.Default.Segments_Max);
-                    comm.OnIam += new BacnetClient.IamHandler(OnIam);
+                    if (Properties.Settings.Default.YabeDeviceId >= 0) // If Yabe get a Device id
+                    {
+                        if (m_storage == null)
+                        {
+                            // Load descriptor from the embedded xml resource
+                            m_storage = m_storage = DeviceStorage.Load("Yabe.YabeDeviceDescriptor.xml", (uint)Properties.Settings.Default.YabeDeviceId);
+                            // A fast way to change the PROP_OBJECT_LIST
+                            Property Prop = Array.Find<Property>(m_storage.Objects[0].Properties, p => p.Id == BacnetPropertyIds.PROP_OBJECT_LIST);
+                            Prop.Value[0] = "OBJECT_DEVICE:" + Properties.Settings.Default.YabeDeviceId.ToString();
+                            // change PROP_FIRMWARE_REVISION
+                            Prop = Array.Find<Property>(m_storage.Objects[0].Properties, p => p.Id == BacnetPropertyIds.PROP_FIRMWARE_REVISION);
+                            Prop.Value[0] = this.GetType().Assembly.GetName().Version.ToString();
+                            // change PROP_APPLICATION_SOFTWARE_VERSION
+                            Prop = Array.Find<Property>(m_storage.Objects[0].Properties, p => p.Id == BacnetPropertyIds.PROP_APPLICATION_SOFTWARE_VERSION);
+                            Prop.Value[0] = this.GetType().Assembly.GetName().Version.ToString();
+                        }
+                        comm.OnIam += new BacnetClient.IamHandler(OnIam);
+                        comm.OnReadPropertyRequest += new BacnetClient.ReadPropertyRequestHandler(OnReadPropertyRequest);
+                        comm.OnReadPropertyMultipleRequest += new BacnetClient.ReadPropertyMultipleRequestHandler(OnReadPropertyMultipleRequest);
+                    }
+                    comm.OnWhoIs += new BacnetClient.WhoIsHandler(OnWhoIs);
                     comm.OnCOVNotification += new BacnetClient.COVNotificationHandler(OnCOVNotification);
                     comm.OnEventNotify += new BacnetClient.EventNotificationCallbackHandler(OnEventNotify);
                     comm.Start();

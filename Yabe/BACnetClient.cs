@@ -719,11 +719,12 @@ namespace System.IO.BACnet
                         offset += npdu_len;
                         msg_length -= npdu_len;
                         BacnetPduTypes apdu_type;
-                        apdu_type = APDU.GetDecodedType(buffer, offset);
-
-                        //APDU
                         if (msg_length > 0)
+                        {
+                            apdu_type = APDU.GetDecodedType(buffer, offset);
+                            //APDU
                             ProcessApdu(remote_address, apdu_type, buffer, offset, msg_length);
+                        }
                     }
                 }
             }

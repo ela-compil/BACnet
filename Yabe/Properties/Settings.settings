@@ -83,5 +83,8 @@
     <Setting Name="DefaultWritePriority" Type="System.UInt32" Scope="User">
       <Value Profile="(Default)">16</Value>
     </Setting>
+    <Setting Name="YabeDeviceId" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">-1</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

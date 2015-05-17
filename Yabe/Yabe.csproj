@@ -164,6 +164,9 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="YabeDeviceDescriptor.xml">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <None Include="Resources\cross.png" />
     <None Include="Resources\add.png" />
     <None Include="Resources\note.png" />

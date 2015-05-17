@@ -346,5 +346,17 @@ namespace Yabe.Properties {
                 this["DefaultWritePriority"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("-1")]
+        public int YabeDeviceId {
+            get {
+                return ((int)(this["YabeDeviceId"]));
+            }
+            set {
+                this["YabeDeviceId"] = value;
+            }
+        }
     }
 }
