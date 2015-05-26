@@ -490,11 +490,11 @@ namespace Yabe
                             Prop = Array.Find<Property>(m_storage.Objects[0].Properties, p => p.Id == BacnetPropertyIds.PROP_APPLICATION_SOFTWARE_VERSION);
                             Prop.Value[0] = this.GetType().Assembly.GetName().Version.ToString();
                         }
-                        comm.OnIam += new BacnetClient.IamHandler(OnIam);
+                        comm.OnWhoIs += new BacnetClient.WhoIsHandler(OnWhoIs); 
                         comm.OnReadPropertyRequest += new BacnetClient.ReadPropertyRequestHandler(OnReadPropertyRequest);
                         comm.OnReadPropertyMultipleRequest += new BacnetClient.ReadPropertyMultipleRequestHandler(OnReadPropertyMultipleRequest);
                     }
-                    comm.OnWhoIs += new BacnetClient.WhoIsHandler(OnWhoIs);
+                    comm.OnIam += new BacnetClient.IamHandler(OnIam);
                     comm.OnCOVNotification += new BacnetClient.COVNotificationHandler(OnCOVNotification);
                     comm.OnEventNotify += new BacnetClient.EventNotificationCallbackHandler(OnEventNotify);
                     comm.Start();
