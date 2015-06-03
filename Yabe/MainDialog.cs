@@ -893,16 +893,16 @@ namespace Yabe
                         {
                             if (e.Node.ToolTipText=="")   // already update with the device name
                             {
-                                IList<BacnetValue> values;
-                                if (comm.ReadPropertyRequest(adr, bobj_id, BacnetPropertyIds.PROP_OBJECT_NAME, out values))
+                                try
                                 {
-                                    try
+                                    IList<BacnetValue> values;
+                                    if (comm.ReadPropertyRequest(adr, bobj_id, BacnetPropertyIds.PROP_OBJECT_NAME, out values))
                                     {
-                                        e.Node.ToolTipText = e.Node.Text;   // IP or MSTP node id -> in the Tooltip
-                                        e.Node.Text = values[0].ToString() + " ["+device_id.ToString()+"] ";  // change @ by the Name                                       
+                                            e.Node.ToolTipText = e.Node.Text;   // IP or MSTP node id -> in the Tooltip
+                                            e.Node.Text = values[0].ToString() + " ["+device_id.ToString()+"] ";  // change @ by the Name                                       
                                     }
-                                    catch { }
                                 }
+                                catch { }
                             }
                          }                         
                     }
