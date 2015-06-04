@@ -2,6 +2,11 @@
 				Some codes based on Yabe stack
 ------------------------------------------------------------------------------------------------
 
+LibBacnet
+	Contains all the classes for a new development in the compiled file : LibBacnet.Dll
+	could be useful for instance for Visual Basic programmers (or others)
+	Ready for both client and server applications
+
 BasicReadWrite
 	Send a Whois to all devices on the net
 	Get back all the Iam responses
