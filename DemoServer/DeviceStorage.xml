@@ -25,10 +25,10 @@
           <Value>GNU</Value>
         </Property>
         <Property Id="PROP_FIRMWARE_REVISION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
-          <Value>0.9.7</Value>
+          <Value>0.9.8</Value>
         </Property>
         <Property Id="PROP_APPLICATION_SOFTWARE_VERSION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
-          <Value>0.9.7</Value>
+          <Value>0.9.8</Value>
         </Property>
         <Property Id="PROP_PROTOCOL_VERSION" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
           <Value>1</Value>
@@ -323,6 +323,43 @@
         </Property>
       </Properties>
     </Object>
+    <Object Type="OBJECT_TRENDLOG" Instance="0">
+      <Properties>
+        <Property Id="PROP_DESCRIPTION" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>TrendLog Test</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
+          <Value>OBJECT_TRENDLOG:0</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_NAME" Tag="BACNET_APPLICATION_TAG_CHARACTER_STRING">
+          <Value>TestLog</Value>
+        </Property>
+        <Property Id="PROP_OBJECT_TYPE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>20</Value>
+        </Property>
+        <Property Id="PROP_BUFFER_SIZE" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>100</Value>
+        </Property>
+        <Property Id="PROP_STOP_WHEN_FULL" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>False</Value>
+        </Property>
+        <Property Id="PROP_ENABLE" Tag="BACNET_APPLICATION_TAG_BOOLEAN">
+          <Value>True</Value>
+        </Property>
+        <Property Id="PROP_TOTAL_RECORD_COUNT" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>100</Value>
+        </Property>
+        <Property Id="PROP_RECORD_COUNT" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
+          <Value>100</Value>
+        </Property>
+        <Property Id="PROP_LOG_BUFFER" Tag="BACNET_APPLICATION_TAG_LOG_RECORD">
+          <!-- Will be auto generated -->
+        </Property>
+        <Property Id="PROP_EVENT_STATE" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
+          <Value>0</Value>
+        </Property>
+      </Properties>
+    </Object>
 	  <Object Type="OBJECT_FILE" Instance="0">
       <Properties>
         <Property Id="PROP_OBJECT_IDENTIFIER" Tag="BACNET_APPLICATION_TAG_OBJECT_ID">
@@ -449,6 +486,7 @@
           <Value>OBJECT_MULTI_STATE_VALUE:333</Value>
           <Value>OBJECT_BITSTRING_VALUE:33333</Value>
           <Value>OBJECT_OCTETSTRING_VALUE:0</Value>
+          <Value>OBJECT_TRENDLOG:0</Value>
           <Value>OBJECT_FILE:0</Value>
           <Value>OBJECT_STRUCTURED_VIEW:1</Value>
         </Property>

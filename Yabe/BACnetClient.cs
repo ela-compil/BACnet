@@ -171,6 +171,8 @@ namespace System.IO.BACnet
         public event DeviceCommunicationControlRequestHandler OnDeviceCommunicationControl;
         public delegate void ReinitializedRequestHandler(BacnetClient sender, BacnetAddress adr, byte invoke_id, BacnetReinitializedStates state, string password, BacnetMaxSegments max_segments);
         public event ReinitializedRequestHandler OnReinitializedDevice;
+        public delegate void ReadRangeHandler(BacnetClient sender, BacnetAddress adr, byte invoke_id, BacnetObjectId objectId, BacnetPropertyReference property, BacnetReadRangeRequestTypes requestType, uint position, DateTime time, int count, BacnetMaxSegments max_segments);
+        public event ReadRangeHandler OnReadRange;
 
         protected void ProcessConfirmedServiceRequest(BacnetAddress adr, BacnetPduTypes type, BacnetConfirmedServices service, BacnetMaxSegments max_segments, BacnetMaxAdpu max_adpu, byte invoke_id, byte[] buffer, int offset, int length)
         {
@@ -311,6 +313,25 @@ namespace System.IO.BACnet
                     else
                         Trace.TraceWarning("Couldn't decode Event/Alarm Notification");
                 }
+                else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_READ_RANGE && OnReadRange != null)
+                {
+                    BacnetObjectId objectId;
+                    BacnetPropertyReference property;
+                    BacnetReadRangeRequestTypes requestType;
+                    uint position;
+                    DateTime time;
+                    int count;
+                    if (Services.DecodeReadRange(buffer, offset, length, out objectId, out property, out requestType, out position, out time, out count) >= 0)
+                    {
+                        OnReadRange(this, adr, invoke_id, objectId, property, requestType, position, time, count, max_segments);
+                    }
+                    else
+                        Trace.TraceWarning("Couldn't decode ReadRange");
+                }
+                else
+                {
+                    Trace.TraceWarning("Confirmed service not handled: " + service.ToString());
+                }
             }
             catch (Exception ex)
             {
@@ -394,6 +415,10 @@ namespace System.IO.BACnet
                     }
                     else
                         Trace.TraceWarning("Couldn't decode Event/Alarm Notification");
+                }
+                else
+                {
+                    Trace.TraceWarning("Unconfirmed service not handled: " + service.ToString());
                 }
             }
             catch (Exception ex)
@@ -996,6 +1021,7 @@ namespace System.IO.BACnet
             file_buffer_offset = -1;
             return false;
         }
+
         // Fc
         public IAsyncResult BeginReadRangeRequest(BacnetAddress adr, BacnetObjectId object_id,  uint idxBegin, uint Quantity, bool wait_for_transmit, byte invoke_id = 0)
         {
@@ -1006,7 +1032,7 @@ namespace System.IO.BACnet
             EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);
             NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, adr.RoutedSource, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, 0);
             APDU.EncodeConfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST | (m_max_segments != BacnetMaxSegments.MAX_SEG0 ? BacnetPduTypes.SEGMENTED_RESPONSE_ACCEPTED : 0), BacnetConfirmedServices.SERVICE_CONFIRMED_READ_RANGE, m_max_segments, m_client.MaxAdpuLength, invoke_id, 0, 0);
-            Services.EncodeReadRange(b, object_id, (uint)BacnetPropertyIds.PROP_LOG_BUFFER, ASN1.BACNET_ARRAY_ALL, Services.BacnetReadRangeRequestTypes.RR_BY_POSITION, idxBegin, DateTime.Now, (int)Quantity);           
+            Services.EncodeReadRange(b, object_id, (uint)BacnetPropertyIds.PROP_LOG_BUFFER, ASN1.BACNET_ARRAY_ALL, BacnetReadRangeRequestTypes.RR_BY_POSITION, idxBegin, DateTime.Now, (int)Quantity);           
             //send
             BacnetAsyncResult ret = new BacnetAsyncResult(this, adr, invoke_id, b.buffer, b.offset - m_client.HeaderLength, wait_for_transmit, m_transmit_timeout);
             ret.Resend();
@@ -1014,6 +1040,7 @@ namespace System.IO.BACnet
             return ret;
 
         }
+
         // Fc
         public void EndReadRangeRequest(IAsyncResult result, out byte[] trendbuffer, out uint ItemCount, out Exception ex)
         {
@@ -1034,6 +1061,7 @@ namespace System.IO.BACnet
 
             res.Dispose();
         }
+
         // Fc
         public bool ReadRangeRequest(BacnetAddress adr, BacnetObjectId object_id, uint idxBegin, ref uint Quantity, out byte[] Range, byte invoke_id = 0)
         {
@@ -1762,6 +1790,14 @@ namespace System.IO.BACnet
             SendComplexAck(adr, invoke_id, segmentation, BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROP_MULTIPLE, (b) => 
             { 
                 Services.EncodeReadPropertyMultipleAcknowledge(b, values); 
+            });
+        }
+
+        public void ReadRangeResponse(BacnetAddress adr, byte invoke_id, Segmentation segmentation, BacnetObjectId object_id, BacnetPropertyReference property, BacnetResultFlags status, uint item_count, byte[] application_data, BacnetReadRangeRequestTypes request_type, uint first_sequence_no)
+        {
+            SendComplexAck(adr, invoke_id, segmentation, BacnetConfirmedServices.SERVICE_CONFIRMED_READ_RANGE, (b) =>
+            {
+                Services.EncodeReadRangeAcknowledge(b, object_id, property.propertyIdentifier, property.propertyArrayIndex, BacnetBitString.ConvertFromInt((uint)status), item_count, application_data, request_type, first_sequence_no);
             });
         }
 

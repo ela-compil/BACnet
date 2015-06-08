@@ -335,6 +335,11 @@ namespace Yabe
             sender.Iam(myId, new BacnetSegmentations());
         }
 
+        void OnWhoIsIgnore(BacnetClient sender, BacnetAddress adr, int low_limit, int high_limit)
+        {
+            //ignore whois responses from other devices (or loopbacks)
+        }
+
         private void OnReadPropertyRequest(BacnetClient sender, BacnetAddress adr, byte invoke_id, BacnetObjectId object_id, BacnetPropertyReference property, BacnetMaxSegments max_segments)
         {
             lock (m_storage)
@@ -490,9 +495,13 @@ namespace Yabe
                             Prop = Array.Find<Property>(m_storage.Objects[0].Properties, p => p.Id == BacnetPropertyIds.PROP_APPLICATION_SOFTWARE_VERSION);
                             Prop.Value[0] = this.GetType().Assembly.GetName().Version.ToString();
                         }
-                        comm.OnWhoIs += new BacnetClient.WhoIsHandler(OnWhoIs); 
+                        comm.OnWhoIs += new BacnetClient.WhoIsHandler(OnWhoIs);
                         comm.OnReadPropertyRequest += new BacnetClient.ReadPropertyRequestHandler(OnReadPropertyRequest);
                         comm.OnReadPropertyMultipleRequest += new BacnetClient.ReadPropertyMultipleRequestHandler(OnReadPropertyMultipleRequest);
+                    }
+                    else
+                    {
+                        comm.OnWhoIs += new BacnetClient.WhoIsHandler(OnWhoIsIgnore);
                     }
                     comm.OnIam += new BacnetClient.IamHandler(OnIam);
                     comm.OnCOVNotification += new BacnetClient.COVNotificationHandler(OnCOVNotification);
@@ -702,6 +711,12 @@ namespace Yabe
                     break;
                 case BacnetObjectTypes.OBJECT_STRUCTURED_VIEW:
                     node.ImageIndex = 11;
+                    break;
+                case BacnetObjectTypes.OBJECT_TRENDLOG:
+                    node.ImageIndex = 12;
+                    break;
+                case BacnetObjectTypes.OBJECT_TREND_LOG_MULTIPLE:
+                    node.ImageIndex = 12;
                     break;
                 default:
                     node.ImageIndex = 4;
@@ -1558,7 +1573,10 @@ namespace Yabe
                 new TrendLogDisplay(comm, adr, object_id).ShowDialog();
 
             }
-            catch {}
+            catch(Exception ex)
+            {
+                Trace.TraceError("Error during TrendLog: " + ex.Message);
+            }
         }
         // en cours
         private void showScheduleToolStripMenuItem_Click(object sender, EventArgs e)

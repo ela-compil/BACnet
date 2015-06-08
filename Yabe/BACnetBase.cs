@@ -75,6 +75,15 @@ namespace System.IO.BACnet
         MAX_DEVICE_STATUS = 6
     };
 
+    [Flags]
+    public enum BacnetResultFlags
+    {
+        NONE = 0,
+        FIRST_ITEM = 1,
+        LAST_ITEM = 2,
+        MORE_ITEMS = 4,
+    }
+
     public enum BacnetRejectReasons
     {
         REJECT_REASON_OTHER = 0,
@@ -841,6 +850,8 @@ namespace System.IO.BACnet
         BACNET_APPLICATION_TAG_LIGHTING_COMMAND,
         BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC_DECODED,
         BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC_ENCODED,
+        /* BACnetLogRecord */
+        BACNET_APPLICATION_TAG_LOG_RECORD,
     };
 
     public enum BacnetCharacterStringEncodings
@@ -1327,6 +1338,15 @@ namespace System.IO.BACnet
             this.error_class = error_class;
             this.error_code = error_code;
         }
+        public BacnetError(uint error_class, uint error_code)
+        {
+            this.error_class = (BacnetErrorClasses)error_class;
+            this.error_code = (BacnetErrorCodes)error_code;
+        }
+        public override string ToString()
+        {
+            return error_class.ToString() + ": " + error_code.ToString();
+        }
     }
 
     public struct BacnetBitString
@@ -1386,7 +1406,54 @@ namespace System.IO.BACnet
         {
             return BitConverter.ToUInt32(value, 0);
         }
+
+        public static BacnetBitString ConvertFromInt(uint value)
+        {
+            BacnetBitString ret = new BacnetBitString();
+            ret.value=BitConverter.GetBytes(value);
+            ret.bits_used = (byte)Math.Ceiling(Math.Log(value, 2));
+            return ret;
+        }
     };
+
+    public enum BacnetTrendLogValueType : byte
+    {
+        // Copyright (C) 2009 Peter Mc Shane in Steve Karg Stack, trendlog.h
+        // Thank's to it's encoding sample, very usefull for this decoding work
+        TL_TYPE_STATUS = 0,
+        TL_TYPE_BOOL = 1,
+        TL_TYPE_REAL = 2,
+        TL_TYPE_ENUM = 3,
+        TL_TYPE_UNSIGN = 4,
+        TL_TYPE_SIGN = 5,
+        TL_TYPE_BITS = 6,
+        TL_TYPE_NULL = 7,
+        TL_TYPE_ERROR = 8,
+        TL_TYPE_DELTA = 9,
+        TL_TYPE_ANY = 10
+    }
+
+    public struct BacnetLogRecord
+    {
+        public DateTime timestamp;
+
+        /* logDatum: CHOICE { */
+        public BacnetTrendLogValueType type;
+        public BacnetBitString log_status;
+        public bool boolean_value;
+        public float real_value;
+        public uint enum_value;
+        public uint unsigned_value;
+        public int signed_value;
+        public BacnetBitString bitstring_value;
+        public bool null_value;
+        public BacnetError failure;
+        public float time_change;
+        public object any_value;
+        /* } */
+
+        public BacnetBitString statusFlags;
+    }
 
     public enum BacnetAddressTypes
     {
@@ -5002,6 +5069,14 @@ namespace System.IO.BACnet.Serialize
         NotEnoughBuffer = 1,
     }
 
+    public enum BacnetReadRangeRequestTypes
+    {
+        RR_BY_POSITION = 1,
+        RR_BY_SEQUENCE = 2,
+        RR_BY_TIME = 4,
+        RR_READ_ALL = 8,
+    }
+
     public class Services
     {
         public static void EncodeIamBroadcast(EncodeBuffer buffer, UInt32 device_id, uint max_apdu, BacnetSegmentations segmentation, UInt16 vendor_id)
@@ -6186,14 +6261,6 @@ namespace System.IO.BACnet.Serialize
             return len;
         }
 
-        public enum BacnetReadRangeRequestTypes
-        {
-            RR_BY_POSITION = 1,
-            RR_BY_SEQUENCE = 2,
-            RR_BY_TIME = 4,
-            RR_READ_ALL = 8,
-        }
-
         public static void EncodeReadRange(EncodeBuffer buffer, BacnetObjectId object_id, uint property_id, uint arrayIndex, BacnetReadRangeRequestTypes requestType, uint position, DateTime time, int count)
         {
             ASN1.encode_context_object_id(buffer, 0, object_id.type, object_id.instance);
@@ -6238,6 +6305,79 @@ namespace System.IO.BACnet.Serialize
             }
         }
 
+        public static int DecodeReadRange(byte[] buffer, int offset, int apdu_len, out BacnetObjectId object_id, out BacnetPropertyReference property, out BacnetReadRangeRequestTypes requestType, out uint position, out DateTime time, out int count)
+        {
+            int len = 0;
+            ushort type = 0;
+            byte tag_number = 0;
+            uint len_value_type = 0;
+
+            object_id = new BacnetObjectId();
+            property = new BacnetPropertyReference();
+            requestType = BacnetReadRangeRequestTypes.RR_READ_ALL;
+            position = 0;
+            time = new DateTime(1, 1, 1);
+            count = -1;
+
+            /* Tag 0: Object ID          */
+            if (!ASN1.decode_is_context_tag(buffer, offset + len, 0))
+                return -1;
+            len++;
+            len += ASN1.decode_object_id(buffer, offset + len, out type, out object_id.instance);
+            object_id.type = (BacnetObjectTypes)type;
+            /* Tag 1: Property ID */
+            len +=
+                ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value_type);
+            if (tag_number != 1)
+                return -1;
+            len += ASN1.decode_enumerated(buffer, offset + len, len_value_type, out property.propertyIdentifier);
+
+            /* Tag 2: Optional Array Index */
+            if (len < apdu_len && ASN1.decode_is_context_tag(buffer, offset + len, 0))
+            {
+                len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value_type);
+                len += ASN1.decode_unsigned(buffer, offset + len, len_value_type, out property.propertyArrayIndex);
+            }
+            else
+                property.propertyArrayIndex = ASN1.BACNET_ARRAY_ALL;
+
+            /* optional request type */
+            if (len < apdu_len)
+            {
+                len += ASN1.decode_tag_number(buffer, offset + len, out tag_number);    //opening tag
+                switch (tag_number)
+                {
+                    case 3:
+                        requestType = BacnetReadRangeRequestTypes.RR_BY_POSITION;
+                        len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value_type);
+                        len += ASN1.decode_unsigned(buffer, offset + len, len_value_type, out position);
+                        len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value_type);
+                        len += ASN1.decode_signed(buffer, offset + len, len_value_type, out count);
+                        break;
+                    case 6:
+                        requestType = BacnetReadRangeRequestTypes.RR_BY_SEQUENCE;
+                        len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value_type);
+                        len += ASN1.decode_unsigned(buffer, offset + len, len_value_type, out position);
+                        len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value_type);
+                        len += ASN1.decode_signed(buffer, offset + len, len_value_type, out count);
+                        break;
+                    case 7:
+                        requestType = BacnetReadRangeRequestTypes.RR_BY_TIME;
+                        DateTime date;
+                        len += ASN1.decode_application_date(buffer, offset + len, out date);
+                        len += ASN1.decode_application_time(buffer, offset + len, out time);
+                        time = new DateTime(date.Year, date.Month, date.Day, time.Hour, time.Minute, time.Second, time.Millisecond);
+                        len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value_type);
+                        len += ASN1.decode_signed(buffer, offset + len, len_value_type, out count);
+                        break;
+                    default:
+                        return -1;  //don't know this type yet
+                }
+                len += ASN1.decode_tag_number(buffer, offset + len, out tag_number);    //closing tag
+            }
+            return len;
+        }
+
         public static void EncodeReadRangeAcknowledge(EncodeBuffer buffer, BacnetObjectId object_id, uint property_id, uint arrayIndex, BacnetBitString ResultFlags, uint ItemCount, byte[] application_data, BacnetReadRangeRequestTypes requestType, uint FirstSequence)
         {
             /* service ack follows */
@@ -6268,6 +6408,7 @@ namespace System.IO.BACnet.Serialize
                 ASN1.encode_context_unsigned(buffer, 6, FirstSequence);
             }
         }
+
         // FC
         public static uint DecodeReadRangeAcknowledge(byte[] buffer, int offset, int apdu_len, out byte[] RangeBuffer)
         {
@@ -7014,6 +7155,72 @@ namespace System.IO.BACnet.Serialize
             error_code = (BacnetErrorCodes)tmp;
 
             return offset - org_offset;
+        }
+
+        public static void EncodeLogRecord(EncodeBuffer buffer, BacnetLogRecord record)
+        {
+            /* Tag 0: timestamp */
+            ASN1.encode_opening_tag(buffer, 0);
+            ASN1.encode_application_date(buffer, record.timestamp);
+            ASN1.encode_application_time(buffer, record.timestamp);
+            ASN1.encode_closing_tag(buffer, 0);
+
+            /* Tag 1: logDatum */
+            if (record.type != BacnetTrendLogValueType.TL_TYPE_NULL)
+            {
+                ASN1.encode_opening_tag(buffer, 1);
+                EncodeBuffer tmp1 = buffer.Copy();
+                ASN1.encode_tag(buffer, (byte)record.type, false, 0);       //dummy
+                EncodeBuffer tmp2 = buffer.Copy();
+                switch (record.type)
+                {
+                    case BacnetTrendLogValueType.TL_TYPE_ANY:
+                        throw new NotImplementedException();
+                    case BacnetTrendLogValueType.TL_TYPE_BITS:
+                        ASN1.encode_bitstring(buffer, record.bitstring_value);
+                        break;
+                    case BacnetTrendLogValueType.TL_TYPE_BOOL:
+                        buffer.Add(record.boolean_value ? (byte)1 : (byte)0);
+                        break;
+                    case BacnetTrendLogValueType.TL_TYPE_DELTA:
+                        ASN1.encode_bacnet_real(buffer, record.time_change);
+                        break;
+                    case BacnetTrendLogValueType.TL_TYPE_ENUM:
+                        ASN1.encode_application_enumerated(buffer, record.enum_value);
+                        break;
+                    case BacnetTrendLogValueType.TL_TYPE_ERROR:
+                        Services.EncodeError(buffer, record.failure.error_class, record.failure.error_code);
+                        break;
+                    case BacnetTrendLogValueType.TL_TYPE_REAL:
+                        ASN1.encode_bacnet_real(buffer, record.real_value);
+                        break;
+                    case BacnetTrendLogValueType.TL_TYPE_SIGN:
+                        ASN1.encode_bacnet_signed(buffer, record.signed_value);
+                        break;
+                    case BacnetTrendLogValueType.TL_TYPE_STATUS:
+                        ASN1.encode_bitstring(buffer, record.log_status);
+                        break;
+                    case BacnetTrendLogValueType.TL_TYPE_UNSIGN:
+                        ASN1.encode_bacnet_unsigned(buffer, record.unsigned_value);
+                        break;
+                }
+                ASN1.encode_tag(tmp1, (byte)record.type, false, (uint)tmp2.GetDiff(buffer));
+                ASN1.encode_closing_tag(buffer, 1);
+            }
+
+            /* Tag 2: status */
+            if (record.statusFlags.bits_used > 0)
+            {
+                ASN1.encode_opening_tag(buffer, 2);
+                ASN1.encode_application_bitstring(buffer, record.statusFlags);
+                ASN1.encode_closing_tag(buffer, 2);
+            }
+        }
+
+        public static int DecodeLogRecord(byte[] buffer, int offset, int length, out BacnetLogRecord record)
+        {
+            record = new BacnetLogRecord();
+            throw new NotImplementedException();
         }
     }
 }

@@ -36,6 +36,7 @@ using System.IO.BACnet.Serialize;
 using System.Threading;
 using ZedGraph;
 using System.IO;
+using System.Diagnostics;
 
 namespace Yabe
 {
@@ -73,10 +74,10 @@ namespace Yabe
             // to set antialias for fonts ZedGraph.FontSpec.Default.IsAntiAlias=true can be used
 
             Logsize = ReadRangeSize(comm, adr, object_id);
+            if (Logsize < 0) Logsize = 0;
             m_progresslabel.Text = "Downloads of " + Logsize + " records in progress (0%)";
             m_progressBar.Maximum = Logsize;
 
-            ReadCurveName(comm, adr, object_id);
             m_zedGraphCtl.GraphPane.Title.Text = ReadCurveName(comm, adr, object_id);
 
             // get the number of Trend in the Log, 1 for basic TrendLog
@@ -163,6 +164,7 @@ namespace Yabe
             }
             catch
             {
+                Trace.TraceError("Couldn't load PROP_RECORD_COUNT from TendLog object");
                 return -1;
             }
         }
@@ -207,11 +209,7 @@ namespace Yabe
         // modification : it will lost some values and duplicate some others.
         //
         private void DownloadFullTrendLog()
-        {
-            // I'm a rookie with lambda expressions, but I like it !
-            // It's the way data as to be given to me by the TrendLogDecoder
-            Action<int, DateTime, double> DataStorage = (idx, timestamp, val) => Pointslists[idx].Add(new XDate(timestamp), val);
-            
+        {   
             uint ItemCount;
             int Idx;
 
@@ -219,6 +217,20 @@ namespace Yabe
             {
                 // First index is 1
                 Idx = 1;
+
+                // I'm a rookie with lambda expressions, but I like it !
+                // It's the way data as to be given to me by the TrendLogDecoder
+                Action<int, DateTime, BacnetTrendLogValueType, object> DataStorage = (idx, timestamp, type, val) => 
+                { 
+                    if(val != null && val.GetType() == typeof(double))
+                        Pointslists[idx].Add(new XDate(timestamp), (double)val);
+                    else
+                        Pointslists[idx].Add(new XDate(timestamp), double.NaN);
+
+                    AddToList(Idx, timestamp, type, val);
+                    Idx++;
+                };
+
                 do
                 {
                     byte[] TrendBuffer;
@@ -228,12 +240,14 @@ namespace Yabe
 
                     if ((comm.ReadRangeRequest(adr, object_id, (uint)Idx, ref ItemCount, out TrendBuffer) == false) || (ItemCount == 0))
                     {
+                        Trace.TraceError("Couldn't load log data");
                         BeginInvoke(new Action<bool>(UpdateEnd), false);
                         return;
                     }
 
                     if (TrendLogDecoder.DecodeTrendBuffer(TrendBuffer, ItemCount, CurvesNumber, DataStorage) != ItemCount)
                     {
+                        Trace.TraceError("Couldn't decode log data");
                         BeginInvoke(new Action<bool>(UpdateEnd), false);
                         return;
                     }
@@ -241,14 +255,13 @@ namespace Yabe
                     // Update progress bar
                     BeginInvoke(new Action<int>(UpdateProgress), (int)ItemCount);
 
-                    Idx += (int)ItemCount;
-
                 } while (((Idx + 1) < Logsize)&&(StopDownload==false));
 
                 BeginInvoke(new Action<bool>(UpdateEnd), true);
             }
-            catch
+            catch(Exception ex)
             {
+                Trace.TraceError("Error during log data: " + ex.Message);
                 try
                 {
                     // Exception if Form is closed
@@ -336,23 +349,15 @@ namespace Yabe
         }
         #endregion
 
-    }
-
-    public enum BacnetTrendLogValueType : byte
-    {
-        // Copyright (C) 2009 Peter Mc Shane in Steve Karg Stack, trendlog.h
-        // Thank's to it's encoding sample, very usefull for this decoding work
-        TL_TYPE_STATUS = 0,
-        TL_TYPE_BOOL = 1,
-        TL_TYPE_REAL = 2,
-        TL_TYPE_ENUM = 3,
-        TL_TYPE_UNSIGN = 4,
-        TL_TYPE_SIGN = 5,
-        TL_TYPE_BITS = 6,
-        TL_TYPE_NULL = 7,
-        TL_TYPE_ERROR = 8,
-        TL_TYPE_DELTA = 9,
-        TL_TYPE_ANY = 10
+        private void AddToList(int sequence_no, DateTime dt, BacnetTrendLogValueType type, object value)
+        {
+            ListViewItem itm = new ListViewItem();
+            itm.Text = sequence_no.ToString();
+            itm.SubItems.Add(dt.ToString());
+            itm.SubItems.Add(type.ToString());
+            itm.SubItems.Add(value != null ? value.ToString() : "NULL");
+            this.Invoke((MethodInvoker)delegate { m_list.Items.Add(itm); });
+        }
     }
 
     public static class TrendLogDecoder
@@ -364,7 +369,7 @@ namespace Yabe
         // like a call to Add to an array of List<KeyValuePair<DateTime, double>>
         // or other to get back the values. If a value is null or in error, double.NaN is provided
         //
-        public static uint DecodeTrendBuffer(byte[] buffer, uint ItemCount, int NbCurves, Action<int, DateTime, double> StoreValue)
+        public static uint DecodeTrendBuffer(byte[] buffer, uint ItemCount, int NbCurves, Action<int, DateTime, BacnetTrendLogValueType, object> StoreValue)
         {
             int offset = 0;
             byte tagnumber = 0;
@@ -408,57 +413,58 @@ namespace Yabe
                         case BacnetTrendLogValueType.TL_TYPE_STATUS:
                             BacnetBitString StatusFlags;
                             offset += ASN1.decode_bitstring(buffer, offset, TagLenght, out StatusFlags);
-                            StoreValue(CurveNumber, dt, double.NaN); // this is a discontinuity in the curve
+                            StoreValue(CurveNumber, dt, (BacnetTrendLogValueType)ContextTagType, StatusFlags); // this is a discontinuity in the curve
                             break;  
                         case BacnetTrendLogValueType.TL_TYPE_BOOL:
-                            StoreValue(CurveNumber, dt, buffer[offset++]);
+                            StoreValue(CurveNumber, dt, (BacnetTrendLogValueType)ContextTagType, (double)buffer[offset++]);
                             break;
                         case BacnetTrendLogValueType.TL_TYPE_REAL:
                             if (TagLenght == 4)
                             {
                                 float ValR;
                                 offset += ASN1.decode_real(buffer, offset, out ValR);
-                                StoreValue(CurveNumber, dt, ValR);
+                                StoreValue(CurveNumber, dt, (BacnetTrendLogValueType)ContextTagType, (double)ValR);
                             }
                             else  // not sure double can exist here
                             {
                                 double ValD;
                                 offset += ASN1.decode_double(buffer, offset, out ValD);
-                                StoreValue(CurveNumber, dt, ValD);
+                                StoreValue(CurveNumber, dt, (BacnetTrendLogValueType)ContextTagType, (double)ValD);
                             }
                             break;
                         case BacnetTrendLogValueType.TL_TYPE_ENUM:
                             uint ValEnum;
                             offset += ASN1.decode_enumerated(buffer, offset, TagLenght, out ValEnum);
-                            StoreValue(CurveNumber, dt, ValEnum);
+                            StoreValue(CurveNumber, dt, (BacnetTrendLogValueType)ContextTagType, ValEnum);
                             break;
                         case BacnetTrendLogValueType.TL_TYPE_SIGN:
                             int ValS;
                             offset += ASN1.decode_signed(buffer, offset, TagLenght, out ValS);
-                            StoreValue(CurveNumber, dt, ValS);
+                            StoreValue(CurveNumber, dt, (BacnetTrendLogValueType)ContextTagType, (double)ValS);
                             break;
                         case BacnetTrendLogValueType.TL_TYPE_UNSIGN:
                             uint ValU;
                             offset += ASN1.decode_unsigned(buffer, offset, TagLenght, out ValU);
-                            StoreValue(CurveNumber, dt, ValU);
+                            StoreValue(CurveNumber, dt, (BacnetTrendLogValueType)ContextTagType, (double)ValU);
                             break;
                         case BacnetTrendLogValueType.TL_TYPE_ERROR:
+                            uint Errclass;
                             uint Errcode;
-                            offset += ASN1.decode_enumerated(buffer, offset, (uint)2, out Errcode);
+                            offset += ASN1.decode_enumerated(buffer, offset, (uint)2, out Errclass);
                             offset += ASN1.decode_enumerated(buffer, offset, (uint)2, out Errcode);
                             byte b = buffer[offset];
                             offset++;
-                            StoreValue(CurveNumber, dt, double.NaN); // this is a discontinuity in the curve
+                            StoreValue(CurveNumber, dt, (BacnetTrendLogValueType)ContextTagType, new BacnetError(Errclass, Errcode)); // this is a discontinuity in the curve
                             break;  
                         case BacnetTrendLogValueType.TL_TYPE_NULL:
                             offset++;
-                            StoreValue(CurveNumber, dt, double.NaN); // this is a discontinuity in the curve
+                            StoreValue(CurveNumber, dt, (BacnetTrendLogValueType)ContextTagType, null); // this is a discontinuity in the curve
                             break;
                         // Time change (Automatic or Synch time) Delta in seconds
                         case BacnetTrendLogValueType.TL_TYPE_DELTA:
                             float ValDelta;
                             offset += ASN1.decode_real(buffer, offset, out ValDelta);  
-                            StoreValue(CurveNumber, dt, double.NaN); // this is certainly a discontinuity in the curve
+                            StoreValue(CurveNumber, dt, (BacnetTrendLogValueType)ContextTagType, ValDelta.ToString()); // this is certainly a discontinuity in the curve
                             break;
                         // No way to handle these data types, sure it's the end of this download !
                         case BacnetTrendLogValueType.TL_TYPE_ANY:
@@ -486,6 +492,5 @@ namespace Yabe
             }
             return ItemCount;
         }
-
     }
 }

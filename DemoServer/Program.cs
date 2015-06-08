@@ -68,6 +68,8 @@ namespace DemoServer
                 m_ip_server.OnTimeSynchronize += new BacnetClient.TimeSynchronizeHandler(OnTimeSynchronize);
                 m_ip_server.OnDeviceCommunicationControl += new BacnetClient.DeviceCommunicationControlRequestHandler(OnDeviceCommunicationControl);
                 m_ip_server.OnReinitializedDevice += new BacnetClient.ReinitializedRequestHandler(OnReinitializedDevice);
+                m_ip_server.OnIam += new BacnetClient.IamHandler(OnIam);
+                m_ip_server.OnReadRange += new BacnetClient.ReadRangeHandler(OnReadRange);
                 m_ip_server.Start();
 
                 //create pipe (MSTP) service point
@@ -87,6 +89,8 @@ namespace DemoServer
                 m_mstp_server.OnTimeSynchronize += new BacnetClient.TimeSynchronizeHandler(OnTimeSynchronize);
                 m_mstp_server.OnDeviceCommunicationControl += new BacnetClient.DeviceCommunicationControlRequestHandler(OnDeviceCommunicationControl);
                 m_mstp_server.OnReinitializedDevice += new BacnetClient.ReinitializedRequestHandler(OnReinitializedDevice);
+                m_mstp_server.OnIam += new BacnetClient.IamHandler(OnIam);
+                m_mstp_server.OnReadRange += new BacnetClient.ReadRangeHandler(OnReadRange);
                 m_mstp_server.Start();
 
                 //create pipe (PTP) service point
@@ -106,6 +110,8 @@ namespace DemoServer
                 m_ptp_server.OnTimeSynchronize += new BacnetClient.TimeSynchronizeHandler(OnTimeSynchronize);
                 m_ptp_server.OnDeviceCommunicationControl += new BacnetClient.DeviceCommunicationControlRequestHandler(OnDeviceCommunicationControl);
                 m_ptp_server.OnReinitializedDevice += new BacnetClient.ReinitializedRequestHandler(OnReinitializedDevice);
+                m_ptp_server.OnIam += new BacnetClient.IamHandler(OnIam);
+                m_ptp_server.OnReadRange += new BacnetClient.ReadRangeHandler(OnReadRange);
                 m_ptp_server.Start();
 
                 //display info
@@ -139,6 +145,68 @@ namespace DemoServer
                 Console.WriteLine("Press the ANY key ... once more");
                 Console.ReadKey();
             }
+        }
+
+        private static BacnetLogRecord[] m_trend_samples = null;
+
+        private static byte[] GetEncodedTrends(uint start, int count, out BacnetResultFlags status)
+        {
+            status = BacnetResultFlags.NONE;
+            start--;    //position is 1 based
+
+            if (start >= m_trend_samples.Length || (start + count) > m_trend_samples.Length)
+            {
+                Trace.TraceError("Trend data read overflow");
+                return null;
+            }
+
+            if (start == 0) status |= BacnetResultFlags.FIRST_ITEM;
+            if ((start + count) >= m_trend_samples.Length) status |= BacnetResultFlags.LAST_ITEM;
+            else status |= BacnetResultFlags.MORE_ITEMS;
+
+            System.IO.BACnet.Serialize.EncodeBuffer buffer = new System.IO.BACnet.Serialize.EncodeBuffer();
+            for (uint i = start; i < (start + count); i++)
+            {
+                System.IO.BACnet.Serialize.Services.EncodeLogRecord(buffer, m_trend_samples[i]);
+            }
+
+            return buffer.ToArray();
+        }
+
+        private static void OnReadRange(BacnetClient sender, BacnetAddress adr, byte invoke_id, BacnetObjectId objectId, BacnetPropertyReference property, System.IO.BACnet.Serialize.BacnetReadRangeRequestTypes requestType, uint position, DateTime time, int count, BacnetMaxSegments max_segments)
+        {
+            if (objectId.type == BacnetObjectTypes.OBJECT_TRENDLOG && objectId.instance == 0)
+            {
+                //generate 100 samples
+                if (m_trend_samples == null)
+                {
+                    m_trend_samples = new BacnetLogRecord[100];
+                    DateTime current = DateTime.Now.AddSeconds(-m_trend_samples.Length);
+                    Random rnd = new Random();
+                    for (int i = 0; i < m_trend_samples.Length; i++)
+                    {
+                        m_trend_samples[i] = new BacnetLogRecord();
+                        m_trend_samples[i].timestamp = current;
+                        m_trend_samples[i].type = BacnetTrendLogValueType.TL_TYPE_UNSIGN;
+                        m_trend_samples[i].unsigned_value = (uint)rnd.Next(0, 100);
+                        current = current.AddSeconds(1);
+                    }
+                }
+
+                //encode
+                BacnetResultFlags status;
+                byte[] application_data = GetEncodedTrends(position, count, out status);
+
+                //send
+                sender.ReadRangeResponse(adr, invoke_id, sender.GetSegmentBuffer(max_segments), objectId, property, status, (uint)count, application_data, requestType, position);
+            }
+            else
+                sender.ErrorResponse(adr, BacnetConfirmedServices.SERVICE_CONFIRMED_READ_RANGE, invoke_id, BacnetErrorClasses.ERROR_CLASS_DEVICE, BacnetErrorCodes.ERROR_CODE_OTHER);    
+        }
+
+        private static void OnIam(BacnetClient sender, BacnetAddress adr, uint device_id, uint max_apdu, BacnetSegmentations segmentation, ushort vendor_id)
+        {
+            //ignore Iams from other devices. (Also loopbacks)
         }
 
         /// <summary>
