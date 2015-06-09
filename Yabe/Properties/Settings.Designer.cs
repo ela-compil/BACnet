@@ -358,5 +358,17 @@ namespace Yabe.Properties {
                 this["YabeDeviceId"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string DefaultBBMD {
+            get {
+                return ((string)(this["DefaultBBMD"]));
+            }
+            set {
+                this["DefaultBBMD"] = value;
+            }
+        }
     }
 }

@@ -16,6 +16,7 @@ namespace Yabe
         {
             this.client = client;
             InitializeComponent();
+            BBMD_IP.Text = Properties.Settings.Default.DefaultBBMD;
         }
 
         private int PortNumber()

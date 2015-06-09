@@ -110,6 +110,8 @@ namespace Yabe
                 m_progressBar.Visible = false;
                 m_progresslabel.Text = "The trendlog is empty, nothing to display";
             }
+
+            m_list.Visible=false; // to avoid flicker during download
         }
 
         // Stop download
@@ -148,6 +150,8 @@ namespace Yabe
                 m_progresslabel.Text = "Error loading trend";
             else
                 m_progresslabel.Visible = false;
+
+            m_list.Visible=true;
         }
 
         // Get the numbers of records in the Log
@@ -361,7 +365,7 @@ namespace Yabe
             ListViewItem itm = new ListViewItem();
             itm.Text = sequence_no.ToString();
             itm.SubItems.Add(dt.ToString());
-            itm.SubItems.Add(type.ToString());
+            itm.SubItems.Add(System.Threading.Thread.CurrentThread.CurrentCulture.TextInfo.ToTitleCase(type.ToString().ToLower().Substring(8)));
             itm.SubItems.Add(value != null ? value.ToString() : "NULL");
             itm.SubItems.Add(status.ToString());
             this.Invoke((MethodInvoker)delegate { m_list.Items.Add(itm); });
