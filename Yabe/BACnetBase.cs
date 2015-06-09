@@ -1404,7 +1404,7 @@ namespace System.IO.BACnet
 
         public uint ConvertToInt()
         {
-            return BitConverter.ToUInt32(value, 0);
+            return value == null ? 0 : BitConverter.ToUInt32(value, 0);
         }
 
         public static BacnetBitString ConvertFromInt(uint value)
@@ -1453,6 +1453,36 @@ namespace System.IO.BACnet
         /* } */
 
         public BacnetBitString statusFlags;
+
+        public object GetValue()
+        {
+            switch (type)
+            {
+                case BacnetTrendLogValueType.TL_TYPE_ANY:
+                    throw new NotImplementedException();
+                case BacnetTrendLogValueType.TL_TYPE_BITS:
+                    return bitstring_value;
+                case BacnetTrendLogValueType.TL_TYPE_BOOL:
+                    return boolean_value;
+                case BacnetTrendLogValueType.TL_TYPE_DELTA:
+                    return time_change;
+                case BacnetTrendLogValueType.TL_TYPE_ENUM:
+                    return enum_value;
+                case BacnetTrendLogValueType.TL_TYPE_ERROR:
+                    return failure;
+                case BacnetTrendLogValueType.TL_TYPE_NULL:
+                    return null;
+                case BacnetTrendLogValueType.TL_TYPE_REAL:
+                    return real_value;
+                case BacnetTrendLogValueType.TL_TYPE_SIGN:
+                    return signed_value;
+                case BacnetTrendLogValueType.TL_TYPE_STATUS:
+                    return log_status;
+                case BacnetTrendLogValueType.TL_TYPE_UNSIGN:
+                    return unsigned_value;
+            }
+            throw new NotSupportedException();
+        }
     }
 
     public enum BacnetAddressTypes
@@ -7217,10 +7247,108 @@ namespace System.IO.BACnet.Serialize
             }
         }
 
-        public static int DecodeLogRecord(byte[] buffer, int offset, int length, out BacnetLogRecord record)
+        public static int DecodeLogRecord(byte[] buffer, int offset, int length, int n_curves, out BacnetLogRecord[] records)
         {
-            record = new BacnetLogRecord();
-            throw new NotImplementedException();
+            int len = 0;
+            byte tag_number;
+            uint len_value;
+            records = new BacnetLogRecord[n_curves];
+
+            DateTime date;
+            DateTime time;
+
+            len += ASN1.decode_tag_number(buffer, offset + len, out tag_number);
+            if (tag_number != 0) return -1;
+
+            // Date and Time in Tag 0
+            len += ASN1.decode_application_date(buffer, offset+len, out date);
+            len += ASN1.decode_application_time(buffer, offset + len, out time);
+
+            DateTime dt = new DateTime(date.Year, date.Month, date.Day, time.Hour, time.Minute, time.Second, time.Millisecond);
+
+            if (!(ASN1.decode_is_closing_tag(buffer, offset + len))) return -1;
+            len++;
+
+            // Value or error in Tag 1
+            len += ASN1.decode_tag_number(buffer, offset+len, out tag_number);
+            if (tag_number != 1) return -1;
+
+            byte ContextTagType = 0;
+
+            // Not test for TrendLogMultiple
+            // Seems to be encoded like this somewhere in an Ashrae document
+            for (int CurveNumber = 0; CurveNumber < n_curves; CurveNumber++)
+            {
+                len += ASN1.decode_tag_number_and_value(buffer, offset + len, out ContextTagType, out len_value);
+                records[CurveNumber] = new BacnetLogRecord();
+                records[CurveNumber].timestamp = dt;
+                records[CurveNumber].type = (BacnetTrendLogValueType)ContextTagType;
+
+                switch ((BacnetTrendLogValueType)ContextTagType)
+                {
+                    case BacnetTrendLogValueType.TL_TYPE_STATUS:
+                        len += ASN1.decode_bitstring(buffer, offset + len, len_value, out records[CurveNumber].log_status);
+                        break;
+                    case BacnetTrendLogValueType.TL_TYPE_BOOL:
+                        records[CurveNumber].boolean_value = buffer[offset + len] > 0 ? true : false;
+                        len++;
+                        break;
+                    case BacnetTrendLogValueType.TL_TYPE_REAL:
+                        len += ASN1.decode_real(buffer, offset + len, out records[CurveNumber].real_value);
+                        break;
+                    case BacnetTrendLogValueType.TL_TYPE_ENUM:
+                        len += ASN1.decode_enumerated(buffer, offset + len, len_value, out records[CurveNumber].enum_value);
+                        break;
+                    case BacnetTrendLogValueType.TL_TYPE_SIGN:
+                        len += ASN1.decode_signed(buffer, offset + len, len_value, out records[CurveNumber].signed_value);
+                        break;
+                    case BacnetTrendLogValueType.TL_TYPE_UNSIGN:
+                        len += ASN1.decode_unsigned(buffer, offset + len, len_value, out records[CurveNumber].unsigned_value);
+                        break;
+                    case BacnetTrendLogValueType.TL_TYPE_ERROR:
+                        BacnetErrorClasses Errclass;
+                        BacnetErrorCodes Errcode;
+                        len += DecodeError(buffer, offset + len, length, out Errclass, out Errcode);
+                        records[CurveNumber].failure = new BacnetError(Errclass, Errcode);
+                        break;
+                    case BacnetTrendLogValueType.TL_TYPE_NULL:
+                        len++;
+                        break;
+                    // Time change (Automatic or Synch time) Delta in seconds
+                    case BacnetTrendLogValueType.TL_TYPE_DELTA:
+                        len += ASN1.decode_real(buffer, offset + len, out records[CurveNumber].time_change);
+                        break;
+                    // No way to handle these data types, sure it's the end of this download !
+                    case BacnetTrendLogValueType.TL_TYPE_ANY:
+                        throw new NotImplementedException();
+                    case BacnetTrendLogValueType.TL_TYPE_BITS:
+                        len += ASN1.decode_bitstring(buffer, offset + len, len_value, out records[CurveNumber].bitstring_value);
+                        break;
+                    default:
+                        return 0;
+                }
+            }
+
+            if (!(ASN1.decode_is_closing_tag(buffer, offset+len))) return -1;
+            len++;
+
+            // Optional Tag 2
+            if (len < length)
+            {
+                int l = ASN1.decode_tag_number(buffer, offset+len, out tag_number);
+                if (tag_number == 2)
+                {
+                    len += l;
+                    BacnetBitString StatusFlags;
+                    len += ASN1.decode_bitstring(buffer, offset+len, 2, out StatusFlags);
+
+                    //set status to all returns
+                    for (int CurveNumber = 0; CurveNumber < n_curves; CurveNumber++)
+                        records[CurveNumber].statusFlags = StatusFlags;
+                }
+            }
+
+            return len;
         }
     }
 }

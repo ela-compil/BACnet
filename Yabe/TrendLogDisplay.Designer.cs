@@ -35,15 +35,16 @@
             this.m_progresslabel = new System.Windows.Forms.Label();
             this.m_list = new System.Windows.Forms.ListView();
             this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader3 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader4 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.columnHeader5 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.SuspendLayout();
             // 
             // m_progressBar
             // 
             this.m_progressBar.Anchor = System.Windows.Forms.AnchorStyles.None;
-            this.m_progressBar.Location = new System.Drawing.Point(195, 133);
+            this.m_progressBar.Location = new System.Drawing.Point(198, 146);
             this.m_progressBar.Name = "m_progressBar";
             this.m_progressBar.Size = new System.Drawing.Size(231, 23);
             this.m_progressBar.TabIndex = 0;
@@ -64,14 +65,14 @@
             this.m_zedGraphCtl.ScrollMinX = 0D;
             this.m_zedGraphCtl.ScrollMinY = 0D;
             this.m_zedGraphCtl.ScrollMinY2 = 0D;
-            this.m_zedGraphCtl.Size = new System.Drawing.Size(605, 317);
+            this.m_zedGraphCtl.Size = new System.Drawing.Size(621, 317);
             this.m_zedGraphCtl.TabIndex = 1;
             // 
             // m_progresslabel
             // 
             this.m_progresslabel.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.m_progresslabel.BackColor = System.Drawing.SystemColors.Window;
-            this.m_progresslabel.Location = new System.Drawing.Point(195, 109);
+            this.m_progresslabel.Location = new System.Drawing.Point(198, 122);
             this.m_progresslabel.Name = "m_progresslabel";
             this.m_progresslabel.Size = new System.Drawing.Size(231, 21);
             this.m_progresslabel.TabIndex = 2;
@@ -86,12 +87,13 @@
             this.columnHeader1,
             this.columnHeader3,
             this.columnHeader2,
-            this.columnHeader4});
+            this.columnHeader4,
+            this.columnHeader5});
             this.m_list.FullRowSelect = true;
             this.m_list.GridLines = true;
-            this.m_list.Location = new System.Drawing.Point(604, 0);
+            this.m_list.Location = new System.Drawing.Point(621, 0);
             this.m_list.Name = "m_list";
-            this.m_list.Size = new System.Drawing.Size(323, 317);
+            this.m_list.Size = new System.Drawing.Size(368, 317);
             this.m_list.TabIndex = 3;
             this.m_list.UseCompatibleStateImageBehavior = false;
             this.m_list.View = System.Windows.Forms.View.Details;
@@ -101,25 +103,29 @@
             this.columnHeader1.Text = "Sequence no";
             this.columnHeader1.Width = 32;
             // 
-            // columnHeader2
-            // 
-            this.columnHeader2.Text = "Type";
-            this.columnHeader2.Width = 110;
-            // 
             // columnHeader3
             // 
             this.columnHeader3.Text = "Time";
             this.columnHeader3.Width = 96;
             // 
+            // columnHeader2
+            // 
+            this.columnHeader2.Text = "Type";
+            this.columnHeader2.Width = 110;
+            // 
             // columnHeader4
             // 
             this.columnHeader4.Text = "Value";
+            // 
+            // columnHeader5
+            // 
+            this.columnHeader5.Text = "Status";
             // 
             // TrendLogDisplay
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(927, 317);
+            this.ClientSize = new System.Drawing.Size(989, 317);
             this.Controls.Add(this.m_list);
             this.Controls.Add(this.m_progresslabel);
             this.Controls.Add(this.m_progressBar);
@@ -141,5 +147,6 @@
         private System.Windows.Forms.ColumnHeader columnHeader3;
         private System.Windows.Forms.ColumnHeader columnHeader2;
         private System.Windows.Forms.ColumnHeader columnHeader4;
+        private System.Windows.Forms.ColumnHeader columnHeader5;
     }
 }
