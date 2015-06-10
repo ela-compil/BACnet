@@ -54,8 +54,8 @@ namespace AnotherStorageImplementation
     [Serializable]
     abstract class MultiStateValueAndOutput:AnalogValueAndOutput<uint>
     {
-        
-        uint m_PROP_NUMBER_OF_STATES;
+
+        protected uint m_PROP_NUMBER_OF_STATES;
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT)]
         public virtual uint PROP_NUMBER_OF_STATES
         {

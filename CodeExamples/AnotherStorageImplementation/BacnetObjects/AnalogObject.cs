@@ -34,7 +34,7 @@ namespace AnotherStorageImplementation
     [Serializable]
     abstract class AnalogObject<T> : BacnetObject
     {
-        uint m_PROP_UNITS;
+        protected uint m_PROP_UNITS;
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED)]
         public virtual uint PROP_UNITS
         {
@@ -46,14 +46,14 @@ namespace AnotherStorageImplementation
             get { return 0; }
         }
 
-        BacnetBitString m_PROP_STATUS_FLAGS = new BacnetBitString();
+        protected BacnetBitString m_PROP_STATUS_FLAGS = new BacnetBitString();
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_BIT_STRING)]
         public virtual BacnetBitString PROP_STATUS_FLAGS
         {
             get { return m_PROP_STATUS_FLAGS; }
         }
 
-        bool m_PROP_OUT_OF_SERVICE = false;
+        protected bool m_PROP_OUT_OF_SERVICE = false;
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_BOOLEAN)]
         public virtual bool PROP_OUT_OF_SERVICE
         {

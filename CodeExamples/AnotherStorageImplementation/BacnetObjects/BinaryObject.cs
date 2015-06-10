@@ -52,7 +52,7 @@ namespace AnotherStorageImplementation
             get { return m_PROP_STATUS_FLAGS; }
         }
 
-        bool m_PROP_OUT_OF_SERVICE = false;
+        protected bool m_PROP_OUT_OF_SERVICE = false;
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_BOOLEAN)]
         public virtual bool PROP_OUT_OF_SERVICE
         {

@@ -36,30 +36,30 @@ namespace AnotherStorageImplementation
     [Serializable]
     class DeviceObject : BacnetObject, IRegisterBacnetObject
     {
-        List<BacnetObject> ObjectsList=new List<BacnetObject>();
+        protected List<BacnetObject> ObjectsList=new List<BacnetObject>();
 
-        List<BacnetValue> m_PROP_OBJECT_LIST=new List<BacnetValue>();
+        protected List<BacnetValue> m_PROP_OBJECT_LIST = new List<BacnetValue>();
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID)]
         public virtual List<BacnetValue> PROP_OBJECT_LIST
         {
             get { return m_PROP_OBJECT_LIST; }
         }
-        
-        List<BacnetValue> m_PROP_STRUCTURED_OBJECT_LIST = new List<BacnetValue>();
+
+        protected List<BacnetValue> m_PROP_STRUCTURED_OBJECT_LIST = new List<BacnetValue>();
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID)]
         public virtual List<BacnetValue> PROP_STRUCTURED_OBJECT_LIST
         {
             get { return m_PROP_STRUCTURED_OBJECT_LIST; }
         }
-        
-        BacnetBitString m_PROP_PROTOCOL_OBJECT_TYPES_SUPPORTED= new BacnetBitString();
+
+        protected BacnetBitString m_PROP_PROTOCOL_OBJECT_TYPES_SUPPORTED = new BacnetBitString();
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_BIT_STRING)]
         public virtual BacnetBitString PROP_PROTOCOL_OBJECT_TYPES_SUPPORTED
         {
             get { return m_PROP_PROTOCOL_OBJECT_TYPES_SUPPORTED; }
         }
 
-        BacnetBitString m_PROP_PROTOCOL_SERVICES_SUPPORTED = new BacnetBitString();
+        protected BacnetBitString m_PROP_PROTOCOL_SERVICES_SUPPORTED = new BacnetBitString();
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_BIT_STRING)]
         public virtual BacnetBitString PROP_PROTOCOL_SERVICES_SUPPORTED
         {
@@ -138,7 +138,7 @@ namespace AnotherStorageImplementation
             get { return null; }
         }
 
-        bool UseStructuredView;
+        protected bool UseStructuredView;
 
         public DeviceObject(uint Id, String DeviceName, bool UseStructuredView)
             : base(new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, Id), DeviceName)
@@ -164,7 +164,7 @@ namespace AnotherStorageImplementation
         }
 
         // Each object provided by the server must be added one by one to the DeviceObject
-        public void AddBacnetObject(BacnetObject newObj)
+        public virtual void AddBacnetObject(BacnetObject newObj)
         {
             ObjectsList.Add(newObj);
             // Update OBJECT_TYPES_SUPPORTED
@@ -182,7 +182,7 @@ namespace AnotherStorageImplementation
         }
 
         // Can be use to find a particular object with it's bacnet id 
-        public BacnetObject FindBacnetObject(BacnetObjectId objId)
+        public virtual BacnetObject FindBacnetObject(BacnetObjectId objId)
         {
             if (this.Equals(objId)) return this;
 

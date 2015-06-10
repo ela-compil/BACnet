@@ -35,7 +35,7 @@ namespace AnotherStorageImplementation
     class CharacterString : BacnetObject
     {
 
-        BacnetBitString m_PROP_STATUS_FLAGS = new BacnetBitString();
+        protected BacnetBitString m_PROP_STATUS_FLAGS = new BacnetBitString();
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_BIT_STRING)]
         public virtual BacnetBitString PROP_STATUS_FLAGS
         {

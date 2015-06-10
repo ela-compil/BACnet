@@ -55,7 +55,7 @@ namespace AnotherStorageImplementation
     {
         protected bool UsePriorityArray = false;
 
-        T m_PROP_RELINQUISH_DEFAULT;
+        protected T m_PROP_RELINQUISH_DEFAULT;
         // BacnetSerialize made freely by the stack depending on the type
         public virtual T PROP_RELINQUISH_DEFAULT
         {
@@ -66,7 +66,7 @@ namespace AnotherStorageImplementation
                 }
         }
 
-        BacnetValue[] m_PROP_PRIORITY_ARRAY = new BacnetValue[16];
+        protected BacnetValue[] m_PROP_PRIORITY_ARRAY = new BacnetValue[16];
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_NULL)]
         public virtual BacnetValue[] PROP_PRIORITY_ARRAY
         {
@@ -129,7 +129,7 @@ namespace AnotherStorageImplementation
 
         // This will shows a property which is only programmed with methods
         // ... just for the example
-        bool binternal = true;
+        protected bool binternal = true;
 
         public virtual IList<BacnetValue> get2_PROP_OPTIONAL()
         {
