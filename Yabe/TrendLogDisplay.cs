@@ -255,11 +255,11 @@ namespace Yabe
                         for (int i = 0; i < records.Length; i++, Idx++)
                         {
                             if(records[i].type == BacnetTrendLogValueType.TL_TYPE_UNSIGN || records[i].type == BacnetTrendLogValueType.TL_TYPE_SIGN || records[i].type == BacnetTrendLogValueType.TL_TYPE_REAL)
-                                Pointslists[i].Add(new XDate(records[i].timestamp), (double)Convert.ChangeType(records[i].GetValue(), typeof(double)));
+                                Pointslists[i].Add(new XDate(records[i].timestamp), (double)Convert.ChangeType(records[i].Value, typeof(double)));
                             else
                                 Pointslists[i].Add(new XDate(records[i].timestamp), double.NaN);
 
-                            AddToList(Idx, records[i].timestamp, records[i].type, records[i].GetValue(), records[i].statusFlags.ConvertToInt());
+                            AddToList(Idx, records[i].timestamp, records[i].type, records[i].Value, records[i].statusFlags.ConvertToInt());
                         }
                     }
 

@@ -185,10 +185,7 @@ namespace DemoServer
                     Random rnd = new Random();
                     for (int i = 0; i < m_trend_samples.Length; i++)
                     {
-                        m_trend_samples[i] = new BacnetLogRecord();
-                        m_trend_samples[i].timestamp = current;
-                        m_trend_samples[i].type = BacnetTrendLogValueType.TL_TYPE_UNSIGN;
-                        m_trend_samples[i].unsigned_value = (uint)rnd.Next(0, 100);
+                        m_trend_samples[i] = new BacnetLogRecord(BacnetTrendLogValueType.TL_TYPE_UNSIGN, (uint)rnd.Next(0, 100), current, 0);
                         current = current.AddSeconds(1);
                     }
                 }

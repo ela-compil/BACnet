@@ -1439,49 +1439,168 @@ namespace System.IO.BACnet
 
         /* logDatum: CHOICE { */
         public BacnetTrendLogValueType type;
-        public BacnetBitString log_status;
-        public bool boolean_value;
-        public float real_value;
-        public uint enum_value;
-        public uint unsigned_value;
-        public int signed_value;
-        public BacnetBitString bitstring_value;
-        public bool null_value;
-        public BacnetError failure;
-        public float time_change;
-        public object any_value;
+        private BacnetBitString log_status;
+        private bool boolean_value;
+        private float real_value;
+        private uint enum_value;
+        private uint unsigned_value;
+        private int signed_value;
+        private BacnetBitString bitstring_value;
+        //private bool null_value;
+        private BacnetError failure;
+        private float time_change;
+        //private object any_value;
         /* } */
 
         public BacnetBitString statusFlags;
 
-        public object GetValue()
+        public BacnetLogRecord(BacnetTrendLogValueType type, object value, DateTime stamp, uint status)
+        {
+            this.type = type;
+            timestamp = stamp;
+            statusFlags = BacnetBitString.ConvertFromInt(status);
+            log_status = new BacnetBitString();
+            boolean_value = false;
+            real_value = 0;
+            enum_value = 0;
+            unsigned_value = 0;
+            signed_value = 0;
+            bitstring_value = new BacnetBitString();
+            failure = new BacnetError();
+            time_change = 0;
+            this.Value = value;
+        }
+
+        public object Value
+        {
+            get
+            {
+                switch (type)
+                {
+                    case BacnetTrendLogValueType.TL_TYPE_ANY:
+                        throw new NotImplementedException();
+                    case BacnetTrendLogValueType.TL_TYPE_BITS:
+                        return bitstring_value;
+                    case BacnetTrendLogValueType.TL_TYPE_BOOL:
+                        return boolean_value;
+                    case BacnetTrendLogValueType.TL_TYPE_DELTA:
+                        return time_change;
+                    case BacnetTrendLogValueType.TL_TYPE_ENUM:
+                        return enum_value;
+                    case BacnetTrendLogValueType.TL_TYPE_ERROR:
+                        return failure;
+                    case BacnetTrendLogValueType.TL_TYPE_NULL:
+                        return null;
+                    case BacnetTrendLogValueType.TL_TYPE_REAL:
+                        return real_value;
+                    case BacnetTrendLogValueType.TL_TYPE_SIGN:
+                        return signed_value;
+                    case BacnetTrendLogValueType.TL_TYPE_STATUS:
+                        return log_status;
+                    case BacnetTrendLogValueType.TL_TYPE_UNSIGN:
+                        return unsigned_value;
+                    default:
+                        throw new NotSupportedException();
+                }
+            }
+            set
+            {
+                switch (type)
+                {
+                    case BacnetTrendLogValueType.TL_TYPE_ANY:
+                        throw new NotImplementedException();
+                    case BacnetTrendLogValueType.TL_TYPE_BITS:
+                        if(value == null) value = new BacnetBitString();
+                        if (value.GetType() != typeof(BacnetBitString))
+                            value = BacnetBitString.ConvertFromInt((uint)Convert.ChangeType(value, typeof(uint)));
+                        bitstring_value = (BacnetBitString)value;
+                        break;
+                    case BacnetTrendLogValueType.TL_TYPE_BOOL:
+                        if(value == null) value = false;
+                        if (value.GetType() != typeof(bool))
+                            value = (bool)Convert.ChangeType(value, typeof(bool));
+                        boolean_value = (bool)value;
+                        break;
+                    case BacnetTrendLogValueType.TL_TYPE_DELTA:
+                        if(value == null) value = (float)0;
+                        if (value.GetType() != typeof(float))
+                            value = (float)Convert.ChangeType(value, typeof(float));
+                        time_change = (float)value;
+                        break;
+                    case BacnetTrendLogValueType.TL_TYPE_ENUM:
+                        if(value == null) value = (uint)0;
+                        if (value.GetType() != typeof(uint))
+                            value = (uint)Convert.ChangeType(value, typeof(uint));
+                        enum_value = (uint)value;
+                        break;
+                    case BacnetTrendLogValueType.TL_TYPE_ERROR:
+                        if (value == null) value = new BacnetError();
+                        if (value.GetType() != typeof(BacnetError))
+                            throw new ArgumentException();
+                        failure = (BacnetError)value;
+                        break;
+                    case BacnetTrendLogValueType.TL_TYPE_NULL:
+                        if (value != null) throw new ArgumentException();
+                        break;
+                    case BacnetTrendLogValueType.TL_TYPE_REAL:
+                        if(value == null) value = (float)0;
+                        if (value.GetType() != typeof(float))
+                            value = (float)Convert.ChangeType(value, typeof(float));
+                        real_value = (float)value;
+                        break;
+                    case BacnetTrendLogValueType.TL_TYPE_SIGN:
+                        if(value == null) value = (Int32)0;
+                        if (value.GetType() != typeof(Int32))
+                            value = (Int32)Convert.ChangeType(value, typeof(Int32));
+                        signed_value = (Int32)value;
+                        break;
+                    case BacnetTrendLogValueType.TL_TYPE_STATUS:
+                        if(value == null) value = new BacnetBitString();
+                        if (value.GetType() != typeof(BacnetBitString))
+                            value = BacnetBitString.ConvertFromInt((uint)Convert.ChangeType(value, typeof(uint)));
+                        log_status = (BacnetBitString)value;
+                        break;
+                    case BacnetTrendLogValueType.TL_TYPE_UNSIGN:
+                        if(value == null) value = (UInt32)0;
+                        if (value.GetType() != typeof(UInt32))
+                            value = (UInt32)Convert.ChangeType(value, typeof(UInt32));
+                        unsigned_value = (UInt32)value;
+                        break;
+                    default:
+                        throw new NotSupportedException();
+                }
+            }
+        }
+
+        public T GetValue<T>()
         {
             switch (type)
             {
                 case BacnetTrendLogValueType.TL_TYPE_ANY:
                     throw new NotImplementedException();
                 case BacnetTrendLogValueType.TL_TYPE_BITS:
-                    return bitstring_value;
+                    return (T)Convert.ChangeType(bitstring_value, typeof(T));
                 case BacnetTrendLogValueType.TL_TYPE_BOOL:
-                    return boolean_value;
+                    return (T)Convert.ChangeType(boolean_value, typeof(T));
                 case BacnetTrendLogValueType.TL_TYPE_DELTA:
-                    return time_change;
+                    return (T)Convert.ChangeType(time_change, typeof(T));
                 case BacnetTrendLogValueType.TL_TYPE_ENUM:
-                    return enum_value;
+                    return (T)Convert.ChangeType(enum_value, typeof(T));
                 case BacnetTrendLogValueType.TL_TYPE_ERROR:
-                    return failure;
+                    return (T)Convert.ChangeType(failure, typeof(T));
                 case BacnetTrendLogValueType.TL_TYPE_NULL:
-                    return null;
+                    return default(T);
                 case BacnetTrendLogValueType.TL_TYPE_REAL:
-                    return real_value;
+                    return (T)Convert.ChangeType(real_value, typeof(T));
                 case BacnetTrendLogValueType.TL_TYPE_SIGN:
-                    return signed_value;
+                    return (T)Convert.ChangeType(signed_value, typeof(T));
                 case BacnetTrendLogValueType.TL_TYPE_STATUS:
-                    return log_status;
+                    return (T)Convert.ChangeType(log_status, typeof(T));
                 case BacnetTrendLogValueType.TL_TYPE_UNSIGN:
-                    return unsigned_value;
+                    return (T)Convert.ChangeType(unsigned_value, typeof(T));
+                default:
+                    throw new NotSupportedException();
             }
-            throw new NotSupportedException();
         }
     }
 
@@ -7207,31 +7326,32 @@ namespace System.IO.BACnet.Serialize
                     case BacnetTrendLogValueType.TL_TYPE_ANY:
                         throw new NotImplementedException();
                     case BacnetTrendLogValueType.TL_TYPE_BITS:
-                        ASN1.encode_bitstring(buffer, record.bitstring_value);
+                        ASN1.encode_bitstring(buffer, record.GetValue<BacnetBitString>());
                         break;
                     case BacnetTrendLogValueType.TL_TYPE_BOOL:
-                        buffer.Add(record.boolean_value ? (byte)1 : (byte)0);
+                        buffer.Add(record.GetValue<bool>() ? (byte)1 : (byte)0);
                         break;
                     case BacnetTrendLogValueType.TL_TYPE_DELTA:
-                        ASN1.encode_bacnet_real(buffer, record.time_change);
+                        ASN1.encode_bacnet_real(buffer, record.GetValue<float>());
                         break;
                     case BacnetTrendLogValueType.TL_TYPE_ENUM:
-                        ASN1.encode_application_enumerated(buffer, record.enum_value);
+                        ASN1.encode_application_enumerated(buffer, record.GetValue<uint>());
                         break;
                     case BacnetTrendLogValueType.TL_TYPE_ERROR:
-                        Services.EncodeError(buffer, record.failure.error_class, record.failure.error_code);
+                        BacnetError err = record.GetValue<BacnetError>();
+                        Services.EncodeError(buffer, err.error_class, err.error_code);
                         break;
                     case BacnetTrendLogValueType.TL_TYPE_REAL:
-                        ASN1.encode_bacnet_real(buffer, record.real_value);
+                        ASN1.encode_bacnet_real(buffer, record.GetValue<float>());
                         break;
                     case BacnetTrendLogValueType.TL_TYPE_SIGN:
-                        ASN1.encode_bacnet_signed(buffer, record.signed_value);
+                        ASN1.encode_bacnet_signed(buffer, record.GetValue<int>());
                         break;
                     case BacnetTrendLogValueType.TL_TYPE_STATUS:
-                        ASN1.encode_bitstring(buffer, record.log_status);
+                        ASN1.encode_bitstring(buffer, record.GetValue<BacnetBitString>());
                         break;
                     case BacnetTrendLogValueType.TL_TYPE_UNSIGN:
-                        ASN1.encode_bacnet_unsigned(buffer, record.unsigned_value);
+                        ASN1.encode_bacnet_unsigned(buffer, record.GetValue<uint>());
                         break;
                 }
                 ASN1.encode_tag(tmp1, (byte)record.type, false, (uint)tmp2.GetDiff(buffer));
@@ -7287,42 +7407,57 @@ namespace System.IO.BACnet.Serialize
                 switch ((BacnetTrendLogValueType)ContextTagType)
                 {
                     case BacnetTrendLogValueType.TL_TYPE_STATUS:
-                        len += ASN1.decode_bitstring(buffer, offset + len, len_value, out records[CurveNumber].log_status);
+                        BacnetBitString sval;
+                        len += ASN1.decode_bitstring(buffer, offset + len, len_value, out sval);
+                        records[CurveNumber].Value = sval;
                         break;
                     case BacnetTrendLogValueType.TL_TYPE_BOOL:
-                        records[CurveNumber].boolean_value = buffer[offset + len] > 0 ? true : false;
+                        records[CurveNumber].Value = buffer[offset + len] > 0 ? true : false;
                         len++;
                         break;
                     case BacnetTrendLogValueType.TL_TYPE_REAL:
-                        len += ASN1.decode_real(buffer, offset + len, out records[CurveNumber].real_value);
+                        float rval;
+                        len += ASN1.decode_real(buffer, offset + len, out rval);
+                        records[CurveNumber].Value = rval;
                         break;
                     case BacnetTrendLogValueType.TL_TYPE_ENUM:
-                        len += ASN1.decode_enumerated(buffer, offset + len, len_value, out records[CurveNumber].enum_value);
+                        uint eval;
+                        len += ASN1.decode_enumerated(buffer, offset + len, len_value, out eval);
+                        records[CurveNumber].Value = eval;
                         break;
                     case BacnetTrendLogValueType.TL_TYPE_SIGN:
-                        len += ASN1.decode_signed(buffer, offset + len, len_value, out records[CurveNumber].signed_value);
+                        int ival;
+                        len += ASN1.decode_signed(buffer, offset + len, len_value, out ival);
+                        records[CurveNumber].Value = ival;
                         break;
                     case BacnetTrendLogValueType.TL_TYPE_UNSIGN:
-                        len += ASN1.decode_unsigned(buffer, offset + len, len_value, out records[CurveNumber].unsigned_value);
+                        uint uinval;
+                        len += ASN1.decode_unsigned(buffer, offset + len, len_value, out uinval);
+                        records[CurveNumber].Value = uinval;
                         break;
                     case BacnetTrendLogValueType.TL_TYPE_ERROR:
                         BacnetErrorClasses Errclass;
                         BacnetErrorCodes Errcode;
                         len += DecodeError(buffer, offset + len, length, out Errclass, out Errcode);
-                        records[CurveNumber].failure = new BacnetError(Errclass, Errcode);
+                        records[CurveNumber].Value = new BacnetError(Errclass, Errcode);
                         break;
                     case BacnetTrendLogValueType.TL_TYPE_NULL:
                         len++;
+                        records[CurveNumber].Value = null;
                         break;
                     // Time change (Automatic or Synch time) Delta in seconds
                     case BacnetTrendLogValueType.TL_TYPE_DELTA:
-                        len += ASN1.decode_real(buffer, offset + len, out records[CurveNumber].time_change);
+                        float dval;
+                        len += ASN1.decode_real(buffer, offset + len, out dval);
+                        records[CurveNumber].Value = dval;
                         break;
                     // No way to handle these data types, sure it's the end of this download !
                     case BacnetTrendLogValueType.TL_TYPE_ANY:
                         throw new NotImplementedException();
                     case BacnetTrendLogValueType.TL_TYPE_BITS:
-                        len += ASN1.decode_bitstring(buffer, offset + len, len_value, out records[CurveNumber].bitstring_value);
+                        BacnetBitString bval;
+                        len += ASN1.decode_bitstring(buffer, offset + len, len_value, out bval);
+                        records[CurveNumber].Value = bval;
                         break;
                     default:
                         return 0;
