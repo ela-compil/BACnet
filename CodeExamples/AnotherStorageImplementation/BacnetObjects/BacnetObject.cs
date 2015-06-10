@@ -42,6 +42,11 @@ namespace AnotherStorageImplementation
         OutOfRange = -5
     }
 
+    interface IRegisterBacnetObject   
+    {
+        void AddBacnetObject(BacnetObject newObj);
+    }
+
     [Serializable]
     abstract class BacnetObject
     {

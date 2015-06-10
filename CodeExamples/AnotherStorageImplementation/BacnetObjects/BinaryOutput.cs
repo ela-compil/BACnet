@@ -31,39 +31,39 @@ using System.IO.BACnet;
 
 namespace AnotherStorageImplementation
 {
-
     [Serializable]
-    class AnalogOutput<T> : AnalogValueAndOutput<T>
+    class BinaryOutput : BinaryValueAndOutput
     {
-        public AnalogOutput(int ObjId, T InitialValue, String ObjName, BacnetUnitsId Unit)
-            : base(new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_OUTPUT, (uint)ObjId), InitialValue, ObjName, Unit, true)
+        public BinaryOutput(int ObjId, bool InitialValue, String ObjName)
+            : base(new BacnetObjectId(BacnetObjectTypes.OBJECT_BINARY_OUTPUT, (uint)ObjId), InitialValue, ObjName, true)
         {
         }
     }
 
     [Serializable]
-    class AnalogValue<T> : AnalogValueAndOutput<T>
+    class BinaryValue : BinaryValueAndOutput
     {
-         public AnalogValue(int ObjId, T InitialValue, String ObjName, BacnetUnitsId Unit, bool WithPriorityArray)
-            : base(new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_VALUE, (uint)ObjId), InitialValue, ObjName, Unit, WithPriorityArray)
+        public BinaryValue(int ObjId, bool InitialValue, String ObjName, BacnetUnitsId Unit, bool WithPriorityArray)
+            : base(new BacnetObjectId(BacnetObjectTypes.OBJECT_BINARY_VALUE, (uint)ObjId), InitialValue, ObjName, WithPriorityArray)
         {
         }
     }
 
     [Serializable]
-    class AnalogValueAndOutput<T> : AnalogObject<T>
+    abstract class BinaryValueAndOutput : BinaryObject
     {
         protected bool UsePriorityArray = false;
 
-        T m_PROP_RELINQUISH_DEFAULT;
+        bool m_PROP_RELINQUISH_DEFAULT;
         // BacnetSerialize made freely by the stack depending on the type
-        public virtual T PROP_RELINQUISH_DEFAULT
+        public virtual bool PROP_RELINQUISH_DEFAULT
         {
             get { return m_PROP_RELINQUISH_DEFAULT; }
-            set { 
-                    m_PROP_RELINQUISH_DEFAULT=value;
-                    COVManagement(BacnetPropertyIds.PROP_PRESENT_VALUE);
-                }
+            set
+            {
+                m_PROP_RELINQUISH_DEFAULT = value;
+                COVManagement(BacnetPropertyIds.PROP_PRESENT_VALUE);
+            }
         }
 
         BacnetValue[] m_PROP_PRIORITY_ARRAY = new BacnetValue[16];
@@ -73,8 +73,8 @@ namespace AnotherStorageImplementation
             get { return m_PROP_PRIORITY_ARRAY; }
         }
 
-        public AnalogValueAndOutput(BacnetObjectId ObjId, T InitialValue, String ObjName, BacnetUnitsId Unit, bool WithPriorityArray)
-            : base(ObjId, InitialValue, ObjName, Unit)
+        public BinaryValueAndOutput(BacnetObjectId ObjId, bool InitialValue, String ObjName, bool WithPriorityArray)
+            : base(ObjId, InitialValue, ObjName)
         {
             if (WithPriorityArray == true)
             {
@@ -101,7 +101,7 @@ namespace AnotherStorageImplementation
         {
             if (UsePriorityArray == false)
             {
-                m_PROP_PRESENT_VALUE = (T) Value[0].Value;
+                m_PROP_PRESENT_VALUE = (bool)Value[0].Value;
                 return;
             }
             else
@@ -113,7 +113,7 @@ namespace AnotherStorageImplementation
                 {
                     if (m_PROP_PRIORITY_ARRAY[i].Value != null)    // A value is OK
                     {
-                        m_PROP_PRESENT_VALUE = (T)m_PROP_PRIORITY_ARRAY[i].Value;
+                        m_PROP_PRESENT_VALUE = (bool)m_PROP_PRIORITY_ARRAY[i].Value;
                         done = true;
                         break;
                     }
@@ -126,20 +126,5 @@ namespace AnotherStorageImplementation
                 return;
             }
         }
-
-        // This will shows a property which is only programmed with methods
-        // ... just for the example
-        bool binternal = true;
-
-        public virtual IList<BacnetValue> get2_PROP_OPTIONAL()
-        {
-            return new BacnetValue[1] { new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_BOOLEAN, binternal) };
-         }
-
-        public virtual void set2_PROP_OPTIONAL(IList<BacnetValue> Value, byte WritePriority)
-        {
-            binternal = (bool)Value[0].Value;
-        }
-        
     }
 }

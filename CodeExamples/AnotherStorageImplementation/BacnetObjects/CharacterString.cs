@@ -32,19 +32,8 @@ using System.IO.BACnet;
 namespace AnotherStorageImplementation
 {
     [Serializable]
-    abstract class AnalogObject<T> : BacnetObject
+    class CharacterString : BacnetObject
     {
-        uint m_PROP_UNITS;
-        [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED)]
-        public virtual uint PROP_UNITS
-        {
-            get { return m_PROP_UNITS; }
-        }
-        [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED)]
-        public virtual uint PROP_EVENT_STATE
-        {
-            get { return 0; }
-        }
 
         BacnetBitString m_PROP_STATUS_FLAGS = new BacnetBitString();
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_BIT_STRING)]
@@ -53,24 +42,13 @@ namespace AnotherStorageImplementation
             get { return m_PROP_STATUS_FLAGS; }
         }
 
-        bool m_PROP_OUT_OF_SERVICE = false;
-        [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_BOOLEAN)]
-        public virtual bool PROP_OUT_OF_SERVICE
-        {
-            get { return m_PROP_OUT_OF_SERVICE; }
-            set { 
-                    m_PROP_OUT_OF_SERVICE=value;
-                    COVManagement(BacnetPropertyIds.PROP_PRESENT_VALUE);
-                }
-        }
-
         protected bool m_PRESENT_VALUE_ReadOnly = false;
-        protected T m_PROP_PRESENT_VALUE;
-        // BacnetSerialize made freely by the stack depending on the type
-        public virtual T PROP_PRESENT_VALUE
+        protected String m_PROP_PRESENT_VALUE;
+
+        public virtual String PROP_PRESENT_VALUE
         {
             get { return m_PROP_PRESENT_VALUE; }
-            set 
+            set
             {
                 if (m_PRESENT_VALUE_ReadOnly == false)
                     m_PROP_PRESENT_VALUE = value;
@@ -81,28 +59,26 @@ namespace AnotherStorageImplementation
 
         // This property shows the same attribut as the previous, but without restriction
         // for internal usage, not for network callbacks
-        public virtual T internal_PROP_PRESENT_VALUE
+        public virtual String internal_PROP_PRESENT_VALUE
         {
             get { return m_PROP_PRESENT_VALUE; }
-            set { 
-                    m_PROP_PRESENT_VALUE = value; 
-                    COVManagement(BacnetPropertyIds.PROP_PRESENT_VALUE); 
-                }
+            set
+            {
+                m_PROP_PRESENT_VALUE = value;
+                COVManagement(BacnetPropertyIds.PROP_PRESENT_VALUE);
+            }
         }
-           
-        public AnalogObject(BacnetObjectId ObjId, T InitialValue, String ObjName, BacnetUnitsId Unit)
-            : base(ObjId, ObjName)
-        {
 
+        public CharacterString(int ObjId, String InitialValue, String ObjName, bool ReadOnly)
+            : base(new BacnetObjectId(BacnetObjectTypes.OBJECT_CHARACTERSTRING_VALUE,(uint)ObjId), ObjName)
+        {
             m_PROP_STATUS_FLAGS.SetBit((byte)0, false);
             m_PROP_STATUS_FLAGS.SetBit((byte)1, false);
             m_PROP_STATUS_FLAGS.SetBit((byte)2, false);
             m_PROP_STATUS_FLAGS.SetBit((byte)3, false);
 
-            m_PROP_UNITS = (uint)Unit;
-
+            m_PRESENT_VALUE_ReadOnly = ReadOnly;
             m_PROP_PRESENT_VALUE = InitialValue;
-
         }
     }
 }

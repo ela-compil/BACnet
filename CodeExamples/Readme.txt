@@ -38,3 +38,13 @@ AnotherStorageImplementation
 	Each Bacnetobject is a object in the C# code.
 	So a class must to be written for each Bacnet object type, but this give the
 	possibility to write a complex behaviour in objects code.
+	Actual objects types are :
+		Device
+		Structured View
+		Analog Input, Analog Value, Analog Output
+		Digital Input, Digial Value, Digital Output
+		Multistates Input, Multistates Value, Multistates Output
+		Characters String
+		File
+		Trendlog
+		... send us your own code !

@@ -25,8 +25,8 @@ namespace AnotherStorageImplementation
             get { return m_PROP_STATE_TEXT; }
         }
 
-        public MultiStateInput(BacnetObjectId ObjId, uint InitialValue, uint StatesNumber, String ObjName, bool WithPriorityArray)
-            : base(ObjId, InitialValue, ObjName, BacnetUnitsId.UNITS_DEGREES_PHASE)
+        public MultiStateInput(int ObjId, uint InitialValue, uint StatesNumber, String ObjName, bool WithPriorityArray)
+            : base(new BacnetObjectId(BacnetObjectTypes.OBJECT_MULTI_STATE_INPUT, (uint)ObjId), InitialValue, ObjName, BacnetUnitsId.UNITS_DEGREES_PHASE)
         {
             // InitialValue must be within 1 and m_PROP_NUMBER_OF_STATES
             m_PROP_NUMBER_OF_STATES = StatesNumber;

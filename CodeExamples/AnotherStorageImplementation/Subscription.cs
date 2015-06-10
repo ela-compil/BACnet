@@ -1,7 +1,7 @@
 ﻿/**************************************************************************
 *                           MIT License
 * 
-* Copyright (C) 2014 Morten Kvistgaard <mk@pch-engineering.dk>
+* Copyright (C) 2014 Morten Kvistgaard <mkKvistgaard@pch-engineering.dk>
 *
 * Permission is hereby granted, free of charge, to any person obtaining
 * a copy of this software and associated documentation files (the

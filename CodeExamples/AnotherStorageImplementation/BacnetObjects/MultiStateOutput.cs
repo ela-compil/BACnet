@@ -31,10 +31,28 @@ using System.IO.BACnet;
 
 namespace AnotherStorageImplementation
 {
+    [Serializable]
+    class MultiStateOutput : MultiStateValueAndOutput
+    {
+        public MultiStateOutput(int ObjId, uint InitialValue, uint StatesNumber, String ObjName)
+            : base(new BacnetObjectId(BacnetObjectTypes.OBJECT_MULTI_STATE_OUTPUT, (uint)ObjId), InitialValue, StatesNumber, ObjName, true)
+        {
+        }
+    }
+
+    [Serializable]
+    class MultiStateValue : MultiStateValueAndOutput
+    {
+        public MultiStateValue(int ObjId, uint InitialValue, uint StatesNumber, String ObjName, bool WithPriorityArray)
+            : base(new BacnetObjectId(BacnetObjectTypes.OBJECT_MULTI_STATE_VALUE, (uint)ObjId), InitialValue, StatesNumber, ObjName, WithPriorityArray)
+        {
+        }
+    }
+
     // Could be used for MultiStateOutput
     // and MultiStateValue
     [Serializable]
-    class MultiStateOutput:AnalogOutput<uint>
+    abstract class MultiStateValueAndOutput:AnalogValueAndOutput<uint>
     {
         
         uint m_PROP_NUMBER_OF_STATES;
@@ -51,8 +69,8 @@ namespace AnotherStorageImplementation
             get { return m_PROP_STATE_TEXT; }
         }
         
-        public MultiStateOutput(BacnetObjectId ObjId, uint InitialValue, uint StatesNumber, String ObjName, bool WithPriorityArray)
-            : base(ObjId, InitialValue, ObjName, BacnetUnitsId.UNITS_DEGREES_PHASE, true)
+        public MultiStateValueAndOutput(BacnetObjectId ObjId, uint InitialValue, uint StatesNumber, String ObjName, bool WithPriorityArray)
+            : base(ObjId, InitialValue, ObjName, BacnetUnitsId.UNITS_DEGREES_PHASE,true)
         {
             // InitialValue must be within 1 and m_PROP_NUMBER_OF_STATES
             m_PROP_NUMBER_OF_STATES = StatesNumber;

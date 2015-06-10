@@ -32,15 +32,10 @@ using System.IO.BACnet;
 namespace AnotherStorageImplementation
 {
     [Serializable]
-    class AnalogInput<T> : AnalogObject<T>
+    class BinaryInput : BinaryObject
     {
-        public AnalogInput(int ObjId, T InitialValue, String ObjName, BacnetUnitsId Unit)
-            : base(new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, (uint)ObjId), InitialValue, ObjName, Unit)
-        {
-            m_PRESENT_VALUE_ReadOnly = true;
-        }
-        public AnalogInput(BacnetObjectId ObjId, T InitialValue, String ObjName, BacnetUnitsId Unit)
-            : base(ObjId, InitialValue, ObjName, Unit)
+        public BinaryInput(int ObjId, bool InitialValue, String ObjName)
+            : base(new BacnetObjectId(BacnetObjectTypes.OBJECT_BINARY_INPUT, (uint)ObjId), InitialValue, ObjName)
         {
             m_PRESENT_VALUE_ReadOnly = true;
         }

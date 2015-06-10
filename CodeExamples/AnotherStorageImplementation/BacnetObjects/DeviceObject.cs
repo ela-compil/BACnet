@@ -29,11 +29,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO.BACnet;
+using System.Diagnostics;
 
 namespace AnotherStorageImplementation
 {
     [Serializable]
-    class DeviceObject : BacnetObject
+    class DeviceObject : BacnetObject, IRegisterBacnetObject
     {
         List<BacnetObject> ObjectsList=new List<BacnetObject>();
 
@@ -43,7 +44,14 @@ namespace AnotherStorageImplementation
         {
             get { return m_PROP_OBJECT_LIST; }
         }
-
+        
+        List<BacnetValue> m_PROP_STRUCTURED_OBJECT_LIST = new List<BacnetValue>();
+        [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID)]
+        public virtual List<BacnetValue> PROP_STRUCTURED_OBJECT_LIST
+        {
+            get { return m_PROP_STRUCTURED_OBJECT_LIST; }
+        }
+        
         BacnetBitString m_PROP_PROTOCOL_OBJECT_TYPES_SUPPORTED= new BacnetBitString();
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_BIT_STRING)]
         public virtual BacnetBitString PROP_PROTOCOL_OBJECT_TYPES_SUPPORTED
@@ -130,11 +138,15 @@ namespace AnotherStorageImplementation
             get { return null; }
         }
 
-        public DeviceObject(uint Id, String DeviceName)
+        bool UseStructuredView;
+
+        public DeviceObject(uint Id, String DeviceName, bool UseStructuredView)
             : base(new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, Id), DeviceName)
         {
+            this.UseStructuredView = UseStructuredView;
 
             m_PROP_OBJECT_LIST.Add(new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID, m_PROP_OBJECT_IDENTIFIER));
+            m_PROP_STRUCTURED_OBJECT_LIST.Add(new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID, m_PROP_OBJECT_IDENTIFIER));
 
             m_PROP_PROTOCOL_OBJECT_TYPES_SUPPORTED.SetBit((byte)BacnetObjectTypes.OBJECT_DEVICE, true);
 
@@ -146,6 +158,9 @@ namespace AnotherStorageImplementation
             m_PROP_PROTOCOL_SERVICES_SUPPORTED.SetBit((byte)BacnetServicesSupported.SERVICE_SUPPORTED_WRITE_PROPERTY, true);
             m_PROP_PROTOCOL_SERVICES_SUPPORTED.SetBit((byte)BacnetServicesSupported.SERVICE_SUPPORTED_SUBSCRIBE_COV, true);
             m_PROP_PROTOCOL_SERVICES_SUPPORTED.SetBit((byte)BacnetServicesSupported.SERVICE_SUPPORTED_SUBSCRIBE_COV_PROPERTY, true);
+            m_PROP_PROTOCOL_SERVICES_SUPPORTED.SetBit((byte)BacnetServicesSupported.SERVICE_SUPPORTED_READ_RANGE, true);
+            m_PROP_PROTOCOL_SERVICES_SUPPORTED.SetBit((byte)BacnetServicesSupported.SERVICE_SUPPORTED_ATOMIC_READ_FILE, true);
+            m_PROP_PROTOCOL_SERVICES_SUPPORTED.SetBit((byte)BacnetServicesSupported.SERVICE_SUPPORTED_ATOMIC_WRITE_FILE, true);
         }
 
         // Each object provided by the server must be added one by one to the DeviceObject
@@ -156,6 +171,14 @@ namespace AnotherStorageImplementation
             m_PROP_PROTOCOL_OBJECT_TYPES_SUPPORTED.SetBit((byte)newObj.m_PROP_OBJECT_IDENTIFIER.type, true);
             // Update OBJECT_LIST
             m_PROP_OBJECT_LIST.Add(new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID, newObj.m_PROP_OBJECT_IDENTIFIER));
+            
+            // Update structured object list
+            // but only if the caller is not a view
+            // check by caller method name
+            string callermethod = new StackFrame(1).GetMethod().Name;
+
+            if ((newObj.m_PROP_OBJECT_TYPE == (uint)BacnetObjectTypes.OBJECT_STRUCTURED_VIEW)&&(callermethod!="AddBacnetObject"))
+                m_PROP_STRUCTURED_OBJECT_LIST.Add(new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID, newObj.m_PROP_OBJECT_IDENTIFIER));
         }
 
         // Can be use to find a particular object with it's bacnet id 
@@ -167,6 +190,14 @@ namespace AnotherStorageImplementation
                 if (b.Equals(objId))
                     return b;
             return null;
+        }
+
+        protected override uint BacnetMethodNametoId(String Name)
+        {
+            if ((Name == "get_PROP_STRUCTURED_OBJECT_LIST") && (!this.UseStructuredView))  // Hide this property
+                return (uint)((int)BacnetPropertyIds.MAX_BACNET_PROPERTY_ID + 1);
+            else
+                return base.BacnetMethodNametoId(Name);
         }
     }
 }

@@ -32,13 +32,12 @@ using System.IO.BACnet;
 namespace AnotherStorageImplementation
 {
     [Serializable]
-    abstract class AnalogObject<T> : BacnetObject
+    abstract class BinaryObject : BacnetObject
     {
-        uint m_PROP_UNITS;
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED)]
-        public virtual uint PROP_UNITS
+        public virtual uint PROP_POLARITY
         {
-            get { return m_PROP_UNITS; }
+            get { return 0; }
         }
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED)]
         public virtual uint PROP_EVENT_STATE
@@ -58,19 +57,20 @@ namespace AnotherStorageImplementation
         public virtual bool PROP_OUT_OF_SERVICE
         {
             get { return m_PROP_OUT_OF_SERVICE; }
-            set { 
-                    m_PROP_OUT_OF_SERVICE=value;
-                    COVManagement(BacnetPropertyIds.PROP_PRESENT_VALUE);
-                }
+            set
+            {
+                m_PROP_OUT_OF_SERVICE = value;
+                COVManagement(BacnetPropertyIds.PROP_PRESENT_VALUE);
+            }
         }
 
         protected bool m_PRESENT_VALUE_ReadOnly = false;
-        protected T m_PROP_PRESENT_VALUE;
-        // BacnetSerialize made freely by the stack depending on the type
-        public virtual T PROP_PRESENT_VALUE
+        protected bool m_PROP_PRESENT_VALUE;
+        [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_BOOLEAN)]
+        public virtual bool PROP_PRESENT_VALUE
         {
             get { return m_PROP_PRESENT_VALUE; }
-            set 
+            set
             {
                 if (m_PRESENT_VALUE_ReadOnly == false)
                     m_PROP_PRESENT_VALUE = value;
@@ -81,25 +81,23 @@ namespace AnotherStorageImplementation
 
         // This property shows the same attribut as the previous, but without restriction
         // for internal usage, not for network callbacks
-        public virtual T internal_PROP_PRESENT_VALUE
+        public virtual bool internal_PROP_PRESENT_VALUE
         {
             get { return m_PROP_PRESENT_VALUE; }
-            set { 
-                    m_PROP_PRESENT_VALUE = value; 
-                    COVManagement(BacnetPropertyIds.PROP_PRESENT_VALUE); 
-                }
+            set
+            {
+                m_PROP_PRESENT_VALUE = value;
+                COVManagement(BacnetPropertyIds.PROP_PRESENT_VALUE);
+            }
         }
-           
-        public AnalogObject(BacnetObjectId ObjId, T InitialValue, String ObjName, BacnetUnitsId Unit)
+
+        public BinaryObject(BacnetObjectId ObjId, bool InitialValue, String ObjName)
             : base(ObjId, ObjName)
         {
-
             m_PROP_STATUS_FLAGS.SetBit((byte)0, false);
             m_PROP_STATUS_FLAGS.SetBit((byte)1, false);
             m_PROP_STATUS_FLAGS.SetBit((byte)2, false);
             m_PROP_STATUS_FLAGS.SetBit((byte)3, false);
-
-            m_PROP_UNITS = (uint)Unit;
 
             m_PROP_PRESENT_VALUE = InitialValue;
 
