@@ -840,6 +840,17 @@ namespace System.IO.BACnet
             m_client.Send(b.buffer, m_client.HeaderLength, b.offset - m_client.HeaderLength, broadcast, false, 0);
         }
 
+        public void SendUnconfirmedEventNotification(BacnetAddress adr, BacnetEventNotificationData eventData)
+        {
+            Trace.WriteLine("Sending Event Notification ... ", null);
+
+            EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, adr, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, 0);
+            APDU.EncodeUnconfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_EVENT_NOTIFICATION);
+            Services.EncodeEventNotifyUnconfirmed(b, eventData);
+            m_client.Send(b.buffer, m_client.HeaderLength, b.offset - m_client.HeaderLength, adr, false, 0);
+        }
+
         public void SynchronizeTime(BacnetAddress adr, DateTime dateTime, bool utc)
         {
             Trace.WriteLine("Sending Time Synchronize ... ", null);

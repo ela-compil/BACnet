@@ -31,6 +31,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.IO.BACnet.Serialize;
 
 namespace System.IO.BACnet
 {
@@ -922,6 +923,19 @@ namespace System.IO.BACnet
             EVENT_STATE_LOW_LIMIT = 4
         } ;
 
+        public enum  BacnetEventEnable 
+        {
+            EVENT_ENABLE_TO_OFFNORMAL = 1,
+            EVENT_ENABLE_TO_FAULT = 2,
+            EVENT_ENABLE_TO_NORMAL = 4
+        };
+
+        public enum BacnetLimitEnable
+        {
+            EVENT_LOW_LIMIT_ENABLE = 1,
+            EVENT_HIGH_LIMIT_ENABLE = 2
+        };
+
         public enum BacnetNotifyTypes
         {
             NOTIFY_ALARM = 0,
@@ -1640,6 +1654,14 @@ namespace System.IO.BACnet
                 return RoutedSource.Equals(d.RoutedSource);
 
             }
+        }
+
+        public void ASN1encode(EncodeBuffer buffer)
+        {
+            ASN1.encode_opening_tag(buffer, 1);
+            ASN1.encode_application_unsigned(buffer, net);
+            ASN1.encode_application_octet_string(buffer, adr, 0, adr.Length);
+            ASN1.encode_closing_tag(buffer, 1);
         }
     }
 
@@ -3009,38 +3031,34 @@ namespace System.IO.BACnet.Serialize
 
         public static void encode_application_object_id(EncodeBuffer buffer, BacnetObjectTypes object_type, UInt32 instance)
         {
-            EncodeBuffer tmp1 = buffer.Copy();
-            encode_tag(buffer, (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID, false, 0);  //dummy
-            EncodeBuffer tmp2 = buffer.Copy();
-            encode_bacnet_object_id(buffer, object_type, instance);
-            encode_tag(tmp1, (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID, false, (uint)tmp2.GetDiff(buffer));
+            EncodeBuffer tmp1 = new EncodeBuffer();
+            encode_bacnet_object_id(tmp1, object_type, instance);
+            encode_tag(buffer, (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID, false, (uint)tmp1.offset);
+            buffer.Add(tmp1.buffer, tmp1.offset);
         }
 
         public static void encode_application_unsigned(EncodeBuffer buffer, UInt32 value)
         {
-            EncodeBuffer tmp1 = buffer.Copy();
-            encode_tag(buffer, (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT, false, 0);  //dummy
-            EncodeBuffer tmp2 = buffer.Copy();
-            encode_bacnet_unsigned(buffer, value);
-            encode_tag(tmp1, (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT, false, (uint)tmp2.GetDiff(buffer));
+            EncodeBuffer tmp1 = new EncodeBuffer();
+            encode_bacnet_unsigned(tmp1, value);
+            encode_tag(buffer, (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT, false, (uint)tmp1.offset);
+            buffer.Add(tmp1.buffer, tmp1.offset);
         }
 
         public static void encode_application_enumerated(EncodeBuffer buffer, UInt32 value)
         {
-            EncodeBuffer tmp1 = buffer.Copy();
-            encode_tag(buffer, (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED, false, 0);  //dummy
-            EncodeBuffer tmp2 = buffer.Copy();
-            encode_bacnet_enumerated(buffer, value);
-            encode_tag(tmp1, (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED, false, (uint)tmp2.GetDiff(buffer));
+            EncodeBuffer tmp1 = new EncodeBuffer();
+            encode_bacnet_enumerated(tmp1, value);
+            encode_tag(buffer, (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED, false, (uint)tmp1.offset);
+            buffer.Add(tmp1.buffer, tmp1.offset);
         }
 
         public static void encode_application_signed(EncodeBuffer buffer, Int32 value)
         {
-            EncodeBuffer tmp1 = buffer.Copy();
-            encode_tag(buffer, (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_SIGNED_INT, false, 0);  //dummy
-            EncodeBuffer tmp2 = buffer.Copy();
-            encode_bacnet_signed(buffer, value);
-            encode_tag(tmp1, (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_SIGNED_INT, false, (uint)tmp2.GetDiff(buffer));
+            EncodeBuffer tmp1 = new EncodeBuffer();
+            encode_bacnet_signed(tmp1, value);
+            encode_tag(buffer, (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_SIGNED_INT, false, (uint)tmp1.offset);
+            buffer.Add(tmp1.buffer, tmp1.offset);
         }
 
         public static void encode_bacnet_unsigned(EncodeBuffer buffer, UInt32 value)
@@ -3344,6 +3362,10 @@ namespace System.IO.BACnet.Serialize
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_TIME:
                     encode_application_time(buffer, (DateTime)value.Value);
                     break;
+                // Added for EventTimeStamp 
+                case BacnetApplicationTags.BACNET_APPLICATION_TAG_DATETIME:
+                    bacapp_encode_context_datetime(buffer, 2, (DateTime)value.Value);
+                    break;
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID:
                     encode_application_object_id(buffer, ((BacnetObjectId)value.Value).type, ((BacnetObjectId)value.Value).instance);
                     break;
@@ -3355,7 +3377,7 @@ namespace System.IO.BACnet.Serialize
                     break;
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_READ_ACCESS_SPECIFICATION:
                     encode_read_access_specification(buffer, ((BacnetReadAccessSpecification)value.Value));     //is this the right way to do it, I wonder?
-                    break;
+                    break;                    
                 default:
                     //context specific
                     if (value.Value is byte[])
@@ -3364,7 +3386,14 @@ namespace System.IO.BACnet.Serialize
                         if (buffer != null) buffer.Add(arr, arr.Length);
                     }
                     else
-                        throw new Exception("I cannot encode this");
+                    {
+                        try
+                        {
+                            dynamic d = value.Value;    // last chance
+                            d.ASN1encode(buffer);
+                        }
+                        catch { throw new Exception("I cannot encode this"); }
+                    }
                     break;
             }
         }
@@ -7286,43 +7315,42 @@ namespace System.IO.BACnet.Serialize
             if (record.type != BacnetTrendLogValueType.TL_TYPE_NULL)
             {
                 ASN1.encode_opening_tag(buffer, 1);
-                EncodeBuffer tmp1 = buffer.Copy();
-                ASN1.encode_tag(buffer, (byte)record.type, false, 0);       //dummy
-                EncodeBuffer tmp2 = buffer.Copy();
+                EncodeBuffer tmp1 = new System.IO.BACnet.Serialize.EncodeBuffer(); 
                 switch (record.type)
                 {
                     case BacnetTrendLogValueType.TL_TYPE_ANY:
                         throw new NotImplementedException();
                     case BacnetTrendLogValueType.TL_TYPE_BITS:
-                        ASN1.encode_bitstring(buffer, record.GetValue<BacnetBitString>());
+                        ASN1.encode_bitstring(tmp1, record.GetValue<BacnetBitString>());
                         break;
                     case BacnetTrendLogValueType.TL_TYPE_BOOL:
-                        buffer.Add(record.GetValue<bool>() ? (byte)1 : (byte)0);
+                        tmp1.Add(record.GetValue<bool>() ? (byte)1 : (byte)0);
                         break;
                     case BacnetTrendLogValueType.TL_TYPE_DELTA:
-                        ASN1.encode_bacnet_real(buffer, record.GetValue<float>());
+                        ASN1.encode_bacnet_real(tmp1, record.GetValue<float>());
                         break;
                     case BacnetTrendLogValueType.TL_TYPE_ENUM:
-                        ASN1.encode_application_enumerated(buffer, record.GetValue<uint>());
+                        ASN1.encode_application_enumerated(tmp1, record.GetValue<uint>());
                         break;
                     case BacnetTrendLogValueType.TL_TYPE_ERROR:
                         BacnetError err = record.GetValue<BacnetError>();
-                        Services.EncodeError(buffer, err.error_class, err.error_code);
+                        Services.EncodeError(tmp1, err.error_class, err.error_code);
                         break;
                     case BacnetTrendLogValueType.TL_TYPE_REAL:
-                        ASN1.encode_bacnet_real(buffer, record.GetValue<float>());
+                        ASN1.encode_bacnet_real(tmp1, record.GetValue<float>());
                         break;
                     case BacnetTrendLogValueType.TL_TYPE_SIGN:
-                        ASN1.encode_bacnet_signed(buffer, record.GetValue<int>());
+                        ASN1.encode_bacnet_signed(tmp1, record.GetValue<int>());
                         break;
                     case BacnetTrendLogValueType.TL_TYPE_STATUS:
-                        ASN1.encode_bitstring(buffer, record.GetValue<BacnetBitString>());
+                        ASN1.encode_bitstring(tmp1, record.GetValue<BacnetBitString>());
                         break;
                     case BacnetTrendLogValueType.TL_TYPE_UNSIGN:
-                        ASN1.encode_bacnet_unsigned(buffer, record.GetValue<uint>());
+                        ASN1.encode_bacnet_unsigned(tmp1, record.GetValue<uint>());
                         break;
                 }
-                ASN1.encode_tag(tmp1, (byte)record.type, false, (uint)tmp2.GetDiff(buffer));
+                ASN1.encode_tag(buffer, (byte)record.type, false, (uint)tmp1.offset); 
+                buffer.Add(tmp1.buffer, tmp1.offset);
                 ASN1.encode_closing_tag(buffer, 1);
             }
 
