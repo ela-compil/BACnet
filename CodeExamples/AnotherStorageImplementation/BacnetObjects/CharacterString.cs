@@ -29,21 +29,21 @@ using System.Linq;
 using System.Text;
 using System.IO.BACnet;
 
-namespace AnotherStorageImplementation
+namespace BaCSharp
 {
     [Serializable]
-    class CharacterString : BacnetObject
+    public class CharacterString : BaCSharpObject
     {
 
-        protected BacnetBitString m_PROP_STATUS_FLAGS = new BacnetBitString();
+        public BacnetBitString m_PROP_STATUS_FLAGS = new BacnetBitString();
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_BIT_STRING)]
         public virtual BacnetBitString PROP_STATUS_FLAGS
         {
             get { return m_PROP_STATUS_FLAGS; }
         }
 
-        protected bool m_PRESENT_VALUE_ReadOnly = false;
-        protected String m_PROP_PRESENT_VALUE;
+        public bool m_PRESENT_VALUE_ReadOnly = false;
+        public String m_PROP_PRESENT_VALUE;
 
         public virtual String PROP_PRESENT_VALUE
         {
@@ -69,8 +69,8 @@ namespace AnotherStorageImplementation
             }
         }
 
-        public CharacterString(int ObjId, String InitialValue, String ObjName, bool ReadOnly)
-            : base(new BacnetObjectId(BacnetObjectTypes.OBJECT_CHARACTERSTRING_VALUE,(uint)ObjId), ObjName)
+        public CharacterString(int ObjId, String ObjName, String Description, String InitialValue, bool ReadOnly)
+            : base(new BacnetObjectId(BacnetObjectTypes.OBJECT_CHARACTERSTRING_VALUE,(uint)ObjId), ObjName,  Description)
         {
             m_PROP_STATUS_FLAGS.SetBit((byte)0, false);
             m_PROP_STATUS_FLAGS.SetBit((byte)1, false);
@@ -80,5 +80,6 @@ namespace AnotherStorageImplementation
             m_PRESENT_VALUE_ReadOnly = ReadOnly;
             m_PROP_PRESENT_VALUE = InitialValue;
         }
+        public CharacterString() { }
     }
 }

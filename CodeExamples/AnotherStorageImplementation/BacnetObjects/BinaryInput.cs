@@ -29,15 +29,16 @@ using System.Linq;
 using System.Text;
 using System.IO.BACnet;
 
-namespace AnotherStorageImplementation
+namespace BaCSharp
 {
     [Serializable]
-    class BinaryInput : BinaryObject
+    public class BinaryInput : BinaryObject
     {
-        public BinaryInput(int ObjId, bool InitialValue, String ObjName)
-            : base(new BacnetObjectId(BacnetObjectTypes.OBJECT_BINARY_INPUT, (uint)ObjId), InitialValue, ObjName)
+        public BinaryInput(int ObjId, String ObjName, String Description, bool InitialValue)
+            : base(new BacnetObjectId(BacnetObjectTypes.OBJECT_BINARY_INPUT, (uint)ObjId), ObjName, Description, InitialValue)
         {
             m_PRESENT_VALUE_ReadOnly = true;
         }
+        public BinaryInput() { }
     }
 }

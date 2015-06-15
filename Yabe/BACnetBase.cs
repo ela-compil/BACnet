@@ -1258,6 +1258,13 @@ namespace System.IO.BACnet
         public BacnetTimestampTags Tag;
         public DateTime Time;
         public UInt16 Sequence;
+
+        public BacnetGenericTime(DateTime Time, BacnetTimestampTags Tag, UInt16 Sequence = 0)
+        {
+            this.Time = Time;
+            this.Tag = Tag;
+            this.Sequence = Sequence;
+        }
     }
 
     public enum BacnetTimestampTags
@@ -1583,6 +1590,81 @@ namespace System.IO.BACnet
         public T GetValue<T>()
         {
             return (T)Convert.ChangeType(Value, typeof(T));
+        }
+    }
+
+    // FC
+    public struct DeviceReportingRecipient
+    {
+        public BacnetBitString WeekofDay;
+        public DateTime toTime, fromTime;
+
+        public BacnetObjectId Id;
+        public BacnetAddress adr;
+
+        public uint processIdentifier;
+        public bool Ack_Required;
+        public BacnetBitString evenType;
+
+        public DeviceReportingRecipient(BacnetValue v0, BacnetValue v1, BacnetValue v2, BacnetValue v3, BacnetValue v4, BacnetValue v5, BacnetValue v6)
+        {
+            Id = new BacnetObjectId();
+            adr = null;
+
+            WeekofDay = (BacnetBitString)v0.Value;
+            fromTime = (DateTime)v1.Value;
+            toTime = (DateTime)v2.Value;
+            if (v3.Value is BacnetObjectId)
+                Id = (BacnetObjectId)v3.Value;
+            else
+            {
+                BacnetValue[] netdescr=(BacnetValue[])v3.Value;
+                ushort s = (ushort)(uint)netdescr[0].Value;
+                byte[] b=(byte[])netdescr[1].Value;
+                adr = new BacnetAddress(BacnetAddressTypes.IP, s, b);
+            }
+            processIdentifier = (uint)v4.Value;
+            Ack_Required = (bool)v5.Value;
+            evenType = (BacnetBitString)v6.Value;
+        }
+
+        public DeviceReportingRecipient(BacnetBitString WeekofDay, DateTime fromTime, DateTime toTime, BacnetObjectId Id, uint priority, bool Ack_Required, BacnetBitString evenType)
+        {
+            adr = null;
+
+            this.WeekofDay = WeekofDay;
+            this.toTime = toTime;
+            this.fromTime = fromTime;
+            this.Id = Id;
+            this.processIdentifier = priority;
+            this.Ack_Required = Ack_Required;
+            this.evenType = evenType;
+        }
+        public DeviceReportingRecipient(BacnetBitString WeekofDay, DateTime fromTime, DateTime toTime, BacnetAddress adr, uint priority, bool Ack_Required, BacnetBitString evenType)
+        {
+            Id = new BacnetObjectId();
+
+            this.WeekofDay = WeekofDay;
+            this.toTime = toTime;
+            this.fromTime = fromTime;
+            this.adr = adr;
+            this.processIdentifier = priority;
+            this.Ack_Required = Ack_Required;
+            this.evenType = evenType;
+        }
+
+        public void ASN1encode(EncodeBuffer buffer)
+        {
+            ASN1.bacapp_encode_application_data(buffer, new BacnetValue(WeekofDay));
+            ASN1.bacapp_encode_application_data(buffer, new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_TIME, toTime));
+            ASN1.bacapp_encode_application_data(buffer, new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_TIME, fromTime));
+            if (adr != null)
+                adr.ASN1encode(buffer);
+            else
+                ASN1.encode_context_object_id(buffer, 0, Id.type, Id.instance);         // BacnetObjectId is context specific encoded
+            ASN1.bacapp_encode_application_data(buffer, new BacnetValue(processIdentifier));
+            ASN1.bacapp_encode_application_data(buffer, new BacnetValue(Ack_Required));
+            ASN1.bacapp_encode_application_data(buffer, new BacnetValue(evenType));
         }
     }
 
@@ -3363,8 +3445,8 @@ namespace System.IO.BACnet.Serialize
                     encode_application_time(buffer, (DateTime)value.Value);
                     break;
                 // Added for EventTimeStamp 
-                case BacnetApplicationTags.BACNET_APPLICATION_TAG_DATETIME:
-                    bacapp_encode_context_datetime(buffer, 2, (DateTime)value.Value);
+                case BacnetApplicationTags.BACNET_APPLICATION_TAG_TIMESTAMP:
+                    bacapp_encode_timestamp(buffer, (BacnetGenericTime)value.Value);
                     break;
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID:
                     encode_application_object_id(buffer, ((BacnetObjectId)value.Value).type, ((BacnetObjectId)value.Value).instance);

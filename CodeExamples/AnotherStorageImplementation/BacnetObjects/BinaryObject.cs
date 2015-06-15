@@ -29,10 +29,10 @@ using System.Linq;
 using System.Text;
 using System.IO.BACnet;
 
-namespace AnotherStorageImplementation
+namespace BaCSharp
 {
     [Serializable]
-    abstract class BinaryObject : BacnetObject
+    public abstract class BinaryObject : BaCSharpObject
     {
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED)]
         public virtual uint PROP_POLARITY
@@ -52,7 +52,7 @@ namespace AnotherStorageImplementation
             get { return m_PROP_STATUS_FLAGS; }
         }
 
-        protected bool m_PROP_OUT_OF_SERVICE = false;
+        public bool m_PROP_OUT_OF_SERVICE = false;
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_BOOLEAN)]
         public virtual bool PROP_OUT_OF_SERVICE
         {
@@ -64,8 +64,8 @@ namespace AnotherStorageImplementation
             }
         }
 
-        protected bool m_PRESENT_VALUE_ReadOnly = false;
-        protected bool m_PROP_PRESENT_VALUE;
+        public bool m_PRESENT_VALUE_ReadOnly = false;
+        public bool m_PROP_PRESENT_VALUE;
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_BOOLEAN)]
         public virtual bool PROP_PRESENT_VALUE
         {
@@ -91,8 +91,8 @@ namespace AnotherStorageImplementation
             }
         }
 
-        public BinaryObject(BacnetObjectId ObjId, bool InitialValue, String ObjName)
-            : base(ObjId, ObjName)
+        public BinaryObject(BacnetObjectId ObjId, String ObjName, String Description, bool InitialValue)
+            : base(ObjId, ObjName,  Description)
         {
             m_PROP_STATUS_FLAGS.SetBit((byte)0, false);
             m_PROP_STATUS_FLAGS.SetBit((byte)1, false);
@@ -102,5 +102,6 @@ namespace AnotherStorageImplementation
             m_PROP_PRESENT_VALUE = InitialValue;
 
         }
+        public BinaryObject() { }
     }
 }

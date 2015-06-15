@@ -29,32 +29,34 @@ using System.Linq;
 using System.Text;
 using System.IO.BACnet;
 
-namespace AnotherStorageImplementation
+namespace BaCSharp
 {
     [Serializable]
-    class BinaryOutput : BinaryValueAndOutput
+    public class BinaryOutput : BinaryValueAndOutput
     {
-        public BinaryOutput(int ObjId, bool InitialValue, String ObjName)
-            : base(new BacnetObjectId(BacnetObjectTypes.OBJECT_BINARY_OUTPUT, (uint)ObjId), InitialValue, ObjName, true)
+        public BinaryOutput(int ObjId, String ObjName, String Description, bool InitialValue)
+            : base(new BacnetObjectId(BacnetObjectTypes.OBJECT_BINARY_OUTPUT, (uint)ObjId), ObjName, Description, InitialValue, true)
         {
         }
+        public BinaryOutput(){}
     }
 
     [Serializable]
-    class BinaryValue : BinaryValueAndOutput
+    public class BinaryValue : BinaryValueAndOutput
     {
-        public BinaryValue(int ObjId, bool InitialValue, String ObjName, BacnetUnitsId Unit, bool WithPriorityArray)
-            : base(new BacnetObjectId(BacnetObjectTypes.OBJECT_BINARY_VALUE, (uint)ObjId), InitialValue, ObjName, WithPriorityArray)
+        public BinaryValue(int ObjId, String ObjName, String Description, bool InitialValue, BacnetUnitsId Unit, bool WithPriorityArray)
+            : base(new BacnetObjectId(BacnetObjectTypes.OBJECT_BINARY_VALUE, (uint)ObjId), ObjName, Description, InitialValue, WithPriorityArray)
         {
         }
+        public BinaryValue(){}
     }
 
     [Serializable]
-    abstract class BinaryValueAndOutput : BinaryObject
+    public abstract class BinaryValueAndOutput : BinaryObject
     {
-        protected bool UsePriorityArray = false;
+        public bool UsePriorityArray = false;
 
-        protected bool m_PROP_RELINQUISH_DEFAULT;
+        public bool m_PROP_RELINQUISH_DEFAULT;
         // BacnetSerialize made freely by the stack depending on the type
         public virtual bool PROP_RELINQUISH_DEFAULT
         {
@@ -66,15 +68,15 @@ namespace AnotherStorageImplementation
             }
         }
 
-        protected BacnetValue[] m_PROP_PRIORITY_ARRAY = new BacnetValue[16];
+        public BacnetValue[] m_PROP_PRIORITY_ARRAY = new BacnetValue[16];
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_NULL)]
         public virtual BacnetValue[] PROP_PRIORITY_ARRAY
         {
             get { return m_PROP_PRIORITY_ARRAY; }
         }
 
-        public BinaryValueAndOutput(BacnetObjectId ObjId, bool InitialValue, String ObjName, bool WithPriorityArray)
-            : base(ObjId, InitialValue, ObjName)
+        public BinaryValueAndOutput(BacnetObjectId ObjId, String ObjName, String Description, bool InitialValue, bool WithPriorityArray)
+            : base(ObjId, ObjName, Description, InitialValue)
         {
             if (WithPriorityArray == true)
             {
@@ -84,6 +86,7 @@ namespace AnotherStorageImplementation
 
             this.m_PRESENT_VALUE_ReadOnly = false;
         }
+        public BinaryValueAndOutput() { }
 
         // Do not shows PROP_PRIORITY_ARRAY &  PROP_RELINQUISH_DEFAULT if not in use
         protected override uint BacnetMethodNametoId(String Name)

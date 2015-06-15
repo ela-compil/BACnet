@@ -30,36 +30,37 @@ using System.Linq;
 using System.Text;
 using System.IO.BACnet;
 using System.Diagnostics;
+using System.Reflection;
 
-namespace AnotherStorageImplementation
+namespace BaCSharp
 {
-    [Serializable]
-    class DeviceObject : BacnetObject, IRegisterBacnetObject
+    // Not serializable, quite complexe in a polymorphic context
+    public class DeviceObject : BaCSharpObject
     {
-        protected List<BacnetObject> ObjectsList=new List<BacnetObject>();
+        public List<BaCSharpObject> ObjectsList=new List<BaCSharpObject>();
 
-        protected List<BacnetValue> m_PROP_OBJECT_LIST = new List<BacnetValue>();
+        public List<BacnetValue> m_PROP_OBJECT_LIST = new List<BacnetValue>();
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID)]
         public virtual List<BacnetValue> PROP_OBJECT_LIST
         {
             get { return m_PROP_OBJECT_LIST; }
         }
 
-        protected List<BacnetValue> m_PROP_STRUCTURED_OBJECT_LIST = new List<BacnetValue>();
+        public List<BacnetValue> m_PROP_STRUCTURED_OBJECT_LIST = new List<BacnetValue>();
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID)]
         public virtual List<BacnetValue> PROP_STRUCTURED_OBJECT_LIST
         {
             get { return m_PROP_STRUCTURED_OBJECT_LIST; }
         }
 
-        protected BacnetBitString m_PROP_PROTOCOL_OBJECT_TYPES_SUPPORTED = new BacnetBitString();
+        public BacnetBitString m_PROP_PROTOCOL_OBJECT_TYPES_SUPPORTED = new BacnetBitString();
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_BIT_STRING)]
         public virtual BacnetBitString PROP_PROTOCOL_OBJECT_TYPES_SUPPORTED
         {
             get { return m_PROP_PROTOCOL_OBJECT_TYPES_SUPPORTED; }
         }
 
-        protected BacnetBitString m_PROP_PROTOCOL_SERVICES_SUPPORTED = new BacnetBitString();
+        public BacnetBitString m_PROP_PROTOCOL_SERVICES_SUPPORTED = new BacnetBitString();
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_BIT_STRING)]
         public virtual BacnetBitString PROP_PROTOCOL_SERVICES_SUPPORTED
         {
@@ -138,10 +139,10 @@ namespace AnotherStorageImplementation
             get { return null; }
         }
 
-        protected bool UseStructuredView;
+        public bool UseStructuredView;
 
-        public DeviceObject(uint Id, String DeviceName, bool UseStructuredView)
-            : base(new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, Id), DeviceName)
+        public DeviceObject(uint Id, String DeviceName, String Description, bool UseStructuredView)
+            : base(new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, Id), DeviceName, Description)
         {
             this.UseStructuredView = UseStructuredView;
 
@@ -163,33 +164,47 @@ namespace AnotherStorageImplementation
             m_PROP_PROTOCOL_SERVICES_SUPPORTED.SetBit((byte)BacnetServicesSupported.SERVICE_SUPPORTED_ATOMIC_WRITE_FILE, true);
         }
 
+        public DeviceObject() { }
         // Each object provided by the server must be added one by one to the DeviceObject
-        public virtual void AddBacnetObject(BacnetObject newObj)
+        public virtual void AddBacnetObject(BaCSharpObject newObj)
         {
             ObjectsList.Add(newObj);
-            // Update OBJECT_TYPES_SUPPORTED
-            m_PROP_PROTOCOL_OBJECT_TYPES_SUPPORTED.SetBit((byte)newObj.m_PROP_OBJECT_IDENTIFIER.type, true);
-            // Update OBJECT_LIST
-            m_PROP_OBJECT_LIST.Add(new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID, newObj.m_PROP_OBJECT_IDENTIFIER));
-            
-            // Update structured object list
-            // but only if the caller is not a view
-            // check by caller method name
-            string callermethod = new StackFrame(1).GetMethod().Name;
+            newObj.deviceOwner=this;
 
-            if ((newObj.m_PROP_OBJECT_TYPE == (uint)BacnetObjectTypes.OBJECT_STRUCTURED_VIEW)&&(callermethod!="AddBacnetObject"))
-                m_PROP_STRUCTURED_OBJECT_LIST.Add(new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID, newObj.m_PROP_OBJECT_IDENTIFIER));
+            // Update OBJECT_TYPES_SUPPORTED
+            m_PROP_PROTOCOL_OBJECT_TYPES_SUPPORTED.SetBit((byte)newObj.PROP_OBJECT_IDENTIFIER.type, true);
+            // Update OBJECT_LIST
+            m_PROP_OBJECT_LIST.Add(new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID, newObj.PROP_OBJECT_IDENTIFIER));
+            
+            // Update the structured object list
+            // but only if the caller is not a view
+            // check by caller method type class appartenance
+            MethodBase m = new StackFrame(1).GetMethod();
+            bool CallerIsView = (m.DeclaringType == typeof(StructuredView));
+
+            if (!CallerIsView)
+                m_PROP_STRUCTURED_OBJECT_LIST.Add(new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID, newObj.PROP_OBJECT_IDENTIFIER));
+
         }
 
         // Can be use to find a particular object with it's bacnet id 
-        public virtual BacnetObject FindBacnetObject(BacnetObjectId objId)
+        public virtual BaCSharpObject FindBacnetObject(BacnetObjectId objId)
         {
             if (this.Equals(objId)) return this;
 
-            foreach (BacnetObject b in ObjectsList)
+            foreach (BaCSharpObject b in ObjectsList)
                 if (b.Equals(objId))
                     return b;
             return null;
+        }
+
+        public virtual bool FindBacnetObjectType(BacnetObjectTypes objType)
+        {
+
+            foreach (BaCSharpObject b in ObjectsList)
+                if (b.PROP_OBJECT_TYPE==(uint)objType)
+                    return true;
+            return false;
         }
 
         protected override uint BacnetMethodNametoId(String Name)

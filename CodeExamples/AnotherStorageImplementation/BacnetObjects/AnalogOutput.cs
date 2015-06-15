@@ -29,29 +29,31 @@ using System.Linq;
 using System.Text;
 using System.IO.BACnet;
 
-namespace AnotherStorageImplementation
+namespace BaCSharp
 {
 
     [Serializable]
-    class AnalogOutput<T> : AnalogValueAndOutput<T>
+    public class AnalogOutput<T> : AnalogValueAndOutput<T>
     {
-        public AnalogOutput(int ObjId, T InitialValue, String ObjName, BacnetUnitsId Unit)
-            : base(new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_OUTPUT, (uint)ObjId), InitialValue, ObjName, Unit, true)
+        public AnalogOutput(int ObjId, String ObjName, String Description, T InitialValue, BacnetUnitsId Unit)
+            : base(new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_OUTPUT, (uint)ObjId), ObjName, Description, InitialValue, Unit, true)
         {
         }
+        public AnalogOutput() { }
     }
 
     [Serializable]
-    class AnalogValue<T> : AnalogValueAndOutput<T>
+    public class AnalogValue<T> : AnalogValueAndOutput<T>
     {
-         public AnalogValue(int ObjId, T InitialValue, String ObjName, BacnetUnitsId Unit, bool WithPriorityArray)
-            : base(new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_VALUE, (uint)ObjId), InitialValue, ObjName, Unit, WithPriorityArray)
+        public AnalogValue(int ObjId, String ObjName, String Description, T InitialValue, BacnetUnitsId Unit, bool WithPriorityArray)
+            : base(new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_VALUE, (uint)ObjId), ObjName, Description, InitialValue, Unit, WithPriorityArray)
         {
         }
+        public AnalogValue() { }
     }
 
     [Serializable]
-    class AnalogValueAndOutput<T> : AnalogObject<T>
+    public class AnalogValueAndOutput<T> : AnalogObject<T>
     {
         protected bool UsePriorityArray = false;
 
@@ -73,8 +75,8 @@ namespace AnotherStorageImplementation
             get { return m_PROP_PRIORITY_ARRAY; }
         }
 
-        public AnalogValueAndOutput(BacnetObjectId ObjId, T InitialValue, String ObjName, BacnetUnitsId Unit, bool WithPriorityArray)
-            : base(ObjId, InitialValue, ObjName, Unit)
+        public AnalogValueAndOutput(BacnetObjectId ObjId, String ObjName, String Description, T InitialValue, BacnetUnitsId Unit, bool WithPriorityArray)
+            : base(ObjId, ObjName, Description, InitialValue, Unit)
         {
             if (WithPriorityArray == true)
             {
@@ -84,6 +86,8 @@ namespace AnotherStorageImplementation
 
             this.m_PRESENT_VALUE_ReadOnly = false;
         }
+
+        public AnalogValueAndOutput() { }
 
         // Do not shows PROP_PRIORITY_ARRAY &  PROP_RELINQUISH_DEFAULT if not in use
         protected override uint BacnetMethodNametoId(String Name)

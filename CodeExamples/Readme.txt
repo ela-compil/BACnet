@@ -36,15 +36,17 @@ AnotherStorageImplementation
 	Shows another way, much complex than the original one in DeviceStorage.cs file
 	(without the Xml descriptor also) to write a server.
 	Each Bacnetobject is a object in the C# code.
-	So a class must to be written for each Bacnet object type, but this give the
-	possibility to write a complex behaviour in objects code.
+	So a class must be written for each Bacnet object type, but this give the
+	possibility to have a complex behaviour in objects code.
 	Actual objects types are :
 		Device
 		Structured View
-		Analog Input, Analog Value, Analog Output
+		Analog Input, Analog Value, Analog Output (With Intrinsect reporting)
 		Digital Input, Digial Value, Digital Output
-		Multistates Input, Multistates Value, Multistates Output
+		Multistates Input, Multistates Value, Multistates Output (With Intrinsect reporting)
 		Characters String
 		File
 		Trendlog
+		Notification Class
 		... send us your own code !
+	Objects persistance could be achieved with serialization

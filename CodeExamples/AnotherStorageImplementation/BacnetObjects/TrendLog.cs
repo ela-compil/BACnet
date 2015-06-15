@@ -28,20 +28,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO.BACnet;
+using System.Runtime.InteropServices;
 
-namespace AnotherStorageImplementation
+namespace BaCSharp
 {
     [Serializable]
-    class TrendLog : BacnetObject
+    public class TrendLog : BaCSharpObject
     {
-
-        protected uint m_PROP_RECORD_COUNT = 0;
+        [NonSerialized()]
+        public uint m_PROP_RECORD_COUNT = 0; 
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT)]
         public virtual uint PROP_RECORD_COUNT
         {
             get { return m_PROP_RECORD_COUNT; }
         }
-        protected uint m_PROP_BUFFER_SIZE;
+        public uint m_PROP_BUFFER_SIZE;
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT)]
         public virtual uint PROP_BUFFER_SIZE
         {
@@ -59,14 +60,14 @@ namespace AnotherStorageImplementation
             get { return 0; }
         }
 
-        protected BacnetBitString m_PROP_STATUS_FLAGS = new BacnetBitString();
+        public BacnetBitString m_PROP_STATUS_FLAGS = new BacnetBitString();
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_BIT_STRING)]
         public virtual BacnetBitString PROP_STATUS_FLAGS
         {
             get { return m_PROP_STATUS_FLAGS; }
         }
 
-        protected bool m_PROP_ENABLED = true;
+        public bool m_PROP_ENABLED = true;
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_BOOLEAN)]
         public virtual bool PROP_ENABLED
         {
@@ -84,40 +85,50 @@ namespace AnotherStorageImplementation
             get { return false; }
         }
 
-        protected BacnetLogRecord[] Trend;
-        protected int LogCount = 0;
+        // protected : not serialized 
+        protected  BacnetLogRecord[] Trend;
+        protected int LogPtr = 0;
 
-        public TrendLog(int ObjId, String ObjName, uint Logsize)
-            : base(new BacnetObjectId(BacnetObjectTypes.OBJECT_TRENDLOG,(uint)ObjId), ObjName)
+        public  BacnetTrendLogValueType DefaultValueType;
+
+        public TrendLog(int ObjId, String ObjName, String Description, uint Logsize, BacnetTrendLogValueType DefaultValueType)
+            : base(new BacnetObjectId(BacnetObjectTypes.OBJECT_TRENDLOG,(uint)ObjId), ObjName, Description)
         {
             m_PROP_STATUS_FLAGS.SetBit((byte)0, false);
             m_PROP_STATUS_FLAGS.SetBit((byte)1, false);
             m_PROP_STATUS_FLAGS.SetBit((byte)2, false);
             m_PROP_STATUS_FLAGS.SetBit((byte)3, false);
 
+            this.DefaultValueType = DefaultValueType;
             m_PROP_BUFFER_SIZE = Logsize;
-            Trend = new BacnetLogRecord[Logsize];
-            for (int i = 0; i < Logsize; i++)
-            {
-                Trend[i] = new BacnetLogRecord(BacnetTrendLogValueType.TL_TYPE_UNSIGN, 0, DateTime.Now, 0);
-            }
         }
-        public virtual void AddValue(BacnetTrendLogValueType ValueType, object Value, DateTime TimeStamp, uint Status)
+
+        public TrendLog() { }
+
+        public virtual void AddValue(object Value, DateTime TimeStamp, uint Status, BacnetTrendLogValueType? ValueType=null)
         {
-            Trend[LogCount] = new BacnetLogRecord(ValueType, Value, TimeStamp, Status);
-            LogCount = (LogCount + 1) % Trend.Length;
+            if (Trend == null)
+                Trend = new BacnetLogRecord[m_PROP_BUFFER_SIZE];
+
+            if (ValueType!=null)
+                Trend[LogPtr] = new BacnetLogRecord((BacnetTrendLogValueType)ValueType, Value, TimeStamp, Status);
+            else
+                Trend[LogPtr] = new BacnetLogRecord(DefaultValueType, Value, TimeStamp, Status);
+
+            LogPtr = (LogPtr + 1) % Trend.Length;   // circular buffer
             if (m_PROP_RECORD_COUNT < Trend.Length)
                 m_PROP_RECORD_COUNT++;
         }
 
-        public virtual void AddValue(BacnetTrendLogValueType ValueType, object Value, uint Status)
+        public virtual void AddValue(object Value, uint Status, BacnetTrendLogValueType? ValueType=null)
         {
-            AddValue(ValueType, Value, DateTime.Now, Status);
+            AddValue(Value, DateTime.Now, Status, ValueType);
         }
 
         // By Morten Kvistgaard
         public virtual byte[] GetEncodedTrends(uint start, int count, out BacnetResultFlags status)
         {
+
             status = BacnetResultFlags.NONE;
             start--;    //position is 1 based
 
@@ -129,9 +140,17 @@ namespace AnotherStorageImplementation
             else status |= BacnetResultFlags.MORE_ITEMS;
 
             System.IO.BACnet.Serialize.EncodeBuffer buffer = new System.IO.BACnet.Serialize.EncodeBuffer();
+
+            int offset;
+
+            if (m_PROP_RECORD_COUNT < m_PROP_BUFFER_SIZE) // the buffer is not full
+                offset = 0;
+            else
+                offset = LogPtr;    // circular buffer
+
             for (uint i = start; i < (start + count); i++)
             {
-                System.IO.BACnet.Serialize.Services.EncodeLogRecord(buffer, Trend[i]);
+                System.IO.BACnet.Serialize.Services.EncodeLogRecord(buffer, Trend[(offset + i) % Trend.Length]);
             }
 
             return buffer.ToArray();

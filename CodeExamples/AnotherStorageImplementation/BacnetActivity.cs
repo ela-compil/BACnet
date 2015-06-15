@@ -30,6 +30,7 @@ using System.Linq;
 using System.Text;
 using System.IO.BACnet;
 using System.Reflection;
+using BaCSharp;
 
 namespace AnotherStorageImplementation
 {
@@ -41,13 +42,13 @@ namespace AnotherStorageImplementation
 
         public static void StartActivity(DeviceObject _device)
         {
-            deviceId=_device.m_PROP_OBJECT_IDENTIFIER.instance;
+            deviceId=_device.PROP_OBJECT_IDENTIFIER.instance;
             device=_device;
 
             // Bacnet on UDP/IP/Ethernet
-            bacnet_client = new BacnetClient(new BacnetIpUdpProtocolTransport(0xBAC0, false));
+            bacnet_client = new BacnetClient(new BacnetIpUdpProtocolTransport(0xBAC0, true));
 
-            bacnet_client.OnWhoIs += new BacnetClient.WhoIsHandler(handler_OnWhoIs);
+            bacnet_client.OnIam += new BacnetClient.IamHandler(handler_OnIam);
             bacnet_client.OnReadPropertyRequest += new BacnetClient.ReadPropertyRequestHandler(handler_OnReadPropertyRequest);
             bacnet_client.OnReadPropertyMultipleRequest += new BacnetClient.ReadPropertyMultipleRequestHandler(handler_OnReadPropertyMultipleRequest);
             bacnet_client.OnWritePropertyRequest += new BacnetClient.WritePropertyRequestHandler(handler_OnWritePropertyRequest);
@@ -57,11 +58,23 @@ namespace AnotherStorageImplementation
             bacnet_client.OnAtomicWriteFileRequest += new BacnetClient.AtomicWriteFileRequestHandler(handler_OnAtomicWriteFileRequest);
             bacnet_client.OnAtomicReadFileRequest += new BacnetClient.AtomicReadFileRequestHandler(handler_OnAtomicReadFileRequest);
 
-            BacnetObject.OnCOVNotify += new BacnetObject.WriteNotificationCallbackHandler(handler_OnCOVManagementNotify);
+            BaCSharpObject.OnCOVNotify += new BaCSharpObject.WriteNotificationCallbackHandler(handler_OnCOVManagementNotify);
 
             bacnet_client.Start();    // go
             // Send Iam
             bacnet_client.Iam(deviceId, new BacnetSegmentations());
+
+            if (_device.FindBacnetObjectType(BacnetObjectTypes.OBJECT_NOTIFICATION_CLASS))
+            {
+                bacnet_client.OnWhoIs += new BacnetClient.WhoIsHandler(handler_OnWhoIs);
+                bacnet_client.WhoIs();                          // Send WhoIs : needed BY Notification class for deviceId<->IP endpoint
+                NotificationClass.SetIpEndpoint(bacnet_client); // Register the endpoint for IP Notification usage
+            }
+        }
+
+        static void handler_OnIam(BacnetClient sender, BacnetAddress adr, uint device_id, uint max_apdu, BacnetSegmentations segmentation, ushort vendor_id)
+        {
+            NotificationClass.ReceivedIam(sender, adr, device_id);
         }
 
         private static void handler_OnAtomicReadFileRequest(BacnetClient sender, BacnetAddress adr, byte invoke_id, bool is_stream, BacnetObjectId object_id, int position, uint count, BacnetMaxSegments max_segments)
@@ -69,7 +82,7 @@ namespace AnotherStorageImplementation
             lock (device)
             {
 
-                BacnetObject File = device.FindBacnetObject(object_id);
+                BaCSharpObject File = device.FindBacnetObject(object_id);
                 if (File is BacnetFile)
                 {
                     try
@@ -107,7 +120,7 @@ namespace AnotherStorageImplementation
         {
             lock (device)
             {
-                BacnetObject File = device.FindBacnetObject(object_id);
+                BaCSharpObject File = device.FindBacnetObject(object_id);
                 if (File is BacnetFile)
                 {
                     try
@@ -142,7 +155,7 @@ namespace AnotherStorageImplementation
         {
             lock (device)
             {
-                BacnetObject trend = device.FindBacnetObject(objectId);
+                BaCSharpObject trend = device.FindBacnetObject(objectId);
 
                 if (trend is TrendLog)
                 {
@@ -164,7 +177,7 @@ namespace AnotherStorageImplementation
         {
             lock (device)
             {
-                BacnetObject bacobj = device.FindBacnetObject(monitoredObjectIdentifier);
+                BaCSharpObject bacobj = device.FindBacnetObject(monitoredObjectIdentifier);
                 if (bacobj != null)
                 {
                     //create 
@@ -194,7 +207,7 @@ namespace AnotherStorageImplementation
         {
             lock (device)
             {
-                BacnetObject bacobj = device.FindBacnetObject(monitoredObjectIdentifier);
+                BaCSharpObject bacobj = device.FindBacnetObject(monitoredObjectIdentifier);
                 if (bacobj != null)
                 {
                     //create 
@@ -226,7 +239,7 @@ namespace AnotherStorageImplementation
             } 
         }
         /*****************************************************************************************************/
-        static void handler_OnCOVManagementNotify(BacnetObject sender, BacnetPropertyIds propId)
+        static void handler_OnCOVManagementNotify(BaCSharpObject sender, BacnetPropertyIds propId)
         {
             System.Threading.ThreadPool.QueueUserWorkItem((o) =>
             {
@@ -269,7 +282,7 @@ namespace AnotherStorageImplementation
         {
             lock (device)
             {
-                BacnetObject bacobj = device.FindBacnetObject(object_id);
+                BaCSharpObject bacobj = device.FindBacnetObject(object_id);
                 if (bacobj != null)
                 {
                     ErrorCodes error = bacobj.WritePropertyValue(value, true);
@@ -296,7 +309,7 @@ namespace AnotherStorageImplementation
         {
             lock (device)
             {
-                BacnetObject bacobj=device.FindBacnetObject(object_id);
+                BaCSharpObject bacobj=device.FindBacnetObject(object_id);
 
                 if (bacobj != null)
                 {
@@ -325,7 +338,7 @@ namespace AnotherStorageImplementation
                     {
                         if (p.propertyReferences.Count == 1 && p.propertyReferences[0].propertyIdentifier == (uint)BacnetPropertyIds.PROP_ALL)
                         {                            
-                            BacnetObject bacobj=device.FindBacnetObject(p.objectIdentifier);
+                            BaCSharpObject bacobj=device.FindBacnetObject(p.objectIdentifier);
                             if (!bacobj.ReadPropertyAll(out value))
                             {
                                 sender.ErrorResponse(adr, BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROP_MULTIPLE, invoke_id, BacnetErrorClasses.ERROR_CLASS_OBJECT, BacnetErrorCodes.ERROR_CODE_UNKNOWN_OBJECT);
@@ -334,7 +347,7 @@ namespace AnotherStorageImplementation
                         }
                         else
                         {
-                            BacnetObject bacobj=device.FindBacnetObject(p.objectIdentifier);
+                            BaCSharpObject bacobj=device.FindBacnetObject(p.objectIdentifier);
                             bacobj.ReadPropertyMultiple(p.propertyReferences, out value);
                         }
                         values.Add(new BacnetReadAccessResult(p.objectIdentifier, value));

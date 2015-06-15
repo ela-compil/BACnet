@@ -31,7 +31,8 @@ using System.Text;
 using System.IO.BACnet;
 using System.Threading;
 using System.Diagnostics;
-
+using BaCSharp;
+using System.Xml.Serialization;
 //
 // This code shows a way to map bacnet objects in C# objects
 // and how C# methods&properties in these classes could be used 
@@ -57,7 +58,7 @@ namespace AnotherStorageImplementation
         static uint deviceId = 1234;
 
         static DeviceObject device;
-        static AnalogInput<uint> ana0;
+        static AnalogInput<double> ana0;
         static TrendLog trend0;
 
         static void Main(string[] args)
@@ -69,24 +70,25 @@ namespace AnotherStorageImplementation
             Console.WriteLine("Running ...");
 
             // A simple activity
+            int i = 0;
             for (; ; )
             {
-                Thread.Sleep(1000);
+                Thread.Sleep(500);
 
                 lock (device)   // required for all change
                 {
                     // A direct write into the attribut value could be made
                     // if status change for protected to public
                     // but this one force the COV management if needed
-                    ana0.internal_PROP_PRESENT_VALUE++;
+                    ana0.internal_PROP_PRESENT_VALUE = 100 * Math.Sin(0.1*(i++));
                 }
             }
         }
 
         /*****************************************************************************************************/
-        static void handler_OnWriteNotify(BacnetObject sender, BacnetPropertyIds propId)
+        static void handler_OnWriteNotify(BaCSharpObject sender, BacnetPropertyIds propId)
         {
-            Console.WriteLine("Write success into object : " + sender.m_PROP_OBJECT_IDENTIFIER.ToString());
+            Console.WriteLine("Write success into object : " + sender.PROP_OBJECT_IDENTIFIER.ToString());
         }
         /*****************************************************************************************************/
         static void InitDeviceObjects()
@@ -95,76 +97,84 @@ namespace AnotherStorageImplementation
             // create the device object with StructuredView acceptation
             // for Yabe this means that all others objects are put into a view
 
-            device = new DeviceObject(deviceId, "Device test", true);
-
-            // Create the View
-            StructuredView s = new StructuredView(0, "Content", device);
-            // register it
-            device.AddBacnetObject(s);
+            device = new DeviceObject(deviceId, "Device test","A test Device", true);
 
             // ANALOG_INPUT:0 uint
             // initial value 0           
-            ana0 = new AnalogInput<uint>
+            ana0 = new AnalogInput<double>
                 (
-                new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 0),
                 0,
-                "Ana0 Int",
+                "Ana0 Sin double",
+                "Ana0 Sin double",
+                0,
                 BacnetUnitsId.UNITS_AMPERES
                 );
-            s.AddBacnetObject(ana0);
+            ana0.m_PROP_HIGH_LIMIT = 50;
+            ana0.m_PROP_LOW_LIMIT = -50;
+            ana0.m_PROP_DEADBAND = 5;
+            ana0.Enable_Reporting(true, 0);
 
-            BacnetObject b;
+            device.AddBacnetObject(ana0);
+
+            // Create A StructuredView
+            StructuredView s = new StructuredView(0, "Content","A View");
+            // register it
+            device.AddBacnetObject(s);
+
+            BaCSharpObject b;
             // ANALOG_VALUE:0 double without Priority Array
             // It seems that for AnalogOutput Priority Array is required
             // and not for AnalogValue where is it optional
             b = new AnalogValue<double>
                 (
                 0,
-                5465.23,
                 "Ana0 Double",
+                "Ana0 Double",
+                5465.23,
                 BacnetUnitsId.UNITS_BARS,
                 true
                 );
-            s.AddBacnetObject(b);
+            s.AddBacnetObject(b); // Put it in the view
 
-            b.OnWriteNotify += new BacnetObject.WriteNotificationCallbackHandler(handler_OnWriteNotify);
+            b.OnWriteNotify += new BaCSharpObject.WriteNotificationCallbackHandler(handler_OnWriteNotify);
 
-            // ANALOG_OUTPUT:1 float with Priority Array on Present Value
-            b = new AnalogOutput<float>
+            // ANALOG_OUTPUT:1 int with Priority Array on Present Value
+            b = new AnalogOutput<int>
                 (
                 1,
-                (float)56.8,
-                "Ana1 Float",
+                "Ana1 int",
+                "Ana1 int",
+                (int)56,
                 BacnetUnitsId.UNITS_DEGREES_CELSIUS
                 );
-            s.AddBacnetObject(b);
+            s.AddBacnetObject(b); // Put it in the view
 
-            b.OnWriteNotify += new BacnetObject.WriteNotificationCallbackHandler(handler_OnWriteNotify);
+            b.OnWriteNotify += new BaCSharpObject.WriteNotificationCallbackHandler(handler_OnWriteNotify);
 
-            // MULTI_STATE_VALUE:4 float with Priority Array on Present Value
-            // could be MULTI_STATE_OUTPUT
+            // MULTI_STATE_OUTPUT:4 with 6 states
             MultiStateOutput m = new MultiStateOutput
                 (
                 4,
+                "MultiStates",
+                "MultiStates",
                 1,
-                6,
-                "MultiState"
+                6
                 );
             for (int i = 1; i < 7; i++) m.m_PROP_STATE_TEXT[0] = new BacnetValue("Text Level " + i.ToString());
 
-            s.AddBacnetObject(m);
+            s.AddBacnetObject(m); // in the view
 
-            StructuredView s2 = new StructuredView(1, "Complex objects", device);
+            StructuredView s2 = new StructuredView(1, "Complex objects", "Complex objects");
             s.AddBacnetObject(s2);
 
             // TREND_LOG:0 with int values
-            trend0 = new TrendLog (0, "Trend int",200);
-            s2.AddBacnetObject(trend0);
-            // fill 1/2 Log
-            for (int i = 0; i < 100; i++)
+            trend0 = new TrendLog(0, "Trend signed int", "Trend signed int", 200, BacnetTrendLogValueType.TL_TYPE_SIGN);
+            s2.AddBacnetObject(trend0); // in the second level view
+            // fill Log with more values than the size
+            for (int i = 0; i < 300; i++)
             {
-                DateTime current = DateTime.Now.AddSeconds(-i);
-                trend0.AddValue(BacnetTrendLogValueType.TL_TYPE_SIGN, (int)(50 * Math.Sin((float)i / 0.01)), current, 0);
+                DateTime current = DateTime.Now.AddSeconds(-300+i);
+                trend0.AddValue((int)(i* Math.Sin((float)i / 0.01)), current, 0);
             }
 
             // BACFILE:0
@@ -174,11 +184,58 @@ namespace AnotherStorageImplementation
                 (
                 0,
                 "A file",
+                "File description",
                 "c:\\RemoteObject.xml",
                 false
                 );
-            s2.AddBacnetObject(b);
+            s2.AddBacnetObject(b); // in the second level view
 
+            NotificationClass nc = new NotificationClass
+                (
+                0, 
+                "An alarm sender",
+                "Alarm description",
+                device.PROP_OBJECT_IDENTIFIER
+                );
+
+            device.AddBacnetObject(nc); 
+
+            // Put two elements into the NC recipient List
+
+            // Valid Day
+            BacnetBitString week = new BacnetBitString();
+            for (int i = 0; i < 7; i++) week.SetBit((byte)i, true); // Monday to Sunday
+            // transition
+            BacnetBitString transition = new BacnetBitString();
+            transition.SetBit(0, true); // To OffNormal
+            transition.SetBit(1, true); // To Fault
+            transition.SetBit(2, true); // To Normal
+
+            DeviceReportingRecipient r = new DeviceReportingRecipient
+            (
+                week, // week days
+                DateTime.MinValue.AddDays(10),  // fromTime
+                DateTime.MaxValue,              // toTime
+                new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, 4000),
+                (uint)4,    // processid
+                true,       // Ack required
+                transition  // transition
+            );
+            nc.AddReportingRecipient(r);
+
+            r= new DeviceReportingRecipient
+            (
+                week,
+                DateTime.MinValue.AddDays(10),
+                DateTime.MaxValue,
+                new BacnetAddress(BacnetAddressTypes.IP,0,new Byte[6]{255,255,255,255,0xBA,0xC0}),
+                (uint)4,
+                true,
+                transition
+            );
+
+            nc.AddReportingRecipient(r);        
+            
         }
     }
 }

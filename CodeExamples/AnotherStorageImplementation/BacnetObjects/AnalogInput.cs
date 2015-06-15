@@ -29,20 +29,21 @@ using System.Linq;
 using System.Text;
 using System.IO.BACnet;
 
-namespace AnotherStorageImplementation
+namespace BaCSharp
 {
     [Serializable]
-    class AnalogInput<T> : AnalogObject<T>
+    public class AnalogInput<T> : AnalogObject<T>
     {
-        public AnalogInput(int ObjId, T InitialValue, String ObjName, BacnetUnitsId Unit)
-            : base(new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, (uint)ObjId), InitialValue, ObjName, Unit)
+        public AnalogInput(int ObjId, String ObjName, String Description, T InitialValue, BacnetUnitsId Unit)
+            : base(new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, (uint)ObjId), ObjName, Description, InitialValue, Unit)
         {
             m_PRESENT_VALUE_ReadOnly = true;
         }
-        public AnalogInput(BacnetObjectId ObjId, T InitialValue, String ObjName, BacnetUnitsId Unit)
-            : base(ObjId, InitialValue, ObjName, Unit)
+        public AnalogInput(BacnetObjectId ObjId, String ObjName, String Description, T InitialValue, BacnetUnitsId Unit)
+            : base(ObjId, ObjName, Description, InitialValue, Unit)
         {
             m_PRESENT_VALUE_ReadOnly = true;
         }
+        public AnalogInput() { }
     }
 }

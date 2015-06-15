@@ -29,33 +29,37 @@ using System.Linq;
 using System.Text;
 using System.IO.BACnet;
 
-namespace AnotherStorageImplementation
+namespace BaCSharp
 {
     [Serializable]
-    class MultiStateOutput : MultiStateValueAndOutput
+    public class MultiStateOutput : MultiStateValueAndOutput
     {
-        public MultiStateOutput(int ObjId, uint InitialValue, uint StatesNumber, String ObjName)
-            : base(new BacnetObjectId(BacnetObjectTypes.OBJECT_MULTI_STATE_OUTPUT, (uint)ObjId), InitialValue, StatesNumber, ObjName, true)
+        public MultiStateOutput(int ObjId, String ObjName, String Description, uint InitialValue, uint StatesNumber)
+            : base(new BacnetObjectId(BacnetObjectTypes.OBJECT_MULTI_STATE_OUTPUT, (uint)ObjId), ObjName, Description, InitialValue, StatesNumber, true)
         {
         }
+
+        public MultiStateOutput() { }
     }
 
     [Serializable]
-    class MultiStateValue : MultiStateValueAndOutput
+    public class MultiStateValue : MultiStateValueAndOutput
     {
-        public MultiStateValue(int ObjId, uint InitialValue, uint StatesNumber, String ObjName, bool WithPriorityArray)
-            : base(new BacnetObjectId(BacnetObjectTypes.OBJECT_MULTI_STATE_VALUE, (uint)ObjId), InitialValue, StatesNumber, ObjName, WithPriorityArray)
+        public MultiStateValue(int ObjId, String ObjName, String Description, uint InitialValue, uint StatesNumber, bool WithPriorityArray)
+            : base(new BacnetObjectId(BacnetObjectTypes.OBJECT_MULTI_STATE_VALUE, (uint)ObjId), ObjName, Description, InitialValue, StatesNumber, WithPriorityArray)
         {
         }
+
+        public MultiStateValue() { }
     }
 
     // Could be used for MultiStateOutput
     // and MultiStateValue
     [Serializable]
-    abstract class MultiStateValueAndOutput:AnalogValueAndOutput<uint>
+    public abstract class MultiStateValueAndOutput:AnalogValueAndOutput<uint>
     {
 
-        protected uint m_PROP_NUMBER_OF_STATES;
+        public uint m_PROP_NUMBER_OF_STATES;
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT)]
         public virtual uint PROP_NUMBER_OF_STATES
         {
@@ -68,14 +72,16 @@ namespace AnotherStorageImplementation
         {
             get { return m_PROP_STATE_TEXT; }
         }
-        
-        public MultiStateValueAndOutput(BacnetObjectId ObjId, uint InitialValue, uint StatesNumber, String ObjName, bool WithPriorityArray)
-            : base(ObjId, InitialValue, ObjName, BacnetUnitsId.UNITS_DEGREES_PHASE,true)
+
+        public MultiStateValueAndOutput(BacnetObjectId ObjId, String ObjName, String Description, uint InitialValue, uint StatesNumber, bool WithPriorityArray)
+            : base(ObjId, ObjName, Description, InitialValue, BacnetUnitsId.UNITS_DEGREES_PHASE, true)
         {
             // InitialValue must be within 1 and m_PROP_NUMBER_OF_STATES
             m_PROP_NUMBER_OF_STATES = StatesNumber;
             m_PROP_STATE_TEXT = new BacnetValue[StatesNumber];           
         }
+
+        public MultiStateValueAndOutput() { }
 
         protected override uint BacnetMethodNametoId(String Name)
         {

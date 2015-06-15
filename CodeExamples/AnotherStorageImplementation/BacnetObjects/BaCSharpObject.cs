@@ -29,8 +29,10 @@ using System.Linq;
 using System.Text;
 using System.IO.BACnet;
 using System.Reflection;
+using System.Xml.Serialization;
+using System.Diagnostics;
 
-namespace AnotherStorageImplementation
+namespace BaCSharp
 {
     public enum ErrorCodes
     {
@@ -42,13 +44,18 @@ namespace AnotherStorageImplementation
         OutOfRange = -5
     }
 
-    interface IRegisterBacnetObject   
-    {
-        void AddBacnetObject(BacnetObject newObj);
-    }
-
+    // All children classes are serializable, except Device and Structured View
+    // That's why the default constructor is present everywhere, and members attributs public
+    // So state persistance implementation is quite easy
     [Serializable]
-    abstract class BacnetObject
+    //
+    // You want to serialize a List<BaCSharpObject>, you need to add XmlInclude mark for each type
+    // For instance if the List include some BacnetFile : [XmlInclude(typeof(BacnetFile))]
+    //
+    // Somes classes a parametrable, like AnalogInput. In this case you need to add it for each
+    // type used : [XmlInclude(typeof(AnalogInput<double>))] ... or anything else
+    //]
+    public abstract class BaCSharpObject
     {
         // 3 common properties to all kind of Bacnet objects ... I suppose ! 
 
@@ -64,6 +71,7 @@ namespace AnotherStorageImplementation
         {
             get { return m_PROP_OBJECT_IDENTIFIER; }
         }
+
         public uint m_PROP_OBJECT_TYPE;
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED)]
         public virtual uint PROP_OBJECT_TYPE
@@ -71,19 +79,44 @@ namespace AnotherStorageImplementation
             get { return m_PROP_OBJECT_TYPE; }
         }
 
-        public delegate void WriteNotificationCallbackHandler(BacnetObject sender, BacnetPropertyIds propId);
+        // An optional property
+        public string m_PROP_DESCRIPTION;
+        [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_CHARACTER_STRING)]
+        public virtual string PROP_DESCRIPTION
+        {
+            get { return m_PROP_DESCRIPTION; }
+        }
+
+
+        public delegate void WriteNotificationCallbackHandler(BaCSharpObject sender, BacnetPropertyIds propId);
         // One event for each object if needed
         public event WriteNotificationCallbackHandler OnWriteNotify;
         // One global event for all the content
         public static event WriteNotificationCallbackHandler OnCOVNotify;
 
-        public ErrorCodes ErrorCode_PropertyWrite;
+        protected ErrorCodes ErrorCode_PropertyWrite;
+        
+        // Somes classes needs to access to the device object
+        protected DeviceObject Mydevice;
+        public virtual DeviceObject deviceOwner
+        {
+            set 
+            {
+                // could be only called by a device object
+                MethodBase m = new StackFrame(1).GetMethod();
+                if (m.DeclaringType == typeof(DeviceObject))
+                    Mydevice = value; 
+            }
+        }
 
-        public BacnetObject(BacnetObjectId ObjId, String ObjName)
+        public BaCSharpObject(){}
+
+        public BaCSharpObject(BacnetObjectId ObjId, String ObjName, String Description)
         {
             m_PROP_OBJECT_IDENTIFIER = ObjId;
             m_PROP_OBJECT_NAME = ObjName;
             m_PROP_OBJECT_TYPE = (uint)ObjId.type;
+            m_PROP_DESCRIPTION = Description;
         }
 
         public bool Equals(BacnetObjectId objId)
@@ -133,22 +166,13 @@ namespace AnotherStorageImplementation
                         }
                         catch
                         {
-                            ret = new BacnetValue[] { new BacnetValue((o[0] as BaCSharpTypeAttribute).SerializeType, val) };
+                            ret = new BacnetValue[] { new BacnetValue((o[0] as BaCSharpTypeAttribute).BacnetNativeType, val) };
                         }
                     else
                         ret = new BacnetValue[] { new BacnetValue(null) };
 
 
                     return ret;
-                    /*
-                    if ((o[0] as BacnetSerializeAttribute).IsIlist)
-                        return (IList<BacnetValue>)p.GetValue(this, null);
-                    else
-                    {
-                        b = new BacnetValue((o[0] as BacnetSerializeAttribute).SerializeType, p.GetValue(this, null));
-                        return new BacnetValue[] { b };
-                    }
-                     * */
                 }
             }
 

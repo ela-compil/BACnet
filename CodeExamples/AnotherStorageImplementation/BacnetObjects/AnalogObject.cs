@@ -29,31 +29,32 @@ using System.Linq;
 using System.Text;
 using System.IO.BACnet;
 
-namespace AnotherStorageImplementation
+namespace BaCSharp
 {
-    [Serializable]
-    abstract class AnalogObject<T> : BacnetObject
+    [Serializable] 
+    public abstract partial class AnalogObject<T> : BaCSharpObject
     {
-        protected uint m_PROP_UNITS;
+        public uint m_PROP_UNITS;
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED)]
         public virtual uint PROP_UNITS
         {
             get { return m_PROP_UNITS; }
         }
+        public uint m_PROP_EVENT_STATE = 0;
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED)]
         public virtual uint PROP_EVENT_STATE
         {
-            get { return 0; }
+            get { return m_PROP_EVENT_STATE; } // See BacnetEventNotificationData.BacnetEventStates  
         }
 
-        protected BacnetBitString m_PROP_STATUS_FLAGS = new BacnetBitString();
+        public BacnetBitString m_PROP_STATUS_FLAGS = new BacnetBitString();
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_BIT_STRING)]
         public virtual BacnetBitString PROP_STATUS_FLAGS
         {
             get { return m_PROP_STATUS_FLAGS; }
         }
 
-        protected bool m_PROP_OUT_OF_SERVICE = false;
+        public bool m_PROP_OUT_OF_SERVICE = false;
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_BOOLEAN)]
         public virtual bool PROP_OUT_OF_SERVICE
         {
@@ -64,8 +65,8 @@ namespace AnotherStorageImplementation
                 }
         }
 
-        protected bool m_PRESENT_VALUE_ReadOnly = false;
-        protected T m_PROP_PRESENT_VALUE;
+        public bool m_PRESENT_VALUE_ReadOnly = false;
+        public T m_PROP_PRESENT_VALUE;
         // BacnetSerialize made freely by the stack depending on the type
         public virtual T PROP_PRESENT_VALUE
         {
@@ -73,7 +74,7 @@ namespace AnotherStorageImplementation
             set 
             {
                 if (m_PRESENT_VALUE_ReadOnly == false)
-                    m_PROP_PRESENT_VALUE = value;
+                    internal_PROP_PRESENT_VALUE = value;
                 else
                     ErrorCode_PropertyWrite = ErrorCodes.WriteAccessDenied;
             }
@@ -86,12 +87,15 @@ namespace AnotherStorageImplementation
             get { return m_PROP_PRESENT_VALUE; }
             set { 
                     m_PROP_PRESENT_VALUE = value; 
-                    COVManagement(BacnetPropertyIds.PROP_PRESENT_VALUE); 
+                    COVManagement(BacnetPropertyIds.PROP_PRESENT_VALUE);
+                    IntrinsicReportingManagement();
                 }
         }
-           
-        public AnalogObject(BacnetObjectId ObjId, T InitialValue, String ObjName, BacnetUnitsId Unit)
-            : base(ObjId, ObjName)
+
+        public AnalogObject() {}
+
+        public AnalogObject(BacnetObjectId ObjId, String ObjName, String Description, T InitialValue, BacnetUnitsId Unit)
+            : base(ObjId, ObjName, Description)
         {
 
             m_PROP_STATUS_FLAGS.SetBit((byte)0, false);
@@ -102,6 +106,8 @@ namespace AnotherStorageImplementation
             m_PROP_UNITS = (uint)Unit;
 
             m_PROP_PRESENT_VALUE = InitialValue;
+
+            AnalogObjectEvent();
 
         }
     }
