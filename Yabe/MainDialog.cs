@@ -718,6 +718,12 @@ namespace Yabe
                 case BacnetObjectTypes.OBJECT_TREND_LOG_MULTIPLE:
                     node.ImageIndex = 12;
                     break;
+                case BacnetObjectTypes.OBJECT_NOTIFICATION_CLASS:
+                    node.ImageIndex = 13;
+                    break;
+                case BacnetObjectTypes.OBJECT_SCHEDULE:
+                    node.ImageIndex = 14;
+                    break;
                 default:
                     node.ImageIndex = 4;
                     break;
@@ -1353,6 +1359,42 @@ namespace Yabe
             }
         }
 
+        private bool GetObjectLink(out BacnetClient comm, out BacnetAddress adr, out BacnetObjectId object_id, BacnetObjectTypes ExpectedType)
+        {
+
+            comm = null;
+            adr = new BacnetAddress(BacnetAddressTypes.None, 0, null);
+            object_id = new BacnetObjectId();
+
+            try
+            {
+                if (m_DeviceTree.SelectedNode == null) return false;
+                else if (m_DeviceTree.SelectedNode.Tag == null) return false;
+                else if (!(m_DeviceTree.SelectedNode.Tag is KeyValuePair<BacnetAddress, uint>)) return false;
+                KeyValuePair<BacnetAddress, uint> entry = (KeyValuePair<BacnetAddress, uint>)m_DeviceTree.SelectedNode.Tag;
+                adr = entry.Key;
+                comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag;
+            }
+            finally
+            {
+                if (comm == null) MessageBox.Show(this, "This is not a valid node", "Wrong node", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+
+            //fetch object_id
+            if (
+                m_AddressSpaceTree.SelectedNode == null ||
+                !(m_AddressSpaceTree.SelectedNode.Tag is BacnetObjectId) ||
+                !(((BacnetObjectId)m_AddressSpaceTree.SelectedNode.Tag).type == ExpectedType))
+            {
+                String S = ExpectedType.ToString().Substring(7).ToLower();
+                MessageBox.Show(this, "The marked object is not a " + S, S, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                return false;
+            }
+            object_id = (BacnetObjectId)m_AddressSpaceTree.SelectedNode.Tag;
+
+            return true;
+        }
+
         private void downloadFileToolStripMenuItem_Click(object sender, EventArgs e)
         {
             this.Cursor = Cursors.WaitCursor;
@@ -1360,31 +1402,9 @@ namespace Yabe
             {
                 //fetch end point
                 BacnetClient comm = null;
-                BacnetAddress adr;
-                try
-                {
-                    if (m_DeviceTree.SelectedNode == null) return;
-                    else if (m_DeviceTree.SelectedNode.Tag == null) return;
-                    else if (!(m_DeviceTree.SelectedNode.Tag is KeyValuePair<BacnetAddress, uint>)) return;
-                    KeyValuePair<BacnetAddress, uint> entry = (KeyValuePair<BacnetAddress, uint>)m_DeviceTree.SelectedNode.Tag;
-                    adr = entry.Key;
-                    comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag;
-                }
-                finally
-                {
-                    if (comm == null) MessageBox.Show(this, "This is not a valid node", "Wrong node", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-
-                //fetch object_id
-                if (
-                    m_AddressSpaceTree.SelectedNode == null ||
-                    !(m_AddressSpaceTree.SelectedNode.Tag is BacnetObjectId) ||
-                    !(((BacnetObjectId)m_AddressSpaceTree.SelectedNode.Tag).type == BacnetObjectTypes.OBJECT_FILE))
-                {
-                    MessageBox.Show(this, "The marked object is not a file", "Not a file", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                    return;
-                }
-                BacnetObjectId object_id = (BacnetObjectId)m_AddressSpaceTree.SelectedNode.Tag;
+                BacnetAddress adr;             
+                BacnetObjectId object_id;
+                if (GetObjectLink(out comm, out adr, out object_id, BacnetObjectTypes.OBJECT_FILE) == false) return;
 
                 //where to store file?
                 SaveFileDialog dlg = new SaveFileDialog();
@@ -1462,30 +1482,8 @@ namespace Yabe
                 //fetch end point
                 BacnetClient comm = null;
                 BacnetAddress adr;
-                try
-                {
-                    if (m_DeviceTree.SelectedNode == null) return;
-                    else if (m_DeviceTree.SelectedNode.Tag == null) return;
-                    else if (!(m_DeviceTree.SelectedNode.Tag is KeyValuePair<BacnetAddress, uint>)) return;
-                    KeyValuePair<BacnetAddress, uint> entry = (KeyValuePair<BacnetAddress, uint>)m_DeviceTree.SelectedNode.Tag;
-                    adr = entry.Key;
-                    comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag;
-                }
-                finally
-                {
-                    if (comm == null) MessageBox.Show(this, "This is not a valid node", "Wrong node", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-
-                //fetch object_id
-                if (
-                    m_AddressSpaceTree.SelectedNode == null ||
-                    !(m_AddressSpaceTree.SelectedNode.Tag is BacnetObjectId) ||
-                    !(((BacnetObjectId)m_AddressSpaceTree.SelectedNode.Tag).type == BacnetObjectTypes.OBJECT_FILE))
-                {
-                    MessageBox.Show(this, "The marked object is not a file", "Not a file", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                    return;
-                }
-                BacnetObjectId object_id = (BacnetObjectId)m_AddressSpaceTree.SelectedNode.Tag;
+                BacnetObjectId object_id;
+                if (GetObjectLink(out comm, out adr, out object_id, BacnetObjectTypes.OBJECT_FILE) == false) return;
 
                 //which file to upload?
                 OpenFileDialog dlg = new OpenFileDialog();
@@ -1536,86 +1534,63 @@ namespace Yabe
             MessageBox.Show(this, "Done", "Done", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
-        // en cours
+        // FC
         private void showTrendLogToolStripMenuItem_Click(object sender, EventArgs e)
         {
             try
             {
                 //fetch end point
-                BacnetClient comm = null;
+                BacnetClient comm;
                 BacnetAddress adr;
-                try
-                {
-                    if (m_DeviceTree.SelectedNode == null) return;
-                    else if (m_DeviceTree.SelectedNode.Tag == null) return;
-                    else if (!(m_DeviceTree.SelectedNode.Tag is KeyValuePair<BacnetAddress, uint>)) return;
-                    KeyValuePair<BacnetAddress, uint> entry = (KeyValuePair<BacnetAddress, uint>)m_DeviceTree.SelectedNode.Tag;
-                    adr = entry.Key;
-                    comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag;
-                }
-                finally
-                {
-                    if (comm == null) MessageBox.Show(this, "This is not a valid node", "Wrong node", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
+                BacnetObjectId object_id;
 
-                //fetch object_id
-                if (
-                    m_AddressSpaceTree.SelectedNode == null ||
-                    !(m_AddressSpaceTree.SelectedNode.Tag is BacnetObjectId) ||
-                    !((((BacnetObjectId)m_AddressSpaceTree.SelectedNode.Tag).type == BacnetObjectTypes.OBJECT_TREND_LOG_MULTIPLE) ||
-                    (((BacnetObjectId)m_AddressSpaceTree.SelectedNode.Tag).type == BacnetObjectTypes.OBJECT_TRENDLOG)))
-                {
-                    MessageBox.Show(this, "The marked object is not a TrendLog", "Not a TrendLog", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                    return;
-                }
-                BacnetObjectId object_id = (BacnetObjectId)m_AddressSpaceTree.SelectedNode.Tag;
+                if (GetObjectLink(out comm, out adr, out object_id, BacnetObjectTypes.OBJECT_TRENDLOG) == false)
+                    if (GetObjectLink(out comm, out adr, out object_id, BacnetObjectTypes.OBJECT_TREND_LOG_MULTIPLE) == false) return;             
 
                 new TrendLogDisplay(comm, adr, object_id).ShowDialog();
 
             }
             catch(Exception ex)
             {
-                Trace.TraceError("Error during TrendLog: " + ex.Message);
+                Trace.TraceError("Error loading TrendLog : " + ex.Message);
             }
         }
-        // en cours
+        // FC
         private void showScheduleToolStripMenuItem_Click(object sender, EventArgs e)
         {
             try
             {
                 //fetch end point
-                BacnetClient comm = null;
+                BacnetClient comm;
                 BacnetAddress adr;
-                try
-                {
-                    if (m_DeviceTree.SelectedNode == null) return;
-                    else if (m_DeviceTree.SelectedNode.Tag == null) return;
-                    else if (!(m_DeviceTree.SelectedNode.Tag is KeyValuePair<BacnetAddress, uint>)) return;
-                    KeyValuePair<BacnetAddress, uint> entry = (KeyValuePair<BacnetAddress, uint>)m_DeviceTree.SelectedNode.Tag;
-                    adr = entry.Key;
-                    comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag;
-                }
-                finally
-                {
-                    if (comm == null) MessageBox.Show(this, "This is not a valid node", "Wrong node", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
+                BacnetObjectId object_id;
 
-                //fetch object_id
-                if (
-                    m_AddressSpaceTree.SelectedNode == null ||
-                    !(m_AddressSpaceTree.SelectedNode.Tag is BacnetObjectId) ||
-                    (((BacnetObjectId)m_AddressSpaceTree.SelectedNode.Tag).type != BacnetObjectTypes.OBJECT_SCHEDULE))
-                {
-                    MessageBox.Show(this, "The marked object is not a Schedule", "Not a Schedule", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                    return;
-                }
-                BacnetObjectId object_id = (BacnetObjectId)m_AddressSpaceTree.SelectedNode.Tag;
+                if (GetObjectLink(out comm, out adr, out object_id, BacnetObjectTypes.OBJECT_SCHEDULE) == false) return;
 
                 new ScheduleDisplay(comm, adr, object_id).ShowDialog();
 
             }
-            catch { }
+            catch(Exception ex) { Trace.TraceError("Error loading Schedule : " + ex.Message); }
         }
+
+        //FC
+        private void showNotificationToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                //fetch end point
+                BacnetClient comm;
+                BacnetAddress adr;
+                BacnetObjectId object_id;
+
+                if (GetObjectLink(out comm, out adr, out object_id, BacnetObjectTypes.OBJECT_NOTIFICATION_CLASS) == false) return;
+
+                new NotificationEditor(comm, adr, object_id).ShowDialog();
+
+            }
+            catch (Exception ex) { Trace.TraceError("Error loading Notification : " + ex.Message); }
+        }
+
 
         private void m_AddressSpaceTree_ItemDrag(object sender, ItemDragEventArgs e)
         {
@@ -1982,6 +1957,10 @@ namespace Yabe
             showScheduleToolStripMenuItem_Click(null, null);
         }
 
+        private void showNotificationToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            showNotificationToolStripMenuItem_Click(null, null);
+        }
         private void uploadFileToolStripMenuItem1_Click(object sender, EventArgs e)
         {
             uploadFileToolStripMenuItem_Click(this, null);

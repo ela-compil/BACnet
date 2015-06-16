@@ -42,11 +42,12 @@ namespace BaCSharp
             get { return m_PROP_OBJECT_IDENTIFIER.instance; }
         }
 
-        public BacnetValue[] m_PROP_PRIORITY = new BacnetValue[3];
+        public List<BacnetValue> m_PROP_PRIORITY = new List<BacnetValue>();
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_NULL)]
-        public virtual BacnetValue[] PROP_PRIORITY
+        public virtual List<BacnetValue> PROP_PRIORITY
         {
             get { return m_PROP_PRIORITY; }
+            set { m_PROP_PRIORITY = value; }
         }
 
         public List<BacnetValue> m_PROP_RECIPIENT_LIST = new List<BacnetValue>();
@@ -95,7 +96,7 @@ namespace BaCSharp
             this.Device = Device;
 
             for (int i = 0; i < 3; i++)
-                m_PROP_PRIORITY[i]= new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT, (uint)127);
+                m_PROP_PRIORITY.Add(new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT, (uint)127));
 
             m_PROP_ACK_REQUIRED.SetBit((byte)0, false);
             m_PROP_ACK_REQUIRED.SetBit((byte)1, false);

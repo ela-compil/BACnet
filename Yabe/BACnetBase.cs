@@ -32,6 +32,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.IO.BACnet.Serialize;
+using System.Net;
 
 namespace System.IO.BACnet
 {
@@ -1594,7 +1595,7 @@ namespace System.IO.BACnet
     }
 
     // FC
-    public struct DeviceReportingRecipient
+    public struct DeviceReportingRecipient : ASN1.IASN1encode
     {
         public BacnetBitString WeekofDay;
         public DateTime toTime, fromTime;
@@ -1628,7 +1629,7 @@ namespace System.IO.BACnet
             evenType = (BacnetBitString)v6.Value;
         }
 
-        public DeviceReportingRecipient(BacnetBitString WeekofDay, DateTime fromTime, DateTime toTime, BacnetObjectId Id, uint priority, bool Ack_Required, BacnetBitString evenType)
+        public DeviceReportingRecipient(BacnetBitString WeekofDay, DateTime fromTime, DateTime toTime, BacnetObjectId Id, uint processIdentifier, bool Ack_Required, BacnetBitString evenType)
         {
             adr = null;
 
@@ -1636,11 +1637,11 @@ namespace System.IO.BACnet
             this.toTime = toTime;
             this.fromTime = fromTime;
             this.Id = Id;
-            this.processIdentifier = priority;
+            this.processIdentifier = processIdentifier;
             this.Ack_Required = Ack_Required;
             this.evenType = evenType;
         }
-        public DeviceReportingRecipient(BacnetBitString WeekofDay, DateTime fromTime, DateTime toTime, BacnetAddress adr, uint priority, bool Ack_Required, BacnetBitString evenType)
+        public DeviceReportingRecipient(BacnetBitString WeekofDay, DateTime fromTime, DateTime toTime, BacnetAddress adr, uint processIdentifier, bool Ack_Required, BacnetBitString evenType)
         {
             Id = new BacnetObjectId();
 
@@ -1648,7 +1649,7 @@ namespace System.IO.BACnet
             this.toTime = toTime;
             this.fromTime = fromTime;
             this.adr = adr;
-            this.processIdentifier = priority;
+            this.processIdentifier = processIdentifier;
             this.Ack_Required = Ack_Required;
             this.evenType = evenType;
         }
@@ -1656,8 +1657,8 @@ namespace System.IO.BACnet
         public void ASN1encode(EncodeBuffer buffer)
         {
             ASN1.bacapp_encode_application_data(buffer, new BacnetValue(WeekofDay));
-            ASN1.bacapp_encode_application_data(buffer, new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_TIME, toTime));
             ASN1.bacapp_encode_application_data(buffer, new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_TIME, fromTime));
+            ASN1.bacapp_encode_application_data(buffer, new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_TIME, toTime));
             if (adr != null)
                 adr.ASN1encode(buffer);
             else
@@ -1679,7 +1680,7 @@ namespace System.IO.BACnet
         PTP,
     }
 
-    public class BacnetAddress
+    public class BacnetAddress : ASN1.IASN1encode
     {
         public UInt16 net;
         public byte[] adr;
@@ -1694,6 +1695,33 @@ namespace System.IO.BACnet
             this.net = net;
             this.adr = adr;
             if (this.adr == null) this.adr = new byte[0];
+        }
+
+        public BacnetAddress(BacnetAddressTypes type, String s)
+        {
+            this.type = type;
+            switch (type)
+            {
+                case BacnetAddressTypes.IP:
+                    try
+                    {
+                        String[] IpStrCut = s.Split(':');
+                        IPAddress ip;
+                        bool IsIP = IPAddress.TryParse(IpStrCut[0], out ip);
+                        uint Port = Convert.ToUInt16(IpStrCut[1]);
+                        if (IsIP==true)
+                        {
+                            String[] Cut = IpStrCut[0].Split('.');
+                            adr=new byte[6];
+                                for (int i=0;i<4;i++)
+                                    adr[i]=Convert.ToByte(Cut[i]); 
+                            adr[4] = (byte)((Port & 0xff00) >> 8);
+                            adr[5] = (byte)(Port & 0xff);
+                        }
+                    }
+                    catch { throw new Exception(); }
+                   break;
+            }
         }
         public override int GetHashCode()
         {
@@ -3045,6 +3073,11 @@ namespace System.IO.BACnet.Serialize
         public const uint BACNET_MIN_PRIORITY = 1;
         public const uint BACNET_MAX_PRIORITY = 16;
 
+        public interface IASN1encode
+        {
+            void ASN1encode(EncodeBuffer buffer);
+        }
+
         public static void encode_bacnet_object_id(EncodeBuffer buffer, BacnetObjectTypes object_type, UInt32 instance)
         {
             UInt32 value = 0;
@@ -3471,7 +3504,7 @@ namespace System.IO.BACnet.Serialize
                     {
                         try
                         {
-                            dynamic d = value.Value;    // last chance
+                            IASN1encode d = (IASN1encode)value.Value;    // last chance
                             d.ASN1encode(buffer);
                         }
                         catch { throw new Exception("I cannot encode this"); }

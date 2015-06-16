@@ -77,6 +77,12 @@
     <Compile Include="MainDialog.Designer.cs">
       <DependentUpon>MainDialog.cs</DependentUpon>
     </Compile>
+    <Compile Include="NotificationEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="NotificationEditor.designer.cs">
+      <DependentUpon>NotificationEditor.cs</DependentUpon>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="ProgressDialog.cs">
       <SubType>Form</SubType>
@@ -123,6 +129,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="MainDialog.resx">
       <DependentUpon>MainDialog.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="NotificationEditor.resx">
+      <DependentUpon>NotificationEditor.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="ProgressDialog.resx">
       <DependentUpon>ProgressDialog.cs</DependentUpon>
@@ -184,6 +193,7 @@
     <None Include="Resources\world.png" />
     <None Include="Resources\chart_line.png" />
     <None Include="Resources\calendar_view_week.png" />
+    <None Include="Resources\bell.png" />
     <Content Include="Search.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

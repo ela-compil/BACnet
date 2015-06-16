@@ -53,6 +53,7 @@
             this.subscribeToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.showTrendLogToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showScheduleToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.showNotificationToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -79,6 +80,7 @@
             this.subscribeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showTrendLogToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.showScheduleToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.showNotificationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.label3 = new System.Windows.Forms.Label();
             this.m_SplitContainerRight = new System.Windows.Forms.SplitContainer();
             this.tabControl1 = new System.Windows.Forms.TabControl();
@@ -196,7 +198,8 @@
             this.uploadFileToolStripMenuItem1,
             this.subscribeToolStripMenuItem1,
             this.showTrendLogToolStripMenuItem,
-            this.showScheduleToolStripMenuItem});
+            this.showScheduleToolStripMenuItem,
+            this.showNotificationToolStripMenuItem1});
             this.searchToolStripMenuItem.Name = "searchToolStripMenuItem";
             this.searchToolStripMenuItem.Size = new System.Drawing.Size(71, 20);
             this.searchToolStripMenuItem.Text = "Functions";
@@ -314,6 +317,14 @@
             this.showScheduleToolStripMenuItem.Size = new System.Drawing.Size(218, 22);
             this.showScheduleToolStripMenuItem.Text = "Show Schedule";
             this.showScheduleToolStripMenuItem.Click += new System.EventHandler(this.showScheduleToolStripMenuItem1_Click);
+            // 
+            // showNotificationToolStripMenuItem1
+            // 
+            this.showNotificationToolStripMenuItem1.Image = global::Yabe.Properties.Resources.bell;
+            this.showNotificationToolStripMenuItem1.Name = "showNotificationToolStripMenuItem1";
+            this.showNotificationToolStripMenuItem1.Size = new System.Drawing.Size(218, 22);
+            this.showNotificationToolStripMenuItem1.Text = "Show Notification";
+            this.showNotificationToolStripMenuItem1.Click += new System.EventHandler(this.showNotificationToolStripMenuItem1_Click);
             // 
             // optionsToolStripMenuItem
             // 
@@ -514,6 +525,8 @@
             this.m_ImageList.Images.SetKeyName(10, "bricks.png");
             this.m_ImageList.Images.SetKeyName(11, "folder.png");
             this.m_ImageList.Images.SetKeyName(12, "chart_bar.png");
+            this.m_ImageList.Images.SetKeyName(13, "bell.png");
+            this.m_ImageList.Images.SetKeyName(14, "calendar.png");
             // 
             // label2
             // 
@@ -547,15 +560,16 @@
             this.uploadFileToolStripMenuItem,
             this.subscribeToolStripMenuItem,
             this.showTrendLogToolStripMenuItem1,
-            this.showScheduleToolStripMenuItem1});
+            this.showScheduleToolStripMenuItem1,
+            this.showNotificationToolStripMenuItem});
             this.m_AddressSpaceMenuStrip.Name = "m_AddressSpaceMenuStrip";
-            this.m_AddressSpaceMenuStrip.Size = new System.Drawing.Size(158, 114);
+            this.m_AddressSpaceMenuStrip.Size = new System.Drawing.Size(170, 136);
             // 
             // downloadFileToolStripMenuItem
             // 
             this.downloadFileToolStripMenuItem.Image = global::Yabe.Properties.Resources.note;
             this.downloadFileToolStripMenuItem.Name = "downloadFileToolStripMenuItem";
-            this.downloadFileToolStripMenuItem.Size = new System.Drawing.Size(157, 22);
+            this.downloadFileToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
             this.downloadFileToolStripMenuItem.Text = "Download File";
             this.downloadFileToolStripMenuItem.Click += new System.EventHandler(this.downloadFileToolStripMenuItem_Click);
             // 
@@ -563,7 +577,7 @@
             // 
             this.uploadFileToolStripMenuItem.Image = global::Yabe.Properties.Resources.note;
             this.uploadFileToolStripMenuItem.Name = "uploadFileToolStripMenuItem";
-            this.uploadFileToolStripMenuItem.Size = new System.Drawing.Size(157, 22);
+            this.uploadFileToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
             this.uploadFileToolStripMenuItem.Text = "Upload File";
             this.uploadFileToolStripMenuItem.Click += new System.EventHandler(this.uploadFileToolStripMenuItem_Click);
             // 
@@ -571,7 +585,7 @@
             // 
             this.subscribeToolStripMenuItem.Image = global::Yabe.Properties.Resources.eye;
             this.subscribeToolStripMenuItem.Name = "subscribeToolStripMenuItem";
-            this.subscribeToolStripMenuItem.Size = new System.Drawing.Size(157, 22);
+            this.subscribeToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
             this.subscribeToolStripMenuItem.Text = "Subscribe";
             this.subscribeToolStripMenuItem.Click += new System.EventHandler(this.subscribeToolStripMenuItem_Click);
             // 
@@ -579,7 +593,7 @@
             // 
             this.showTrendLogToolStripMenuItem1.Image = global::Yabe.Properties.Resources.chart_line;
             this.showTrendLogToolStripMenuItem1.Name = "showTrendLogToolStripMenuItem1";
-            this.showTrendLogToolStripMenuItem1.Size = new System.Drawing.Size(157, 22);
+            this.showTrendLogToolStripMenuItem1.Size = new System.Drawing.Size(169, 22);
             this.showTrendLogToolStripMenuItem1.Text = "Show TrendLog";
             this.showTrendLogToolStripMenuItem1.Click += new System.EventHandler(this.showTrendLogToolStripMenuItem_Click);
             // 
@@ -587,9 +601,17 @@
             // 
             this.showScheduleToolStripMenuItem1.Image = global::Yabe.Properties.Resources.calendar_view_week;
             this.showScheduleToolStripMenuItem1.Name = "showScheduleToolStripMenuItem1";
-            this.showScheduleToolStripMenuItem1.Size = new System.Drawing.Size(157, 22);
+            this.showScheduleToolStripMenuItem1.Size = new System.Drawing.Size(169, 22);
             this.showScheduleToolStripMenuItem1.Text = "Show Schedule";
             this.showScheduleToolStripMenuItem1.Click += new System.EventHandler(this.showScheduleToolStripMenuItem_Click);
+            // 
+            // showNotificationToolStripMenuItem
+            // 
+            this.showNotificationToolStripMenuItem.Image = global::Yabe.Properties.Resources.bell;
+            this.showNotificationToolStripMenuItem.Name = "showNotificationToolStripMenuItem";
+            this.showNotificationToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
+            this.showNotificationToolStripMenuItem.Text = "Show Notification";
+            this.showNotificationToolStripMenuItem.Click += new System.EventHandler(this.showNotificationToolStripMenuItem_Click);
             // 
             // label3
             // 
@@ -843,6 +865,8 @@
         private System.Windows.Forms.ToolStripMenuItem showTrendLogToolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem showScheduleToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showScheduleToolStripMenuItem1;
+        private System.Windows.Forms.ToolStripMenuItem showNotificationToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem showNotificationToolStripMenuItem1;
     }
 }
 
