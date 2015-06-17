@@ -65,7 +65,7 @@ namespace BaCSharp
             set
             {
                 m_PROP_PRESENT_VALUE = value;
-                COVManagement(BacnetPropertyIds.PROP_PRESENT_VALUE);
+                InternalCOVManagement(BacnetPropertyIds.PROP_PRESENT_VALUE);
             }
         }
 

@@ -92,7 +92,7 @@ namespace BaCSharp
         // One event for each object if needed
         public event WriteNotificationCallbackHandler OnWriteNotify;
         // One global event for all the content
-        public static event WriteNotificationCallbackHandler OnCOVNotify;
+        public static event WriteNotificationCallbackHandler OnInternalCOVNotify;
 
         protected ErrorCodes ErrorCode_PropertyWrite;
         
@@ -124,10 +124,10 @@ namespace BaCSharp
             return this.m_PROP_OBJECT_IDENTIFIER.Equals(objId);
         }
 
-        public void COVManagement(BacnetPropertyIds propId)
+        public void InternalCOVManagement(BacnetPropertyIds propId)
         {
-            if (OnCOVNotify != null)
-                OnCOVNotify(this, propId);
+            if (OnInternalCOVNotify != null)
+                OnInternalCOVNotify(this, propId);
         }
 
         public IList<BacnetValue> FindPropValue(String propName)
@@ -277,7 +277,7 @@ namespace BaCSharp
                     if (ErrorCode_PropertyWrite == ErrorCodes.Good)
                     {
                         if (OnWriteNotify != null) OnWriteNotify(this, (BacnetPropertyIds)value.property.propertyIdentifier);
-                        if (OnCOVNotify != null) OnCOVNotify(this, (BacnetPropertyIds)value.property.propertyIdentifier);
+                        if (OnInternalCOVNotify != null) OnInternalCOVNotify(this, (BacnetPropertyIds)value.property.propertyIdentifier);
                     }
 
                     return ErrorCode_PropertyWrite;
@@ -301,6 +301,7 @@ namespace BaCSharp
                     // or an Exception can be throw
                     ErrorCode_PropertyWrite = ErrorCodes.Good;
 
+                    /*
                     object[] o = p.GetCustomAttributes(true);
 
                     if (o.Length == 0)
@@ -318,11 +319,31 @@ namespace BaCSharp
                             p.SetValue(this, value.value, null);    // The value is a List <  >
                         }
                     }
+                    */
+                    
+                        try
+                        {
+                            if (value.value.Count == 1)
+                            {
+                                try
+                                {
+                                    p.SetValue(this, value.value[0].Value, null);   // The value is not a List< >
+                                }
+                                catch {}
+                            }
+                            else
+                                p.SetValue(this, value.value, null);    // The value is a List <  >                              
+                        }
+                        catch
+                        {
+                           p.SetValue(this, value.value[0].Value, null); // The value is not a List< > but a List<> was given 
+                        }
+                    
 
                     if (ErrorCode_PropertyWrite == ErrorCodes.Good)
                     {
                         if (OnWriteNotify != null) OnWriteNotify(this, (BacnetPropertyIds)value.property.propertyIdentifier);
-                        if (OnCOVNotify != null) OnCOVNotify(this, (BacnetPropertyIds)value.property.propertyIdentifier);
+                        if (OnInternalCOVNotify != null) OnInternalCOVNotify(this, (BacnetPropertyIds)value.property.propertyIdentifier);
                     }
 
                     return ErrorCode_PropertyWrite;

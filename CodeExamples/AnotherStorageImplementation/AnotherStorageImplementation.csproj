@@ -68,6 +68,7 @@
     <Compile Include="BacnetObjects\MultiStateInput.cs" />
     <Compile Include="BacnetObjects\MultiStateOutput.cs" />
     <Compile Include="BacnetObjects\NotificationClass.cs" />
+    <Compile Include="BacnetObjects\Schedule.cs" />
     <Compile Include="BacnetObjects\StructuredView.cs">
       <SubType>Code</SubType>
     </Compile>

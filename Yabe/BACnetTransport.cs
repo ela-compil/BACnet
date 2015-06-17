@@ -347,10 +347,14 @@ namespace System.IO.BACnet
 
         public void Dispose()
         {
-            m_shared_conn.Close();
-            m_shared_conn = null;
-            m_exclusive_conn.Close();
-            m_exclusive_conn = null;
+            try
+            {
+                m_shared_conn.Close();
+                m_shared_conn = null;
+                m_exclusive_conn.Close();
+                m_exclusive_conn = null;
+            }
+            catch { }
         }
     }
 

@@ -141,6 +141,12 @@ namespace BaCSharp
 
         public bool UseStructuredView;
 
+        // Two element used by Notification & Scheduling to send external data
+        // All the known devices on the net
+        public Dictionary<uint, KeyValuePair<BacnetClient, BacnetAddress>> SuroundingDevices = new Dictionary<uint, KeyValuePair<BacnetClient, BacnetAddress>>();
+        // We assume here that direct Ip are sent using only one endpoint 
+        public BacnetClient DirectIp;
+
         public DeviceObject(uint Id, String DeviceName, String Description, bool UseStructuredView)
             : base(new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, Id), DeviceName, Description)
         {
@@ -213,6 +219,17 @@ namespace BaCSharp
                 return (uint)((int)BacnetPropertyIds.MAX_BACNET_PROPERTY_ID + 1);
             else
                 return base.BacnetMethodNametoId(Name);
+        }
+
+        public void SetIpEndpoint(BacnetClient client)
+        {
+            if (client.Transport.GetType() == typeof(BacnetIpUdpProtocolTransport))
+                DirectIp = client;
+        }
+        public void ReceivedIam(BacnetClient client, BacnetAddress Bacdevice, uint device_id)
+        {
+            SuroundingDevices.Remove(device_id);    // this will renew the registration, if already exists
+            SuroundingDevices.Add(device_id, new KeyValuePair<BacnetClient, BacnetAddress>(client, Bacdevice));
         }
     }
 }

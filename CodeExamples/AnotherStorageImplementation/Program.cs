@@ -95,8 +95,6 @@ namespace AnotherStorageImplementation
         {
 
             // create the device object with StructuredView acceptation
-            // for Yabe this means that all others objects are put into a view
-
             device = new DeviceObject(deviceId, "Device test","A test Device", true);
 
             // ANALOG_INPUT:0 uint
@@ -114,17 +112,16 @@ namespace AnotherStorageImplementation
             ana0.m_PROP_DEADBAND = 5;
             ana0.Enable_Reporting(true, 0);
 
-            device.AddBacnetObject(ana0);
+            device.AddBacnetObject(ana0);   // don't forget to do this
 
             // Create A StructuredView
             StructuredView s = new StructuredView(0, "Content","A View");
             // register it
-            device.AddBacnetObject(s);
-
+            device.AddBacnetObject(s);  // don't forget to do this
+  
             BaCSharpObject b;
-            // ANALOG_VALUE:0 double without Priority Array
-            // It seems that for AnalogOutput Priority Array is required
-            // and not for AnalogValue where is it optional
+            // ANALOG_VALUE:0 double with Priority Array
+            //
             b = new AnalogValue<double>
                 (
                 0,
@@ -234,8 +231,34 @@ namespace AnotherStorageImplementation
                 transition
             );
 
-            nc.AddReportingRecipient(r);        
-            
+            nc.AddReportingRecipient(r);
+
+            // Create a Schedule
+            Schedule sch = new Schedule(0, "Schedule", "Schedule");
+            device.AddBacnetObject(sch);
+
+            // a link to the internal analog output
+            sch.AddPropertyReference(new BacnetDeviceObjectPropertyReference
+                     (new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_OUTPUT, 1),
+                     (uint)BacnetPropertyIds.PROP_PRESENT_VALUE));
+            // a link to analog output through the network : could be on another device than itself
+            sch.AddPropertyReference(new BacnetDeviceObjectPropertyReference
+            (
+                  new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_OUTPUT, 1),
+                  (uint)BacnetPropertyIds.PROP_PRESENT_VALUE,
+                  (uint)1234));
+
+            sch.PROP_SCHEDULE_DEFAULT = (int)452;
+
+            // Schedule a change today in 60 seconds
+            sch.AddSchedule
+                ( 
+                DateTime.Now.DayOfWeek == 0 ? 6 : (int)DateTime.Now.DayOfWeek - 1, // Monday=0, Sunday=6                 
+                DateTime.Now.AddSeconds(10), (int)900                
+                );    
+            sch.PROP_OUT_OF_SERVICE = false;    // needed after all initialization to start the service
+
+
         }
     }
 }

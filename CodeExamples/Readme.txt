@@ -48,5 +48,6 @@ AnotherStorageImplementation
 		File
 		Trendlog
 		Notification Class
+		Schedule
 		... send us your own code !
 	Objects persistance could be achieved with serialization

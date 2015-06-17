@@ -58,7 +58,7 @@ namespace AnotherStorageImplementation
             bacnet_client.OnAtomicWriteFileRequest += new BacnetClient.AtomicWriteFileRequestHandler(handler_OnAtomicWriteFileRequest);
             bacnet_client.OnAtomicReadFileRequest += new BacnetClient.AtomicReadFileRequestHandler(handler_OnAtomicReadFileRequest);
 
-            BaCSharpObject.OnCOVNotify += new BaCSharpObject.WriteNotificationCallbackHandler(handler_OnCOVManagementNotify);
+            BaCSharpObject.OnInternalCOVNotify += new BaCSharpObject.WriteNotificationCallbackHandler(handler_OnCOVManagementNotify);
 
             bacnet_client.Start();    // go
             // Send Iam
@@ -68,13 +68,13 @@ namespace AnotherStorageImplementation
             {
                 bacnet_client.OnWhoIs += new BacnetClient.WhoIsHandler(handler_OnWhoIs);
                 bacnet_client.WhoIs();                          // Send WhoIs : needed BY Notification class for deviceId<->IP endpoint
-                NotificationClass.SetIpEndpoint(bacnet_client); // Register the endpoint for IP Notification usage
+                device.SetIpEndpoint(bacnet_client); // Register the endpoint for IP Notification usage
             }
         }
 
         static void handler_OnIam(BacnetClient sender, BacnetAddress adr, uint device_id, uint max_apdu, BacnetSegmentations segmentation, ushort vendor_id)
         {
-            NotificationClass.ReceivedIam(sender, adr, device_id);
+            device.ReceivedIam(sender, adr, device_id);
         }
 
         private static void handler_OnAtomicReadFileRequest(BacnetClient sender, BacnetAddress adr, byte invoke_id, bool is_stream, BacnetObjectId object_id, int position, uint count, BacnetMaxSegments max_segments)

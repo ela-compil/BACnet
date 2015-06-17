@@ -892,12 +892,28 @@ namespace System.IO.BACnet
         public uint state;
     } ;
 
-    public struct BacnetDeviceObjectPropertyReference
+    public struct BacnetDeviceObjectPropertyReference : ASN1.IASN1encode
     {
         public BacnetObjectId objectIdentifier;
         public uint propertyIdentifier;
         public UInt32 arrayIndex;
         public BacnetObjectId deviceIndentifier;
+
+        public BacnetDeviceObjectPropertyReference(BacnetObjectId objectIdentifier, uint propertyIdentifier, uint? deviceIndentifier =null, UInt32 arrayIndex = ASN1.BACNET_ARRAY_ALL)
+        {
+            this.objectIdentifier = objectIdentifier;
+            this.propertyIdentifier = propertyIdentifier;
+            this.arrayIndex = arrayIndex;
+            if (deviceIndentifier != null)
+                this.deviceIndentifier = new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, deviceIndentifier.Value);
+            else
+                this.deviceIndentifier = new BacnetObjectId(BacnetObjectTypes.MAX_BACNET_OBJECT_TYPE, 0);
+        }
+
+        public void ASN1encode(EncodeBuffer buffer)
+        {
+            ASN1.bacapp_encode_device_obj_property_ref(buffer, this);
+        }
     } ;
 
     public struct BacnetEventNotificationData
@@ -1154,9 +1170,9 @@ namespace System.IO.BACnet
                 Type t = value.GetType();
                 if (t == typeof(string))
                     Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_CHARACTER_STRING;
-                else if (t == typeof(int) || t == typeof(short) || t == typeof(byte))
+                else if (t == typeof(int) || t == typeof(short) || t == typeof(sbyte))
                     Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_SIGNED_INT;
-                else if (t == typeof(uint) || t == typeof(ushort) || t == typeof(sbyte))
+                else if (t == typeof(uint) || t == typeof(ushort) || t == typeof(byte))
                     Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT;
                 else if (t == typeof(bool))
                     Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_BOOLEAN;
@@ -3481,6 +3497,9 @@ namespace System.IO.BACnet.Serialize
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_TIMESTAMP:
                     bacapp_encode_timestamp(buffer, (BacnetGenericTime)value.Value);
                     break;
+                case BacnetApplicationTags.BACNET_APPLICATION_TAG_DATETIME:
+                    bacapp_encode_datetime(buffer, (DateTime)value.Value);
+                    break;
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID:
                     encode_application_object_id(buffer, ((BacnetObjectId)value.Value).type, ((BacnetObjectId)value.Value).instance);
                     break;
@@ -3502,10 +3521,25 @@ namespace System.IO.BACnet.Serialize
                     }
                     else
                     {
-                        try
+                        try 
                         {
-                            IASN1encode d = (IASN1encode)value.Value;    // last chance
-                            d.ASN1encode(buffer);
+                            Type oType = value.Value.GetType();
+                            if (oType.IsGenericType && (oType.GetGenericTypeDefinition() == typeof(List<>)))
+                            {
+                                // last chance to encode a List<object>
+                                List<object> t=(List<object>)value.Value;
+                                foreach (object o in t)
+                                {
+                                    IASN1encode d = (IASN1encode)o;
+                                    d.ASN1encode(buffer);
+                                }
+                            }
+                            else 
+                            {
+                                // last chance to encode a value
+                                IASN1encode d = (IASN1encode)value.Value;    
+                                d.ASN1encode(buffer);
+                            }
                         }
                         catch { throw new Exception("I cannot encode this"); }
                     }

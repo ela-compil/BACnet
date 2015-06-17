@@ -1326,7 +1326,32 @@ namespace Yabe
                         {
                             // Modif FC
                             b_value = new BacnetValue[1];
-                            b_value[0] = new BacnetValue((BacnetApplicationTags)c.CustomProperty.bacnetApplicationTags, new_value);
+                            if ((BacnetApplicationTags)c.CustomProperty.bacnetApplicationTags != BacnetApplicationTags.BACNET_APPLICATION_TAG_NULL)
+                            {
+                                b_value[0] = new BacnetValue((BacnetApplicationTags)c.CustomProperty.bacnetApplicationTags, new_value);
+                            }
+                            else
+                            {
+                                object o=null;
+                                TypeConverter t = new TypeConverter();
+                                // try to convert to the simplest type
+                                String[] typelist = { "Boolean", "UInt32", "Int32", "Single", "Double" };
+
+                                foreach (String typename in typelist)
+                                {
+                                    try
+                                    {
+                                        o=Convert.ChangeType(new_value, Type.GetType("System."+typename));
+                                        break;
+                                    }
+                                    catch { }
+                                }
+
+                                if (o==null)
+                                    b_value[0] = new BacnetValue(new_value);
+                                else
+                                    b_value[0] = new BacnetValue(o);
+                            }
                         }
                     }
                 }

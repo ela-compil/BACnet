@@ -85,10 +85,6 @@ namespace BaCSharp
         }
 
         public BacnetObjectId Device;
-        // All the known devices on the net
-        static Dictionary<uint, KeyValuePair<BacnetClient, BacnetAddress>> SuroundingDevices = new Dictionary<uint, KeyValuePair<BacnetClient, BacnetAddress>>();
-        // We assume here that direct Ip are sent using only one endpoint 
-        static BacnetClient DirectIp;
 
         public NotificationClass(int ObjId, String ObjName, String Description, BacnetObjectId Device)
             : base(new BacnetObjectId(BacnetObjectTypes.OBJECT_NOTIFICATION_CLASS, (uint)ObjId), ObjName, Description)
@@ -108,17 +104,6 @@ namespace BaCSharp
         public void AddReportingRecipient(DeviceReportingRecipient recipient)
         {
             m_PROP_RECIPIENT_LIST.Add(new BacnetValue(recipient));
-        }
-
-        public static void SetIpEndpoint(BacnetClient client)
-        {
-            if (client.Transport.GetType()==typeof(BacnetIpUdpProtocolTransport))
-                DirectIp = client;
-        }
-        public static void ReceivedIam(BacnetClient client, BacnetAddress Bacdevice, uint device_id)
-        {                       
-            SuroundingDevices.Remove(device_id);    // this will renew the registration, if already exists
-            SuroundingDevices.Add(device_id, new KeyValuePair<BacnetClient, BacnetAddress>(client, Bacdevice));
         }
 
         public void SendIntrinsectEvent(BacnetObjectId SenderObject,
@@ -184,13 +169,13 @@ namespace BaCSharp
                 if (devReportEntry.adr != null)
                     recipient = new KeyValuePair<BacnetClient, BacnetAddress>
                         (
-                        DirectIp,
+                        Mydevice.DirectIp,
                         devReportEntry.adr
                         );
                 else
                     try
                     {
-                        recipient = SuroundingDevices[devReportEntry.Id.instance];
+                        recipient = Mydevice.SuroundingDevices[devReportEntry.Id.instance];
                     }
                     catch { }
 
