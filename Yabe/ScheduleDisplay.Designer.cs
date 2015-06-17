@@ -45,12 +45,14 @@
             this.StartDatePicker = new System.Windows.Forms.Button();
             this.EndDatePicker = new System.Windows.Forms.Button();
             this.label4 = new System.Windows.Forms.Label();
+            this.listReferences = new System.Windows.Forms.ListView();
+            this.label5 = new System.Windows.Forms.Label();
             this.contextMenuStrip.SuspendLayout();
             this.SuspendLayout();
             // 
             // TxtStartDate
             // 
-            this.TxtStartDate.Location = new System.Drawing.Point(22, 51);
+            this.TxtStartDate.Location = new System.Drawing.Point(22, 35);
             this.TxtStartDate.Name = "TxtStartDate";
             this.TxtStartDate.Size = new System.Drawing.Size(100, 20);
             this.TxtStartDate.TabIndex = 1;
@@ -60,7 +62,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(19, 35);
+            this.label1.Location = new System.Drawing.Point(19, 19);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(91, 13);
             this.label1.TabIndex = 2;
@@ -69,7 +71,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(171, 35);
+            this.label2.Location = new System.Drawing.Point(226, 19);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(88, 13);
             this.label2.TabIndex = 3;
@@ -77,7 +79,7 @@
             // 
             // TxtEndDate
             // 
-            this.TxtEndDate.Location = new System.Drawing.Point(174, 51);
+            this.TxtEndDate.Location = new System.Drawing.Point(229, 35);
             this.TxtEndDate.Name = "TxtEndDate";
             this.TxtEndDate.Size = new System.Drawing.Size(100, 20);
             this.TxtEndDate.TabIndex = 4;
@@ -87,21 +89,21 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(19, 99);
+            this.label3.Location = new System.Drawing.Point(19, 72);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(91, 13);
+            this.label3.Size = new System.Drawing.Size(96, 13);
             this.label3.TabIndex = 6;
-            this.label3.Text = "Weekly Schedule";
+            this.label3.Text = "Weekly Schedules";
             // 
             // Schedule
             // 
             this.Schedule.ContextMenuStrip = this.contextMenuStrip;
             this.Schedule.ImageIndex = 0;
             this.Schedule.ImageList = this.imageList;
-            this.Schedule.Location = new System.Drawing.Point(22, 115);
+            this.Schedule.Location = new System.Drawing.Point(22, 88);
             this.Schedule.Name = "Schedule";
             this.Schedule.SelectedImageIndex = 0;
-            this.Schedule.Size = new System.Drawing.Size(285, 269);
+            this.Schedule.Size = new System.Drawing.Size(340, 269);
             this.Schedule.TabIndex = 7;
             this.Schedule.AfterLabelEdit += new System.Windows.Forms.NodeLabelEditEventHandler(this.Schedule_AfterLabelEdit);
             this.Schedule.MouseDown += new System.Windows.Forms.MouseEventHandler(this.Schedule_MouseDown);
@@ -145,7 +147,7 @@
             // UpdateButton
             // 
             this.UpdateButton.AutoSize = true;
-            this.UpdateButton.Location = new System.Drawing.Point(179, 408);
+            this.UpdateButton.Location = new System.Drawing.Point(234, 486);
             this.UpdateButton.Name = "UpdateButton";
             this.UpdateButton.Size = new System.Drawing.Size(128, 28);
             this.UpdateButton.TabIndex = 8;
@@ -157,7 +159,7 @@
             // 
             this.StartDatePicker.AutoSize = true;
             this.StartDatePicker.Image = global::Yabe.Properties.Resources.calendar_view_week1;
-            this.StartDatePicker.Location = new System.Drawing.Point(128, 49);
+            this.StartDatePicker.Location = new System.Drawing.Point(128, 33);
             this.StartDatePicker.Name = "StartDatePicker";
             this.StartDatePicker.Size = new System.Drawing.Size(27, 22);
             this.StartDatePicker.TabIndex = 9;
@@ -168,7 +170,7 @@
             // 
             this.EndDatePicker.AutoSize = true;
             this.EndDatePicker.Image = global::Yabe.Properties.Resources.calendar_view_week1;
-            this.EndDatePicker.Location = new System.Drawing.Point(280, 49);
+            this.EndDatePicker.Location = new System.Drawing.Point(335, 33);
             this.EndDatePicker.Name = "EndDatePicker";
             this.EndDatePicker.Size = new System.Drawing.Size(27, 22);
             this.EndDatePicker.TabIndex = 10;
@@ -178,17 +180,38 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(19, 387);
+            this.label4.Location = new System.Drawing.Point(0, 522);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(224, 13);
             this.label4.TabIndex = 11;
             this.label4.Text = "Optional Exception Schedule not implemented";
             // 
+            // listReferences
+            // 
+            this.listReferences.ContextMenuStrip = this.contextMenuStrip;
+            this.listReferences.Location = new System.Drawing.Point(22, 394);
+            this.listReferences.Name = "listReferences";
+            this.listReferences.Size = new System.Drawing.Size(340, 75);
+            this.listReferences.TabIndex = 12;
+            this.listReferences.UseCompatibleStateImageBehavior = false;
+            this.listReferences.View = System.Windows.Forms.View.SmallIcon;
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(19, 378);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(145, 13);
+            this.label5.TabIndex = 13;
+            this.label5.Text = "Objects properties references";
+            // 
             // ScheduleDisplay
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(328, 448);
+            this.ClientSize = new System.Drawing.Size(386, 536);
+            this.Controls.Add(this.label5);
+            this.Controls.Add(this.listReferences);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.EndDatePicker);
             this.Controls.Add(this.StartDatePicker);
@@ -226,5 +249,7 @@
         private System.Windows.Forms.Button EndDatePicker;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.ImageList imageList;
+        private System.Windows.Forms.ListView listReferences;
+        private System.Windows.Forms.Label label5;
     }
 }

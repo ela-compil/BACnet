@@ -39,7 +39,7 @@ using System.IO.BACnet.Storage;
 namespace Yabe
 {
     public partial class MainDialog : Form
-    {
+    {       
         private Dictionary<BacnetClient, BacnetDeviceLine> m_devices = new Dictionary<BacnetClient, BacnetDeviceLine>();
         private Dictionary<string, ListViewItem> m_subscription_index = new Dictionary<string, ListViewItem>();
         private uint m_next_subscription_id = 0;
@@ -686,48 +686,41 @@ namespace Yabe
             removeDeviceToolStripMenuItem_Click(this, null);
         }
 
-        private void SetNodeIcon(BacnetObjectTypes object_type, TreeNode node)
+        public static int GetIconNum(BacnetObjectTypes object_type)
         {
             switch (object_type)
             {
                 case BacnetObjectTypes.OBJECT_DEVICE:
-                    node.ImageIndex = 2;
-                    break;
+                    return 2;
                 case BacnetObjectTypes.OBJECT_FILE:
-                    node.ImageIndex = 5;
-                    break;
+                    return 5;
                 case BacnetObjectTypes.OBJECT_ANALOG_INPUT:
                 case BacnetObjectTypes.OBJECT_ANALOG_OUTPUT:
                 case BacnetObjectTypes.OBJECT_ANALOG_VALUE:
-                    node.ImageIndex = 6;
-                    break;
+                    return 6;
                 case BacnetObjectTypes.OBJECT_BINARY_INPUT:
                 case BacnetObjectTypes.OBJECT_BINARY_OUTPUT:
                 case BacnetObjectTypes.OBJECT_BINARY_VALUE:
-                    node.ImageIndex = 7;
-                    break;
+                    return 7;
                 case BacnetObjectTypes.OBJECT_GROUP:
-                    node.ImageIndex = 10;
-                    break;
+                    return 10;
                 case BacnetObjectTypes.OBJECT_STRUCTURED_VIEW:
-                    node.ImageIndex = 11;
-                    break;
+                    return 11;
                 case BacnetObjectTypes.OBJECT_TRENDLOG:
-                    node.ImageIndex = 12;
-                    break;
+                    return 12;
                 case BacnetObjectTypes.OBJECT_TREND_LOG_MULTIPLE:
-                    node.ImageIndex = 12;
-                    break;
+                    return 12;
                 case BacnetObjectTypes.OBJECT_NOTIFICATION_CLASS:
-                    node.ImageIndex = 13;
-                    break;
+                    return 13;
                 case BacnetObjectTypes.OBJECT_SCHEDULE:
-                    node.ImageIndex = 14;
-                    break;
+                    return 14;
                 default:
-                    node.ImageIndex = 4;
-                    break;
+                    return 4;
             }
+        }
+        private void SetNodeIcon(BacnetObjectTypes object_type, TreeNode node)
+        {
+            node.ImageIndex = GetIconNum(object_type);            
             node.SelectedImageIndex = node.ImageIndex;
         }
 
@@ -1346,7 +1339,7 @@ namespace Yabe
                                     }
                                     catch { }
                                 }
-
+                                
                                 if (o==null)
                                     b_value[0] = new BacnetValue(new_value);
                                 else
@@ -1592,7 +1585,7 @@ namespace Yabe
 
                 if (GetObjectLink(out comm, out adr, out object_id, BacnetObjectTypes.OBJECT_SCHEDULE) == false) return;
 
-                new ScheduleDisplay(comm, adr, object_id).ShowDialog();
+                new ScheduleDisplay(m_AddressSpaceTree.ImageList, comm, adr, object_id).ShowDialog();
 
             }
             catch(Exception ex) { Trace.TraceError("Error loading Schedule : " + ex.Message); }

@@ -899,17 +899,17 @@ namespace System.IO.BACnet
         public UInt32 arrayIndex;
         public BacnetObjectId deviceIndentifier;
 
-        public BacnetDeviceObjectPropertyReference(BacnetObjectId objectIdentifier, uint propertyIdentifier, uint? deviceIndentifier =null, UInt32 arrayIndex = ASN1.BACNET_ARRAY_ALL)
+        public BacnetDeviceObjectPropertyReference(BacnetObjectId objectIdentifier, uint propertyIdentifier, BacnetObjectId? deviceIndentifier=null, UInt32 arrayIndex = ASN1.BACNET_ARRAY_ALL)
         {
             this.objectIdentifier = objectIdentifier;
             this.propertyIdentifier = propertyIdentifier;
             this.arrayIndex = arrayIndex;
             if (deviceIndentifier != null)
-                this.deviceIndentifier = new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, deviceIndentifier.Value);
+                this.deviceIndentifier = deviceIndentifier.Value;
             else
                 this.deviceIndentifier = new BacnetObjectId(BacnetObjectTypes.MAX_BACNET_OBJECT_TYPE, 0);
-        }
 
+        }
         public void ASN1encode(EncodeBuffer buffer)
         {
             ASN1.bacapp_encode_device_obj_property_ref(buffer, this);
@@ -7585,6 +7585,7 @@ namespace System.IO.BACnet.Serialize
                         BacnetErrorCodes Errcode;
                         len += DecodeError(buffer, offset + len, length, out Errclass, out Errcode);
                         records[CurveNumber].Value = new BacnetError(Errclass, Errcode);
+                        len++; // Closing Error Tag
                         break;
                     case BacnetTrendLogValueType.TL_TYPE_NULL:
                         len++;

@@ -29,8 +29,9 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.TreeNode treeNode1 = new System.Windows.Forms.TreeNode("Devices");
+            System.Windows.Forms.ImageList m_ImageList;
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainDialog));
+            System.Windows.Forms.TreeNode treeNode1 = new System.Windows.Forms.TreeNode("Devices");
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.m_SearchToolButton = new System.Windows.Forms.ToolStripButton();
             this.m_RemoveToolButton = new System.Windows.Forms.ToolStripButton();
@@ -71,7 +72,6 @@
             this.exportDeviceDBToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.timeSynchronizeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.communicationControlToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.m_ImageList = new System.Windows.Forms.ImageList(this.components);
             this.label2 = new System.Windows.Forms.Label();
             this.m_AddressSpaceTree = new System.Windows.Forms.TreeView();
             this.m_AddressSpaceMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
@@ -97,6 +97,7 @@
             this.m_LogText = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
             this.m_subscriptionRenewTimer = new System.Windows.Forms.Timer(this.components);
+            m_ImageList = new System.Windows.Forms.ImageList(this.components);
             this.toolStrip1.SuspendLayout();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.m_SplitContainerButtom)).BeginInit();
@@ -120,6 +121,26 @@
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
             this.SuspendLayout();
+            // 
+            // m_ImageList
+            // 
+            m_ImageList.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("m_ImageList.ImageStream")));
+            m_ImageList.TransparentColor = System.Drawing.Color.Transparent;
+            m_ImageList.Images.SetKeyName(0, "computer.png");
+            m_ImageList.Images.SetKeyName(1, "chart_line.png");
+            m_ImageList.Images.SetKeyName(2, "monitor.png");
+            m_ImageList.Images.SetKeyName(3, "chart_organisation.png");
+            m_ImageList.Images.SetKeyName(4, "table.png");
+            m_ImageList.Images.SetKeyName(5, "note.png");
+            m_ImageList.Images.SetKeyName(6, "chart_curve.png");
+            m_ImageList.Images.SetKeyName(7, "contrast.png");
+            m_ImageList.Images.SetKeyName(8, "disconnect.png");
+            m_ImageList.Images.SetKeyName(9, "bullet_green.png");
+            m_ImageList.Images.SetKeyName(10, "bricks.png");
+            m_ImageList.Images.SetKeyName(11, "folder.png");
+            m_ImageList.Images.SetKeyName(12, "chart_bar.png");
+            m_ImageList.Images.SetKeyName(13, "bell.png");
+            m_ImageList.Images.SetKeyName(14, "calendar.png");
             // 
             // toolStrip1
             // 
@@ -428,7 +449,7 @@
             this.m_DeviceTree.ContextMenuStrip = this.m_DeviceTreeMenuStrip;
             this.m_DeviceTree.Dock = System.Windows.Forms.DockStyle.Fill;
             this.m_DeviceTree.ImageIndex = 0;
-            this.m_DeviceTree.ImageList = this.m_ImageList;
+            this.m_DeviceTree.ImageList = m_ImageList;
             this.m_DeviceTree.Location = new System.Drawing.Point(0, 13);
             this.m_DeviceTree.Name = "m_DeviceTree";
             treeNode1.Name = "Node0";
@@ -508,26 +529,6 @@
             this.communicationControlToolStripMenuItem.Text = "Device control";
             this.communicationControlToolStripMenuItem.Click += new System.EventHandler(this.communicationControlToolStripMenuItem_Click);
             // 
-            // m_ImageList
-            // 
-            this.m_ImageList.ImageStream = ((System.Windows.Forms.ImageListStreamer)(resources.GetObject("m_ImageList.ImageStream")));
-            this.m_ImageList.TransparentColor = System.Drawing.Color.Transparent;
-            this.m_ImageList.Images.SetKeyName(0, "computer.png");
-            this.m_ImageList.Images.SetKeyName(1, "chart_line.png");
-            this.m_ImageList.Images.SetKeyName(2, "monitor.png");
-            this.m_ImageList.Images.SetKeyName(3, "chart_organisation.png");
-            this.m_ImageList.Images.SetKeyName(4, "table.png");
-            this.m_ImageList.Images.SetKeyName(5, "note.png");
-            this.m_ImageList.Images.SetKeyName(6, "chart_curve.png");
-            this.m_ImageList.Images.SetKeyName(7, "contrast.png");
-            this.m_ImageList.Images.SetKeyName(8, "disconnect.png");
-            this.m_ImageList.Images.SetKeyName(9, "bullet_green.png");
-            this.m_ImageList.Images.SetKeyName(10, "bricks.png");
-            this.m_ImageList.Images.SetKeyName(11, "folder.png");
-            this.m_ImageList.Images.SetKeyName(12, "chart_bar.png");
-            this.m_ImageList.Images.SetKeyName(13, "bell.png");
-            this.m_ImageList.Images.SetKeyName(14, "calendar.png");
-            // 
             // label2
             // 
             this.label2.AutoSize = true;
@@ -543,7 +544,7 @@
             this.m_AddressSpaceTree.ContextMenuStrip = this.m_AddressSpaceMenuStrip;
             this.m_AddressSpaceTree.Dock = System.Windows.Forms.DockStyle.Fill;
             this.m_AddressSpaceTree.ImageIndex = 0;
-            this.m_AddressSpaceTree.ImageList = this.m_ImageList;
+            this.m_AddressSpaceTree.ImageList = m_ImageList;
             this.m_AddressSpaceTree.Location = new System.Drawing.Point(0, 13);
             this.m_AddressSpaceTree.Name = "m_AddressSpaceTree";
             this.m_AddressSpaceTree.SelectedImageIndex = 0;
@@ -811,7 +812,6 @@
         private System.Windows.Forms.TextBox m_LogText;
         private System.Windows.Forms.SplitContainer splitContainer4;
         private System.Windows.Forms.TreeView m_DeviceTree;
-        private System.Windows.Forms.TreeView m_AddressSpaceTree;
         private System.Windows.Forms.TabControl tabControl1;
         private System.Windows.Forms.TabPage tabPage1;
         private System.Windows.Forms.PropertyGrid m_DataGrid;
@@ -825,7 +825,6 @@
         private System.Windows.Forms.ToolStripMenuItem quitToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem removeDeviceToolStripMenuItem;
-        private System.Windows.Forms.ImageList m_ImageList;
         private System.Windows.Forms.ContextMenuStrip m_DeviceTreeMenuStrip;
         private System.Windows.Forms.ToolStripMenuItem addDeviceToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem removeDeviceToolStripMenuItem1;
@@ -867,6 +866,7 @@
         private System.Windows.Forms.ToolStripMenuItem showScheduleToolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem showNotificationToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showNotificationToolStripMenuItem1;
+        private System.Windows.Forms.TreeView m_AddressSpaceTree;
     }
 }
 
