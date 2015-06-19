@@ -64,11 +64,11 @@ namespace AnotherStorageImplementation
             // Send Iam
             bacnet_client.Iam(deviceId, new BacnetSegmentations());
 
-            if (_device.FindBacnetObjectType(BacnetObjectTypes.OBJECT_NOTIFICATION_CLASS))
+            if ((_device.FindBacnetObjectType(BacnetObjectTypes.OBJECT_NOTIFICATION_CLASS))|| (_device.FindBacnetObjectType(BacnetObjectTypes.OBJECT_SCHEDULE)))
             {
                 bacnet_client.OnWhoIs += new BacnetClient.WhoIsHandler(handler_OnWhoIs);
-                bacnet_client.WhoIs();                          // Send WhoIs : needed BY Notification class for deviceId<->IP endpoint
-                device.SetIpEndpoint(bacnet_client); // Register the endpoint for IP Notification usage
+                bacnet_client.WhoIs();                          // Send WhoIs : needed BY Notification & Schedule for deviceId<->IP endpoint
+                device.SetIpEndpoint(bacnet_client);            // Register the endpoint for IP Notification usage with IP:Port
             }
         }
 
@@ -192,7 +192,7 @@ namespace AnotherStorageImplementation
                         System.Threading.ThreadPool.QueueUserWorkItem((o) =>
                         {
                             IList<BacnetPropertyValue> values;
-                            if (bacobj.ReadPropertyAll(out values))
+                            if (bacobj.ReadPropertyAll(sender, adr, out values))
                                 sender.Notify(adr, sub.subscriberProcessIdentifier, deviceId, sub.monitoredObjectIdentifier, (uint)sub.GetTimeRemaining(), sub.issueConfirmedNotifications, values);
 
                         }, null);
@@ -222,7 +222,7 @@ namespace AnotherStorageImplementation
                         System.Threading.ThreadPool.QueueUserWorkItem((o) =>
                         {
                             IList<BacnetValue> _values;
-                            bacobj.ReadPropertyValue(monitoredProperty, out _values);
+                            bacobj.ReadPropertyValue(sender, adr, monitoredProperty, out _values);
 
                             List<BacnetPropertyValue> values = new List<BacnetPropertyValue>();
                             BacnetPropertyValue tmp = new BacnetPropertyValue();
@@ -285,7 +285,7 @@ namespace AnotherStorageImplementation
                 BaCSharpObject bacobj = device.FindBacnetObject(object_id);
                 if (bacobj != null)
                 {
-                    ErrorCodes error = bacobj.WritePropertyValue(value, true);
+                    ErrorCodes error = bacobj.WritePropertyValue(sender, adr, value, true);
                     if (error == ErrorCodes.Good)
                         sender.SimpleAckResponse(adr, BacnetConfirmedServices.SERVICE_CONFIRMED_WRITE_PROPERTY, invoke_id);
                     else
@@ -314,7 +314,7 @@ namespace AnotherStorageImplementation
                 if (bacobj != null)
                 {
                     IList<BacnetValue> value;
-                    ErrorCodes error= bacobj.ReadPropertyValue(property, out value);
+                    ErrorCodes error = bacobj.ReadPropertyValue(sender, adr, property, out value);
                     if (error == ErrorCodes.Good)
                         sender.ReadPropertyResponse(adr, invoke_id, sender.GetSegmentBuffer(max_segments), object_id, property, value);
                     else
@@ -339,7 +339,7 @@ namespace AnotherStorageImplementation
                         if (p.propertyReferences.Count == 1 && p.propertyReferences[0].propertyIdentifier == (uint)BacnetPropertyIds.PROP_ALL)
                         {                            
                             BaCSharpObject bacobj=device.FindBacnetObject(p.objectIdentifier);
-                            if (!bacobj.ReadPropertyAll(out value))
+                            if (!bacobj.ReadPropertyAll(sender, adr, out value))
                             {
                                 sender.ErrorResponse(adr, BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROP_MULTIPLE, invoke_id, BacnetErrorClasses.ERROR_CLASS_OBJECT, BacnetErrorCodes.ERROR_CODE_UNKNOWN_OBJECT);
                                 return;
@@ -348,7 +348,7 @@ namespace AnotherStorageImplementation
                         else
                         {
                             BaCSharpObject bacobj=device.FindBacnetObject(p.objectIdentifier);
-                            bacobj.ReadPropertyMultiple(p.propertyReferences, out value);
+                            bacobj.ReadPropertyMultiple(sender, adr, p.propertyReferences, out value);
                         }
                         values.Add(new BacnetReadAccessResult(p.objectIdentifier, value));
                     }

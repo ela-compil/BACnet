@@ -64,6 +64,12 @@ namespace System.IO.BACnet
         public bool ForceWindowSize { get { return m_force_window_size; } set { m_force_window_size = value; } }
         public bool DefaultSegmentationHandling { get { return m_default_segmentation_handling; } set { m_default_segmentation_handling = value; } }
 
+        // These members allows to access undecoded buffer by the application
+        // layer, when the basic undecoding process is not really able to do the job
+        // in particular with application_specific_encoding values
+        public byte[] raw_buffer;
+        public int raw_offset, raw_length;
+
         private class LastSegmentACK
         {
             public byte invoke_id;
@@ -179,6 +185,10 @@ namespace System.IO.BACnet
             try
             {
                 Trace.WriteLine("ConfirmedServiceRequest", null);
+
+                raw_buffer = buffer;
+                raw_length = length;
+                raw_offset = offset;
 
                 if (OnConfirmedServiceRequest != null) 
                     OnConfirmedServiceRequest(this, adr, type, service, max_segments, max_adpu, invoke_id, buffer, offset, length);

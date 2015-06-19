@@ -106,6 +106,7 @@
             this.Schedule.Size = new System.Drawing.Size(340, 269);
             this.Schedule.TabIndex = 7;
             this.Schedule.AfterLabelEdit += new System.Windows.Forms.NodeLabelEditEventHandler(this.Schedule_AfterLabelEdit);
+            this.Schedule.DoubleClick += new System.EventHandler(this.modifyToolStripMenuItem_Click);
             this.Schedule.MouseDown += new System.Windows.Forms.MouseEventHandler(this.Schedule_MouseDown);
             // 
             // contextMenuStrip
@@ -195,6 +196,7 @@
             this.listReferences.TabIndex = 12;
             this.listReferences.UseCompatibleStateImageBehavior = false;
             this.listReferences.View = System.Windows.Forms.View.SmallIcon;
+            this.listReferences.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.modifyToolStripMenuItem_Click);
             // 
             // label5
             // 
@@ -225,7 +227,6 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "ScheduleDisplay";
             this.Text = "Simple Schedule Editor";
-            this.Load += new System.EventHandler(this.ScheduleDisplay_Load);
             this.contextMenuStrip.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();

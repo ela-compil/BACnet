@@ -33,6 +33,7 @@ using System.Threading;
 using System.Diagnostics;
 using BaCSharp;
 using System.Xml.Serialization;
+using System.IO.BACnet.Serialize;
 //
 // This code shows a way to map bacnet objects in C# objects
 // and how C# methods&properties in these classes could be used 
@@ -171,8 +172,13 @@ namespace AnotherStorageImplementation
             for (int i = 0; i < 300; i++)
             {
                 DateTime current = DateTime.Now.AddSeconds(-300+i);
-                trend0.AddValue((int)(i* Math.Sin((float)i / 0.01)), current, 0);
+                if ((i>200)&&(i<210))   // simulate some errors in the trend
+                    trend0.AddValue(new BacnetError(), current, 0, BacnetTrendLogValueType.TL_TYPE_ERROR);
+                else
+                    trend0.AddValue((int)(i* Math.Sin((float)i / 0.01)), current, 0);
             }
+
+            trend0.AddValue(new BacnetError(), DateTime.Now, 0, BacnetTrendLogValueType.TL_TYPE_ERROR);
 
             // BACFILE:0
             // File access right me be allowed to the current user
@@ -246,7 +252,7 @@ namespace AnotherStorageImplementation
             (
                   new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_OUTPUT, 1),
                   (uint)BacnetPropertyIds.PROP_PRESENT_VALUE,
-                  (uint)1234));
+                  new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, 1234)));
 
             sch.PROP_SCHEDULE_DEFAULT = (int)452;
 

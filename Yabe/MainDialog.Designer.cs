@@ -75,9 +75,9 @@
             this.label2 = new System.Windows.Forms.Label();
             this.m_AddressSpaceTree = new System.Windows.Forms.TreeView();
             this.m_AddressSpaceMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.subscribeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.downloadFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.uploadFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.subscribeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showTrendLogToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.showScheduleToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.showNotificationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -557,14 +557,22 @@
             // m_AddressSpaceMenuStrip
             // 
             this.m_AddressSpaceMenuStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.subscribeToolStripMenuItem,
             this.downloadFileToolStripMenuItem,
             this.uploadFileToolStripMenuItem,
-            this.subscribeToolStripMenuItem,
             this.showTrendLogToolStripMenuItem1,
             this.showScheduleToolStripMenuItem1,
             this.showNotificationToolStripMenuItem});
             this.m_AddressSpaceMenuStrip.Name = "m_AddressSpaceMenuStrip";
             this.m_AddressSpaceMenuStrip.Size = new System.Drawing.Size(170, 136);
+            // 
+            // subscribeToolStripMenuItem
+            // 
+            this.subscribeToolStripMenuItem.Image = global::Yabe.Properties.Resources.eye;
+            this.subscribeToolStripMenuItem.Name = "subscribeToolStripMenuItem";
+            this.subscribeToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
+            this.subscribeToolStripMenuItem.Text = "Subscribe";
+            this.subscribeToolStripMenuItem.Click += new System.EventHandler(this.subscribeToolStripMenuItem_Click);
             // 
             // downloadFileToolStripMenuItem
             // 
@@ -581,14 +589,6 @@
             this.uploadFileToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
             this.uploadFileToolStripMenuItem.Text = "Upload File";
             this.uploadFileToolStripMenuItem.Click += new System.EventHandler(this.uploadFileToolStripMenuItem_Click);
-            // 
-            // subscribeToolStripMenuItem
-            // 
-            this.subscribeToolStripMenuItem.Image = global::Yabe.Properties.Resources.eye;
-            this.subscribeToolStripMenuItem.Name = "subscribeToolStripMenuItem";
-            this.subscribeToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
-            this.subscribeToolStripMenuItem.Text = "Subscribe";
-            this.subscribeToolStripMenuItem.Click += new System.EventHandler(this.subscribeToolStripMenuItem_Click);
             // 
             // showTrendLogToolStripMenuItem1
             // 

@@ -4069,6 +4069,49 @@ namespace System.IO.BACnet.Serialize
             return len;
         }
 
+        // FC
+        public static int decode_device_obj_property_ref(byte[] buffer, int offset, int apdu_len,  out BacnetDeviceObjectPropertyReference value)
+        {
+            int len = 0;
+            byte tag_number;
+            uint len_value_type;
+            int tag_len;
+
+            value = new BacnetDeviceObjectPropertyReference();
+
+            /* Tag 0: Object ID */
+            if (!ASN1.decode_is_context_tag(buffer, offset + len, 0))
+                return -1;
+            len++;
+            len += ASN1.decode_object_id(buffer, offset + len, out value.objectIdentifier.type, out value.objectIdentifier.instance);
+
+
+            /* Tag 1 : Property identifier */
+            len += decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value_type);
+            if (tag_number != 1)
+                return -1;
+            len += decode_enumerated(buffer, offset + len, len_value_type, out value.propertyIdentifier);
+
+            /* Tag 2: Optional Array Index */
+            tag_len = ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value_type);
+            if (tag_number == 2)
+            {
+                len += tag_len;
+                len += ASN1.decode_unsigned(buffer, offset + len, len_value_type, out value.arrayIndex);
+            }
+
+            /* Tag 3 : Optional Device Identifier */
+            if (!ASN1.decode_is_context_tag(buffer, offset + len, 3))
+                return len;
+            if (IS_CLOSING_TAG(buffer[offset+len])) return len;
+
+            len++;
+
+            len += ASN1.decode_object_id(buffer, offset + len, out value.deviceIndentifier.type, out value.deviceIndentifier.instance);
+
+            return len;
+        }
+
         public static int decode_unsigned(byte[] buffer, int offset, uint len_value, out uint value)
         {
             ushort unsigned16_value = 0;
@@ -4933,6 +4976,15 @@ namespace System.IO.BACnet.Serialize
                     tag_len = ASN1.decode_read_access_result(buffer, offset, max_offset, out v);
                     if (tag_len < 0) return -1;
                     value.Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_READ_ACCESS_RESULT;
+                    value.Value = v;
+                    return tag_len;
+                }
+                else if (property_id == BacnetPropertyIds.PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES)
+                {
+                    BacnetDeviceObjectPropertyReference v;
+                    tag_len = ASN1.decode_device_obj_property_ref(buffer, offset, max_offset, out v);
+                    if (tag_len < 0) return -1;
+                    value.Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_PROPERTY_REFERENCE;
                     value.Value = v;
                     return tag_len;
                 }
@@ -7463,6 +7515,18 @@ namespace System.IO.BACnet.Serialize
             /* Tag 1: logDatum */
             if (record.type != BacnetTrendLogValueType.TL_TYPE_NULL)
             {
+
+                if (record.type == BacnetTrendLogValueType.TL_TYPE_ERROR)
+                {
+                    ASN1.encode_opening_tag(buffer, 1);
+                    ASN1.encode_opening_tag(buffer, 8);
+                    BacnetError err = record.GetValue<BacnetError>();
+                    Services.EncodeError(buffer, err.error_class, err.error_code);
+                    ASN1.encode_closing_tag(buffer, 8);
+                    ASN1.encode_closing_tag(buffer, 1);
+                    return;
+                }
+
                 ASN1.encode_opening_tag(buffer, 1);
                 EncodeBuffer tmp1 = new System.IO.BACnet.Serialize.EncodeBuffer(); 
                 switch (record.type)
@@ -7480,10 +7544,6 @@ namespace System.IO.BACnet.Serialize
                         break;
                     case BacnetTrendLogValueType.TL_TYPE_ENUM:
                         ASN1.encode_application_enumerated(tmp1, record.GetValue<uint>());
-                        break;
-                    case BacnetTrendLogValueType.TL_TYPE_ERROR:
-                        BacnetError err = record.GetValue<BacnetError>();
-                        Services.EncodeError(tmp1, err.error_class, err.error_code);
                         break;
                     case BacnetTrendLogValueType.TL_TYPE_REAL:
                         ASN1.encode_bacnet_real(tmp1, record.GetValue<float>());
@@ -7585,7 +7645,7 @@ namespace System.IO.BACnet.Serialize
                         BacnetErrorCodes Errcode;
                         len += DecodeError(buffer, offset + len, length, out Errclass, out Errcode);
                         records[CurveNumber].Value = new BacnetError(Errclass, Errcode);
-                        len++; // Closing Error Tag
+                        len++; // Closing Tag 8
                         break;
                     case BacnetTrendLogValueType.TL_TYPE_NULL:
                         len++;

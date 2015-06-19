@@ -30,12 +30,7 @@ using System.Text;
 using System.IO.BACnet;
 using System.IO.BACnet.Serialize;
 using System.Threading;
-//
-// List of object property identifier
-//  Object Identifier
-//  Property Identifier
-//  optional array index : uint
-//  optional device identifier BacnetDeviceObjectPropertyReference, classe existante ASN1encode à faire : IASN1encode
+
 namespace BaCSharp
 {
     [Serializable]
@@ -64,25 +59,35 @@ namespace BaCSharp
             get { return m_PROP_STATUS_FLAGS; }
         }
 
-        /*
-        BacnetDeviceObjectPropertyReferenceList m_PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES;
-        public virtual BacnetDeviceObjectPropertyReferenceList PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES
-        {
-            get { return m_PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES; }
-        }
-        */
-        List<object> m_PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES;
-        public virtual List<object> PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES
+        BacnetDeviceObjectPropertyReferenceList m_PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES=new BacnetDeviceObjectPropertyReferenceList();
+        public virtual object PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES
         {
             get 
             {
-                lock (lockObj)
+                lock (lockObj) // Bof : nothing to lock it's a reference
                 {
                     return m_PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES;
                 }
             }
-        }
+            set
+            {
+                lock (lockObj)
+                {
+                    m_PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES.references = new List<BacnetDeviceObjectPropertyReference>();
+                    if (value == null) return;
+                    if (value is BacnetDeviceObjectPropertyReference)
+                    {
+                        m_PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES.references.Add((BacnetDeviceObjectPropertyReference)value);
+                        return;
+                    }
 
+                    List<BacnetValue> valuesList = (List<BacnetValue>)value;
+                    foreach (BacnetValue bv in valuesList)
+                        m_PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES.references.Add((BacnetDeviceObjectPropertyReference)bv.Value);
+                }
+            }
+        }
+        
         public object m_PROP_PRESENT_VALUE; // No need to lock, object reference, invariant
         public bool IsPresentValueDefault = true; 
         public virtual object PROP_PRESENT_VALUE
@@ -114,6 +119,11 @@ namespace BaCSharp
                 {
                     internal_PROP_PRESENT_VALUE = m_PROP_SCHEDULE_DEFAULT;
                 }
+                else if (m_PROP_PRESENT_VALUE == null)
+                {
+                    internal_PROP_PRESENT_VALUE = m_PROP_SCHEDULE_DEFAULT;
+                    IsPresentValueDefault = true;
+                }
             }
         }
         
@@ -137,7 +147,7 @@ namespace BaCSharp
             }
         }
         
-        List<BacnetValue> m_PROP_EFFECTIVE_PERIOD = new List<BacnetValue>();
+        List<BacnetValue> m_PROP_EFFECTIVE_PERIOD = new List<BacnetValue>(); // Two Dates
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_DATE)]
         public virtual List<BacnetValue> PROP_EFFECTIVE_PERIOD
         {
@@ -166,6 +176,9 @@ namespace BaCSharp
 
                     // A quite strange decoding due to the strange re-ordering of
                     // empty value (day without schedule) by the stack
+                    // Maybe it could be a better way to get the raw buffer as 
+                    // in BacnetDeviceObjectPropertyReferenceList for a self decoding
+                    // rather than the automatic one proposed by Yabe stack.
                     List<BacnetValue> valuesList = (List<BacnetValue>)value;
                     foreach (BacnetValue bv in valuesList)
                     {
@@ -224,23 +237,34 @@ namespace BaCSharp
         {
             lock (lockObj)
             {
-                if (m_PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES == null)
-                    m_PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES = new List<object>();
-                m_PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES.Add(reference);
+                if (m_PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES.references == null)
+                    m_PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES.references = new List<BacnetDeviceObjectPropertyReference>();
+                m_PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES.references.Add(reference);
             }
         }
 
         // timer Handler : it's time to change something
         protected virtual void TimeSchedule(Object state)
         {
+            if (m_PROP_OUT_OF_SERVICE == true)
+                return;
+
             lock (lockObj)
             {
                 if ((int)((object[])state)[0] != tmrId)    // an old timer, since we cannot stop a launched timer
                     return;
                 else
                 {
-                    internal_PROP_PRESENT_VALUE = ((object[])state)[1];
-                    IsPresentValueDefault = false;
+                    if (((object[])state)[1] == null)
+                    {
+                        internal_PROP_PRESENT_VALUE = m_PROP_SCHEDULE_DEFAULT;
+                        IsPresentValueDefault = true;
+                    }
+                    else
+                    {
+                        internal_PROP_PRESENT_VALUE = ((object[])state)[1];
+                        IsPresentValueDefault = false;
+                    }
                     DoScheduling();
                 }
             }
@@ -249,10 +273,10 @@ namespace BaCSharp
         // Copy the Present value into each reference properties value
         protected virtual void DoDispatchValue()
         {
-            if (m_PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES == null)
+            if (m_PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES.references == null)
                 return;
 
-            foreach (object obj in m_PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES)
+            foreach (object obj in m_PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES.references)
             {
                 BacnetDeviceObjectPropertyReference reference = (BacnetDeviceObjectPropertyReference)obj;
 
@@ -301,13 +325,14 @@ namespace BaCSharp
         //
         protected virtual void DoScheduling()
         {
+            if (m_PROP_OUT_OF_SERVICE == true)
+            {
+                tmrId++;    // in order to invalidate the action of the timer in the ThreadPool
+                return;
+            }
+
             lock (lockObj)
             {
-                if (m_PROP_OUT_OF_SERVICE == true)
-                {
-                    tmrId++;    // in order to invalidate the action of the timer in the ThreadPool
-                    return;
-                }
 
                 DateTime Now = DateTime.Now; // Add 1 second to avoid mutiple call 
 
@@ -341,22 +366,21 @@ namespace BaCSharp
                             if (                                
                                 ((interval < delay) && (interval >= 0)) ||
                                 ((interval < 0) && (delay == Int32.MaxValue)) ||
-                                ((interval > delay) && (delay < 0))
+                                ((interval > delay) && (delay <= 0))
                                 )
                             {
-                                if (interval == 0) interval += 7 * 24 * 60 * 60; // Add one week
                                 delay = interval;
                                 NewValue = schedule.Value;
                             }
                         }
 
-                    if ((NewValue != null) && (delay > 0))
+                    if (delay > 0)
                         break;      // No need to go next day
 
-                    timeShift = timeShift + 24 * 60 * 60;   // a day after
+                    timeShift = timeShift + 24 * 60 * 60;   // search the next day
                 }
 
-                if (delay < 0) delay = delay + 7 * 24 * 60 * 60; // Add one week
+                if (delay <= 0) delay = delay + 7 * 24 * 60 * 60; // Add one week
 
                 // Put the next TimerEvent in the ThreadPool (Threading.Timer)
                 if ((NewValue != null)&&(delay!=Int32.MaxValue))
@@ -403,6 +427,21 @@ namespace BaCSharp
                         }
                 }
                 ASN1.encode_closing_tag(buffer, 0);
+            }
+        }
+    }
+    [Serializable]
+    class BacnetDeviceObjectPropertyReferenceList : ASN1.IASN1encode
+    {
+        public List<BacnetDeviceObjectPropertyReference> references = null;
+
+        public void ASN1encode(EncodeBuffer buffer)
+        {
+            if (references == null) return;
+
+            foreach (BacnetDeviceObjectPropertyReference reference in references)
+            {
+                reference.ASN1encode(buffer);
             }
         }
     }

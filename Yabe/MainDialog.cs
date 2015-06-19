@@ -123,7 +123,7 @@ namespace Yabe
                 return;
             }
 
-            string sub_key = adr.ToString() + ":" + EventData.initiatingObjectIdentifier.type + ":" + EventData.initiatingObjectIdentifier.instance + ":" + EventData.eventObjectIdentifier.type + ":" + EventData.eventObjectIdentifier.instance;
+            string sub_key = EventData.initiatingObjectIdentifier.instance + ":" + EventData.eventObjectIdentifier.type + ":" + EventData.eventObjectIdentifier.instance;
            
             ListViewItem itm=null;
             // find the Event in the View
@@ -140,7 +140,7 @@ namespace Yabe
             {
                 itm = m_SubscriptionView.Items.Add(adr.ToString());
                 itm.Tag = sub_key;
-                itm.SubItems.Add(EventData.initiatingObjectIdentifier.instance.ToString());
+                itm.SubItems.Add("OBJECT_DEVICE:" + EventData.initiatingObjectIdentifier.instance.ToString());
                 itm.SubItems.Add(EventData.eventObjectIdentifier.type + ":" + EventData.eventObjectIdentifier.instance);   //name
                 itm.SubItems.Add(EventTypeNiceName(EventData.fromState) + " to " + EventTypeNiceName(EventData.toState));
                 itm.SubItems.Add(EventData.timeStamp.Time.ToString("HH:mm:ss"));   //time
@@ -1275,6 +1275,37 @@ namespace Yabe
         private void m_AddressSpaceTree_AfterSelect(object sender, TreeViewEventArgs e)
         {
             UpdateGrid(e.Node);
+            BacnetClient cl; BacnetAddress ba;BacnetObjectId objId;
+
+            // Hide all elements in the toolstip menu
+            foreach (object its in m_AddressSpaceMenuStrip.Items)
+                (its as ToolStripMenuItem).Visible = false;
+            // Set Subscribe always visible
+            m_AddressSpaceMenuStrip.Items[0].Visible = true;
+            // Get the node type
+            GetObjectLink(out cl, out ba, out objId, BacnetObjectTypes.MAX_BACNET_OBJECT_TYPE);
+            // Set visible some elements depending of the object type
+            switch (objId.type)
+            {
+                case BacnetObjectTypes.OBJECT_FILE:
+                    m_AddressSpaceMenuStrip.Items[1].Visible = true;
+                    m_AddressSpaceMenuStrip.Items[2].Visible = true;
+                    break;
+
+                case BacnetObjectTypes.OBJECT_TRENDLOG:
+                case BacnetObjectTypes.OBJECT_TREND_LOG_MULTIPLE:
+                    m_AddressSpaceMenuStrip.Items[3].Visible = true;
+                    break;
+
+                case BacnetObjectTypes.OBJECT_SCHEDULE:
+                    m_AddressSpaceMenuStrip.Items[4].Visible = true;
+                    break;
+
+                case BacnetObjectTypes.OBJECT_NOTIFICATION_CLASS:
+                    m_AddressSpaceMenuStrip.Items[5].Visible = true;
+                    break;
+            }
+
         }
 
         private void m_DataGrid_PropertyValueChanged(object s, PropertyValueChangedEventArgs e)
@@ -1393,9 +1424,11 @@ namespace Yabe
                 adr = entry.Key;
                 comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag;
             }
-            finally
+            catch
             {
-                if (comm == null) MessageBox.Show(this, "This is not a valid node", "Wrong node", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                if (ExpectedType!=BacnetObjectTypes.MAX_BACNET_OBJECT_TYPE)
+                    MessageBox.Show(this, "This is not a valid node", "Wrong node", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return false;
             }
 
             //fetch object_id
@@ -1405,8 +1438,11 @@ namespace Yabe
                 !(((BacnetObjectId)m_AddressSpaceTree.SelectedNode.Tag).type == ExpectedType))
             {
                 String S = ExpectedType.ToString().Substring(7).ToLower();
-                MessageBox.Show(this, "The marked object is not a " + S, S, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                return false;
+                if (ExpectedType != BacnetObjectTypes.MAX_BACNET_OBJECT_TYPE)
+                {
+                    MessageBox.Show(this, "The marked object is not a " + S, S, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    return false;
+                }
             }
             object_id = (BacnetObjectId)m_AddressSpaceTree.SelectedNode.Tag;
 

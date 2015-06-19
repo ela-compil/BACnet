@@ -87,12 +87,14 @@ namespace BaCSharp
             get { return m_PROP_DESCRIPTION; }
         }
 
-
         public delegate void WriteNotificationCallbackHandler(BaCSharpObject sender, BacnetPropertyIds propId);
         // One event for each object if needed
         public event WriteNotificationCallbackHandler OnWriteNotify;
         // One global event for all the content
         public static event WriteNotificationCallbackHandler OnInternalCOVNotify;
+
+        //To get back the raw buffer for specific decoding if needed
+        protected BacnetClient sender;
 
         protected ErrorCodes ErrorCode_PropertyWrite;
         
@@ -178,28 +180,27 @@ namespace BaCSharp
 
             return propVal;
         }
-
         public ErrorCodes ReadPropertyValue(BacnetPropertyReference PropRef, out IList<BacnetValue> propVal)
         {
             propVal = null;
 
             try
             {
-                propVal=FindPropValue(PropRef.ToString());
+                propVal = FindPropValue(PropRef.ToString());
                 if (propVal == null)
                     return ErrorCodes.NotExist;
 
                 // number of elements required
                 if (PropRef.propertyArrayIndex == 0)
                 {
-                    propVal= new BacnetValue[] { new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT, (uint)propVal.Count) };
+                    propVal = new BacnetValue[] { new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT, (uint)propVal.Count) };
                     return ErrorCodes.Good;
                 }
 
                 // only a particular element
                 else if (PropRef.propertyArrayIndex != System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL)
                     propVal = new BacnetValue[] { propVal[(int)PropRef.propertyArrayIndex - 1] };
-             
+
                 return ErrorCodes.Good;
 
             }
@@ -208,8 +209,12 @@ namespace BaCSharp
                 return ErrorCodes.GenericError;
             }
         }
+        public ErrorCodes ReadPropertyValue(BacnetClient sender, BacnetAddress adr, BacnetPropertyReference PropRef, out IList<BacnetValue> propVal)
+        {
+            return ReadPropertyValue(PropRef, out propVal);
+        }
 
-        public bool ReadPropertyMultiple(IList<BacnetPropertyReference> properties, out IList<BacnetPropertyValue> values)
+        public bool ReadPropertyMultiple(BacnetClient sender, BacnetAddress adr, IList<BacnetPropertyReference> properties, out IList<BacnetPropertyValue> values)
         {
 
             values = new BacnetPropertyValue[properties.Count];
@@ -219,7 +224,7 @@ namespace BaCSharp
             {
                 BacnetPropertyValue new_entry = new BacnetPropertyValue();
                 new_entry.property = entry;
-                if (ReadPropertyValue(entry, out new_entry.value) != ErrorCodes.Good)
+                if (ReadPropertyValue(sender, adr, entry, out new_entry.value) != ErrorCodes.Good)
                     new_entry.value = new BacnetValue[] { new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_ERROR, new BacnetError(BacnetErrorClasses.ERROR_CLASS_OBJECT, BacnetErrorCodes.ERROR_CODE_UNKNOWN_PROPERTY)) };
                 values[count] = new_entry;
                 count++;
@@ -245,7 +250,7 @@ namespace BaCSharp
             return (uint)((int)BacnetPropertyIds.MAX_BACNET_PROPERTY_ID+1);
         }
 
-        public bool ReadPropertyAll(out IList<BacnetPropertyValue> values)
+        public bool ReadPropertyAll(BacnetClient sender, BacnetAddress adr, out IList<BacnetPropertyValue> values)
         {
             IList<BacnetPropertyReference> properties = new List<BacnetPropertyReference>();
 
@@ -259,13 +264,13 @@ namespace BaCSharp
                         properties.Add(new BacnetPropertyReference(PropId, System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL));
             }
 
-            return ReadPropertyMultiple(properties, out values);
+            return ReadPropertyMultiple(sender, adr, properties, out values);
         }
 
         public ErrorCodes WritePropertyValue(BacnetPropertyValue value, bool writeFromNetwork)
         {
             // First try to found the set2_ method in the class code
-            MethodInfo m = this.GetType().GetMethod("set2_"+value.property.ToString());
+            MethodInfo m = this.GetType().GetMethod("set2_" + value.property.ToString());
             try
             {
                 if (m != null)
@@ -286,7 +291,7 @@ namespace BaCSharp
             catch
             {
                 return ErrorCodes.GenericError;
-            }            
+            }
 
             // Second, if not found, try to find in the programmed properties list
             PropertyInfo p = this.GetType().GetProperty(value.property.ToString());
@@ -299,46 +304,26 @@ namespace BaCSharp
                 {
                     // since Property cannot return error, this member could be set if a problem occure
                     // or an Exception can be throw
-                    ErrorCode_PropertyWrite = ErrorCodes.Good;
+                    ErrorCode_PropertyWrite = ErrorCodes.Good;                
 
-                    /*
-                    object[] o = p.GetCustomAttributes(true);
-
-                    if (o.Length == 0)
+                    try
                     {
-                        p.SetValue(this, value.value[0].Value, null);
-                    }
-                    else
-                    {
-                        try
+                        if (value.value.Count == 1)
                         {
-                            p.SetValue(this, value.value[0].Value, null); // The value is not a List< >  
-                        }
-                        catch
-                        {
-                            p.SetValue(this, value.value, null);    // The value is a List <  >
-                        }
-                    }
-                    */
-                    
-                        try
-                        {
-                            if (value.value.Count == 1)
+                            try
                             {
-                                try
-                                {
-                                    p.SetValue(this, value.value[0].Value, null);   // The value is not a List< >
-                                }
-                                catch {}
+                                p.SetValue(this, value.value[0].Value, null);   // The value is not a List< >
                             }
-                            else
-                                p.SetValue(this, value.value, null);    // The value is a List <  >                              
+                            catch { }
                         }
-                        catch
-                        {
-                           p.SetValue(this, value.value[0].Value, null); // The value is not a List< > but a List<> was given 
-                        }
-                    
+                        else
+                            p.SetValue(this, value.value, null);    // The value is a List <  >                              
+                    }
+                    catch
+                    {
+                        p.SetValue(this, value.value[0].Value, null); // The value is not a List< > but a List<> was given 
+                    }
+
 
                     if (ErrorCode_PropertyWrite == ErrorCodes.Good)
                     {
@@ -347,7 +332,7 @@ namespace BaCSharp
                     }
 
                     return ErrorCode_PropertyWrite;
-                }      
+                }
                 catch
                 {
                     return ErrorCodes.GenericError;
@@ -355,6 +340,12 @@ namespace BaCSharp
             }
 
             return ErrorCodes.NotExist;
+        }
+
+        public ErrorCodes WritePropertyValue(BacnetClient sender, BacnetAddress adr, BacnetPropertyValue value, bool writeFromNetwork)
+        {
+            this.sender = sender;
+            return WritePropertyValue (value, writeFromNetwork);
         }
 
     }

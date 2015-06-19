@@ -45,6 +45,8 @@ namespace Yabe
         // Could be choosen somewhere by the user
         BacnetApplicationTags ScheduleType = BacnetApplicationTags.BACNET_APPLICATION_TAG_REAL;
 
+        TreeNode mySelectedScheduleNode;
+
         public ScheduleDisplay(ImageList img_List, BacnetClient comm, BacnetAddress adr, BacnetObjectId object_id)
         {
             InitializeComponent();
@@ -146,73 +148,26 @@ namespace Yabe
 
         private void ReadObjectsPropertiesReferences()
         {
-
-            // Raw operation and manual Bacnet/ASN1 decoding, List<BacnetValue> not clean
-            // content is array ( Tag 0 : Object Id; Tag 1 : Property Id; Tag 2 : optional prperty index; Tag 3: optional Device Object Id )
-            // ... since tag number are lost by the stack, at this layer, it's not possible to absolutely determine if an Object Id of Device type
-            // is the  Device ... or the Object. Of course who write a device property ? Certainly nobody, not surely !
-             try
-             {
-                 byte[] buffer = null;
-                 comm.RawEncodedDecodedPropertyConfirmedRequest(adr, schedule_id, BacnetPropertyIds.PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES, BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROPERTY, ref buffer);
-
-                 if (buffer.Length < 2) return; // empty
-
-                 int offset = 0;
-                 int len = 1;
-                 ushort type = 0;
-                 byte tag_number;
-                 uint len_value_type = 0;
-
-                 for(;;)
-                 {
-                     BacnetObjectId objectRef_id;
-                     BacnetObjectId? DeviceobjectRef_id=null;
-                     BacnetPropertyReference property;
-
-                    /* Tag 0: Object ID          */
-                    if (!ASN1.decode_is_context_tag(buffer, offset + len, 0))
-                        return ;    // A problem, go away
-                    len++;
-                    len += ASN1.decode_object_id(buffer, offset + len, out type, out objectRef_id.instance);
-                    objectRef_id.type = (BacnetObjectTypes)type;
-
-                    /* Tag 1: Property ID */
-                    len +=ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value_type);
-                    if (tag_number != 1)
-                        return;  // A problem, go away
-                    len += ASN1.decode_enumerated(buffer, offset + len, len_value_type, out property.propertyIdentifier);
-
-                    /* Tag 2: Optional Array Index */
-                    if (ASN1.decode_is_context_tag(buffer, offset + len, 2))
+            listReferences.BeginUpdate();
+            listReferences.Items.Clear();
+            try
+            {
+                IList<BacnetValue> value;
+                if (comm.ReadPropertyRequest(adr, schedule_id, BacnetPropertyIds.PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES, out value))
+                {
+                    foreach (BacnetValue bv in value)
                     {
-                        len++;
-                        len += ASN1.decode_unsigned(buffer, offset + len, len_value_type, out property.propertyArrayIndex);
+                        BacnetDeviceObjectPropertyReference bopr = (BacnetDeviceObjectPropertyReference)bv.Value;
+                        AddPropertyRefentry(bopr, -1);
                     }
-                    else
-                        property.propertyArrayIndex = ASN1.BACNET_ARRAY_ALL;
-                     
-                    /* Tag 3 : Optional Device Object */
-                    if ((ASN1.decode_is_context_tag(buffer, offset + len, 3))&(!ASN1.decode_is_closing_tag(buffer, offset+len)))
-                    {
-                        len++;
-                        uint objinstance;
-                        len += ASN1.decode_object_id(buffer, offset + len, out type, out objinstance);
-                        DeviceobjectRef_id=new BacnetObjectId((BacnetObjectTypes)type,objinstance);
-                    }
-                    
-                    BacnetDeviceObjectPropertyReference bopr = new BacnetDeviceObjectPropertyReference(objectRef_id, property.propertyIdentifier, DeviceobjectRef_id, property.propertyArrayIndex);
+                }
 
-                    AddPropertyRefentry(bopr, -1);
+            }
+            catch
+            {
 
-                    if (ASN1.decode_is_closing_tag(buffer, offset+len))
-                        break;
-                 }
-             }
-             catch
-             {
-
-             }
+            }
+             listReferences.EndUpdate();
         }
 
         private void WriteObjectsPropertiesReferences()
@@ -279,24 +234,10 @@ namespace Yabe
 
         }
 
-        private void Update_Click(object sender, EventArgs e)
-        {
-            WriteEffectivePeriod();
-            WriteEffectiveWeeklySchedule();
-            WriteObjectsPropertiesReferences();
-
-            ReadEffectivePeriod();
-            ReadEffectiveWeeklySchedule();
-            ReadObjectsPropertiesReferences();
-        }
-
        private void ReadEffectiveWeeklySchedule()
         {
             Schedule.BeginUpdate();
-            listReferences.BeginUpdate();
-
             Schedule.Nodes.Clear();
-            listReferences.Items.Clear();
 
             byte[] InOutBuffer = null;
 
@@ -363,12 +304,20 @@ namespace Yabe
                 Schedule.ExpandAll();
                 Schedule.LabelEdit = true;
 
-                listReferences.EndUpdate();
             }
 
         }
 
-        TreeNode mySelectedScheduleNode;
+        private void Update_Click(object sender, EventArgs e)
+        {
+            WriteEffectivePeriod();
+            WriteEffectiveWeeklySchedule();
+            WriteObjectsPropertiesReferences();
+
+            ReadEffectivePeriod();
+            ReadEffectiveWeeklySchedule();
+            ReadObjectsPropertiesReferences();
+        }
 
         private void Schedule_MouseDown(object sender, MouseEventArgs e)
         {
@@ -416,7 +365,6 @@ namespace Yabe
             }
 
         }
-
 
         private void modifyToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -575,16 +523,11 @@ namespace Yabe
                 TxtDate_Validated(sender, null);
         }
 
-        private void ScheduleDisplay_Load(object sender, EventArgs e)
-        {
-
-        }
-
     }
 
     /*******************************************************/
 
-    public partial class EditPropertyObjectReference : Form
+    public class EditPropertyObjectReference : Form
     {
         public BacnetDeviceObjectPropertyReference ObjRef;
         public bool OutOK = false;
@@ -621,6 +564,11 @@ namespace Yabe
                 Reference_Device.Text = ObjRef.deviceIndentifier.instance.ToString();
             if (ObjRef.arrayIndex != ASN1.BACNET_ARRAY_ALL)
                 Reference_Array.Text = ObjRef.arrayIndex.ToString();
+        }
+
+        private void EditPropertyObjectReference_Load(object sender, System.EventArgs e)
+        {
+            this.SetDesktopLocation(Cursor.Position.X-this.Width/2, Cursor.Position.Y-this.Height/2);
         }
 
         private void OK_Click(object sender, EventArgs e)
@@ -682,7 +630,9 @@ namespace Yabe
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
-            // 
+            this.Text = "Object Property Reference";
+            this.Load += new System.EventHandler(this.EditPropertyObjectReference_Load);
+ 
             // label1
             // 
             this.label1.AutoSize = true;
@@ -713,7 +663,7 @@ namespace Yabe
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(45, 13);
+            this.label3.Location = new System.Drawing.Point(29, 13);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(86, 13);
             this.label3.TabIndex = 3;
@@ -722,7 +672,7 @@ namespace Yabe
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(66, 64);
+            this.label4.Location = new System.Drawing.Point(29, 64);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(46, 13);
             this.label4.TabIndex = 4;
