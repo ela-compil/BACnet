@@ -91,6 +91,8 @@ namespace Yabe
 
                         NewTab.Controls.Add(content);
                         RecipientsTab.Controls.Add(NewTab);
+
+                        labelEmpty.Visible = false;
                     }
 
                 }
@@ -159,10 +161,12 @@ namespace Yabe
             catch { }
 
             int i=1;
+            labelEmpty.Visible = true;
             foreach (TabPage t in RecipientsTab.Controls) // Re-numbering of each TabPage
             {
                 t.Text = t.Name = i.ToString();
                 i++;
+                labelEmpty.Visible = false;
             }
         }
 
@@ -181,6 +185,8 @@ namespace Yabe
             RecipientsTab.Controls.Add(NewTab);
 
             RecipientsTab.SelectTab("Not Set");
+
+            labelEmpty.Visible = false;
         }
 
         private void btReadWrite_Click(object sender, EventArgs e)
@@ -206,8 +212,13 @@ namespace Yabe
         {
             InitializeComponent();
             this.myTab = myTab;
-            
-            if (recipient == null) return;
+
+            if (recipient == null)
+            {
+                for (byte i = 0; i < 7;i++ ) WeekOfDay.SetBit(i, true);
+                for (byte i = 0; i < 3; i++) EventType.SetBit(i, true);
+                return;
+            }
 
             if (recipient.Value.adr != null)
             {

@@ -43,6 +43,7 @@
             this.P_Off = new System.Windows.Forms.TextBox();
             this.P_Fault = new System.Windows.Forms.TextBox();
             this.P_Normal = new System.Windows.Forms.TextBox();
+            this.labelEmpty = new System.Windows.Forms.Label();
             this.PopupMenu.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
@@ -160,11 +161,23 @@
             this.P_Normal.Size = new System.Drawing.Size(33, 20);
             this.P_Normal.TabIndex = 2;
             // 
+            // labelEmpty
+            // 
+            this.labelEmpty.BackColor = System.Drawing.SystemColors.ButtonHighlight;
+            this.labelEmpty.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F);
+            this.labelEmpty.Location = new System.Drawing.Point(205, 178);
+            this.labelEmpty.Name = "labelEmpty";
+            this.labelEmpty.Size = new System.Drawing.Size(153, 66);
+            this.labelEmpty.TabIndex = 4;
+            this.labelEmpty.Text = "Empty list";
+            // 
             // NotificationEditor
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(491, 576);
+            this.ContextMenuStrip = this.PopupMenu;
+            this.Controls.Add(this.labelEmpty);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.labelRecipient);
             this.Controls.Add(this.btReadWrite);
@@ -196,5 +209,6 @@
         private System.Windows.Forms.TextBox P_Off;
         private System.Windows.Forms.TextBox P_Fault;
         private System.Windows.Forms.TextBox P_Normal;
+        private System.Windows.Forms.Label labelEmpty;
     }
 }

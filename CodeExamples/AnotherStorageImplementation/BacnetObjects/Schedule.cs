@@ -374,7 +374,7 @@ namespace BaCSharp
                             }
                         }
 
-                    if (delay > 0)
+                    if ((delay > 0)&&(delay!=Int32.MaxValue))
                         break;      // No need to go next day
 
                     timeShift = timeShift + 24 * 60 * 60;   // search the next day

@@ -251,10 +251,12 @@ namespace System.IO.BACnet
             }
             catch (Exception ex)
             {
-                Trace.TraceError("Exception in Ip OnRecieveData: " + ex.Message);
                 //restart data receive
                 if (conn.Client != null)
+                {
+                    Trace.TraceError("Exception in Ip OnRecieveData: " + ex.Message);
                     conn.BeginReceive(OnReceiveData, conn);
+                }
             }
         }
 
@@ -349,10 +351,10 @@ namespace System.IO.BACnet
         {
             try
             {
-                m_shared_conn.Close();
-                m_shared_conn = null;
                 m_exclusive_conn.Close();
                 m_exclusive_conn = null;
+                m_shared_conn.Close(); // maybe an exception if null
+                m_shared_conn = null;
             }
             catch { }
         }
