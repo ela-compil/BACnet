@@ -1659,7 +1659,7 @@ namespace System.IO.BACnet
         }
         public DeviceReportingRecipient(BacnetBitString WeekofDay, DateTime fromTime, DateTime toTime, BacnetAddress adr, uint processIdentifier, bool Ack_Required, BacnetBitString evenType)
         {
-            Id = new BacnetObjectId();
+            this.Id = new BacnetObjectId();
 
             this.WeekofDay = WeekofDay;
             this.toTime = toTime;
@@ -4507,8 +4507,10 @@ namespace System.IO.BACnet.Serialize
             if (hour == 0xFF && min == 0xFF && sec == 0xFF && hundredths == 0xFF)
                 btime = new DateTime(1, 1, 1);
             else
+            {
+                if (hundredths > 100) hundredths = 0;   // sometimes set to 255
                 btime = new DateTime(1, 1, 1, hour, min, sec, hundredths * 10);
-
+            }
             return 4;
         }
 
