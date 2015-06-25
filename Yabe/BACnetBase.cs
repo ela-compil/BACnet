@@ -5814,6 +5814,44 @@ namespace System.IO.BACnet.Serialize
             return len;
         }
 
+        //**********************************************************************************
+        // by Christopher Günter
+        public static void EncodeCreateProperty(EncodeBuffer buffer, BacnetObjectId object_id, ICollection<BacnetPropertyValue> value_list)
+        {
+
+            /* Tag 1: sequence of WriteAccessSpecification */
+            ASN1.encode_opening_tag(buffer, 0);
+            ASN1.encode_context_object_id(buffer, 1, object_id.type, object_id.instance);
+            ASN1.encode_closing_tag(buffer, 0);
+
+            ASN1.encode_opening_tag(buffer, 1);
+
+            foreach (BacnetPropertyValue p_value in value_list)
+            {
+
+                ASN1.encode_context_enumerated(buffer, 0, p_value.property.propertyIdentifier);
+
+
+                if (p_value.property.propertyArrayIndex != ASN1.BACNET_ARRAY_ALL)
+                    ASN1.encode_context_unsigned(buffer, 1, p_value.property.propertyArrayIndex);
+
+
+                ASN1.encode_opening_tag(buffer, 2);
+                foreach (BacnetValue value in p_value.value)
+                {
+                    ASN1.bacapp_encode_application_data(buffer, value);
+                }
+                ASN1.encode_closing_tag(buffer, 2);
+
+
+                if (p_value.priority != ASN1.BACNET_NO_PRIORITY)
+                    ASN1.encode_context_unsigned(buffer, 3, p_value.priority);
+            }
+
+            ASN1.encode_closing_tag(buffer, 1);
+
+        }
+
         public static void EncodeAtomicWriteFileAcknowledge(EncodeBuffer buffer, bool is_stream, int position)
         {
             switch (is_stream)
