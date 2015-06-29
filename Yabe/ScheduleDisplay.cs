@@ -39,7 +39,7 @@ using System.Diagnostics;
 namespace Yabe
 {
     public partial class ScheduleDisplay : Form
-    {
+    { 
         BacnetClient comm; BacnetAddress adr; BacnetObjectId schedule_id;
         // Default value type here if no values are already present
         // Could be choosen somewhere by the user

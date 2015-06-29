@@ -1782,6 +1782,19 @@ namespace System.IO.BACnet
             }
         }
 
+        // checked if device is routed by curent equipement
+        public bool IsMyRouter(BacnetAddress device)
+        {
+            if ((device.RoutedSource == null)||(RoutedSource!=null))
+                return false;
+            if (adr.Length != device.adr.Length) return false;
+
+            for (int i = 0; i < adr.Length; i++)
+                if (adr[i] != device.adr[i]) return false;
+
+            return true;
+        }
+
         public void ASN1encode(EncodeBuffer buffer)
         {
             ASN1.encode_opening_tag(buffer, 1);

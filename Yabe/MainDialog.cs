@@ -418,12 +418,27 @@ namespace Yabe
                         return;
                     }
                 }
+                // Try to add it under a router if any 
+                foreach (TreeNode s in parent.Nodes)
+                {
+                    KeyValuePair<BacnetAddress, uint>? entry = s.Tag as KeyValuePair<BacnetAddress, uint>?;
+                    if (entry!=null && entry.Value.Key.IsMyRouter(adr))
+                    {
+                        TreeNode node = s.Nodes.Add(new_entry.Key + " - " + new_entry.Value);
+                        node.ImageIndex = 2;
+                        node.SelectedImageIndex = node.ImageIndex;
+                        node.Tag = new_entry;
+                        m_DeviceTree.ExpandAll();
+                        return;
+                    }
 
-                //add
-                TreeNode node = parent.Nodes.Add(new_entry.Key + " - " + new_entry.Value);
-                node.ImageIndex = 2;
-                node.SelectedImageIndex = node.ImageIndex;
-                node.Tag = new_entry;
+                }
+
+                //add simply
+                TreeNode basicnode = parent.Nodes.Add(new_entry.Key + " - " + new_entry.Value);
+                basicnode.ImageIndex = 2;
+                basicnode.SelectedImageIndex = basicnode.ImageIndex;
+                basicnode.Tag = new_entry;
                 m_DeviceTree.ExpandAll();
             });
         }
@@ -806,7 +821,13 @@ namespace Yabe
             {
                 m_AddressSpaceTree.Nodes.Clear();   //clear
 
-                BacnetClient comm = (BacnetClient)e.Node.Parent.Tag;
+                BacnetClient comm ;
+
+                if (e.Node.Parent.Tag is BacnetClient)  // A 'basic node'
+                    comm = (BacnetClient)e.Node.Parent.Tag;
+                else  // A routed node
+                    comm = (BacnetClient)e.Node.Parent.Parent.Tag;
+
                 BacnetAddress adr = entry.Value.Key;
                 uint device_id = entry.Value.Value;
 
@@ -1160,7 +1181,12 @@ namespace Yabe
                 else if (!(m_DeviceTree.SelectedNode.Tag is KeyValuePair<BacnetAddress, uint>)) return;
                 KeyValuePair<BacnetAddress, uint> entry = (KeyValuePair<BacnetAddress, uint>)m_DeviceTree.SelectedNode.Tag;
                 BacnetAddress adr = entry.Key;
-                BacnetClient comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag;
+                BacnetClient comm;
+                
+                if (m_DeviceTree.SelectedNode.Parent.Tag is BacnetClient)
+                    comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag;
+                else
+                    comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Parent.Tag;  // routed node
 
                 if (selected_node.Tag is BacnetObjectId)
                 {
@@ -1422,7 +1448,10 @@ namespace Yabe
                 else if (!(m_DeviceTree.SelectedNode.Tag is KeyValuePair<BacnetAddress, uint>)) return false;
                 KeyValuePair<BacnetAddress, uint> entry = (KeyValuePair<BacnetAddress, uint>)m_DeviceTree.SelectedNode.Tag;
                 adr = entry.Key;
-                comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag;
+                if (m_DeviceTree.SelectedNode.Parent.Tag is BacnetClient)
+                    comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag;
+                else  // a routed node
+                    comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Parent.Tag;
             }
             catch
             {
@@ -1752,7 +1781,12 @@ namespace Yabe
                 else if (!(m_DeviceTree.SelectedNode.Tag is KeyValuePair<BacnetAddress, uint>)) return;
                 KeyValuePair<BacnetAddress, uint> entry = (KeyValuePair<BacnetAddress, uint>)m_DeviceTree.SelectedNode.Tag;
                 BacnetAddress adr = entry.Key;
-                BacnetClient comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag;
+
+                BacnetClient comm;
+                if (m_DeviceTree.SelectedNode.Parent.Tag is BacnetClient)
+                    comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag;
+                else  // a routed device
+                    comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Parent.Tag;
 
                 //fetch object_id
                 TreeNode node = (TreeNode)e.Data.GetData("System.Windows.Forms.TreeNode");
