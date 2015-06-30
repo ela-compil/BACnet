@@ -7407,6 +7407,43 @@ namespace System.IO.BACnet.Serialize
             ASN1.encode_closing_tag(buffer, 1);
         }
 
+        public static void EncodeWriteObjectMultiple(EncodeBuffer buffer, ICollection<BacnetReadAccessResult> value_list)
+        {
+            foreach (BacnetReadAccessResult r_value in value_list)
+            {
+
+
+                ASN1.encode_context_object_id(buffer, 0, r_value.objectIdentifier.type, r_value.objectIdentifier.instance);
+                /* Tag 1: sequence of WriteAccessSpecification */
+                ASN1.encode_opening_tag(buffer, 1);
+
+                foreach (BacnetPropertyValue p_value in r_value.values)
+                {
+                    /* Tag 0: Property */
+                    ASN1.encode_context_enumerated(buffer, 0, p_value.property.propertyIdentifier);
+
+                    /* Tag 1: array index */
+                    if (p_value.property.propertyArrayIndex != ASN1.BACNET_ARRAY_ALL)
+                        ASN1.encode_context_unsigned(buffer, 1, p_value.property.propertyArrayIndex);
+
+                    /* Tag 2: Value */
+                    ASN1.encode_opening_tag(buffer, 2);
+                    foreach (BacnetValue value in p_value.value)
+                    {
+                        ASN1.bacapp_encode_application_data(buffer, value);
+                    }
+                    ASN1.encode_closing_tag(buffer, 2);
+
+                    /* Tag 3: Priority */
+                    if (p_value.priority != ASN1.BACNET_NO_PRIORITY)
+                        ASN1.encode_context_unsigned(buffer, 3, p_value.priority);
+                }
+
+                ASN1.encode_closing_tag(buffer, 1);
+            }
+
+        }
+
         public static int DecodeWritePropertyMultiple(byte[] buffer, int offset, int apdu_len, out BacnetObjectId object_id, out ICollection<BacnetPropertyValue> values_refs)
         {
             int len = 0;
