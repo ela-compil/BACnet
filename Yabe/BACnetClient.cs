@@ -1376,9 +1376,9 @@ namespace System.IO.BACnet
         }
 
         // By Chritopher Günter : Write multiple properties on multiple objects
-        public bool WriteObjectMultipleRequest(BacnetAddress adr, ICollection<BacnetReadAccessResult> value_list, byte invoke_id = 0)
+        public bool WritePropertyMultipleRequest(BacnetAddress adr, ICollection<BacnetReadAccessResult> value_list, byte invoke_id = 0)
         {
-            using (BacnetAsyncResult result = (BacnetAsyncResult)BeginWriteObjectMultipleRequest(adr, value_list, true, invoke_id))
+            using (BacnetAsyncResult result = (BacnetAsyncResult)BeginWritePropertyMultipleRequest(adr, value_list, true, invoke_id))
             {
                 for (int r = 0; r < m_retries; r++)
                 {
@@ -1396,7 +1396,7 @@ namespace System.IO.BACnet
             return false;
         }
 
-        public IAsyncResult BeginWriteObjectMultipleRequest(BacnetAddress adr, ICollection<BacnetReadAccessResult> value_list, bool wait_for_transmit, byte invoke_id = 0)
+        public IAsyncResult BeginWritePropertyMultipleRequest(BacnetAddress adr, ICollection<BacnetReadAccessResult> value_list, bool wait_for_transmit, byte invoke_id = 0)
         {
             Trace.WriteLine("Sending WritePropertyMultipleRequest ... ", null);
             if (invoke_id == 0) invoke_id = unchecked(m_invoke_id++);
@@ -1444,6 +1444,44 @@ namespace System.IO.BACnet
             NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, adr.RoutedSource, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, 0);
             APDU.EncodeConfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST | (m_max_segments != BacnetMaxSegments.MAX_SEG0 ? BacnetPduTypes.SEGMENTED_RESPONSE_ACCEPTED : 0), BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROP_MULTIPLE, m_max_segments, m_client.MaxAdpuLength, invoke_id, 0, 0);
             Services.EncodeReadPropertyMultiple(b, object_id, property_id_and_array_index);
+
+            //send
+            BacnetAsyncResult ret = new BacnetAsyncResult(this, adr, invoke_id, b.buffer, b.offset - m_client.HeaderLength, wait_for_transmit, m_transmit_timeout);
+            ret.Resend();
+
+            return ret;
+        }
+
+        // Another way to read multiple properties on multiples objects, if supported by devices
+        public bool ReadPropertyMultipleRequest(BacnetAddress adr, IList<BacnetReadAccessSpecification> properties, out IList<BacnetReadAccessResult> values, byte invoke_id = 0)
+        {
+            using (BacnetAsyncResult result = (BacnetAsyncResult)BeginReadPropertyMultipleRequest(adr, properties, true, invoke_id))
+            {
+                for (int r = 0; r < m_retries; r++)
+                {
+                    if (result.WaitForDone(m_timeout))
+                    {
+                        Exception ex;
+                        EndReadPropertyMultipleRequest(result, out values, out ex);
+                        if (ex != null) throw ex;
+                        else return true;
+                    }
+                    result.Resend();
+                }
+            }
+            values = null;
+            return false;
+        }
+
+        public IAsyncResult BeginReadPropertyMultipleRequest(BacnetAddress adr, IList<BacnetReadAccessSpecification> properties, bool wait_for_transmit, byte invoke_id = 0)
+        {
+            Trace.WriteLine("Sending ReadPropertyMultipleRequest ... ", null);
+            if (invoke_id == 0) invoke_id = unchecked(m_invoke_id++);
+
+            EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, adr.RoutedSource, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, 0);
+            APDU.EncodeConfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST | (m_max_segments != BacnetMaxSegments.MAX_SEG0 ? BacnetPduTypes.SEGMENTED_RESPONSE_ACCEPTED : 0), BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROP_MULTIPLE, m_max_segments, m_client.MaxAdpuLength, invoke_id, 0, 0);
+            Services.EncodeReadPropertyMultiple(b, properties);
 
             //send
             BacnetAsyncResult ret = new BacnetAsyncResult(this, adr, invoke_id, b.buffer, b.offset - m_client.HeaderLength, wait_for_transmit, m_transmit_timeout);
