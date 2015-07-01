@@ -37,6 +37,9 @@
     <ApplicationIcon>Search.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="CalendarView">
+      <HintPath>.\CalendarView.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -57,6 +60,12 @@
     <Compile Include="BACnetBase.cs" />
     <Compile Include="BACnetClient.cs" />
     <Compile Include="BACnetTransport.cs" />
+    <Compile Include="CalendarEditor.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CalendarEditor.Designer.cs">
+      <DependentUpon>CalendarEditor.cs</DependentUpon>
+    </Compile>
     <Compile Include="DeviceCommunicationControlDialog.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -121,6 +130,9 @@
     <Compile Include="SourceAddressDialog.Designer.cs">
       <DependentUpon>SourceAddressDialog.cs</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="CalendarEditor.resx">
+      <DependentUpon>CalendarEditor.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="DeviceCommunicationControlDialog.resx">
       <DependentUpon>DeviceCommunicationControlDialog.cs</DependentUpon>
     </EmbeddedResource>
@@ -194,6 +206,7 @@
     <None Include="Resources\chart_line.png" />
     <None Include="Resources\calendar_view_week.png" />
     <None Include="Resources\bell.png" />
+    <None Include="Resources\date.png" />
     <Content Include="Search.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

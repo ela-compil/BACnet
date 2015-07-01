@@ -449,7 +449,10 @@ namespace Yabe
                 "\nReference: http://bacnet.sourceforge.net/" + 
                 "\nReference: http://www.unified-automation.com/products/development-tools/uaexpert.html" +
                 "\nReference: http://www.famfamfam.com/"+
-                "\nReference: http://sourceforge.net/projects/zedgraph/", "About", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                "\nReference: http://sourceforge.net/projects/zedgraph/"+
+                "\nReference: http://www.codeproject.com/Articles/38699/A-Professional-Calendar-Agenda-View-That-You-Will"
+                
+                , "About", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void quitToolStripMenuItem_Click(object sender, EventArgs e)
@@ -729,6 +732,8 @@ namespace Yabe
                     return 13;
                 case BacnetObjectTypes.OBJECT_SCHEDULE:
                     return 14;
+                case BacnetObjectTypes.OBJECT_CALENDAR:
+                    return 15;
                 default:
                     return 4;
             }
@@ -1330,6 +1335,10 @@ namespace Yabe
                 case BacnetObjectTypes.OBJECT_NOTIFICATION_CLASS:
                     m_AddressSpaceMenuStrip.Items[5].Visible = true;
                     break;
+
+                case BacnetObjectTypes.OBJECT_CALENDAR:
+                    m_AddressSpaceMenuStrip.Items[6].Visible = true;
+                    break;
             }
 
         }
@@ -1654,6 +1663,23 @@ namespace Yabe
 
             }
             catch(Exception ex) { Trace.TraceError("Error loading Schedule : " + ex.Message); }
+        }
+
+        private void showCalendarToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                //fetch end point
+                BacnetClient comm;
+                BacnetAddress adr;
+                BacnetObjectId object_id;
+
+                if (GetObjectLink(out comm, out adr, out object_id, BacnetObjectTypes.OBJECT_CALENDAR) == false) return;
+
+                new CalendarEditor(comm, adr, object_id).ShowDialog();
+
+            }
+            catch (Exception ex) { Trace.TraceError("Error loading Calendar : " + ex.Message); }
         }
 
         //FC

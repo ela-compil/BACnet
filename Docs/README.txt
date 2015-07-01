@@ -65,6 +65,8 @@
 		GUI and concept is inspired by UaExpert:
 		http://www.unified-automation.com/products/development-tools/uaexpert.html
 		Zedgraph come from http://sourceforge.net/projects/zedgraph/
+		Calendar control come from 
+		http://www.codeproject.com/Articles/38699/A-Professional-Calendar-Agenda-View-That-You-Will
 
 2.  USAGE
 

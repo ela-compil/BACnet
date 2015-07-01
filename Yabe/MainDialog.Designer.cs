@@ -81,6 +81,7 @@
             this.showTrendLogToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.showScheduleToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.showNotificationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.showCalendarToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.label3 = new System.Windows.Forms.Label();
             this.m_SplitContainerRight = new System.Windows.Forms.SplitContainer();
             this.tabControl1 = new System.Windows.Forms.TabControl();
@@ -141,6 +142,7 @@
             m_ImageList.Images.SetKeyName(12, "chart_bar.png");
             m_ImageList.Images.SetKeyName(13, "bell.png");
             m_ImageList.Images.SetKeyName(14, "calendar.png");
+            m_ImageList.Images.SetKeyName(15, "date.png");
             // 
             // toolStrip1
             // 
@@ -562,9 +564,10 @@
             this.uploadFileToolStripMenuItem,
             this.showTrendLogToolStripMenuItem1,
             this.showScheduleToolStripMenuItem1,
-            this.showNotificationToolStripMenuItem});
+            this.showNotificationToolStripMenuItem,
+            this.showCalendarToolStripMenuItem});
             this.m_AddressSpaceMenuStrip.Name = "m_AddressSpaceMenuStrip";
-            this.m_AddressSpaceMenuStrip.Size = new System.Drawing.Size(170, 136);
+            this.m_AddressSpaceMenuStrip.Size = new System.Drawing.Size(170, 158);
             // 
             // subscribeToolStripMenuItem
             // 
@@ -613,6 +616,14 @@
             this.showNotificationToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
             this.showNotificationToolStripMenuItem.Text = "Show Notification";
             this.showNotificationToolStripMenuItem.Click += new System.EventHandler(this.showNotificationToolStripMenuItem_Click);
+            // 
+            // showCalendarToolStripMenuItem
+            // 
+            this.showCalendarToolStripMenuItem.Image = global::Yabe.Properties.Resources.date;
+            this.showCalendarToolStripMenuItem.Name = "showCalendarToolStripMenuItem";
+            this.showCalendarToolStripMenuItem.Size = new System.Drawing.Size(169, 22);
+            this.showCalendarToolStripMenuItem.Text = "Show Calendar";
+            this.showCalendarToolStripMenuItem.Click += new System.EventHandler(this.showCalendarToolStripMenuItem_Click);
             // 
             // label3
             // 
@@ -867,6 +878,7 @@
         private System.Windows.Forms.ToolStripMenuItem showNotificationToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showNotificationToolStripMenuItem1;
         private System.Windows.Forms.TreeView m_AddressSpaceTree;
+        private System.Windows.Forms.ToolStripMenuItem showCalendarToolStripMenuItem;
     }
 }
 

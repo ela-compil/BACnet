@@ -280,6 +280,7 @@ namespace BaCSharp
             {
                 BacnetDeviceObjectPropertyReference reference = (BacnetDeviceObjectPropertyReference)obj;
 
+                // reference.deviceIndentifier.type is not set to OBJECT_DEVICE for local object reference
                 if (reference.deviceIndentifier.type != BacnetObjectTypes.OBJECT_DEVICE) // local object
                 {
                     BaCSharpObject bcs= Mydevice.FindBacnetObject(reference.objectIdentifier);
@@ -303,6 +304,7 @@ namespace BaCSharp
 
                     try
                     {
+                        // SuroundingDevices is updated with Iam messages
                         recipient = Mydevice.SuroundingDevices[reference.deviceIndentifier.instance];
                     }
                     catch { }
@@ -334,7 +336,7 @@ namespace BaCSharp
             lock (lockObj)
             {
 
-                DateTime Now = DateTime.Now; // Add 1 second to avoid mutiple call 
+                DateTime Now = DateTime.Now; 
 
                 // test Validity Date and return if out
                 //
@@ -347,17 +349,18 @@ namespace BaCSharp
                 if (((Now - dt).TotalSeconds > 0) && (dt.Ticks != 0))
                     return;
 
+                // dayofWeek eq 0 if Now is monday, 1 for friday ....
                 int DayOfWeek = Now.DayOfWeek == 0 ? 6 : (int)Now.DayOfWeek - 1; // Put Sunday at the end of the enumaration
 
                 int timeShift = 0;
                 int delay = Int32.MaxValue;
                 object NewValue = null;
-                // Values are not ordered so we need to check quite all the day
+                // Values are not ordered so we need to check quite all the days
                 // in order to found the next date after now
                 for (int i = 0; i < 7; i++)
                 {
 
-                    if (m_PROP_WEEKLY_SCHEDULE.days[(i + DayOfWeek) % 7] != null)
+                    if (m_PROP_WEEKLY_SCHEDULE.days[(i + DayOfWeek) % 7] != null) // schdules for this day ?
                         foreach (DaySchedule schedule in m_PROP_WEEKLY_SCHEDULE.days[(i + DayOfWeek) % 7])
                         {
                             DateTime eventdate = new DateTime(Now.Year, Now.Month, Now.Day, schedule.dt.Hour, schedule.dt.Minute, schedule.dt.Second);
