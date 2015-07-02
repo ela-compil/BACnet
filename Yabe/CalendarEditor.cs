@@ -45,6 +45,7 @@ namespace Yabe
         BACnetCalendarEntry calendarEntries;
 
         DateTime CalendarStartRequested;
+        bool InternalListeEntriesSelect=false;
 
         public CalendarEditor(BacnetClient comm, BacnetAddress adr, BacnetObjectId object_id)
         {
@@ -70,16 +71,15 @@ namespace Yabe
             foreach (object e in calendarEntries.Entries)
                 listEntries.Items.Add(e);
 
+            //  calendarView will be updated by the calendarView_LoadItems event
             SetCalendarDisplayDate(DateTime.Now);
+
         }
 
         private void WriteCalendar()
         {
             try
             {
-                // provisoire pour ne pas faire n'importe quoi
-                // BacnetObjectId object_id = new BacnetObjectId(BacnetObjectTypes.OBJECT_CALENDAR, 23);
-
                 List<BacnetValue> v = new List<BacnetValue>();
                 v.Add(new BacnetValue(calendarEntries));
                 comm.WritePropertyRequest(adr, object_id, BacnetPropertyIds.PROP_DATE_LIST, v);
@@ -110,6 +110,12 @@ namespace Yabe
 
         private void listEntries_SelectedIndexChanged(object sender, EventArgs e)
         {
+            if ((InternalListeEntriesSelect)||(listEntries.SelectedIndex==-1))
+            {
+                InternalListeEntriesSelect = false;
+                return;
+            }
+
             object o = listEntries.Items[listEntries.SelectedIndex];
             if (o is BacnetDateRange)
             {
@@ -118,9 +124,14 @@ namespace Yabe
                 if (bdr.startDate.year != 255)
                     SetCalendarDisplayDate(bdr.startDate.toDateTime());
                 else if (bdr.endDate.year != 255)
-                    SetCalendarDisplayDate(bdr.endDate.toDateTime().AddDays(-10));
+                    SetCalendarDisplayDate(bdr.endDate.toDateTime().AddDays(-10));       
             }
-
+            else if (o is BacnetDate)
+            {
+                BacnetDate bd = (BacnetDate)o;
+                if (!bd.IsPeriodic)
+                    SetCalendarDisplayDate(bd.toDateTime());
+            }
         }
 
         private void AddCalendarEntry(DateTime _start, DateTime _end,  Color color, String Text, object tag)
@@ -133,8 +144,7 @@ namespace Yabe
             ci.Tag = tag;
 
             if (start <= calendarView.Days[calendarView.Days.Length-1].Date && calendarView.Days[0] .Date <= end)
-                calendarView.Items.Add(ci);
-             
+                calendarView.Items.Add(ci);          
         }
 
         private void PlaceItemsInCalendarView()
@@ -159,11 +169,11 @@ namespace Yabe
                     DateTime start,end;
 
                     if (bdr.startDate.year != 255)
-                        start = new DateTime(bdr.startDate.year, bdr.startDate.month, bdr.startDate.day, 0, 0, 0);
+                        start = new DateTime(bdr.startDate.year+1900, bdr.startDate.month, bdr.startDate.day, 0, 0, 0);
                     else
                         start = DateTime.MinValue;
                     if (bdr.endDate.year != 255)
-                        end = new DateTime(bdr.endDate.year, bdr.endDate.month, bdr.endDate.day, 23, 59, 59);
+                        end = new DateTime(bdr.endDate.year+1900, bdr.endDate.month, bdr.endDate.day, 23, 59, 59);
                     else
                         end = DateTime.MaxValue;
                     CalendarItem ci = new CalendarItem(calendarView, start, end, "");
@@ -187,7 +197,6 @@ namespace Yabe
         private void calendarView_LoadItems(object sender, CalendarLoadEventArgs e)
         {
             PlaceItemsInCalendarView();
-
         }
 
         private void calendarView_ItemDeleted(object sender, CalendarItemEventArgs e)
@@ -196,20 +205,27 @@ namespace Yabe
             listEntries.Items.Remove(e.Item.Tag);
             SetCalendarDisplayDate(CalendarStartRequested);
         }
-
+        
+        private void calendarView_ItemSelected(object sender, CalendarItemEventArgs e)
+        {
+            int Idx=listEntries.Items.IndexOf(e.Item.Tag);
+            listEntries.SelectedIndex = Idx;
+            InternalListeEntriesSelect = true;
+        }
+        
         private void calendarView_ItemCreated(object sender, CalendarItemCancelEventArgs e)
         {
             if ((e.Item.StartDate.Year == e.Item.EndDate.Year) && (e.Item.StartDate.Month == e.Item.EndDate.Month) && (e.Item.StartDate.Day == e.Item.EndDate.Day))
             {
-                BacnetDate newbd = new BacnetDate((ushort)e.Item.StartDate.Year, (byte)e.Item.StartDate.Month, (byte)e.Item.StartDate.Day);
+                BacnetDate newbd = new BacnetDate((byte)(e.Item.StartDate.Year-1900), (byte)e.Item.StartDate.Month, (byte)e.Item.StartDate.Day);
                 listEntries.Items.Add(newbd);
                 calendarEntries.Entries.Add(newbd);
             }
             else
             {
                 BacnetDateRange newbdr = new BacnetDateRange();
-                newbdr.startDate = new BacnetDate((ushort)e.Item.StartDate.Year, (byte)e.Item.StartDate.Month, (byte)e.Item.StartDate.Day);
-                newbdr.endDate = new BacnetDate((ushort)e.Item.EndDate.Year, (byte)e.Item.EndDate.Month, (byte)e.Item.EndDate.Day);
+                newbdr.startDate = new BacnetDate((byte)(e.Item.StartDate.Year-1900), (byte)e.Item.StartDate.Month, (byte)e.Item.StartDate.Day);
+                newbdr.endDate = new BacnetDate((byte)(e.Item.EndDate.Year-1900), (byte)e.Item.EndDate.Month, (byte)e.Item.EndDate.Day);
                 listEntries.Items.Add(newbdr);
                 calendarEntries.Entries.Add(newbdr);
             }
@@ -234,15 +250,15 @@ namespace Yabe
 
                 if ((e.Item.StartDate.Year == e.Item.EndDate.Year)&&(e.Item.StartDate.Month == e.Item.EndDate.Month)&&(e.Item.StartDate.Day == e.Item.EndDate.Day))
                 {
-                    BacnetDate newbd = new BacnetDate((ushort)e.Item.StartDate.Year, (byte)e.Item.StartDate.Month, (byte)e.Item.StartDate.Day);
+                    BacnetDate newbd = new BacnetDate((byte)(e.Item.StartDate.Year-1900), (byte)e.Item.StartDate.Month, (byte)e.Item.StartDate.Day);
                     listEntries.Items.Insert(Idx, newbd);
                     calendarEntries.Entries.Add(newbd);
                 }
                 else
                 {
                     BacnetDateRange newbdr = new BacnetDateRange();
-                    newbdr.startDate = new BacnetDate((ushort)e.Item.StartDate.Year, (byte)e.Item.StartDate.Month, (byte)e.Item.StartDate.Day);
-                    newbdr.endDate = new BacnetDate((ushort)e.Item.EndDate.Year, (byte)e.Item.EndDate.Month, (byte)e.Item.EndDate.Day);
+                    newbdr.startDate = new BacnetDate((byte)(e.Item.StartDate.Year-1900), (byte)e.Item.StartDate.Month, (byte)e.Item.StartDate.Day);
+                    newbdr.endDate = new BacnetDate((byte)(e.Item.EndDate.Year-1900), (byte)e.Item.EndDate.Month, (byte)e.Item.EndDate.Day);
                     listEntries.Items.Insert(Idx, newbdr);
                     calendarEntries.Entries.Add(newbdr);
                 }
@@ -262,6 +278,70 @@ namespace Yabe
             SetCalendarDisplayDate(CalendarStartRequested);
         }
 
+        private void btAdd_Click(object sender, EventArgs e)
+        {
+            calendarView.CreateItemOnSelection("", true);
+        }
+
+        private void btDelete_Click(object sender, EventArgs e)
+        {
+            if (listEntries.SelectedIndex == -1) return;
+            calendarView.DeleteSelectedItems();
+
+        }
+
+        private void addToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            BacnetweekNDay bwd = new BacnetweekNDay(1, 1);
+            CalendarEntryEdit Edit = new CalendarEntryEdit(bwd);
+            Edit.ShowDialog();
+            if (Edit.OutOK)
+            {
+                object o = Edit.GetBackEntry();
+                listEntries.Items.Add(o);
+                calendarEntries.Entries.Add(o);
+                SetCalendarDisplayDate(CalendarStartRequested);
+            }
+        }
+
+        private void modifyToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (listEntries.SelectedIndex == -1) return;
+            try
+            {
+                object selected = listEntries.SelectedItem;
+                CalendarEntryEdit Edit = new CalendarEntryEdit(listEntries.SelectedItem);
+                Edit.ShowDialog();
+                if (Edit.OutOK)
+                {
+                    object o = Edit.GetBackEntry();
+
+                    calendarEntries.Entries.Remove(listEntries.SelectedItem);
+                    int Idx = listEntries.SelectedIndex;
+
+                    try // Don't understand, exception, but all is OK , and the job is done !
+                    {
+                        listEntries.Items.Remove(selected);
+                    }
+                    catch { }
+
+                    listEntries.Items.Insert(Idx, o);
+                    calendarEntries.Entries.Add(o);
+                }
+            }
+            catch { }
+            SetCalendarDisplayDate(CalendarStartRequested);
+        }
+        private void listEntries_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            modifyToolStripMenuItem_Click(null, null);
+        }
+
+        private void calendarView_ItemDoubleClick(object sender, CalendarItemEventArgs e)
+        {
+            modifyToolStripMenuItem_Click(null, null);
+        }
+
     }
 
     #region Calendar entries structures   
@@ -269,14 +349,14 @@ namespace Yabe
     // Some help from http://sourceforge.net/p/bacnet/mailman/message/1258810/
 
     /* Tag 0 in CalendarEntry */
-    struct BacnetDate : ASN1.IASN1encode
+    public struct BacnetDate : ASN1.IASN1encode
     {
-        public UInt16 year;     /* 255 any */
+        public byte year;     /* 255 any */
         public byte month;      /* 1=Jan; 255 any, 13 Odd, 14 Even */
         public byte day;        /* 1..31; 32 last day of the month; 255 any */
         public byte wday;       /* 1=Monday-7=Sunday, 255 any */
 
-        public BacnetDate(UInt16 year, byte month, byte day, byte wday = 255)
+        public BacnetDate(byte year, byte month, byte day, byte wday = 255)
         {
             this.year = year;
             this.month = month;
@@ -286,11 +366,8 @@ namespace Yabe
 
         public void ASN1encode(EncodeBuffer buffer)
         {
-            ASN1.encode_tag(buffer, 0, true, 4);
-            if (year != 255)
-                buffer.Add((byte)(year - 1900)); // bacnet is ready for the year 2156 bug
-            else
-                buffer.Add(255);
+
+            buffer.Add((byte)year);
             buffer.Add((byte)month);
             buffer.Add((byte)day);
             buffer.Add((byte)wday);
@@ -298,11 +375,7 @@ namespace Yabe
 
         public int ASN1decode(byte[] buffer, int offset, uint len_value)
         {
-            if (buffer[offset] != 255)
-                year = (ushort)(buffer[offset] + 1900);
-            else
-                year = 255;
-
+            year = buffer[offset];
             month = buffer[offset + 1];
             day = buffer[offset + 2];
             wday = buffer[offset + 3];
@@ -311,12 +384,12 @@ namespace Yabe
         }
         public bool IsPeriodic
         {
-            get { return (year == 255) || (month == 255) || (day == 255); }        
+            get { return (year == 255) ||  (month>12) || (day == 255); }        
         }
 
         public bool IsAFittingDate (DateTime date)
         {
-            if ((date.Year!=year)&&(year!=255))
+            if ((date.Year!=(year+1900))&&(year!=255))
                 return false;
 
             if ((date.Month != month) && (month != 255) && (month != 13) && (month != 14))
@@ -344,10 +417,10 @@ namespace Yabe
         {
             try
             {
-                if (day == 255)
+                if (IsPeriodic==true)
                     return new DateTime(1, 1, 1);
                 else
-                    return new DateTime(year, month, day);
+                    return new DateTime(year+1900, month, day);
             }
             catch { }
 
@@ -392,7 +465,7 @@ namespace Yabe
 
 
             if (year != 255)
-                ret = ret +year.ToString();
+                ret = ret +(year+1900).ToString();
             else
                 ret = ret + "****";
 
@@ -401,16 +474,24 @@ namespace Yabe
     }
 
     /* Tag 1 in CalendarEntry */
-    struct BacnetDateRange : ASN1.IASN1encode
+    public struct BacnetDateRange : ASN1.IASN1encode
     {
         public BacnetDate startDate;
         public BacnetDate endDate;
+
+        public BacnetDateRange(BacnetDate start, BacnetDate end)
+        {
+            startDate = start;
+            endDate = end;
+        }
         public void ASN1encode(EncodeBuffer buffer)
         {
-            ASN1.encode_opening_tag(buffer, 1);
+
+            ASN1.encode_tag(buffer, (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_DATE, false, 4);
             startDate.ASN1encode(buffer);
+            ASN1.encode_tag(buffer, (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_DATE, false, 4);
             endDate.ASN1encode(buffer);
-            ASN1.encode_closing_tag(buffer, 1);
+
         }
         public int ASN1decode(byte[] buffer, int offset, uint len_value)
         {
@@ -439,14 +520,21 @@ namespace Yabe
         }
     };
     /* Tag 2 in CalendarEntry */
-    struct BacnetweekNDay : ASN1.IASN1encode
+    public struct BacnetweekNDay : ASN1.IASN1encode
     {
         public byte month;  /* 1 January, 13 Odd, 14 Even, 255 Any */
-        public byte week;   /* Don't realy understand */
+        public byte week;   /* Don't realy understand ??? 1 for day 1 to 7, 2 for ... what's the objective ?  boycott it*/
         public byte wday;   /* 1=Monday-7=Sunday, 255 any */
+
+        public BacnetweekNDay(byte day, byte month)
+        {
+            wday = day;
+            this.month = month;
+            week = 255;
+        }
+
         public void ASN1encode(EncodeBuffer buffer)
         {
-            ASN1.encode_tag(buffer, 2, true, 3);
             buffer.Add(month);
             buffer.Add(week);
             buffer.Add(wday);
@@ -477,9 +565,9 @@ namespace Yabe
                 ret= "Every days";
 
             if (month!=255)
-                ret=ret+"/"+CultureInfo.InvariantCulture.DateTimeFormat.MonthNames[month-1];
+                ret=ret+" on "+CultureInfo.CurrentCulture.DateTimeFormat.MonthNames[month-1];
             else
-                ret =ret+"/Every month";
+                ret =ret+" on every month";
 
             return ret;
         }
@@ -493,7 +581,7 @@ namespace Yabe
             if ((month == 14) && ((date.Month & 1) == 1))
                 return false;
 
-            // What about week !
+            // What about week, too much stupid : boycott it !
 
             if (wday == 255)
                 return true;
@@ -506,7 +594,7 @@ namespace Yabe
         }
     }
 
-    struct BACnetCalendarEntry : ASN1.IASN1encode
+    public struct BACnetCalendarEntry : ASN1.IASN1encode
     {
         public List<object> Entries; // BacnetDate or BacnetDateRange or BacnetweekNDay
 
@@ -514,7 +602,24 @@ namespace Yabe
         {
             if (Entries != null)
                 foreach (ASN1.IASN1encode entry in Entries)
-                    entry.ASN1encode(buffer);
+                {
+                    if (entry is BacnetDate)
+                    {
+                        ASN1.encode_tag(buffer, 0, true, 4);
+                        entry.ASN1encode(buffer);
+                    }
+                    if (entry is BacnetDateRange)
+                    {
+                        ASN1.encode_opening_tag(buffer, 1);
+                        entry.ASN1encode(buffer);
+                        ASN1.encode_closing_tag(buffer, 1);
+                    }
+                    if (entry is BacnetweekNDay)
+                    {
+                        ASN1.encode_tag(buffer, 2, true, 3);
+                        entry.ASN1encode(buffer);
+                    }
+                }
         }
 
 
@@ -557,5 +662,363 @@ namespace Yabe
         }
     }
 
+    #endregion
+
+    #region CalendarEntryEdit
+    class CalendarEntryEdit : Form
+    {
+        public bool OutOK = false;
+
+        object Entry;
+
+        private void InitCalendarEntryEdit()
+        {
+            InitializeComponent();
+
+            for (int i = 1; i < 7; i++)
+                wday.Items.Add(CultureInfo.CurrentCulture.DateTimeFormat.DayNames[i]);
+            wday.Items.Add(CultureInfo.CurrentCulture.DateTimeFormat.DayNames[0]);
+            wday.Items.Add("****");
+
+            for (int i = 1; i < 32; i++)
+                day.Items.Add(i);
+            day.Items.Add("Last");
+            day.Items.Add("**");
+
+            for (int i = 0; i < 12; i++)
+                month.Items.Add(CultureInfo.CurrentCulture.DateTimeFormat.MonthNames[i]);
+            month.Items.Add("Even");
+            month.Items.Add("Odd");
+            month.Items.Add("****");
+        }
+
+        public CalendarEntryEdit(object entry)
+        {
+            InitCalendarEntryEdit();
+
+            this.Entry = entry;
+
+            if (entry is BacnetDate)
+            {
+                dateRangeGrp.Visible = false;
+                DateGrp.Visible = true;
+                DateGrp.Location = dateRangeGrp.Location;
+
+                BacnetDate bd = (BacnetDate)entry;
+
+                if (bd.wday != 255)
+                    wday.SelectedIndex = bd.wday - 1;
+                else
+                    wday.SelectedIndex = 7;
+
+                if (bd.day != 255)
+                    day.SelectedIndex = bd.day - 1;
+                else
+                    day.SelectedIndex = 32;
+
+                if (bd.month != 255)
+                    month.SelectedIndex = bd.month - 1;
+                else
+                    month.SelectedIndex = 14;
+
+                if (bd.year != 255)
+                    year.Text = (bd.year + 1900).ToString();
+                else
+                    year.Text = "****";
+            }
+
+            if (entry is BacnetDateRange)
+            {
+                dateRangeGrp.Visible = true;
+                DateGrp.Visible = false;
+                BacnetDateRange bdr = (BacnetDateRange)entry;
+
+                if (bdr.startDate.year != 255)
+                    startDate.Value = bdr.startDate.toDateTime();
+                else
+                    startDate.Value = DateTimePicker.MinimumDateTime ;
+
+                if (bdr.endDate.year != 255)
+                    endDate.Value = bdr.endDate.toDateTime();
+                else
+                    endDate.Value = DateTimePicker.MaximumDateTime;
+            }
+
+            if (entry is BacnetweekNDay)
+            {
+                dateRangeGrp.Visible = false;
+                DateGrp.Visible = true;
+                DateGrp.Location = dateRangeGrp.Location;
+                year.Visible = false;
+                day.Visible = false;
+                wday.Location=new Point(wday.Location.X+50,wday.Location.Y);
+
+                BacnetweekNDay bwd = (BacnetweekNDay)entry;
+
+                if (bwd.wday != 255)
+                    wday.SelectedIndex = bwd.wday - 1;
+                else
+                    wday.SelectedIndex = 7;
+
+                if (bwd.month != 255)
+                    month.SelectedIndex = bwd.month - 1;
+                else
+                    month.SelectedIndex = 14;
+            }
+        }
+
+        public object GetBackEntry()
+        {
+            if (Entry is BacnetDate)
+            {
+                BacnetDate bd = new BacnetDate();
+
+                if (wday.SelectedIndex == 7)
+                    bd.wday = 255;
+                else
+                    bd.wday = (byte)(wday.SelectedIndex + 1);
+
+                if (day.SelectedIndex == 32)
+                    bd.day = 255;
+                else
+                    bd.day = (byte)(day.SelectedIndex + 1);
+
+                if (month.SelectedIndex == 14)
+                    bd.month = 255;
+                else
+                    bd.month = (byte)(month.SelectedIndex + 1);
+
+                int valyear = 255;
+                try
+                {
+                    valyear = Convert.ToInt32(year.Text) - 1900;
+                }
+                catch { }
+
+                bd.year = (byte)valyear;
+
+                return bd;
+
+            }
+
+            if (Entry is BacnetDateRange)
+            {
+                BacnetDateRange bdr = new BacnetDateRange();
+
+                if (startDate.Value == DateTimePicker.MinimumDateTime)
+                    bdr.startDate = new BacnetDate(255, 255, 255);
+                else
+                    bdr.startDate = new BacnetDate((byte)(startDate.Value.Year - 1900), (byte)startDate.Value.Month, (byte)startDate.Value.Day);
+
+                if (endDate.Value == DateTimePicker.MaximumDateTime)
+                    bdr.startDate = new BacnetDate(255, 255, 255);
+                else
+                    bdr.endDate = new BacnetDate((byte)(endDate.Value.Year - 1900), (byte)endDate.Value.Month, (byte)endDate.Value.Day);
+
+                return bdr;
+            }
+            if (Entry is BacnetweekNDay)
+            {
+                BacnetweekNDay bwd = (BacnetweekNDay)Entry;
+
+                if (wday.SelectedIndex == 7)
+                    bwd.wday = 255;
+                else
+                    bwd.wday = (byte)(wday.SelectedIndex + 1);
+
+                if (month.SelectedIndex == 14)
+                    bwd.month = 255;
+                else
+                    bwd.month = (byte)( month.SelectedIndex + 1);
+
+                return bwd;
+            }
+            return null;
+        }
+
+        private void btOk_Click(object sender, EventArgs e)
+        {
+            OutOK = true;
+            Close();
+        }
+
+        private void btCancel_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
+
+        private System.ComponentModel.IContainer components = null;
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && (components != null))
+            {
+                components.Dispose();
+            }
+            base.Dispose(disposing);
+        }
+
+        private void InitializeComponent()
+        {
+            this.startDate = new System.Windows.Forms.DateTimePicker();
+            this.endDate = new System.Windows.Forms.DateTimePicker();
+            this.label1 = new System.Windows.Forms.Label();
+            this.label2 = new System.Windows.Forms.Label();
+            this.dateRangeGrp = new System.Windows.Forms.GroupBox();
+            this.DateGrp = new System.Windows.Forms.GroupBox();
+            this.year = new System.Windows.Forms.TextBox();
+            this.month = new System.Windows.Forms.ComboBox();
+            this.day = new System.Windows.Forms.ComboBox();
+            this.wday = new System.Windows.Forms.ComboBox();
+            this.btOk = new System.Windows.Forms.Button();
+            this.btCancel = new System.Windows.Forms.Button();
+            this.dateRangeGrp.SuspendLayout();
+            this.DateGrp.SuspendLayout();
+            this.SuspendLayout();
+            // 
+            // startDate
+            // 
+            this.startDate.Format = System.Windows.Forms.DateTimePickerFormat.Short;
+            this.startDate.Location = new System.Drawing.Point(31, 29);
+            this.startDate.Name = "startDate";
+            this.startDate.Size = new System.Drawing.Size(106, 20);
+            this.startDate.TabIndex = 0;
+            // 
+            // endDate
+            // 
+            this.endDate.Format = System.Windows.Forms.DateTimePickerFormat.Short;
+            this.endDate.Location = new System.Drawing.Point(162, 29);
+            this.endDate.Name = "endDate";
+            this.endDate.Size = new System.Drawing.Size(106, 20);
+            this.endDate.TabIndex = 1;
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(28, 13);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(29, 13);
+            this.label1.TabIndex = 2;
+            this.label1.Text = "Start";
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(159, 13);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(26, 13);
+            this.label2.TabIndex = 3;
+            this.label2.Text = "End";
+            // 
+            // dateRangeGrp
+            // 
+            this.dateRangeGrp.Controls.Add(this.startDate);
+            this.dateRangeGrp.Controls.Add(this.label1);
+            this.dateRangeGrp.Controls.Add(this.label2);
+            this.dateRangeGrp.Controls.Add(this.endDate);
+            this.dateRangeGrp.Location = new System.Drawing.Point(12, 12);
+            this.dateRangeGrp.Name = "dateRangeGrp";
+            this.dateRangeGrp.Size = new System.Drawing.Size(293, 62);
+            this.dateRangeGrp.TabIndex = 4;
+            this.dateRangeGrp.TabStop = false;
+            // 
+            // DateGrp
+            // 
+            this.DateGrp.Controls.Add(this.year);
+            this.DateGrp.Controls.Add(this.month);
+            this.DateGrp.Controls.Add(this.day);
+            this.DateGrp.Controls.Add(this.wday);
+            this.DateGrp.Location = new System.Drawing.Point(43, 125);
+            this.DateGrp.Name = "DateGrp";
+            this.DateGrp.Size = new System.Drawing.Size(293, 66);
+            this.DateGrp.TabIndex = 5;
+            this.DateGrp.TabStop = false;
+            // 
+            // year
+            // 
+            this.year.Location = new System.Drawing.Point(231, 27);
+            this.year.Name = "year";
+            this.year.Size = new System.Drawing.Size(50, 20);
+            this.year.TabIndex = 3;
+            // 
+            // month
+            // 
+            this.month.FormattingEnabled = true;
+            this.month.Location = new System.Drawing.Point(162, 27);
+            this.month.Name = "month";
+            this.month.Size = new System.Drawing.Size(53, 21);
+            this.month.TabIndex = 2;
+            // 
+            // day
+            // 
+            this.day.FormattingEnabled = true;
+            this.day.Location = new System.Drawing.Point(101, 27);
+            this.day.Name = "day";
+            this.day.Size = new System.Drawing.Size(53, 21);
+            this.day.TabIndex = 1;
+            // 
+            // wday
+            // 
+            this.wday.FormattingEnabled = true;
+            this.wday.Location = new System.Drawing.Point(16, 27);
+            this.wday.Name = "wday";
+            this.wday.Size = new System.Drawing.Size(79, 21);
+            this.wday.TabIndex = 0;
+            // 
+            // btOk
+            // 
+            this.btOk.Location = new System.Drawing.Point(73, 90);
+            this.btOk.Name = "btOk";
+            this.btOk.Size = new System.Drawing.Size(76, 29);
+            this.btOk.TabIndex = 6;
+            this.btOk.Text = "OK";
+            this.btOk.UseVisualStyleBackColor = true;
+            this.btOk.Click += new System.EventHandler(this.btOk_Click);
+            // 
+            // btCancel
+            // 
+            this.btCancel.Location = new System.Drawing.Point(192, 90);
+            this.btCancel.Name = "btCancel";
+            this.btCancel.Size = new System.Drawing.Size(76, 29);
+            this.btCancel.TabIndex = 7;
+            this.btCancel.Text = "Cancel";
+            this.btCancel.UseVisualStyleBackColor = true;
+            this.btCancel.Click += new System.EventHandler(this.btCancel_Click);
+            // 
+            // CalendarEntryEdit
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.ClientSize = new System.Drawing.Size(322, 148);
+            this.Controls.Add(this.btCancel);
+            this.Controls.Add(this.btOk);
+            this.Controls.Add(this.DateGrp);
+            this.Controls.Add(this.dateRangeGrp);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
+            this.Name = "CalendarEntryEdit";
+            this.Text = "Calendar Entry";
+            this.dateRangeGrp.ResumeLayout(false);
+            this.dateRangeGrp.PerformLayout();
+            this.DateGrp.ResumeLayout(false);
+            this.DateGrp.PerformLayout();
+            this.ResumeLayout(false);
+
+        }
+
+        private System.Windows.Forms.DateTimePicker startDate;
+        private System.Windows.Forms.DateTimePicker endDate;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.GroupBox dateRangeGrp;
+        private System.Windows.Forms.GroupBox DateGrp;
+        private System.Windows.Forms.TextBox year;
+        private System.Windows.Forms.ComboBox month;
+        private System.Windows.Forms.ComboBox day;
+        private System.Windows.Forms.ComboBox wday;
+        private System.Windows.Forms.Button btOk;
+        private System.Windows.Forms.Button btCancel;
+    }
     #endregion
 }
