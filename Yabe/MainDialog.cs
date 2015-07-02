@@ -2071,6 +2071,11 @@ namespace Yabe
             showScheduleToolStripMenuItem_Click(null, null);
         }
 
+        private void showCalendarToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            showCalendarToolStripMenuItem_Click(null, null);
+        }
+
         private void showNotificationToolStripMenuItem1_Click(object sender, EventArgs e)
         {
             showNotificationToolStripMenuItem_Click(null, null);
@@ -2278,6 +2283,7 @@ namespace Yabe
             Form F = new ForeignRegistry(comm);
             F.ShowDialog();
         }
+
 
     }
 }

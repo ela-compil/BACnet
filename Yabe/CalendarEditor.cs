@@ -238,10 +238,11 @@ namespace Yabe
 
             if (((o is BacnetDate)&&(((BacnetDate)o).IsPeriodic))||( o is BacnetweekNDay))
             {
-                MessageBox.Show("Cannot do that with perodic element\r\nEdit it with the Date entries list popup menu", "Yabe", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                // Cannot do that with perodic element : what has to be changed : day n°, wday, month ????
+                modifyToolStripMenuItem_Click(null, null);
             }
             else
-            //if ((o is BacnetDate) || (o is BacnetDateRange))
+            //(o is BacnetDate) || (o is BacnetDateRange)
             {
                 calendarEntries.Entries.Remove(o);
                 int Idx = listEntries.Items.IndexOf(o);
@@ -574,6 +575,7 @@ namespace Yabe
 
         public bool IsAFittingDate(DateTime date)
         {
+
             if ((date.Month != month) && (month != 255) && (month!=13) && (month!=14))
                 return false;
             if ((month == 13) && ((date.Month & 1) != 1))

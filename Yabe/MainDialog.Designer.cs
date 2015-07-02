@@ -55,6 +55,7 @@
             this.showTrendLogToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showScheduleToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showNotificationToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.showCalendarToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -222,7 +223,8 @@
             this.subscribeToolStripMenuItem1,
             this.showTrendLogToolStripMenuItem,
             this.showScheduleToolStripMenuItem,
-            this.showNotificationToolStripMenuItem1});
+            this.showNotificationToolStripMenuItem1,
+            this.showCalendarToolStripMenuItem1});
             this.searchToolStripMenuItem.Name = "searchToolStripMenuItem";
             this.searchToolStripMenuItem.Size = new System.Drawing.Size(71, 20);
             this.searchToolStripMenuItem.Text = "Functions";
@@ -348,6 +350,14 @@
             this.showNotificationToolStripMenuItem1.Size = new System.Drawing.Size(218, 22);
             this.showNotificationToolStripMenuItem1.Text = "Show Notification";
             this.showNotificationToolStripMenuItem1.Click += new System.EventHandler(this.showNotificationToolStripMenuItem1_Click);
+            // 
+            // showCalendarToolStripMenuItem1
+            // 
+            this.showCalendarToolStripMenuItem1.Image = global::Yabe.Properties.Resources.date;
+            this.showCalendarToolStripMenuItem1.Name = "showCalendarToolStripMenuItem1";
+            this.showCalendarToolStripMenuItem1.Size = new System.Drawing.Size(218, 22);
+            this.showCalendarToolStripMenuItem1.Text = "Show Calendar";
+            this.showCalendarToolStripMenuItem1.Click += new System.EventHandler(this.showCalendarToolStripMenuItem1_Click);
             // 
             // optionsToolStripMenuItem
             // 
@@ -879,6 +889,7 @@
         private System.Windows.Forms.ToolStripMenuItem showNotificationToolStripMenuItem1;
         private System.Windows.Forms.TreeView m_AddressSpaceTree;
         private System.Windows.Forms.ToolStripMenuItem showCalendarToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem showCalendarToolStripMenuItem1;
     }
 }
 
