@@ -5864,6 +5864,27 @@ namespace System.IO.BACnet.Serialize
             ASN1.encode_closing_tag(buffer, 1);
 
         }
+        //***************************************************************
+        public static void EncodeAddListElement(EncodeBuffer buffer, BacnetObjectId object_id, uint property_id, uint array_index, IList<BacnetValue> value_list)
+        {
+            ASN1.encode_context_object_id(buffer, 0, object_id.type, object_id.instance);
+            ASN1.encode_context_enumerated(buffer, 1, property_id);
+
+
+            if (array_index != ASN1.BACNET_ARRAY_ALL)
+            {
+                ASN1.encode_context_unsigned(buffer, 2, array_index);
+            }
+
+
+            ASN1.encode_opening_tag(buffer, 3);
+            foreach (BacnetValue value in value_list)
+            {
+                ASN1.bacapp_encode_application_data(buffer, value);
+            }
+            ASN1.encode_closing_tag(buffer, 3);
+
+        }
 
         public static void EncodeAtomicWriteFileAcknowledge(EncodeBuffer buffer, bool is_stream, int position)
         {

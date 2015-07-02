@@ -1572,7 +1572,6 @@ namespace System.IO.BACnet
         }
 
         //***************************************************************************************************
-
         public bool DeleteObjectRequest(BacnetAddress adr, BacnetObjectId object_id, byte invoke_id = 0)
         {
             using (BacnetAsyncResult result = (BacnetAsyncResult)BeginDeleteObjectRequest(adr, object_id, true, invoke_id))
@@ -1617,6 +1616,101 @@ namespace System.IO.BACnet
 
         //************************************************************
         public void EndDeleteObjectRequest(IAsyncResult result, out Exception ex)
+        {
+            BacnetAsyncResult res = (BacnetAsyncResult)result;
+            ex = res.Error;
+            if (ex == null && !res.WaitForDone(m_timeout))
+                ex = new Exception("Wait Timeout");
+
+            if (ex == null)
+            {
+            }
+            else
+            {
+            }
+
+            res.Dispose();
+        }
+        //*************************************************************
+
+        public bool AddListElementRequest(BacnetAddress adr, BacnetObjectId object_id,BacnetPropertyReference reference, IList<BacnetValue> value_list, byte invoke_id = 0)
+		{
+			using (BacnetAsyncResult result = (BacnetAsyncResult)BeginAddListElementRequest(adr, object_id,reference,value_list, true, invoke_id))
+            {
+                for (int r = 0; r < m_retries; r++)
+                {
+                	
+                    if (result.WaitForDone(m_timeout))
+                    {
+                        Exception ex;
+                        EndAddListElementRequest(result, out ex);
+                        if (ex != null) throw ex;
+                        else return true;
+                    }
+                    result.Resend();
+                }
+            }
+            //values = null;
+            return false;			
+		}
+        //**********************************************************************
+        public bool RemoveListElementRequest(BacnetAddress adr, BacnetObjectId object_id,BacnetPropertyReference reference, IList<BacnetValue> value_list, byte invoke_id = 0)
+		{
+			using (BacnetAsyncResult result = (BacnetAsyncResult)BeginRemoveListElementRequest(adr, object_id,reference,value_list, true, invoke_id))
+            {
+                for (int r = 0; r < m_retries; r++)
+                {
+                	
+                    if (result.WaitForDone(m_timeout))
+                    {
+                        Exception ex;
+                        EndAddListElementRequest(result, out ex);
+                        if (ex != null) throw ex;
+                        else return true;
+                    }
+                    result.Resend();
+                }
+            }
+            //values = null;
+            return false;			
+		}
+        //***********************************************************************
+        public IAsyncResult BeginRemoveListElementRequest(BacnetAddress adr, BacnetObjectId object_id,BacnetPropertyReference reference, IList<BacnetValue> value_list, bool wait_for_transmit, byte invoke_id = 0)
+        {
+            Trace.WriteLine("Sending RemoveListElementRequest ... ", null);
+            if (invoke_id == 0) invoke_id = unchecked(m_invoke_id++);
+
+            EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, adr.RoutedSource, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, 0);
+            APDU.EncodeConfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST | (m_max_segments != BacnetMaxSegments.MAX_SEG0 ? BacnetPduTypes.SEGMENTED_RESPONSE_ACCEPTED : 0), BacnetConfirmedServices.SERVICE_CONFIRMED_REMOVE_LIST_ELEMENT, m_max_segments, m_client.MaxAdpuLength, invoke_id, 0, 0);
+            Services.EncodeAddListElement(b, object_id,(uint) reference.propertyIdentifier,(uint) reference.propertyArrayIndex,value_list);
+
+            //send
+            BacnetAsyncResult ret = new BacnetAsyncResult(this, adr, invoke_id, b.buffer, b.offset - m_client.HeaderLength, wait_for_transmit, m_transmit_timeout);
+            ret.Resend();
+
+            return ret;
+        }
+
+        //******************************************************************************
+        public IAsyncResult BeginAddListElementRequest(BacnetAddress adr, BacnetObjectId object_id, BacnetPropertyReference reference, IList<BacnetValue> value_list, bool wait_for_transmit, byte invoke_id = 0)
+        {
+            Trace.WriteLine("Sending AddListElementRequest ... ", null);
+            if (invoke_id == 0) invoke_id = unchecked(m_invoke_id++);
+
+            EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, adr.RoutedSource, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, 0);
+            APDU.EncodeConfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST | (m_max_segments != BacnetMaxSegments.MAX_SEG0 ? BacnetPduTypes.SEGMENTED_RESPONSE_ACCEPTED : 0), BacnetConfirmedServices.SERVICE_CONFIRMED_ADD_LIST_ELEMENT, m_max_segments, m_client.MaxAdpuLength, invoke_id, 0, 0);
+            Services.EncodeAddListElement(b, object_id, (uint)reference.propertyIdentifier, (uint)reference.propertyArrayIndex, value_list);
+
+            //send
+            BacnetAsyncResult ret = new BacnetAsyncResult(this, adr, invoke_id, b.buffer, b.offset - m_client.HeaderLength, wait_for_transmit, m_transmit_timeout);
+            ret.Resend();
+
+            return ret;
+        }
+        //*****************************************************************************
+        public void EndAddListElementRequest(IAsyncResult result, out Exception ex)
         {
             BacnetAsyncResult res = (BacnetAsyncResult)result;
             ex = res.Error;
