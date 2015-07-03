@@ -264,6 +264,10 @@ namespace AnotherStorageImplementation
                 );    
             sch.PROP_OUT_OF_SERVICE = false;    // needed after all initialization to start the service
 
+            // One empty Calendar, could be fullfill with yabe
+
+            Calendar cal = new Calendar(0, "Test Calendar", "A Yabe calendar");
+            device.AddBacnetObject(cal);
 
         }
     }

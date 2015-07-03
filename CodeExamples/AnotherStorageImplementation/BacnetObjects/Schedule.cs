@@ -325,6 +325,7 @@ namespace BaCSharp
         //
         // Add a Thread pool Timer for the next event
         //
+        Timer tmr;
         protected virtual void DoScheduling()
         {
             if (m_PROP_OUT_OF_SERVICE == true)
@@ -389,7 +390,7 @@ namespace BaCSharp
                 if ((NewValue != null)&&(delay!=Int32.MaxValue))
                 {
                     tmrId++;
-                    Timer tmr = new Timer(new TimerCallback(TimeSchedule), new object[] { tmrId, NewValue }, delay * 1000, Timeout.Infinite);
+                    tmr = new Timer(new TimerCallback(TimeSchedule), new object[] { tmrId, NewValue }, delay * 1000, Timeout.Infinite);
                 }
             }
 

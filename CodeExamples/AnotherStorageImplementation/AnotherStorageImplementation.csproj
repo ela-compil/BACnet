@@ -63,6 +63,7 @@
     <Compile Include="BacnetObjects\BinaryInput.cs" />
     <Compile Include="BacnetObjects\BinaryObject.cs" />
     <Compile Include="BacnetObjects\BinaryOutput.cs" />
+    <Compile Include="BacnetObjects\Calendar.cs" />
     <Compile Include="BacnetObjects\CharacterString.cs" />
     <Compile Include="BacnetObjects\DeviceObject.cs" />
     <Compile Include="BacnetObjects\MultiStateInput.cs" />

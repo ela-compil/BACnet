@@ -187,6 +187,7 @@
             this.Controls.Add(this.listEntries);
             this.Controls.Add(this.dateSelect);
             this.Controls.Add(this.calendarView);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.Name = "CalendarEditor";
