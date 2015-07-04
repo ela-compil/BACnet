@@ -915,6 +915,7 @@ namespace System.IO.BACnet
         {
             ASN1.bacapp_encode_device_obj_property_ref(buffer, this);
         }
+
     } ;
 
     public struct BacnetEventNotificationData
@@ -1215,6 +1216,16 @@ namespace System.IO.BACnet
         {
             this.type = type;
             this.instance = instance;
+        }
+        public BacnetObjectTypes Type
+        {
+            get { return type; }
+            set { type = value; }
+        }
+        public UInt32 Instance
+        {
+            get { return instance; }
+            set { instance = value; }
         }
         public override string ToString()
         {

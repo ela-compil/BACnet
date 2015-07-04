@@ -29,6 +29,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO.BACnet;
+using System.Globalization;
 
 namespace Utilities
 {
@@ -199,7 +200,7 @@ namespace Utilities
 	/// <summary>
 	/// Custom property class 
 	/// </summary>
-	class CustomProperty
+	public class CustomProperty
 	{
 		private string m_name = string.Empty;
 		private bool m_readonly = false;
@@ -222,7 +223,7 @@ namespace Utilities
 			this.m_readonly = read_only;
             this.m_tag = tag;
             this.m_options = options;
-            this.m_category = category;
+            this.m_category = "BacnetProperty";
             this.m_description = description;
 		}
 
@@ -526,7 +527,7 @@ namespace Utilities
         public int this[string name]
         {
             get
-            {
+            { 
                 int value = 0;
 
                 if (name.IndexOf(',') != -1)
@@ -718,6 +719,87 @@ namespace Utilities
          
     }
 
+    public class BacnetObjectIdentifierConverter : ExpandableObjectConverter
+    {
+
+        public override bool CanConvertTo(ITypeDescriptorContext context,
+                                  System.Type destinationType)
+        {
+            if (destinationType == typeof(BacnetObjectId))
+                return true;
+            return base.CanConvertTo(context, destinationType);
+        }
+
+        public override bool CanConvertFrom(ITypeDescriptorContext context,
+                              System.Type sourceType)
+        {
+            if (sourceType == typeof(string))
+                return true;
+
+            return base.CanConvertFrom(context, sourceType);
+        }
+        
+        // Call to change the display
+        public override object ConvertTo(ITypeDescriptorContext context,
+                               CultureInfo culture,
+                               object value,
+                               System.Type destinationType)
+        {
+            if (destinationType == typeof(System.String) &&
+                 value is BacnetObjectId)
+            {
+
+                BacnetObjectId objId = (BacnetObjectId)value;
+
+                return objId.type +
+                       ":" + objId.instance;
+            }
+            return base.ConvertTo(context, culture, value, destinationType);
+        }
+
+        public override object ConvertFrom(ITypeDescriptorContext context,
+                              CultureInfo culture, object value)
+        {
+            if (value is string)
+            {
+                try
+                {
+                    string[] s = (value as String).Split(':');
+                    return new BacnetObjectId((BacnetObjectTypes)Enum.Parse(typeof(BacnetObjectTypes), s[0]), Convert.ToUInt16(s[1]));
+                }
+                catch { return null; }
+            }
+            return base.ConvertFrom(context, culture, value);
+        }
+    }
+
+
+    public class BacnetBitStringConverter : TypeConverter
+    {
+        public override bool CanConvertFrom(ITypeDescriptorContext context,
+                              System.Type sourceType)
+        {
+            if (sourceType == typeof(string))
+                return true;
+
+            return base.CanConvertFrom(context, sourceType);
+        }
+
+        public override object ConvertFrom(ITypeDescriptorContext context,
+                      CultureInfo culture, object value)
+        {
+            if (value is string)
+            {
+                try
+                {
+                    return BacnetBitString.Parse(value as String);
+                }
+                catch { return null; }
+            }
+            return base.ConvertFrom(context, culture, value);
+        }
+
+    }
 	/// <summary>
 	/// Custom PropertyDescriptor
 	/// </summary>
@@ -814,6 +896,10 @@ namespace Utilities
                 if (m_Property.Type == typeof(DynamicPropertyGridContainer)) return new ExpandableObjectConverter();
                 else if (m_Property.Options != null) return new DynamicEnumConverter(m_Property.Options);
                 else if (m_Property.Type == typeof(float)) return new CustomSingleConverter();
+                else if (m_Property.Type == typeof(BacnetObjectId)) return new BacnetObjectIdentifierConverter();
+                else if (m_Property.Type == typeof(BacnetBitString))
+                    return new BacnetBitStringConverter();
+
                 else return base.Converter;
             }
         }
@@ -827,106 +913,6 @@ namespace Utilities
         }
 
 		#endregion
-
 			
 	}
-
-    public class IntToHexTypeDescriptionProvider : TypeDescriptionProvider
-    {
-        private IntToHexCustomTypeDescriptor m_Descriptor = new IntToHexCustomTypeDescriptor();
-
-        public IntToHexTypeDescriptionProvider(TypeDescriptionProvider parent) :
-            base(parent) { }
-
-        public override ICustomTypeDescriptor GetTypeDescriptor(Type objectType, object instance)
-        {
-            if (objectType == typeof(int) || objectType == typeof(uint) || objectType == typeof(short) || objectType == typeof(ushort) || objectType == typeof(byte) || objectType == typeof(sbyte) || objectType == typeof(Int64) || objectType == typeof(UInt64))
-            {
-                return m_Descriptor;
-            }
-            else
-            {
-                return base.GetTypeDescriptor(objectType, instance);
-            }
-        }
-    }
-
-    public class IntToHexCustomTypeDescriptor : CustomTypeDescriptor
-    {
-        private IntToHexTypeConverter m_Converter = new IntToHexTypeConverter();
-        public override TypeConverter GetConverter()
-        {
-            return m_Converter;
-        }
-    }
-
-    public class IntToHexTypeConverter : TypeConverter
-    {
-        public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
-        {
-            if (sourceType == typeof(string))
-            {
-                return true;
-            }
-            else
-            {
-                return base.CanConvertFrom(context, sourceType);
-            }
-        }
-
-        public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType)
-        {
-            if (destinationType == typeof(string))
-            {
-                return true;
-            }
-            else
-            {
-                return base.CanConvertTo(context, destinationType);
-            }
-        }
-
-        public override object ConvertTo(ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value, Type destinationType)
-        {
-            if (destinationType == typeof(string) && (value.GetType() == typeof(byte) || value.GetType() == typeof(sbyte)))
-            {
-                return string.Format("0x{0:X2}", value);
-            }
-            else if (destinationType == typeof(string) && (value.GetType() == typeof(short) || value.GetType() == typeof(ushort)))
-            {
-                return string.Format("0x{0:X4}", value);
-            }
-            else if (destinationType == typeof(string) && (value.GetType() == typeof(int) || value.GetType() == typeof(uint)))
-            {
-                return string.Format("0x{0:X8}", value);
-            }
-            else if (destinationType == typeof(string) && (value.GetType() == typeof(Int64) || value.GetType() == typeof(UInt64)))
-            {
-                return string.Format("0x{0:X16}", value);
-            }
-            else
-            {
-                return base.ConvertTo(context, culture, value, destinationType);
-            }
-        }
-
-        public override object ConvertFrom(ITypeDescriptorContext context, System.Globalization.CultureInfo culture, object value)
-        {
-            if (value.GetType() == typeof(string))
-            {
-                string input = (string)value;
-
-                if (input.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
-                {
-                    input = input.Substring(2);
-                }
-
-                return base.ConvertFrom(context, culture, int.Parse(input, System.Globalization.NumberStyles.HexNumber, culture));
-            }
-            else
-            {
-                return base.ConvertFrom(context, culture, value);
-            }
-        }
-    }
 }
