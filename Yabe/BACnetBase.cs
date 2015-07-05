@@ -896,11 +896,11 @@ namespace System.IO.BACnet
     public struct BacnetDeviceObjectPropertyReference : ASN1.IASN1encode
     {
         public BacnetObjectId objectIdentifier;
-        public uint propertyIdentifier;
+        public BacnetPropertyIds propertyIdentifier;
         public UInt32 arrayIndex;
         public BacnetObjectId deviceIndentifier;
 
-        public BacnetDeviceObjectPropertyReference(BacnetObjectId objectIdentifier, uint propertyIdentifier, BacnetObjectId? deviceIndentifier=null, UInt32 arrayIndex = ASN1.BACNET_ARRAY_ALL)
+        public BacnetDeviceObjectPropertyReference(BacnetObjectId objectIdentifier, BacnetPropertyIds propertyIdentifier, BacnetObjectId? deviceIndentifier=null, UInt32 arrayIndex = ASN1.BACNET_ARRAY_ALL)
         {
             this.objectIdentifier = objectIdentifier;
             this.propertyIdentifier = propertyIdentifier;
@@ -914,6 +914,50 @@ namespace System.IO.BACnet
         public void ASN1encode(EncodeBuffer buffer)
         {
             ASN1.bacapp_encode_device_obj_property_ref(buffer, this);
+        }
+
+        public BacnetObjectId ObjectId
+        {
+            get { return objectIdentifier; }
+            set { objectIdentifier = value; }
+        }
+        public Int32 ArrayIndex // shows -1 when it's ASN1.BACNET_ARRAY_ALL
+        {
+            get 
+            {
+                if (arrayIndex == ASN1.BACNET_ARRAY_ALL)
+                    return -1;
+                else return (Int32)arrayIndex;
+            }
+            set 
+            {
+                if (value < 0)
+                    arrayIndex = ASN1.BACNET_ARRAY_ALL;
+                else
+                    arrayIndex = (UInt32)value; 
+            }
+        }
+        public BacnetObjectId? DeviceId  // shows null when it's not OBJECT_DEVICE
+        {
+            get 
+            {
+                if (deviceIndentifier.type == BacnetObjectTypes.OBJECT_DEVICE)
+                    return deviceIndentifier;
+                else
+                    return null;
+            }
+            set 
+            {
+                if (value == null)
+                    deviceIndentifier = new BacnetObjectId();
+                else
+                    deviceIndentifier = value.Value;             
+            }
+        }
+        public BacnetPropertyIds PropertyId
+        {
+            get { return propertyIdentifier; }
+            set { propertyIdentifier = value; }
         }
 
     } ;
@@ -3898,7 +3942,7 @@ namespace System.IO.BACnet.Serialize
         public static void bacapp_encode_device_obj_property_ref(EncodeBuffer buffer, BacnetDeviceObjectPropertyReference value)
         {
             encode_context_object_id(buffer, 0, value.objectIdentifier.type, value.objectIdentifier.instance);
-            encode_context_enumerated(buffer, 1, value.propertyIdentifier);
+            encode_context_enumerated(buffer, 1, (uint)value.propertyIdentifier);
 
             /* Array index is optional so check if needed before inserting */
             if (value.arrayIndex != ASN1.BACNET_ARRAY_ALL)
@@ -4426,6 +4470,7 @@ namespace System.IO.BACnet.Serialize
             int tag_len;
 
             value = new BacnetDeviceObjectPropertyReference();
+            value.arrayIndex = ASN1.BACNET_ARRAY_ALL;
 
             /* Tag 0: Object ID */
             if (!ASN1.decode_is_context_tag(buffer, offset + len, 0))
@@ -4438,7 +4483,9 @@ namespace System.IO.BACnet.Serialize
             len += decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value_type);
             if (tag_number != 1)
                 return -1;
-            len += decode_enumerated(buffer, offset + len, len_value_type, out value.propertyIdentifier);
+            uint propertyIdentifier;
+            len += decode_enumerated(buffer, offset + len, len_value_type, out propertyIdentifier);
+            value.propertyIdentifier = (BacnetPropertyIds)propertyIdentifier;
 
             /* Tag 2: Optional Array Index */
             tag_len = ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value_type);
@@ -5329,7 +5376,7 @@ namespace System.IO.BACnet.Serialize
                     value.Value = v;
                     return tag_len;
                 }
-                else if (property_id == BacnetPropertyIds.PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES)
+                else if ((property_id == BacnetPropertyIds.PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES)||(property_id == BacnetPropertyIds.PROP_LOG_DEVICE_OBJECT_PROPERTY))
                 {
                     BacnetDeviceObjectPropertyReference v;
                     tag_len = ASN1.decode_device_obj_property_ref(buffer, offset, max_offset, out v);

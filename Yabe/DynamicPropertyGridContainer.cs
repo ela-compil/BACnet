@@ -773,6 +773,34 @@ namespace Utilities
         }
     }
 
+    public class BacnetDeviceObjectPropertyReferenceConverter: ExpandableObjectConverter
+    {
+        public override bool CanConvertTo(ITypeDescriptorContext context,
+                            System.Type destinationType)
+        {
+            if (destinationType == typeof(BacnetDeviceObjectPropertyReference))
+                return true;
+            return base.CanConvertTo(context, destinationType);
+        }
+        public override object ConvertTo(ITypeDescriptorContext context,
+                        CultureInfo culture,
+                        object value,
+                        System.Type destinationType)
+        {
+
+            if (destinationType == typeof(System.String) &&
+                 value is BacnetDeviceObjectPropertyReference)
+            {
+                BacnetDeviceObjectPropertyReference pr = (BacnetDeviceObjectPropertyReference)value;
+
+                return "Reference to " +pr.objectIdentifier.ToString();
+            }
+            else
+                return base.ConvertTo(context, culture, value, destinationType);
+          
+          }
+
+    }
 
     public class BacnetBitStringConverter : TypeConverter
     {
@@ -800,12 +828,21 @@ namespace Utilities
         }
 
     }
-	/// <summary>
+	
+    /// <summary>
 	/// Custom PropertyDescriptor
 	/// </summary>
 	class CustomPropertyDescriptor: PropertyDescriptor
 	{
 		CustomProperty m_Property;
+
+        static CustomPropertyDescriptor()
+        {
+            TypeDescriptor.AddAttributes(typeof(BacnetDeviceObjectPropertyReference), new TypeConverterAttribute(typeof(BacnetDeviceObjectPropertyReferenceConverter)));
+            TypeDescriptor.AddAttributes(typeof(BacnetObjectId), new TypeConverterAttribute(typeof(BacnetObjectIdentifierConverter)));
+            TypeDescriptor.AddAttributes(typeof(BacnetBitString), new TypeConverterAttribute(typeof(BacnetBitStringConverter)));
+        }
+
 		public CustomPropertyDescriptor(ref CustomProperty myProperty, Attribute [] attrs) :base(myProperty.Name, attrs)
 		{
 			m_Property = myProperty;
@@ -892,14 +929,9 @@ namespace Utilities
         public override TypeConverter Converter
         {
             get
-            {
-                if (m_Property.Type == typeof(DynamicPropertyGridContainer)) return new ExpandableObjectConverter();
-                else if (m_Property.Options != null) return new DynamicEnumConverter(m_Property.Options);
+            {               
+                if (m_Property.Options != null) return new DynamicEnumConverter(m_Property.Options);
                 else if (m_Property.Type == typeof(float)) return new CustomSingleConverter();
-                else if (m_Property.Type == typeof(BacnetObjectId)) return new BacnetObjectIdentifierConverter();
-                else if (m_Property.Type == typeof(BacnetBitString))
-                    return new BacnetBitStringConverter();
-
                 else return base.Converter;
             }
         }

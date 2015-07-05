@@ -442,7 +442,7 @@ namespace Yabe
             }
             else
             {
-                BacnetDeviceObjectPropertyReference newobj = new BacnetDeviceObjectPropertyReference(new BacnetObjectId(), (uint)85);
+                BacnetDeviceObjectPropertyReference newobj = new BacnetDeviceObjectPropertyReference(new BacnetObjectId(), BacnetPropertyIds.PROP_PRESENT_VALUE);
 
                 EditPropertyObjectReference form = new EditPropertyObjectReference(newobj);
                 form.ShowDialog();
@@ -552,7 +552,7 @@ namespace Yabe
                 Reference_Prop.Items.Add(new Enumcombo(bpi.ToString().Substring(5), (uint)bpi));
 
             for (int i = 0; i < Reference_Prop.Items.Count; i++)
-                if ((Reference_Prop.Items[i] as Enumcombo).enumValue == ObjRef.propertyIdentifier)
+                if ((Reference_Prop.Items[i] as Enumcombo).enumValue == (uint)ObjRef.propertyIdentifier)
                 {
                     Reference_Prop.SelectedIndex = i;
                     break;
@@ -587,7 +587,7 @@ namespace Yabe
 
                 BacnetDeviceObjectPropertyReference newref = new BacnetDeviceObjectPropertyReference(
                     new BacnetObjectId((BacnetObjectTypes)(Reference_ObjType.SelectedItem as Enumcombo).enumValue, Convert.ToUInt16(Reference_ObjId.Text)),
-                    (Reference_Prop.SelectedItem as Enumcombo).enumValue, device, ArrayIdx);
+                    (BacnetPropertyIds)(Reference_Prop.SelectedItem as Enumcombo).enumValue, device, ArrayIdx);
 
                 if (!ObjRef.Equals(newref))
                 {

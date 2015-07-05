@@ -293,7 +293,7 @@ namespace BaCSharp
                         else
                             value.priority = (byte)m_PROP_PRIORITY;
 
-                        value.property = new BacnetPropertyReference(reference.propertyIdentifier, reference.arrayIndex);
+                        value.property = new BacnetPropertyReference((uint)reference.propertyIdentifier, reference.arrayIndex);
                         value.value = new BacnetValue[] { new BacnetValue(m_PROP_PRESENT_VALUE) };
                         bcs.WritePropertyValue(value, false);
                     }

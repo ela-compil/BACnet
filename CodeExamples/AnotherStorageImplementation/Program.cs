@@ -246,12 +246,12 @@ namespace AnotherStorageImplementation
             // a link to the internal analog output
             sch.AddPropertyReference(new BacnetDeviceObjectPropertyReference
                      (new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_OUTPUT, 1),
-                     (uint)BacnetPropertyIds.PROP_PRESENT_VALUE));
+                     BacnetPropertyIds.PROP_PRESENT_VALUE));
             // a link to analog output through the network : could be on another device than itself
             sch.AddPropertyReference(new BacnetDeviceObjectPropertyReference
             (
                   new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_OUTPUT, 1),
-                  (uint)BacnetPropertyIds.PROP_PRESENT_VALUE,
+                  BacnetPropertyIds.PROP_PRESENT_VALUE,
                   new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, 1234)));
 
             sch.PROP_SCHEDULE_DEFAULT = (int)452;

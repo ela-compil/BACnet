@@ -1362,28 +1362,27 @@ namespace Yabe
                 else if (!(m_AddressSpaceTree.SelectedNode.Tag is BacnetObjectId)) return;
                 BacnetObjectId object_id = (BacnetObjectId)m_AddressSpaceTree.SelectedNode.Tag;
 
-                Utilities.CustomPropertyDescriptor c;
+                Utilities.CustomPropertyDescriptor c=null;
+                GridItem gridItem=e.ChangedItem;
 
-                try
-                {
-                    c = (Utilities.CustomPropertyDescriptor)e.ChangedItem.PropertyDescriptor;
-                }
-                catch
+                do
                 {
                     try
                     {
-                        c = (Utilities.CustomPropertyDescriptor)e.ChangedItem.Parent.PropertyDescriptor;
+                        c = (Utilities.CustomPropertyDescriptor)gridItem.PropertyDescriptor;
                     }
                     catch
                     {
-                        return;
+                        gridItem=gridItem.Parent;
                     }
-                }
+                } while ((c==null)&&(gridItem!=null));
+
+                if (c == null) return;  // normaly it couldn't occur
 
                 //fetch property
                 BacnetPropertyReference property = (BacnetPropertyReference)c.CustomProperty.Tag;
                 //new value
-                object new_value = e.ChangedItem.Value;
+                object new_value = gridItem.Value;
 
                 //convert to bacnet
                 BacnetValue[] b_value = null;
