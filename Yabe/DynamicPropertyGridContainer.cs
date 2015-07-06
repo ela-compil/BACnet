@@ -30,6 +30,9 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO.BACnet;
 using System.Globalization;
+using System.Windows.Forms.Design;
+using System.Windows.Forms;
+using System.Drawing.Design;
 
 namespace Utilities
 {
@@ -796,10 +799,8 @@ namespace Utilities
                 return "Reference to " +pr.objectIdentifier.ToString();
             }
             else
-                return base.ConvertTo(context, culture, value, destinationType);
-          
+                return base.ConvertTo(context, culture, value, destinationType);          
           }
-
     }
 
     public class BacnetBitStringConverter : TypeConverter
@@ -828,7 +829,96 @@ namespace Utilities
         }
 
     }
-	
+
+    // used for BacnetTime (without Date, but stored in a DateTime struct)
+    public class BacnetTimeConverter : TypeConverter
+    {
+        public override bool CanConvertFrom(ITypeDescriptorContext context,
+                      System.Type sourceType)
+        {
+            if (sourceType == typeof(string))
+                return true;
+
+            return base.CanConvertFrom(context, sourceType);
+        }
+
+        public override object ConvertFrom(ITypeDescriptorContext context,
+              CultureInfo culture, object value)
+        {
+            if (value is string)
+            {
+                try
+                {
+                    return DateTime.Parse("1/1/1 "+(string)value,System.Threading.Thread.CurrentThread.CurrentCulture);
+                }
+                catch { return null; }
+            }
+            return base.ConvertFrom(context, culture, value);
+        }
+
+         public override bool CanConvertTo(ITypeDescriptorContext context,
+                            System.Type destinationType)
+        {
+            if (destinationType == typeof(DateTime))
+                return true;
+            return base.CanConvertTo(context, destinationType);
+        }
+
+         public override object ConvertTo(ITypeDescriptorContext context,
+                         CultureInfo culture,
+                         object value,
+                         System.Type destinationType)
+         {
+             if (destinationType == typeof(System.String) &&
+                 value is DateTime)
+             {
+                 DateTime dt = (DateTime)value;
+
+                 return dt.ToLongTimeString();
+             }
+             else
+                return base.ConvertTo(context, culture, value, destinationType);
+         }
+    }
+
+    // http://www.acodemics.co.uk/2014/03/20/c-datetimepicker-in-propertygrid/
+    // used for BacnetTime Edition
+    public class BacnetTimePickerEditor : UITypeEditor
+    {
+
+        IWindowsFormsEditorService editorService;
+        DateTimePicker picker = new DateTimePicker();
+
+        public BacnetTimePickerEditor()
+        {
+            picker.Format = DateTimePickerFormat.Time;
+            picker.ShowUpDown = true;
+        }
+
+        public override UITypeEditorEditStyle GetEditStyle(ITypeDescriptorContext context)
+        {
+            return UITypeEditorEditStyle.DropDown;
+        }
+
+        public override object EditValue(ITypeDescriptorContext context, IServiceProvider provider, object value)
+        {
+            if (provider != null)
+            {
+                this.editorService = provider.GetService(typeof(IWindowsFormsEditorService)) as IWindowsFormsEditorService;
+            }
+
+            if (this.editorService != null)
+            {
+                DateTime dt= (DateTime)value;
+                // this value is 1/1/1 for the date,  DatetimePicket don't accept it
+                picker.Value = new DateTime(2000, 1, 1, dt.Hour, dt.Minute, dt.Second);
+                this.editorService.DropDownControl(picker);
+                value = picker.Value;
+            }
+
+            return value;
+        }
+    }
     /// <summary>
 	/// Custom PropertyDescriptor
 	/// </summary>
@@ -841,6 +931,7 @@ namespace Utilities
             TypeDescriptor.AddAttributes(typeof(BacnetDeviceObjectPropertyReference), new TypeConverterAttribute(typeof(BacnetDeviceObjectPropertyReferenceConverter)));
             TypeDescriptor.AddAttributes(typeof(BacnetObjectId), new TypeConverterAttribute(typeof(BacnetObjectIdentifierConverter)));
             TypeDescriptor.AddAttributes(typeof(BacnetBitString), new TypeConverterAttribute(typeof(BacnetBitStringConverter)));
+            //TypeDescriptor.AddAttributes(typeof(DateTime), new EditorAttribute(typeof(DateTimePickerEditor), typeof(System.Drawing.Design.UITypeEditor)));
         }
 
 		public CustomPropertyDescriptor(ref CustomProperty myProperty, Attribute [] attrs) :base(myProperty.Name, attrs)
@@ -929,11 +1020,18 @@ namespace Utilities
         public override TypeConverter Converter
         {
             get
-            {               
+            {
                 if (m_Property.Options != null) return new DynamicEnumConverter(m_Property.Options);
                 else if (m_Property.Type == typeof(float)) return new CustomSingleConverter();
+                else if (m_Property.bacnetApplicationTags == BacnetApplicationTags.BACNET_APPLICATION_TAG_TIME) return new BacnetTimeConverter();
                 else return base.Converter;
             }
+        }
+
+        public override object GetEditor(Type editorBaseType)
+        {
+            if (m_Property.bacnetApplicationTags == BacnetApplicationTags.BACNET_APPLICATION_TAG_TIME) return new BacnetTimePickerEditor();
+            else return base.GetEditor(editorBaseType);
         }
 
         public DynamicEnum Options

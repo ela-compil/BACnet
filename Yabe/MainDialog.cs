@@ -1364,21 +1364,19 @@ namespace Yabe
 
                 Utilities.CustomPropertyDescriptor c=null;
                 GridItem gridItem=e.ChangedItem;
+                // Go up to the Property (could be a sub-element)
 
                 do
                 {
-                    try
-                    {
+                    if (gridItem.PropertyDescriptor is Utilities.CustomPropertyDescriptor)
                         c = (Utilities.CustomPropertyDescriptor)gridItem.PropertyDescriptor;
-                    }
-                    catch
-                    {
-                        gridItem=gridItem.Parent;
-                    }
-                } while ((c==null)&&(gridItem!=null));
+                    else
+                        gridItem = gridItem.Parent;
 
-                if (c == null) return;  // normaly it couldn't occur
+                } while ((c == null) && (gridItem != null));
 
+                if (c==null) return; // never occur normaly
+ 
                 //fetch property
                 BacnetPropertyReference property = (BacnetPropertyReference)c.CustomProperty.Tag;
                 //new value
