@@ -919,6 +919,82 @@ namespace Utilities
             return value;
         }
     }
+
+    // In order to give a readable list instead of a bitstring
+    public class BacnetBitStringToEnumListDisplay : UITypeEditor
+    {
+        public enum ValueType {ObjectSupported,ServicesSupported,StatusFlag, Ack, LimitEnable}; 
+
+        IWindowsFormsEditorService editorService;
+
+        ListBox ObjetList;
+        ValueType currentType;
+
+        public BacnetBitStringToEnumListDisplay(ValueType typeRequired)
+        {
+            currentType = typeRequired;
+        }
+        public override UITypeEditorEditStyle GetEditStyle(ITypeDescriptorContext context)
+        {
+            return UITypeEditorEditStyle.DropDown;
+        }
+
+        private static string GetNiceName(String name)
+        {
+            if (name.StartsWith("OBJECT_")) name = name.Substring(7);
+            if (name.StartsWith("SERVICE_SUPPORTED_")) name = name.Substring(18);
+            if (name.StartsWith("STATUS_FLAG_")) name = name.Substring(12);
+            if (name.StartsWith("EVENT_ENABLE_")) name = name.Substring(13);
+            if (name.StartsWith("EVENT_")) name = name.Substring(6);
+            
+            name = name.Replace('_', ' ');
+            name = System.Threading.Thread.CurrentThread.CurrentCulture.TextInfo.ToTitleCase(name.ToLower());
+            return name;
+        }
+
+        public override object EditValue(ITypeDescriptorContext context, IServiceProvider provider, object value)
+        {
+            if (provider != null)
+            {
+                this.editorService = provider.GetService(typeof(IWindowsFormsEditorService)) as IWindowsFormsEditorService;
+            }
+            if (this.editorService != null)
+            {
+                if (ObjetList==null)
+                {
+                    ObjetList= new ListBox();
+                    String bbs = value.ToString();
+
+                    for (int i=0;i<bbs.Length;i++)
+                    {
+                        if (bbs[i] == '1')
+                        {
+                            try
+                            {
+                                if (currentType == ValueType.ObjectSupported)
+                                    ObjetList.Items.Add(GetNiceName(((BacnetObjectTypes)i).ToString()));
+                                else if (currentType == ValueType.ServicesSupported)
+                                    ObjetList.Items.Add(GetNiceName(((BacnetServicesSupported)i).ToString()));
+                                else if (currentType == ValueType.StatusFlag)
+                                    ObjetList.Items.Add(GetNiceName(((BacnetStatusFlags)(1<<i)).ToString()));
+                                else if (currentType == ValueType.Ack)
+                                    ObjetList.Items.Add(GetNiceName(((BacnetEventNotificationData.BacnetEventEnable)(1 << i)).ToString()));
+                                else if (currentType == ValueType.LimitEnable)
+                                    ObjetList.Items.Add(GetNiceName(((BacnetEventNotificationData.BacnetLimitEnable)(1 << i)).ToString()));
+                            }
+                            catch { }
+                        }
+                    }
+                }
+
+                if (ObjetList.Items.Count == 0)
+                    ObjetList.Items.Add("...Nothing");
+
+                this.editorService.DropDownControl(ObjetList);
+            }
+            return value;
+        }
+    }
     /// <summary>
 	/// Custom PropertyDescriptor
 	/// </summary>
@@ -931,7 +1007,6 @@ namespace Utilities
             TypeDescriptor.AddAttributes(typeof(BacnetDeviceObjectPropertyReference), new TypeConverterAttribute(typeof(BacnetDeviceObjectPropertyReferenceConverter)));
             TypeDescriptor.AddAttributes(typeof(BacnetObjectId), new TypeConverterAttribute(typeof(BacnetObjectIdentifierConverter)));
             TypeDescriptor.AddAttributes(typeof(BacnetBitString), new TypeConverterAttribute(typeof(BacnetBitStringConverter)));
-            //TypeDescriptor.AddAttributes(typeof(DateTime), new EditorAttribute(typeof(DateTimePickerEditor), typeof(System.Drawing.Design.UITypeEditor)));
         }
 
 		public CustomPropertyDescriptor(ref CustomProperty myProperty, Attribute [] attrs) :base(myProperty.Name, attrs)
@@ -1031,6 +1106,12 @@ namespace Utilities
         public override object GetEditor(Type editorBaseType)
         {
             if (m_Property.bacnetApplicationTags == BacnetApplicationTags.BACNET_APPLICATION_TAG_TIME) return new BacnetTimePickerEditor();
+            else if (m_Property.Name == "Protocol Object Types Supported") return new BacnetBitStringToEnumListDisplay(BacnetBitStringToEnumListDisplay.ValueType.ObjectSupported);
+            else if (m_Property.Name == "Protocol Services Supported") return new BacnetBitStringToEnumListDisplay(BacnetBitStringToEnumListDisplay.ValueType.ServicesSupported);
+            else if (m_Property.Name == "Status Flags") return new BacnetBitStringToEnumListDisplay(BacnetBitStringToEnumListDisplay.ValueType.StatusFlag);
+            else if ((m_Property.Name == "Ack Required") || (m_Property.Name == "Acked Transitions") || (m_Property.Name == "Event Enable")) return new BacnetBitStringToEnumListDisplay(BacnetBitStringToEnumListDisplay.ValueType.Ack);
+            else if (m_Property.Name == "Limit Enable") return new BacnetBitStringToEnumListDisplay(BacnetBitStringToEnumListDisplay.ValueType.LimitEnable);
+
             else return base.GetEditor(editorBaseType);
         }
 
