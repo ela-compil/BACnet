@@ -819,6 +819,18 @@ namespace Yabe
                         });
         }
 
+        private List<BacnetObjectId> SortBacnetObjects(IList<BacnetValue> RawList)
+        {
+
+            List<BacnetObjectId> SortedList = new List<BacnetObjectId>();
+            foreach (BacnetValue value in RawList)
+                SortedList.Add((BacnetObjectId)value.Value);
+
+            SortedList.Sort();
+
+            return SortedList;
+        }
+
         private void m_DeviceTree_AfterSelect(object sender, TreeViewEventArgs e)
         {
             KeyValuePair<BacnetAddress, uint>? entry = e.Node.Tag as KeyValuePair<BacnetAddress, uint>?;
@@ -920,11 +932,11 @@ namespace Yabe
                             return;
                         }
                     }
-                    
+
+                    List<BacnetObjectId> objectList= SortBacnetObjects(value_list);
                     //add to tree
-                    foreach (BacnetValue value in value_list)
+                    foreach (BacnetObjectId bobj_id in objectList)
                     {
-                        BacnetObjectId bobj_id = (BacnetObjectId)value.Value;
                         AddObjectEntry(comm, adr, null, bobj_id, m_AddressSpaceTree.Nodes);//AddObjectEntry(comm, adr, null, bobj_id, e.Node.Nodes);
                         
                         // Add FC
@@ -961,13 +973,9 @@ namespace Yabe
                 IList<BacnetValue> values;
                 if (comm.ReadPropertyRequest(adr, object_id, BacnetPropertyIds.PROP_SUBORDINATE_LIST, out values))
                 {
-                    foreach (BacnetValue value in values)
-                    {
-                        if (value.Value is BacnetObjectId)
-                        {
-                            AddObjectEntry(comm, adr, null, (BacnetObjectId)value.Value, nodes);
-                        }
-                    }
+                    List<BacnetObjectId> objectList = SortBacnetObjects(values);
+                    foreach (BacnetObjectId objid in objectList)
+                        AddObjectEntry(comm, adr, null, objid, nodes);
                 }
                 else
                 {

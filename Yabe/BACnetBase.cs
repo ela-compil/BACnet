@@ -1252,7 +1252,7 @@ namespace System.IO.BACnet
         }
     }
 
-    public struct BacnetObjectId
+    public struct BacnetObjectId : IComparable<BacnetObjectId>
     {
         public BacnetObjectTypes type;
         public UInt32 instance;
@@ -1284,7 +1284,16 @@ namespace System.IO.BACnet
             if (obj == null) return false;
             else return obj.ToString().Equals(this.ToString());
         }
+        public int CompareTo(BacnetObjectId other)
+        {
+            if (this.type == BacnetObjectTypes.OBJECT_DEVICE) return -1;
+            if (other.type == BacnetObjectTypes.OBJECT_DEVICE) return 1;
 
+            if (this.type == other.type)
+                return this.instance.CompareTo(other.instance);
+            else
+                return this.type.CompareTo(other.type);
+        }
         public static BacnetObjectId Parse(string value)
         {
             BacnetObjectId ret = new BacnetObjectId();
@@ -1297,6 +1306,7 @@ namespace System.IO.BACnet
             ret.instance = uint.Parse(str_instance);
             return ret;
         }
+
     };
 
     public struct BacnetPropertyReference
