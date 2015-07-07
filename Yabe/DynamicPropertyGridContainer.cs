@@ -923,17 +923,21 @@ namespace Utilities
     // In order to give a readable list instead of a bitstring
     public class BacnetBitStringToEnumListDisplay : UITypeEditor
     {
-        public enum ValueType {ObjectSupported,ServicesSupported,StatusFlag, Ack, LimitEnable}; 
-
         IWindowsFormsEditorService editorService;
 
         ListBox ObjetList;
-        ValueType currentType;
 
-        public BacnetBitStringToEnumListDisplay(ValueType typeRequired)
+        bool LinearEnum;
+        Enum currentPropertyEnum;
+
+        // the corresponding Enum is given in parameters
+        // and also how the value is fixed 0,1,2... or 1,2,4,8... in the enumeration
+        public BacnetBitStringToEnumListDisplay(Enum e, bool LinearEnum)
         {
-            currentType = typeRequired;
+            currentPropertyEnum = e; 
+            this.LinearEnum = LinearEnum;
         }
+
         public override UITypeEditorEditStyle GetEditStyle(ITypeDescriptorContext context)
         {
             return UITypeEditorEditStyle.DropDown;
@@ -971,16 +975,13 @@ namespace Utilities
                         {
                             try
                             {
-                                if (currentType == ValueType.ObjectSupported)
-                                    ObjetList.Items.Add(GetNiceName(((BacnetObjectTypes)i).ToString()));
-                                else if (currentType == ValueType.ServicesSupported)
-                                    ObjetList.Items.Add(GetNiceName(((BacnetServicesSupported)i).ToString()));
-                                else if (currentType == ValueType.StatusFlag)
-                                    ObjetList.Items.Add(GetNiceName(((BacnetStatusFlags)(1<<i)).ToString()));
-                                else if (currentType == ValueType.Ack)
-                                    ObjetList.Items.Add(GetNiceName(((BacnetEventNotificationData.BacnetEventEnable)(1 << i)).ToString()));
-                                else if (currentType == ValueType.LimitEnable)
-                                    ObjetList.Items.Add(GetNiceName(((BacnetEventNotificationData.BacnetLimitEnable)(1 << i)).ToString()));
+                                String Text;
+                                if (LinearEnum==true)
+                                    Text = Enum.GetName(currentPropertyEnum.GetType(), i);
+                                else
+                                    Text = Enum.GetName(currentPropertyEnum.GetType(), 1 << i);
+
+                                ObjetList.Items.Add(GetNiceName(Text));
                             }
                             catch { }
                         }
@@ -988,7 +989,7 @@ namespace Utilities
                 }
 
                 if (ObjetList.Items.Count == 0)
-                    ObjetList.Items.Add("...Nothing");
+                    ObjetList.Items.Add("... Nothing");
 
                 this.editorService.DropDownControl(ObjetList);
             }
@@ -999,15 +1000,15 @@ namespace Utilities
     // In order to give a readable name to classic enums
     public class BacnetEnumValueDisplay : UITypeEditor
     {
-        public enum ValueType { Polarity, EventState, Reliability }; 
-
-        TextBox EnumString;
+        Label EnumString;
         IWindowsFormsEditorService editorService;
-        ValueType currentType;
 
-        public BacnetEnumValueDisplay(ValueType typeRequired)
+        Enum currentPropertyEnum;
+
+        // the corresponding Enum is given in parameter
+        public BacnetEnumValueDisplay(Enum e)
         {
-            currentType = typeRequired;
+            currentPropertyEnum = e;
         }
 
         public override UITypeEditorEditStyle GetEditStyle(ITypeDescriptorContext context)
@@ -1020,7 +1021,9 @@ namespace Utilities
             if (name.StartsWith("EVENT_STATE_")) name = name.Substring(12);
             if (name.StartsWith("POLARITY_")) name = name.Substring(9);
             if (name.StartsWith("RELIABILITY_")) name = name.Substring(12);
-
+            if (name.StartsWith("SEGMENTATION_")) name = name.Substring(13);
+            if (name.StartsWith("STATUS_")) name = name.Substring(13);      
+     
             name = name.Replace('_', ' ');
             name = System.Threading.Thread.CurrentThread.CurrentCulture.TextInfo.ToTitleCase(name.ToLower());
             return name;
@@ -1037,14 +1040,11 @@ namespace Utilities
 
                 if (EnumString == null)
                 {
-                    EnumString = new TextBox();
+                    EnumString = new Label();
                     uint i=(uint)value;
-                    if (currentType==ValueType.EventState)
-                        EnumString.Text = GetNiceName(((BacnetEventNotificationData.BacnetEventStates)i).ToString());
-                    else if (currentType == ValueType.Polarity)
-                        EnumString.Text = GetNiceName(((BacnetPolarity)i).ToString());
-                    else if (currentType == ValueType.Reliability)
-                        EnumString.Text = GetNiceName(((BacnetReliability)i).ToString());
+
+                    String Text = Enum.GetName(currentPropertyEnum.GetType(), i);
+                    EnumString.Text = GetNiceName(Text) + " (" + i.ToString() + ")";
                 }
                 this.editorService.DropDownControl(EnumString);
             }
@@ -1161,20 +1161,45 @@ namespace Utilities
             }
         }
 
+        // Give a way to display/modify some specifics values in ListBox, TextBox, ...
         public override object GetEditor(Type editorBaseType)
         {
+            // All Bacnet Time as this
             if (m_Property.bacnetApplicationTags == BacnetApplicationTags.BACNET_APPLICATION_TAG_TIME) return new BacnetTimePickerEditor();
-            else if (m_Property.Name == "Protocol Object Types Supported") return new BacnetBitStringToEnumListDisplay(BacnetBitStringToEnumListDisplay.ValueType.ObjectSupported);
-            else if (m_Property.Name == "Protocol Services Supported") return new BacnetBitStringToEnumListDisplay(BacnetBitStringToEnumListDisplay.ValueType.ServicesSupported);
-            else if (m_Property.Name == "Status Flags") return new BacnetBitStringToEnumListDisplay(BacnetBitStringToEnumListDisplay.ValueType.StatusFlag);
-            else if ((m_Property.Name == "Ack Required") || (m_Property.Name == "Acked Transitions") || (m_Property.Name == "Event Enable")) return new BacnetBitStringToEnumListDisplay(BacnetBitStringToEnumListDisplay.ValueType.Ack);
-            else if (m_Property.Name == "Limit Enable") return new BacnetBitStringToEnumListDisplay(BacnetBitStringToEnumListDisplay.ValueType.LimitEnable);
-            else if (m_Property.Name == "Event State") return new BacnetEnumValueDisplay(BacnetEnumValueDisplay.ValueType.EventState);
-            else if (m_Property.Name == "Polarity") return new BacnetEnumValueDisplay(BacnetEnumValueDisplay.ValueType.Polarity);
-            else if (m_Property.Name == "Reliability") return new BacnetEnumValueDisplay(BacnetEnumValueDisplay.ValueType.Reliability);
+            
+            BacnetPropertyReference bpr=(BacnetPropertyReference)m_Property.Tag;
 
+            // A lot of classic Bacnet Enum & BitString
+            switch ((BacnetPropertyIds)bpr.propertyIdentifier)
+            {
+                case BacnetPropertyIds.PROP_PROTOCOL_OBJECT_TYPES_SUPPORTED:
+                    return new BacnetBitStringToEnumListDisplay(new BacnetObjectTypes(), true);
+                case BacnetPropertyIds.PROP_PROTOCOL_SERVICES_SUPPORTED:
+                    return new BacnetBitStringToEnumListDisplay(new BacnetServicesSupported(), true);
+                case BacnetPropertyIds.PROP_STATUS_FLAGS:
+                    return new BacnetBitStringToEnumListDisplay(new BacnetStatusFlags(), false);
+                case BacnetPropertyIds.PROP_LIMIT_ENABLE:
+                    return new BacnetBitStringToEnumListDisplay(new BacnetEventNotificationData.BacnetLimitEnable(), false);
 
-            else return base.GetEditor(editorBaseType);
+                case BacnetPropertyIds.PROP_EVENT_ENABLE:
+                case BacnetPropertyIds.PROP_ACK_REQUIRED:
+                case BacnetPropertyIds.PROP_ACKED_TRANSITIONS:
+                    return new BacnetBitStringToEnumListDisplay(new BacnetEventNotificationData.BacnetEventEnable(), false);
+
+                case BacnetPropertyIds.PROP_EVENT_STATE:
+                    return new BacnetEnumValueDisplay(new BacnetEventNotificationData.BacnetEventStates());
+                case BacnetPropertyIds.PROP_POLARITY:
+                    return new BacnetEnumValueDisplay(new BacnetPolarity());
+                case BacnetPropertyIds.PROP_RELIABILITY:
+                    return new BacnetEnumValueDisplay(new BacnetReliability());
+                case BacnetPropertyIds.PROP_SEGMENTATION_SUPPORTED:
+                    return new BacnetEnumValueDisplay(new BacnetSegmentations());
+                case BacnetPropertyIds.PROP_SYSTEM_STATUS:
+                    return new BacnetEnumValueDisplay(new BacnetDeviceStatus());
+                default :
+                    return base.GetEditor(editorBaseType);
+            }
+
         }
 
         public DynamicEnum Options

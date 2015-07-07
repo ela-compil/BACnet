@@ -67,16 +67,15 @@ namespace System.IO.BACnet
         MAX_BACNET_SEGMENTATION = 4
     };
 
-    public enum BacnetDeviceStatus
+    public enum BacnetDeviceStatus : byte
     {
-        STATUS_OPERATIONAL = 0,
-        STATUS_OPERATIONAL_READ_ONLY = 1,
-        STATUS_DOWNLOAD_REQUIRED = 2,
-        STATUS_DOWNLOAD_IN_PROGRESS = 3,
-        STATUS_NON_OPERATIONAL = 4,
-        STATUS_BACKUP_IN_PROGRESS = 5,
-        MAX_DEVICE_STATUS = 6
-    };
+        OPERATIONAL = 0,
+        OPERATIONAL_READONLY = 1,
+        DOWNLOAD_REQUIRED = 2,
+        DOWNLOAD_IN_PROGRESS = 3,
+        NON_OPERATIONAL = 4,
+        BACKUP_IN_PROGRESS = 5
+    }
 
     [Flags]
     public enum BacnetResultFlags
