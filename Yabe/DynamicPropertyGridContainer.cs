@@ -995,9 +995,67 @@ namespace Utilities
             return value;
         }
     }
+
+    // In order to give a readable name to classic enums
+    public class BacnetEnumValueDisplay : UITypeEditor
+    {
+        public enum ValueType { Polarity, EventState, Reliability }; 
+
+        TextBox EnumString;
+        IWindowsFormsEditorService editorService;
+        ValueType currentType;
+
+        public BacnetEnumValueDisplay(ValueType typeRequired)
+        {
+            currentType = typeRequired;
+        }
+
+        public override UITypeEditorEditStyle GetEditStyle(ITypeDescriptorContext context)
+        {
+            return UITypeEditorEditStyle.DropDown;
+        }
+
+        private static string GetNiceName(String name)
+        {
+            if (name.StartsWith("EVENT_STATE_")) name = name.Substring(12);
+            if (name.StartsWith("POLARITY_")) name = name.Substring(9);
+            if (name.StartsWith("RELIABILITY_")) name = name.Substring(12);
+
+            name = name.Replace('_', ' ');
+            name = System.Threading.Thread.CurrentThread.CurrentCulture.TextInfo.ToTitleCase(name.ToLower());
+            return name;
+        }
+
+        public override object EditValue(ITypeDescriptorContext context, IServiceProvider provider, object value)
+        {            
+            if (provider != null)
+            {
+                this.editorService = provider.GetService(typeof(IWindowsFormsEditorService)) as IWindowsFormsEditorService;
+            }
+            if (this.editorService != null)
+            {
+
+                if (EnumString == null)
+                {
+                    EnumString = new TextBox();
+                    uint i=(uint)value;
+                    if (currentType==ValueType.EventState)
+                        EnumString.Text = GetNiceName(((BacnetEventNotificationData.BacnetEventStates)i).ToString());
+                    else if (currentType == ValueType.Polarity)
+                        EnumString.Text = GetNiceName(((BacnetPolarity)i).ToString());
+                    else if (currentType == ValueType.Reliability)
+                        EnumString.Text = GetNiceName(((BacnetReliability)i).ToString());
+                }
+                this.editorService.DropDownControl(EnumString);
+            }
+            return value;
+        }
+    }
+
     /// <summary>
 	/// Custom PropertyDescriptor
 	/// </summary>
+    /// 
 	class CustomPropertyDescriptor: PropertyDescriptor
 	{
 		CustomProperty m_Property;
@@ -1111,6 +1169,10 @@ namespace Utilities
             else if (m_Property.Name == "Status Flags") return new BacnetBitStringToEnumListDisplay(BacnetBitStringToEnumListDisplay.ValueType.StatusFlag);
             else if ((m_Property.Name == "Ack Required") || (m_Property.Name == "Acked Transitions") || (m_Property.Name == "Event Enable")) return new BacnetBitStringToEnumListDisplay(BacnetBitStringToEnumListDisplay.ValueType.Ack);
             else if (m_Property.Name == "Limit Enable") return new BacnetBitStringToEnumListDisplay(BacnetBitStringToEnumListDisplay.ValueType.LimitEnable);
+            else if (m_Property.Name == "Event State") return new BacnetEnumValueDisplay(BacnetEnumValueDisplay.ValueType.EventState);
+            else if (m_Property.Name == "Polarity") return new BacnetEnumValueDisplay(BacnetEnumValueDisplay.ValueType.Polarity);
+            else if (m_Property.Name == "Reliability") return new BacnetEnumValueDisplay(BacnetEnumValueDisplay.ValueType.Reliability);
+
 
             else return base.GetEditor(editorBaseType);
         }

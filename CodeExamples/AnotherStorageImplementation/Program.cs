@@ -158,7 +158,7 @@ namespace AnotherStorageImplementation
                 1,
                 6
                 );
-            for (int i = 1; i < 7; i++) m.m_PROP_STATE_TEXT[0] = new BacnetValue("Text Level " + i.ToString());
+            for (int i = 1; i < 7; i++) m.m_PROP_STATE_TEXT[i-1] = new BacnetValue("Text Level " + i.ToString());
 
             s.AddBacnetObject(m); // in the view
 
