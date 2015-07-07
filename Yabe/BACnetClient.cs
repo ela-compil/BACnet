@@ -1825,7 +1825,7 @@ namespace System.IO.BACnet
                     {
                         Exception ex;
                         EndDeviceCommunicationControlRequest(result, out ex);
-                        if (ex != null) throw ex;
+                        if (ex != null) return false;
                         else return true;
                     }
                     result.Resend();
@@ -1878,7 +1878,7 @@ namespace System.IO.BACnet
                     {
                         Exception ex;
                         EndReinitializeRequest(result, out ex);
-                        if (ex != null) throw ex;
+                        if (ex != null) return false;
                         else return true;
                     }
                     result.Resend();

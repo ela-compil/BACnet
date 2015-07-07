@@ -675,14 +675,25 @@ namespace Yabe
             if (m_DeviceTree.SelectedNode == null) return;
             else if (m_DeviceTree.SelectedNode.Tag == null) return;
             KeyValuePair<BacnetAddress, uint>? device_entry = m_DeviceTree.SelectedNode.Tag as KeyValuePair<BacnetAddress, uint>?;
-            BacnetClient comm_entry = m_DeviceTree.SelectedNode.Tag as BacnetClient;
+            BacnetClient comm_entry; 
+            if (m_DeviceTree.SelectedNode.Tag is BacnetClient)    
+                comm_entry = m_DeviceTree.SelectedNode.Tag as BacnetClient;
+            else
+                 comm_entry = m_DeviceTree.SelectedNode.Parent.Tag as BacnetClient;
+
             if (device_entry != null)
             {
                 if (MessageBox.Show(this, "Delete this device?", "Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == System.Windows.Forms.DialogResult.Yes)
                 {
-                    m_devices[(BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag].Devices.Remove((KeyValuePair<BacnetAddress, uint>)device_entry);
-                    if (m_devices[(BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag].Devices.Count == 0)
-                        m_devices.Remove((BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag);
+                    BacnetClient comm;
+                    if (m_DeviceTree.SelectedNode.Parent.Tag is BacnetClient)
+                        comm = m_DeviceTree.SelectedNode.Parent.Tag as BacnetClient;
+                    else
+                        comm = m_DeviceTree.SelectedNode.Parent.Parent.Tag as BacnetClient; // device under a router
+
+                    m_devices[comm].Devices.Remove((KeyValuePair<BacnetAddress, uint>)device_entry);
+                    if (m_devices[comm].Devices.Count == 0)
+                        m_devices.Remove(comm);
                     m_DeviceTree.Nodes.Remove(m_DeviceTree.SelectedNode);
                     RemoveSubscriptions((KeyValuePair<BacnetAddress, uint>)device_entry);
                 }
@@ -1951,7 +1962,10 @@ namespace Yabe
                 KeyValuePair<BacnetAddress, uint> entry = (KeyValuePair<BacnetAddress, uint>)m_DeviceTree.SelectedNode.Tag;
                 adr = entry.Key;
                 device_id = entry.Value;
-                comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag;
+                if (m_DeviceTree.SelectedNode.Parent.Tag is BacnetClient)
+                    comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag;
+                else
+                    comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Parent.Tag; // When device is under a Router
             }
             finally
             {
@@ -2030,7 +2044,11 @@ namespace Yabe
             else if (!(m_DeviceTree.SelectedNode.Tag is KeyValuePair<BacnetAddress, uint>)) return;
             KeyValuePair<BacnetAddress, uint> entry = (KeyValuePair<BacnetAddress, uint>)m_DeviceTree.SelectedNode.Tag;
             BacnetAddress adr = entry.Key;
-            BacnetClient comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag;
+            BacnetClient comm;
+            if (m_DeviceTree.SelectedNode.Parent.Tag is BacnetClient)
+                comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag;
+            else
+                comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Parent.Tag; // When device is under a Router
             uint device_id = entry.Value;
 
             //fetch object_id
@@ -2130,7 +2148,10 @@ namespace Yabe
                 KeyValuePair<BacnetAddress, uint> entry = (KeyValuePair<BacnetAddress, uint>)m_DeviceTree.SelectedNode.Tag;
                 adr = entry.Key;
                 device_id = entry.Value;
-                comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag;
+                if (m_DeviceTree.SelectedNode.Parent.Tag is BacnetClient)
+                    comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag;
+                else
+                    comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Parent.Tag; // When device is under a Router
             }
             finally
             {
@@ -2161,7 +2182,10 @@ namespace Yabe
                 KeyValuePair<BacnetAddress, uint> entry = (KeyValuePair<BacnetAddress, uint>)m_DeviceTree.SelectedNode.Tag;
                 adr = entry.Key;
                 device_id = entry.Value;
-                comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag;
+                if (m_DeviceTree.SelectedNode.Parent.Tag is BacnetClient)
+                    comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag;
+                else
+                    comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Parent.Tag; // When device is under a Router
             }
             finally
             {
@@ -2211,7 +2235,10 @@ namespace Yabe
                 KeyValuePair<BacnetAddress, uint> entry = (KeyValuePair<BacnetAddress, uint>)m_DeviceTree.SelectedNode.Tag;
                 adr = entry.Key;
                 device_id = entry.Value;
-                comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag;
+                if (m_DeviceTree.SelectedNode.Parent.Tag is BacnetClient)
+                    comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag;
+                else
+                    comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Parent.Tag; // When device is under a Router
             }
             finally
             {
