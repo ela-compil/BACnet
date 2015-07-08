@@ -80,8 +80,8 @@
     <Setting Name="DefaultUdpIp" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="DefaultWritePriority" Type="System.UInt32" Scope="User">
-      <Value Profile="(Default)">16</Value>
+    <Setting Name="DefaultWritePriority" Type="System.IO.BACnet.BacnetWritePriority" Scope="User">
+      <Value Profile="(Default)">LOWEST_AND_DEFAULT</Value>
     </Setting>
     <Setting Name="YabeDeviceId" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">-1</Value>

@@ -888,6 +888,27 @@ namespace System.IO.BACnet
         BACNET_APPLICATION_TAG_LOG_RECORD,
     };
 
+    public enum BacnetWritePriority
+    {
+        NO_PRIORITY = 0,
+        MANUAL_LIFE_SAFETY=1,
+        AUTOMATIC_LIFE_SAFETY=2,
+        UNSPECIFIED_LEVEL_3=3,
+        UNSPECIFIED_LEVEL_4=4,
+        CRITICAL_EQUIPMENT_CONTROL=5,
+        MINIMUM_ON_OFF=6,
+        UNSPECIFIED_LEVEL_7=7,
+        MANUAL_OPERATOR=8,
+        UNSPECIFIED_LEVEL_9=9,
+        UNSPECIFIED_LEVEL_10=10,
+        UNSPECIFIED_LEVEL_11=11,
+        UNSPECIFIED_LEVEL_12=12,
+        UNSPECIFIED_LEVEL_13=13,
+        UNSPECIFIED_LEVEL_14=14,
+        UNSPECIFIED_LEVEL_15=15,
+        LOWEST_AND_DEFAULT=16
+    }
+
     public enum BacnetCharacterStringEncodings
     {
         CHARACTER_ANSI_X34 = 0,     /* deprecated */

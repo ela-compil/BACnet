@@ -1196,10 +1196,11 @@ namespace Utilities
                     return new BacnetEnumValueDisplay(new BacnetSegmentations());
                 case BacnetPropertyIds.PROP_SYSTEM_STATUS:
                     return new BacnetEnumValueDisplay(new BacnetDeviceStatus());
+                case BacnetPropertyIds.PROP_PRIORITY_FOR_WRITING:
+                    return new BacnetEnumValueDisplay(new BacnetWritePriority()); 
                 default :
                     return base.GetEditor(editorBaseType);
             }
-
         }
 
         public DynamicEnum Options

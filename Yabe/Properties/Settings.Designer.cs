@@ -337,10 +337,10 @@ namespace Yabe.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("16")]
-        public uint DefaultWritePriority {
+        [global::System.Configuration.DefaultSettingValueAttribute("LOWEST_AND_DEFAULT")]
+        public global::System.IO.BACnet.BacnetWritePriority DefaultWritePriority {
             get {
-                return ((uint)(this["DefaultWritePriority"]));
+                return ((global::System.IO.BACnet.BacnetWritePriority)(this["DefaultWritePriority"]));
             }
             set {
                 this["DefaultWritePriority"] = value;
