@@ -758,7 +758,14 @@ namespace Yabe
         private void AddObjectEntry(BacnetClient comm, BacnetAddress adr, string name, BacnetObjectId object_id, TreeNodeCollection nodes)
         {
             if (string.IsNullOrEmpty(name)) name = object_id.ToString();
-            TreeNode node = nodes.Add(name.Substring(7));
+            
+            TreeNode node;
+
+            if (name.StartsWith("OBJECT_"))
+                node = nodes.Add(name.Substring(7));
+            else
+                node = nodes.Add("PROPRIETARY:"+object_id.Instance.ToString()+" ("+name+")");  // Propertary Objects not in enum appears only with the number such as 584:0
+
             node.Tag = object_id;
 
             //icon
@@ -767,7 +774,7 @@ namespace Yabe
             //fetch sub properties
             if (object_id.type == BacnetObjectTypes.OBJECT_GROUP)
                 FetchGroupProperties(comm, adr, object_id, node.Nodes);
-            else if (object_id.type == BacnetObjectTypes.OBJECT_STRUCTURED_VIEW)
+            else if ((object_id.type == BacnetObjectTypes.OBJECT_STRUCTURED_VIEW) && Properties.Settings.Default.DefaultPreferStructuredView)
                 FetchViewObjects(comm, adr, object_id, node.Nodes);
         }
 
@@ -1042,9 +1049,15 @@ namespace Yabe
         private static string GetNiceName(BacnetPropertyIds property)
         {
             string name = property.ToString();
-            if(name.StartsWith("PROP_")) name = name.Substring(5);
-            name = name.Replace('_', ' ');
-            name = System.Threading.Thread.CurrentThread.CurrentCulture.TextInfo.ToTitleCase(name.ToLower());
+            if (name.StartsWith("PROP_"))
+            {
+                name = name.Substring(5);
+                name = name.Replace('_', ' ');
+                name = System.Threading.Thread.CurrentThread.CurrentCulture.TextInfo.ToTitleCase(name.ToLower());
+            }
+            else
+                //name = "Proprietary (" + property.ToString() + ")";
+                name = property.ToString() + " - Proprietary";
             return name;
         }
 

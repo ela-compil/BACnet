@@ -77,6 +77,19 @@ namespace System.IO.BACnet
         BACKUP_IN_PROGRESS = 5
     }
 
+    // From Loren Van Spronsen csharp-bacnet
+    public enum BacnetRestartReason
+    {
+        UNKNOWN = 0,
+        COLD_START = 1,
+        WARM_START = 2,
+        DETECTED_POWER_LOST = 3,
+        DETECTED_POWER_OFF = 4,
+        HARDWARE_WATCHDOG = 5,
+        SOFTWARE_WATCHDOG = 6,
+        SUSPENDED = 7
+    }
+
     [Flags]
     public enum BacnetResultFlags
     {
@@ -729,8 +742,6 @@ namespace System.IO.BACnet
         /* do the max range inside of enum so that
            compilers will allocate adequate sized datatype for enum
            which is used to store decoding */
-        RELIABILITY_PROPRIETARY_MIN = 64,
-        RELIABILITY_PROPRIETARY_MAX = 65535
     } ;
 
     public enum BacnetMaxSegments : byte
@@ -1082,8 +1093,6 @@ namespace System.IO.BACnet
             /* do the max range inside of enum so that
                compilers will allocate adequate sized datatype for enum
                which is used to store decoding */
-            EVENT_PROPRIETARY_MIN = 64,
-            EVENT_PROPRIETARY_MAX = 65535
         };
 
         public enum BacnetCOVTypes

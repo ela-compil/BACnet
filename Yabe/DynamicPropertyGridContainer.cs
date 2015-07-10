@@ -785,6 +785,16 @@ namespace Utilities
                 return true;
             return base.CanConvertTo(context, destinationType);
         }
+
+        public override bool CanConvertFrom(ITypeDescriptorContext context,
+                      System.Type sourceType)
+        {
+            if (sourceType == typeof(string))
+                return true;
+
+            return base.CanConvertFrom(context, sourceType);
+        }
+
         public override object ConvertTo(ITypeDescriptorContext context,
                         CultureInfo culture,
                         object value,
@@ -801,6 +811,28 @@ namespace Utilities
             else
                 return base.ConvertTo(context, culture, value, destinationType);          
           }
+
+        public override object ConvertFrom(ITypeDescriptorContext context,
+                      CultureInfo culture, object value)
+        {
+            if (value is string)
+            {
+                try
+                {
+                    // A realy hidden service !!!
+                    // and remember that PRESENT_VALUE = 85
+                    // entry like OBJECT_ANALOG_INPUT:0:85
+                    //
+                    string[] s = (value as String).Split(':');
+                    return new BacnetDeviceObjectPropertyReference(
+                            new BacnetObjectId((BacnetObjectTypes)Enum.Parse(typeof(BacnetObjectTypes), s[0]), Convert.ToUInt16(s[1])), 
+                            (BacnetPropertyIds)Convert.ToUInt16(s[2])
+                    );
+                }
+                catch { return null; }
+            }
+            return base.ConvertFrom(context, culture, value);
+        }
     }
 
     public class BacnetBitStringConverter : TypeConverter
@@ -1000,7 +1032,7 @@ namespace Utilities
     // In order to give a readable name to classic enums
     public class BacnetEnumValueDisplay : UITypeEditor
     {
-        Label EnumString;
+        ListBox EnumList;
         IWindowsFormsEditorService editorService;
 
         Enum currentPropertyEnum;
@@ -1022,7 +1054,8 @@ namespace Utilities
             if (name.StartsWith("POLARITY_")) name = name.Substring(9);
             if (name.StartsWith("RELIABILITY_")) name = name.Substring(12);
             if (name.StartsWith("SEGMENTATION_")) name = name.Substring(13);
-            if (name.StartsWith("STATUS_")) name = name.Substring(13);      
+            if (name.StartsWith("STATUS_")) name = name.Substring(7);
+            if (name.StartsWith("NOTIFY_")) name = name.Substring(7);
      
             name = name.Replace('_', ' ');
             name = System.Threading.Thread.CurrentThread.CurrentCulture.TextInfo.ToTitleCase(name.ToLower());
@@ -1037,16 +1070,21 @@ namespace Utilities
             }
             if (this.editorService != null)
             {
+                int CurrentIdx = (int)(uint)value;
 
-                if (EnumString == null)
+                if (EnumList == null)
                 {
-                    EnumString = new Label();
-                    uint i=(uint)value;
+                    EnumList = new ListBox();
 
-                    String Text = Enum.GetName(currentPropertyEnum.GetType(), i);
-                    EnumString.Text = GetNiceName(Text) + " (" + i.ToString() + ")";
+                    String[] sl=Enum.GetNames(currentPropertyEnum.GetType());
+                    for (int i = 0; i < sl.Length; i++)
+                        EnumList.Items.Add( i.ToString()+" : "+ GetNiceName(sl[i]));
+                    EnumList.SelectedIndex = CurrentIdx;
                 }
-                this.editorService.DropDownControl(EnumString);
+                this.editorService.DropDownControl(EnumList);
+
+                if (EnumList.SelectedIndex!=CurrentIdx)
+                    return (uint)EnumList.SelectedIndex;
             }
             return value;
         }
@@ -1186,6 +1224,12 @@ namespace Utilities
                 case BacnetPropertyIds.PROP_ACKED_TRANSITIONS:
                     return new BacnetBitStringToEnumListDisplay(new BacnetEventNotificationData.BacnetEventEnable(), false);
 
+                case BacnetPropertyIds.PROP_OBJECT_TYPE:
+                    return new BacnetEnumValueDisplay(new BacnetObjectTypes());
+                case BacnetPropertyIds.PROP_NOTIFY_TYPE:
+                    return new BacnetEnumValueDisplay(new BacnetEventNotificationData.BacnetNotifyTypes());
+                case BacnetPropertyIds.PROP_EVENT_TYPE:
+                    return new BacnetEnumValueDisplay(new BacnetEventNotificationData.BacnetEventTypes());
                 case BacnetPropertyIds.PROP_EVENT_STATE:
                     return new BacnetEnumValueDisplay(new BacnetEventNotificationData.BacnetEventStates());
                 case BacnetPropertyIds.PROP_POLARITY:
@@ -1196,6 +1240,8 @@ namespace Utilities
                     return new BacnetEnumValueDisplay(new BacnetSegmentations());
                 case BacnetPropertyIds.PROP_SYSTEM_STATUS:
                     return new BacnetEnumValueDisplay(new BacnetDeviceStatus());
+                case BacnetPropertyIds.PROP_LAST_RESTART_REASON:
+                    return new BacnetEnumValueDisplay(new BacnetRestartReason());
                 case BacnetPropertyIds.PROP_PRIORITY_FOR_WRITING:
                     return new BacnetEnumValueDisplay(new BacnetWritePriority()); 
                 default :
