@@ -1048,7 +1048,7 @@ namespace Utilities
             return UITypeEditorEditStyle.DropDown;
         }
 
-        private static string GetNiceName(String name)
+        public static string GetNiceName(String name)
         {
             if (name.StartsWith("EVENT_STATE_")) name = name.Substring(12);
             if (name.StartsWith("POLARITY_")) name = name.Substring(9);
@@ -1070,7 +1070,7 @@ namespace Utilities
             }
             if (this.editorService != null)
             {
-                int CurrentIdx = (int)(uint)value;
+                int InitialIdx = (int)(uint)value;
 
                 if (EnumList == null)
                 {
@@ -1078,15 +1078,46 @@ namespace Utilities
 
                     String[] sl=Enum.GetNames(currentPropertyEnum.GetType());
                     for (int i = 0; i < sl.Length; i++)
-                        EnumList.Items.Add( i.ToString()+" : "+ GetNiceName(sl[i]));
-                    EnumList.SelectedIndex = CurrentIdx;
+                    {
+                        if ((currentPropertyEnum.GetType() == typeof(BacnetObjectTypes)) && (i >= (int)BacnetObjectTypes.MAX_ASHRAE_OBJECT_TYPE))
+                            break;
+                        EnumList.Items.Add(i.ToString() + " : " + GetNiceName(sl[i]));
+                    }
+                    if (InitialIdx<EnumList.Items.Count)
+                        EnumList.SelectedIndex = InitialIdx;
                 }
                 this.editorService.DropDownControl(EnumList);
 
-                if (EnumList.SelectedIndex!=CurrentIdx)
+                if ((EnumList.SelectedIndex!=InitialIdx)&&(InitialIdx<EnumList.Items.Count))
                     return (uint)EnumList.SelectedIndex;
             }
             return value;
+        }
+    }
+    // used for BacnetTime (without Date, but stored in a DateTime struct)
+    public class BacnetEnumValueConverter : TypeConverter
+    {
+         Enum currentPropertyEnum;
+
+        // the corresponding Enum is given in parameter
+        public BacnetEnumValueConverter(Enum e)
+        {
+            currentPropertyEnum = e;
+        }
+
+        public override object ConvertTo(ITypeDescriptorContext context,
+                        CultureInfo culture,
+                        object value,
+                        System.Type destinationType)
+        {
+            if (destinationType == typeof(System.String) &&
+                value is uint)
+            {
+                int i = (int)(uint)value;
+                return i.ToString() + " : " + BacnetEnumValueDisplay.GetNiceName(Enum.GetName(currentPropertyEnum.GetType(), (uint)i));
+            }
+            else
+                return base.ConvertTo(context, culture, value, destinationType);
         }
     }
 
@@ -1195,7 +1226,33 @@ namespace Utilities
                 if (m_Property.Options != null) return new DynamicEnumConverter(m_Property.Options);
                 else if (m_Property.Type == typeof(float)) return new CustomSingleConverter();
                 else if (m_Property.bacnetApplicationTags == BacnetApplicationTags.BACNET_APPLICATION_TAG_TIME) return new BacnetTimeConverter();
-                else return base.Converter;
+
+                BacnetPropertyReference bpr = (BacnetPropertyReference)m_Property.Tag;
+                switch ((BacnetPropertyIds)bpr.propertyIdentifier)
+                {
+                    case BacnetPropertyIds.PROP_OBJECT_TYPE:
+                        return new BacnetEnumValueConverter(new BacnetObjectTypes());
+                    case BacnetPropertyIds.PROP_NOTIFY_TYPE:
+                        return new BacnetEnumValueConverter(new BacnetEventNotificationData.BacnetNotifyTypes());
+                    case BacnetPropertyIds.PROP_EVENT_TYPE:
+                        return new BacnetEnumValueConverter(new BacnetEventNotificationData.BacnetEventTypes());
+                    case BacnetPropertyIds.PROP_EVENT_STATE:
+                        return new BacnetEnumValueConverter(new BacnetEventNotificationData.BacnetEventStates());
+                    case BacnetPropertyIds.PROP_POLARITY:
+                        return new BacnetEnumValueConverter(new BacnetPolarity());
+                    case BacnetPropertyIds.PROP_RELIABILITY:
+                        return new BacnetEnumValueConverter(new BacnetReliability());
+                    case BacnetPropertyIds.PROP_SEGMENTATION_SUPPORTED:
+                        return new BacnetEnumValueConverter(new BacnetSegmentations());
+                    case BacnetPropertyIds.PROP_SYSTEM_STATUS:
+                        return new BacnetEnumValueConverter(new BacnetDeviceStatus());
+                    case BacnetPropertyIds.PROP_LAST_RESTART_REASON:
+                        return new BacnetEnumValueConverter(new BacnetRestartReason());
+                    case BacnetPropertyIds.PROP_PRIORITY_FOR_WRITING:
+                        return new BacnetEnumValueConverter(new BacnetWritePriority()); 
+                    default:
+                        return base.Converter;
+                }
             }
         }
 

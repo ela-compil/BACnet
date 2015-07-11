@@ -1386,7 +1386,13 @@ namespace Yabe
                 else if (!(m_DeviceTree.SelectedNode.Tag is KeyValuePair<BacnetAddress, uint>)) return;
                 KeyValuePair<BacnetAddress, uint> entry = (KeyValuePair<BacnetAddress, uint>)m_DeviceTree.SelectedNode.Tag;
                 BacnetAddress adr = entry.Key;
-                BacnetClient comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag;
+
+                BacnetClient comm;
+
+                if (m_DeviceTree.SelectedNode.Parent.Tag is BacnetClient)
+                    comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag;
+                else
+                    comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Parent.Tag; // a node under a router
 
                 //fetch object_id
                 if (m_AddressSpaceTree.SelectedNode == null) return;

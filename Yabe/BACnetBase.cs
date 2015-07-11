@@ -64,7 +64,6 @@ namespace System.IO.BACnet
         SEGMENTATION_TRANSMIT = 1,
         SEGMENTATION_RECEIVE = 2,
         SEGMENTATION_NONE = 3,
-        MAX_BACNET_SEGMENTATION = 4
     };
 
     public enum BacnetDeviceStatus : byte
@@ -799,7 +798,7 @@ namespace System.IO.BACnet
         OBJECT_LOAD_CONTROL = 28,
         OBJECT_STRUCTURED_VIEW = 29,
         OBJECT_ACCESS_DOOR = 30,
-        /* 31 was lighting output, but BACnet editor changed it... */
+        OBJECT_31 = 31,/* 31 was lighting output, but BACnet editor changed it... */        
         OBJECT_ACCESS_CREDENTIAL = 32,      /* Addendum 2008-j */
         OBJECT_ACCESS_POINT = 33,
         OBJECT_ACCESS_RIGHTS = 34,
@@ -5954,7 +5953,7 @@ namespace System.IO.BACnet.Serialize
                 return -1;
             len = ASN1.decode_enumerated(buffer, offset + apdu_len, len_value, out decoded_value);
             apdu_len += len;
-            if (decoded_value >= (uint)BacnetSegmentations.MAX_BACNET_SEGMENTATION)
+            if (decoded_value > (uint)BacnetSegmentations.SEGMENTATION_NONE)
                 return -1;
             segmentation = (BacnetSegmentations)decoded_value;
             /* Vendor ID - unsigned16 */
