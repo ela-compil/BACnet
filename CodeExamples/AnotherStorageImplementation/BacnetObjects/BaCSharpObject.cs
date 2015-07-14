@@ -247,7 +247,7 @@ namespace BaCSharp
             }
             catch { }
 
-            return (uint)((int)BacnetPropertyIds.MAX_BACNET_PROPERTY_ID+1);
+            return (uint)((int)BacnetPropertyIds.MAX_BACNET_PROPERTY_ID);
         }
 
         public bool ReadPropertyAll(BacnetClient sender, BacnetAddress adr, out IList<BacnetPropertyValue> values)
@@ -259,7 +259,7 @@ namespace BaCSharp
             foreach (MethodInfo m in allmethod)
             {
                 uint PropId = BacnetMethodNametoId(m.Name);         // looking for all with a 'Bacnet name'
-                if (PropId <= (uint)BacnetPropertyIds.MAX_BACNET_PROPERTY_ID)
+                if (PropId < (uint)BacnetPropertyIds.MAX_BACNET_PROPERTY_ID)
                     if (properties.Count(o => o.propertyIdentifier == (uint)PropId) == 0) // could be get_ and get2_, only one is required
                         properties.Add(new BacnetPropertyReference(PropId, System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL));
             }

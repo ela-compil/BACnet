@@ -225,7 +225,7 @@ namespace AnotherStorageImplementation
                 transition  // transition
             );
             nc.AddReportingRecipient(r);
-
+            
             r= new DeviceReportingRecipient
             (
                 week,
@@ -253,7 +253,7 @@ namespace AnotherStorageImplementation
                   new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_OUTPUT, 1),
                   BacnetPropertyIds.PROP_PRESENT_VALUE,
                   new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, 1234)));
-
+            
             sch.PROP_SCHEDULE_DEFAULT = (int)452;
 
             // Schedule a change today in 60 seconds

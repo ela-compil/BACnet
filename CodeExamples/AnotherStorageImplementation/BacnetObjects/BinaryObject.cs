@@ -60,20 +60,29 @@ namespace BaCSharp
             set
             {
                 m_PROP_OUT_OF_SERVICE = value;
+                m_PROP_STATUS_FLAGS.SetBit((byte)3, value);
                 InternalCOVManagement(BacnetPropertyIds.PROP_OUT_OF_SERVICE);
             }
         }
 
         public bool m_PRESENT_VALUE_ReadOnly = false;
-        public bool m_PROP_PRESENT_VALUE;
-        [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_BOOLEAN)]
-        public virtual bool PROP_PRESENT_VALUE
+        public uint m_PROP_PRESENT_VALUE;
+        [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED)]
+        public virtual uint PROP_PRESENT_VALUE
         {
             get { return m_PROP_PRESENT_VALUE; }
             set
             {
                 if (m_PRESENT_VALUE_ReadOnly == false)
-                    m_PROP_PRESENT_VALUE = value;
+                {
+                    if ((value == 0) || (value == 1))
+                    {
+                        m_PROP_PRESENT_VALUE = value;
+                        InternalCOVManagement(BacnetPropertyIds.PROP_PRESENT_VALUE);
+                    }
+                    else
+                        ErrorCode_PropertyWrite = ErrorCodes.OutOfRange;
+                }
                 else
                     ErrorCode_PropertyWrite = ErrorCodes.WriteAccessDenied;
             }
@@ -81,14 +90,10 @@ namespace BaCSharp
 
         // This property shows the same attribut as the previous, but without restriction
         // for internal usage, not for network callbacks
-        public virtual bool internal_PROP_PRESENT_VALUE
+        public virtual uint internal_PROP_PRESENT_VALUE
         {
             get { return m_PROP_PRESENT_VALUE; }
-            set
-            {
-                m_PROP_PRESENT_VALUE = value;
-                InternalCOVManagement(BacnetPropertyIds.PROP_PRESENT_VALUE);
-            }
+            set { m_PROP_PRESENT_VALUE = value; }
         }
 
         public BinaryObject(BacnetObjectId ObjId, String ObjName, String Description, bool InitialValue)
@@ -99,7 +104,7 @@ namespace BaCSharp
             m_PROP_STATUS_FLAGS.SetBit((byte)2, false);
             m_PROP_STATUS_FLAGS.SetBit((byte)3, false);
 
-            m_PROP_PRESENT_VALUE = InitialValue;
+            m_PROP_PRESENT_VALUE = InitialValue==true ? (uint)1 : 0;
 
         }
         public BinaryObject() { }

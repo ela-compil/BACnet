@@ -979,7 +979,8 @@ namespace Yabe
                 }
                 finally
                 {
-                    this.Cursor = Cursors.Default;
+                    this.Cursor = Cursors.Default; 
+                    m_DataGrid.SelectedObject = null;
                 }
             }
         }

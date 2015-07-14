@@ -50,11 +50,6 @@ namespace BaCSharp
         }
 
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED)]
-        public virtual uint PROP_POLARITY
-        {
-            get { return 0; }
-        }
-        [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED)]
         public virtual uint PROP_EVENT_STATE
         {
             get { return 0; }
@@ -67,15 +62,15 @@ namespace BaCSharp
             get { return m_PROP_STATUS_FLAGS; }
         }
 
-        public bool m_PROP_ENABLED = true;
+        public bool m_PROP_ENABLE = true;
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_BOOLEAN)]
-        public virtual bool PROP_ENABLED
+        public virtual bool PROP_ENABLE
         {
-            get { return m_PROP_ENABLED; }
+            get { return m_PROP_ENABLE; }
             set
             {
-                m_PROP_ENABLED = value;
-                InternalCOVManagement(BacnetPropertyIds.PROP_PRESENT_VALUE);
+                m_PROP_ENABLE = value;
+                InternalCOVManagement(BacnetPropertyIds.PROP_ENABLE);
             }
         }
 

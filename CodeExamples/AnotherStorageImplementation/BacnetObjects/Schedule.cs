@@ -47,6 +47,7 @@ namespace BaCSharp
             set
             {  
                 m_PROP_OUT_OF_SERVICE = value;
+                m_PROP_STATUS_FLAGS.SetBit((byte)3, value);
                 InternalCOVManagement(BacnetPropertyIds.PROP_OUT_OF_SERVICE);
                 DoScheduling();
             }
@@ -101,7 +102,6 @@ namespace BaCSharp
             set
             {
                 m_PROP_PRESENT_VALUE = value;
-                InternalCOVManagement(BacnetPropertyIds.PROP_PRESENT_VALUE);
                 DoDispatchValue();
             }
         }

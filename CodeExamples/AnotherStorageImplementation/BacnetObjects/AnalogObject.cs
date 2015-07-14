@@ -61,6 +61,7 @@ namespace BaCSharp
             get { return m_PROP_OUT_OF_SERVICE; }
             set { 
                     m_PROP_OUT_OF_SERVICE=value;
+                    m_PROP_STATUS_FLAGS.SetBit((byte)3, value);
                     InternalCOVManagement(BacnetPropertyIds.PROP_OUT_OF_SERVICE);
                 }
         }
@@ -77,6 +78,9 @@ namespace BaCSharp
                     internal_PROP_PRESENT_VALUE = value;
                 else
                     ErrorCode_PropertyWrite = ErrorCodes.WriteAccessDenied;
+
+                InternalCOVManagement(BacnetPropertyIds.PROP_PRESENT_VALUE);
+                IntrinsicReportingManagement();
             }
         }
 
@@ -85,11 +89,7 @@ namespace BaCSharp
         public virtual T internal_PROP_PRESENT_VALUE
         {
             get { return m_PROP_PRESENT_VALUE; }
-            set { 
-                    m_PROP_PRESENT_VALUE = value; 
-                    InternalCOVManagement(BacnetPropertyIds.PROP_PRESENT_VALUE);
-                    IntrinsicReportingManagement();
-                }
+            set { m_PROP_PRESENT_VALUE = value; IntrinsicReportingManagement(); }
         }
 
         public AnalogObject() {}

@@ -64,7 +64,7 @@ namespace BaCSharp
             get { return m_PROP_RELINQUISH_DEFAULT; }
             set { 
                     m_PROP_RELINQUISH_DEFAULT=value;
-                    InternalCOVManagement(BacnetPropertyIds.PROP_PRESENT_VALUE);
+                    InternalCOVManagement(BacnetPropertyIds.PROP_RELINQUISH_DEFAULT);
                 }
         }
 
@@ -93,7 +93,7 @@ namespace BaCSharp
         protected override uint BacnetMethodNametoId(String Name)
         {
             if ((UsePriorityArray == false) && ((Name == "get_PROP_PRIORITY_ARRAY") || (Name == "get_PROP_RELINQUISH_DEFAULT")))  // Hide these properties
-                return (uint)((int)BacnetPropertyIds.MAX_BACNET_PROPERTY_ID + 1);
+                return (uint)((int)BacnetPropertyIds.MAX_BACNET_PROPERTY_ID);
             else
                 return base.BacnetMethodNametoId(Name);
         }
@@ -105,7 +105,7 @@ namespace BaCSharp
         {
             if (UsePriorityArray == false)
             {
-                m_PROP_PRESENT_VALUE = (T) Value[0].Value;
+                PROP_PRESENT_VALUE = (T) Value[0].Value;
                 return;
             }
             else
@@ -117,14 +117,14 @@ namespace BaCSharp
                 {
                     if (m_PROP_PRIORITY_ARRAY[i].Value != null)    // A value is OK
                     {
-                        m_PROP_PRESENT_VALUE = (T)m_PROP_PRIORITY_ARRAY[i].Value;
+                        PROP_PRESENT_VALUE = (T)m_PROP_PRIORITY_ARRAY[i].Value;
                         done = true;
                         break;
                     }
                 }
                 if (done == false)  // Nothing in the array : PROP_PRESENT_VALUE = PROP_RELINQUISH_DEFAULT
                 {
-                    m_PROP_PRESENT_VALUE = m_PROP_RELINQUISH_DEFAULT;
+                    PROP_PRESENT_VALUE = m_PROP_RELINQUISH_DEFAULT;
                 }
 
                 return;

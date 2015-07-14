@@ -63,7 +63,7 @@ namespace BaCSharp
         protected override uint BacnetMethodNametoId(String Name)
         {
             if (Name == "get_PROP_UNITS")   // Hide this property
-                return (uint)((int)BacnetPropertyIds.MAX_BACNET_PROPERTY_ID + 1);
+                return (uint)((int)BacnetPropertyIds.MAX_BACNET_PROPERTY_ID );
             else
                 return base.BacnetMethodNametoId(Name);
         }

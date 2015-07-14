@@ -943,7 +943,7 @@ namespace Utilities
             {
                 DateTime dt= (DateTime)value;
                 // this value is 1/1/1 for the date,  DatetimePicket don't accept it
-                picker.Value = new DateTime(2000, 1, 1, dt.Hour, dt.Minute, dt.Second);
+                picker.Value = new DateTime(2000, 1, 1, dt.Hour, dt.Minute, dt.Second); // only HH:MM:SS is important
                 this.editorService.DropDownControl(picker);
                 value = picker.Value;
             }
@@ -964,10 +964,15 @@ namespace Utilities
 
         // the corresponding Enum is given in parameters
         // and also how the value is fixed 0,1,2... or 1,2,4,8... in the enumeration
-        public BacnetBitStringToEnumListDisplay(Enum e, bool LinearEnum)
+        public BacnetBitStringToEnumListDisplay(Enum e, bool LinearEnum, bool DisplayAll=false)
         {
             currentPropertyEnum = e; 
             this.LinearEnum = LinearEnum;
+
+            if (DisplayAll == true)
+                ObjetList = new CheckedListBox();
+            else
+                ObjetList = new ListBox();
         }
 
         public override UITypeEditorEditStyle GetEditStyle(ITypeDescriptorContext context)
@@ -996,36 +1001,32 @@ namespace Utilities
             }
             if (this.editorService != null)
             {
-                if (ObjetList==null)
+                String bbs = value.ToString();
+
+                for (int i=0;i<bbs.Length;i++)
                 {
-                    ObjetList= new ListBox();
-                    String bbs = value.ToString();
-
-                    for (int i=0;i<bbs.Length;i++)
+                    try
                     {
-                        if (bbs[i] == '1')
-                        {
-                            try
-                            {
-                                String Text;
-                                if (LinearEnum==true)
-                                    Text = Enum.GetName(currentPropertyEnum.GetType(), i);
-                                else
-                                    Text = Enum.GetName(currentPropertyEnum.GetType(), 1 << i);
+                        String Text;
+                        if (LinearEnum==true)
+                            Text = Enum.GetName(currentPropertyEnum.GetType(), i); // for 'classic' Enum like 0,1,2,3 ...
+                        else
+                            Text = Enum.GetName(currentPropertyEnum.GetType(), 1 << i); // for 2^n shift Enum like 1,2,4,8, ...
 
-                                ObjetList.Items.Add(GetNiceName(Text));
-                            }
-                            catch { }
-                        }
+                        if ((bbs[i] == '1') && !(ObjetList is CheckedListBox))
+                            ObjetList.Items.Add(GetNiceName(Text));
+                        if (ObjetList is CheckedListBox)
+                            (ObjetList as CheckedListBox).Items.Add(GetNiceName(Text), bbs[i] == '1');
                     }
+                    catch { }
                 }
 
-                if (ObjetList.Items.Count == 0)
+                if (ObjetList.Items.Count == 0) // when bitstring is only 00000...
                     ObjetList.Items.Add("... Nothing");
-
+                // shows the list
                 this.editorService.DropDownControl(ObjetList);
             }
-            return value;
+            return value; // do not allows any change
         }
     }
 
@@ -1075,23 +1076,31 @@ namespace Utilities
                 if (EnumList == null)
                 {
                     EnumList = new ListBox();
-
+                    EnumList.Click += new EventHandler(EnumList_Click);
+                    // get all the Enum values string
                     String[] sl=Enum.GetNames(currentPropertyEnum.GetType());
                     for (int i = 0; i < sl.Length; i++)
                     {
                         if ((currentPropertyEnum.GetType() == typeof(BacnetObjectTypes)) && (i >= (int)BacnetObjectTypes.MAX_ASHRAE_OBJECT_TYPE))
-                            break;
-                        EnumList.Items.Add(i.ToString() + " : " + GetNiceName(sl[i]));
+                            break; // One property with some content not usefull
+                        EnumList.Items.Add(i.ToString() + " : " + GetNiceName(sl[i])); // add to the list
                     }
                     if (InitialIdx<EnumList.Items.Count)
-                        EnumList.SelectedIndex = InitialIdx;
+                        EnumList.SelectedIndex = InitialIdx; // select the current item if any
                 }
-                this.editorService.DropDownControl(EnumList);
+                this.editorService.DropDownControl(EnumList); // shows the list
 
                 if ((EnumList.SelectedIndex!=InitialIdx)&&(InitialIdx<EnumList.Items.Count))
-                    return (uint)EnumList.SelectedIndex;
+                    return (uint)EnumList.SelectedIndex; // change the value if required
             }
             return value;
+        }
+
+        void EnumList_Click(object sender, EventArgs e)
+        {
+            if (this.editorService != null)
+                this.editorService.CloseDropDown();
+
         }
     }
     // used for BacnetTime (without Date, but stored in a DateTime struct)
@@ -1227,6 +1236,7 @@ namespace Utilities
                 else if (m_Property.Type == typeof(float)) return new CustomSingleConverter();
                 else if (m_Property.bacnetApplicationTags == BacnetApplicationTags.BACNET_APPLICATION_TAG_TIME) return new BacnetTimeConverter();
 
+                // A lot of classic Bacnet Enum
                 BacnetPropertyReference bpr = (BacnetPropertyReference)m_Property.Tag;
                 switch ((BacnetPropertyIds)bpr.propertyIdentifier)
                 {
@@ -1256,7 +1266,7 @@ namespace Utilities
             }
         }
 
-        // Give a way to display/modify some specifics values in ListBox, TextBox, ...
+        // Give a way to display/modify some specifics values in a ListBox
         public override object GetEditor(Type editorBaseType)
         {
             // All Bacnet Time as this
@@ -1272,17 +1282,17 @@ namespace Utilities
                 case BacnetPropertyIds.PROP_PROTOCOL_SERVICES_SUPPORTED:
                     return new BacnetBitStringToEnumListDisplay(new BacnetServicesSupported(), true);
                 case BacnetPropertyIds.PROP_STATUS_FLAGS:
-                    return new BacnetBitStringToEnumListDisplay(new BacnetStatusFlags(), false);
+                    return new BacnetBitStringToEnumListDisplay(new BacnetStatusFlags(), false, true);
                 case BacnetPropertyIds.PROP_LIMIT_ENABLE:
-                    return new BacnetBitStringToEnumListDisplay(new BacnetEventNotificationData.BacnetLimitEnable(), false);
+                    return new BacnetBitStringToEnumListDisplay(new BacnetEventNotificationData.BacnetLimitEnable(), false, true);
 
                 case BacnetPropertyIds.PROP_EVENT_ENABLE:
                 case BacnetPropertyIds.PROP_ACK_REQUIRED:
                 case BacnetPropertyIds.PROP_ACKED_TRANSITIONS:
-                    return new BacnetBitStringToEnumListDisplay(new BacnetEventNotificationData.BacnetEventEnable(), false);
+                    return new BacnetBitStringToEnumListDisplay(new BacnetEventNotificationData.BacnetEventEnable(), false, true);
 
-                case BacnetPropertyIds.PROP_OBJECT_TYPE:
-                    return new BacnetEnumValueDisplay(new BacnetObjectTypes());
+                //case BacnetPropertyIds.PROP_OBJECT_TYPE:
+                    //return new BacnetEnumValueDisplay(new BacnetObjectTypes());
                 case BacnetPropertyIds.PROP_NOTIFY_TYPE:
                     return new BacnetEnumValueDisplay(new BacnetEventNotificationData.BacnetNotifyTypes());
                 case BacnetPropertyIds.PROP_EVENT_TYPE:

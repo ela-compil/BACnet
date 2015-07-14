@@ -56,9 +56,9 @@ namespace BaCSharp
     {
         public bool UsePriorityArray = false;
 
-        public bool m_PROP_RELINQUISH_DEFAULT;
-        // BacnetSerialize made freely by the stack depending on the type
-        public virtual bool PROP_RELINQUISH_DEFAULT
+        public uint m_PROP_RELINQUISH_DEFAULT;
+        [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED)]
+        public virtual uint PROP_RELINQUISH_DEFAULT
         {
             get { return m_PROP_RELINQUISH_DEFAULT; }
             set
@@ -81,7 +81,7 @@ namespace BaCSharp
             if (WithPriorityArray == true)
             {
                 UsePriorityArray = true;
-                m_PROP_RELINQUISH_DEFAULT = InitialValue;
+                m_PROP_RELINQUISH_DEFAULT = InitialValue == true ? (uint)1 : 0;
             }
 
             this.m_PRESENT_VALUE_ReadOnly = false;
@@ -92,7 +92,7 @@ namespace BaCSharp
         protected override uint BacnetMethodNametoId(String Name)
         {
             if ((UsePriorityArray == false) && ((Name == "get_PROP_PRIORITY_ARRAY") || (Name == "get_PROP_RELINQUISH_DEFAULT")))  // Hide these properties
-                return (uint)((int)BacnetPropertyIds.MAX_BACNET_PROPERTY_ID + 1);
+                return (uint)((int)BacnetPropertyIds.MAX_BACNET_PROPERTY_ID );
             else
                 return base.BacnetMethodNametoId(Name);
         }
@@ -104,7 +104,7 @@ namespace BaCSharp
         {
             if (UsePriorityArray == false)
             {
-                m_PROP_PRESENT_VALUE = (bool)Value[0].Value;
+                m_PROP_PRESENT_VALUE = (uint)Value[0].Value;
                 return;
             }
             else
@@ -116,7 +116,7 @@ namespace BaCSharp
                 {
                     if (m_PROP_PRIORITY_ARRAY[i].Value != null)    // A value is OK
                     {
-                        m_PROP_PRESENT_VALUE = (bool)m_PROP_PRIORITY_ARRAY[i].Value;
+                        m_PROP_PRESENT_VALUE = (uint)m_PROP_PRIORITY_ARRAY[i].Value;
                         done = true;
                         break;
                     }

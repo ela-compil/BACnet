@@ -108,21 +108,6 @@ namespace BaCSharp
             set { if (value < 2) m_PROP_NOTIFY_TYPE = value; } // 0 : Alarm, 1 Event, see BacnetEventNotificationData.BacnetNotifyTypes
         }       
 
-        /*
-         A ajouter dans bacnetbase a coté de BacnetEventNotificationData.BacnetEventStates
-        public enum  BacnetEventEnable 
-        {
-            EVENT_ENABLE_TO_OFFNORMAL = 1,
-            EVENT_ENABLE_TO_FAULT = 2,
-            EVENT_ENABLE_TO_NORMAL = 4
-        };
-        public enum BacnetLimitEnable
-        {
-            EVENT_LOW_LIMIT_ENABLE = 1,
-            EVENT_HIGH_LIMIT_ENABLE = 2
-        };
-         
-        */
         public T Last_PRESENT_VALUE;
 
         public void AnalogObjectEvent()
