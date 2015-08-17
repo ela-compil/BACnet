@@ -207,6 +207,10 @@
     <None Include="Resources\calendar_view_week.png" />
     <None Include="Resources\bell.png" />
     <None Include="Resources\date.png" />
+    <Content Include="ReadSinglePropDescr.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <EmbeddedResource Include="ReadSinglePropDescrDefault.xml" />
     <Content Include="Search.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

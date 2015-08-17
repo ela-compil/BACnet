@@ -955,6 +955,12 @@ namespace System.IO.BACnet
         public uint state;
     } ;
 
+    public struct BacnetObjectDescription
+    {
+        public BacnetObjectTypes typeId;
+        public List<BacnetPropertyIds> propsId;
+    }
+
     public struct BacnetDeviceObjectPropertyReference : ASN1.IASN1encode
     {
         public BacnetObjectId objectIdentifier;
@@ -4834,8 +4840,9 @@ namespace System.IO.BACnet.Serialize
             if (length <= max_length)
             {
                 for (i = 0; i < length; i++)
-                {
-                    char_string += (char)buffer[offset + i];
+                {   //ag150803 JCI adds 0x0 to every character, but its not UTF-16. By Adam Guzik
+                    char oneChar = (char)buffer[offset + i];
+                    if (char.IsControl(oneChar) == false) char_string += oneChar;
                 }
                 status = true;
             }

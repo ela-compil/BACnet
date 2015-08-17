@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- optional external resource used when ReadPropertyMultiple not implemented, override an internal default description file
+OBJECT_IDENTIFIER, OBJECT_NAME & OBJECT_TYPE not here since they're required by all
+-->
+
+<ArrayOfBacnetObjectDescription xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  
+<BacnetObjectDescription>
+    <typeId>OBJECT_DEVICE</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_SYSTEM_STATUS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_VENDOR_NAME</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_VENDOR_IDENTIFIER</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_MODEL_NAME</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_FIRMWARE_REVISION</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_APPLICATION_SOFTWARE_VERSION</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_LOCATION</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_DESCRIPTION</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_PROTOCOL_VERSION</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_PROTOCOL_REVISION</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_PROTOCOL_SERVICES_SUPPORTED</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_PROTOCOL_OBJECT_TYPES_SUPPORTED</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_OBJECT_LIST</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_MAX_APDU_LENGTH_ACCEPTED</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_SEGMENTATION_SUPPORTED</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_MAX_SEGMENTS_ACCEPTED</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_VT_CLASSES_SUPPORTED</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_ACTIVE_VT_SESSIONS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_LOCAL_DATE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_LOCAL_DATE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_UTC_OFFSET</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_DAYLIGHT_SAVINGS_STATUS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_APDU_SEGMENT_TIMEOUT</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_APDU_TIMEOUT</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_NUMBER_OF_APDU_RETRIES</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_LIST_OF_SESSION_KEYS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_TIME_SYNCHRONIZATION_RECIPIENTS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_MAX_MASTER</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_MAX_INFO_FRAMES</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_DEVICE_ADDRESS_BINDING</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_DATABASE_REVISION</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_CONFIGURATION_FILES</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_LAST_RESTORE_TIME</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_BACKUP_FAILURE_TIMEOUT</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_ACTIVE_COV_SUBSCRIPTIONS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_SLAVE_PROXY_ENABLE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_MANUAL_SLAVE_ADDRESS_BINDING</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_AUTO_SLAVE_DISCOVERY</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_SLAVE_ADDRESS_BINDING</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_PROFILE_NAME</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+
+</ArrayOfBacnetObjectDescription>

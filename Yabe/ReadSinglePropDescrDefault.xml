@@ -1,0 +1,607 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- Embedded resource used when ReadPropertyMultiple not implemented 
+OBJECT_IDENTIFIER, OBJECT_NAME & OBJECT_TYPE not here since they're required by all
+could be 'ovveride' by an optional external file
+-->
+
+<ArrayOfBacnetObjectDescription xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  
+<BacnetObjectDescription>
+    <typeId>OBJECT_ACCUMULATOR</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_PRESENT_VALUE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_STATUS_FLAGS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_EVENT_STATE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_OUT_OF_SERVICE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_UNITS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_SCALE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_MAX_PRES_VALUE</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_ANALOG_INPUT</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_PRESENT_VALUE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_STATUS_FLAGS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_EVENT_STATE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_OUT_OF_SERVICE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_UNITS</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_ANALOG_OUTPUT</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_PRESENT_VALUE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_STATUS_FLAGS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_EVENT_STATE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_OUT_OF_SERVICE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_UNITS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_PRIORITY_ARRAY</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_RELINQUISH_DEFAULT</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_ANALOG_VALUE</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_PRESENT_VALUE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_STATUS_FLAGS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_EVENT_STATE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_OUT_OF_SERVICE</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_BINARY_INPUT</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_PRESENT_VALUE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_STATUS_FLAGS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_EVENT_STATE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_OUT_OF_SERVICE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_POLARITY</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_BINARY_OUTPUT</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_PRESENT_VALUE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_STATUS_FLAGS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_EVENT_STATE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_OUT_OF_SERVICE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_PRIORITY_ARRAY</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_RELINQUISH_DEFAULT</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_BINARY_VALUE</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_PRESENT_VALUE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_MEMBER_STATUS_FLAGS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_EVENT_STATE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_OUT_OF_SERVICE</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_CALENDAR</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_PRESENT_VALUE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_IN_PROCESS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_DATE_LIST</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_COMMAND</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_PRESENT_VALUE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_IN_PROCESS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_ALL_WRITES_SUCCESSFUL</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_ACTION</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_DEVICE</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_SYSTEM_STATUS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_VENDOR_NAME</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_VENDOR_IDENTIFIER</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_MODEL_NAME</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_FIRMWARE_REVISION</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_APPLICATION_SOFTWARE_VERSION</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_LOCATION</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_DESCRIPTION</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_PROTOCOL_VERSION</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_PROTOCOL_REVISION</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_PROTOCOL_SERVICES_SUPPORTED</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_PROTOCOL_OBJECT_TYPES_SUPPORTED</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_OBJECT_LIST</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_MAX_APDU_LENGTH_ACCEPTED</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_SEGMENTATION_SUPPORTED</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_APDU_TIMEOUT</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_NUMBER_OF_APDU_RETRIES</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_DEVICE_ADDRESS_BINDING</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_DATABASE_REVISION</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_EVENT_ENROLLMENT</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_EVENT_TYPE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_NOTIFY_TYPE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_EVENT_PARAMETERS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_OBJECT_PROPERTY_REFERENCE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_EVENT_STATE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_EVENT_ENABLE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_ACKED_TRANSITIONS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_NOTIFICATION_CLASS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_EVENT_TIME_STAMPS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_EVENT_DETECTION_ENABLE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_STATUS_FLAGS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_RELIABILITY</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_FILE</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_FILE_TYPE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_FILE_SIZE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_MODIFICATION_DATE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_ARCHIVE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_READ_ONLY</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_FILE_ACCESS_METHOD</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_GROUP</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_LIST_OF_GROUP_MEMBERS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_PRESENT_VALUE</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_LIFE_SAFETY_POINT</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_PRESENT_VALUE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_TRACKING_VALUE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_STATUS_FLAGS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_EVENT_STATE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_RELIABILITY</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_OUT_OF_SERVICE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_MODE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_ACCEPTED_MODES</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_SILENCED</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_OPERATION_EXPECTED</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_LIFE_SAFETY_ZONE</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_PRESENT_VALUE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_TRACKING_VALUE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_STATUS_FLAGS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_EVENT_STATE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_OUT_OF_SERVICE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_RELIABILITY</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_MODE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_ACCEPTED_MODES</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_SILENCED</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_OPERATION_EXPECTED</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_ZONE_MEMBERS</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_LOOP</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_PRESENT_VALUE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_STATUS_FLAGS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_EVENT_STATE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_OUT_OF_SERVICE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_OUTPUT_UNITS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_MANIPULATED_VARIABLE_REFERENCE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_CONTROLLED_VARIABLE_REFERENCE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_CONTROLLED_VARIABLE_VALUE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_CONTROLLED_VARIABLE_UNITS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_SETPOINT_REFERENCE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_SETPOINT</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_ACTION</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_PRIORITY_FOR_WRITING</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_MULTI_STATE_INPUT</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_PRESENT_VALUE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_STATUS_FLAGS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_EVENT_STATE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_OUT_OF_SERVICE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_NUMBER_OF_STATES</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_MULTI_STATE_OUTPUT</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_PRESENT_VALUE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_STATUS_FLAGS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_EVENT_STATE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_OUT_OF_SERVICE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_NUMBER_OF_STATES</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_PRIORITY_ARRAY</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_RELINQUISH_DEFAULT</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>    
+    <typeId>OBJECT_MULTI_STATE_VALUE</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_PRESENT_VALUE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_STATUS_FLAGS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_EVENT_STATE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_OUT_OF_SERVICE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_NUMBER_OF_STATES</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_NOTIFICATION_CLASS</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_NOTIFICATION_CLASS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_PRIORITY</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_ACK_REQUIRED</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_RECIPIENT_LIST</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_PROGRAM</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_PROGRAM_STATE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_PROGRAM_CHANGE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_STATUS_FLAGS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_OUT_OF_SERVICE</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_PULSE_CONVERTER</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_PRESENT_VALUE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_STATUS_FLAGS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_EVENT_STATE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_OUT_OF_SERVICE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_UNITS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_SCALE_FACTOR</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_ADJUST_VALUE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_COUNT_CHANGE_TIME</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_COUNT_BEFORE_CHANGE</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_SCHEDULE</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_PRESENT_VALUE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_EFFECTIVE_PERIOD</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_SCHEDULE_DEFAULT</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_PRIORITY_FOR_WRITING</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_STATUS_FLAGS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_RELIABILITY</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_OUT_OF_SERVICE</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_TRENDLOG</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_STATUS_FLAGS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_ENABLE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_STOP_WHEN_FULL</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_BUFFER_SIZE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_LOG_BUFFER</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_RECORD_COUNT</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_TOTAL_RECORD_COUNT</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_LOGGING_TYPE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_MEMBER_STATUS_FLAGS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_EVENT_STATE</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_ACCESS_DOOR</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_STATUS_FLAGS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_PRESENT_VALUE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_EVENT_STATE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_RELIABILITY</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_OUT_OF_SERVICE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_PRIORITY_ARRAY</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_RELINQUISH_DEFAULT</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_DOOR_PULSE_TIME</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_DOOR_EXTENDED_PULSE_TIME</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_DOOR_OPEN_TOO_LONG_TIME</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_EVENT_LOG</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_STATUS_FLAGS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_EVENT_STATE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_ENABLE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_STOP_WHEN_FULL</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_BUFFER_SIZE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_LOG_BUFFER</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_RECORD_COUNT</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_TOTAL_RECORD_COUNT</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_LOAD_CONTROL</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_PRESENT_VALUE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_STATUS_FLAGS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_REQUESTED_SHED_LEVEL</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_START_TIME</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_SHED_DURATION</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_DUTY_WINDOW</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_ENABLE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_EXPECTED_SHED_LEVEL</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_ACTUAL_SHED_LEVEL</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_SHED_LEVELS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_SHED_LEVEL_DESCRIPTIONS</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_STRUCTURED_VIEW</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_STATUS_FLAGS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_NODE_TYPE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_SUBORDINATE_LIST</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_TREND_LOG_MULTIPLE</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_STATUS_FLAGS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_EVENT_STATE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_ENABLE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_LOG_DEVICE_OBJECT_PROPERTY</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_LOGGING_TYPE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_LOG_INTERVAL</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_STOP_WHEN_FULL</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_BUFFER_SIZE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_RECORD_COUNT</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_TOTAL_RECORD_COUNT</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_ACCESS_POINT</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_STATUS_FLAGS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_EVENT_STATE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_RELIABILITY</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_OUT_OF_SERVICE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_AUTHENTICATION_STATUS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_ACTIVE_AUTHENTICATION_POLICY</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_NUMBER_OF_AUTHENTICATION_POLICIES</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_AUTHORIZATION_MODE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_ACCESS_DOORS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_PRIORITY_FOR_WRITING</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_ACCESS_ZONE</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_GLOBAL_IDENTIFIER</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_OCCUPANCY_STATE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_STATUS_FLAGS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_EVENT_STATE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_RELIABILITY</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_OUT_OF_SERVICE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_ENTRY_POINTS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_EXIT_POINTS</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_ACCESS_USER</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_GLOBAL_IDENTIFIER</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_STATUS_FLAGS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_RELIABILITY</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_USER_TYPE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_CREDENTIALS</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_ACCESS_RIGHTS</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_GLOBAL_IDENTIFIER</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_STATUS_FLAGS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_ENABLE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_RELIABILITY</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_NEGATIVE_ACCESS_RULES</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_POSITIVE_ACCESS_RULES</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_ACCESS_CREDENTIAL</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_STATUS_FLAGS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_RELIABILITY</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_CREDENTIAL_STATUS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_REASON_FOR_DISABLE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_AUTHENTICATION_FACTORS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_ACTIVATION_TIME</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_EXPIRY_TIME</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_CREDENTIAL_DISABLE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_ASSIGNED_ACCESS_RIGHTS</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_CREDENTIAL_DATA_INPUT</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_PRESENT_VALUE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_STATUS_FLAGS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_RELIABILITY</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_OUT_OF_SERVICE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_SUPPORTED_FORMATS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_UPDATE_TIME</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_CHARACTERSTRING_VALUE</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_PRESENT_VALUE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_STATUS_FLAGS</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_DATETIME_VALUE</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_PRESENT_VALUE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_STATUS_FLAGS</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_LARGE_ANALOG_VALUE</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_PRESENT_VALUE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_STATUS_FLAGS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_UNITS</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_BITSTRING_VALUE</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_PRESENT_VALUE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_STATUS_FLAGS</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_OCTETSTRING_VALUE</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_PRESENT_VALUE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_STATUS_FLAGS</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_INTEGER_VALUE</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_PRESENT_VALUE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_STATUS_FLAGS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_UNITS</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_POSITIVE_INTEGER_VALUE</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_PRESENT_VALUE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_STATUS_FLAGS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_UNITS</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_DATE_VALUE</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_PRESENT_VALUE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_STATUS_FLAGS</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_DATETIME_PATTERN_VALUE</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_PRESENT_VALUE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_STATUS_FLAGS</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_TIME_PATTERN_VALUE</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_PRESENT_VALUE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_STATUS_FLAGS</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_DATE_PATTERN_VALUE</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_PRESENT_VALUE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_STATUS_FLAGS</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_NETWORK_SECURITY</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_BASE_DEVICE_SECURITY_POLICY</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_NETWORK_ACCESS_SECURITY_POLICIES</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_SECURITY_TIME_WINDOW</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_PACKET_REORDER_TIME</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_DISTRIBUTION_KEY_REVISION</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_KEY_SETS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_LAST_KEY_SERVER</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_SECURITY_PDU_TIMEOUT</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_UPDATE_KEY_SET_TIMEOUT</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_SUPPORTED_SECURITY_ALGORITHM</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_DO_NOT_HIDE</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_GLOBAL_GROUP</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_PRESENT_VALUE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_GROUP_MEMBERS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_STATUS_FLAGS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_EVENT_STATE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_MEMBER_STATUS_FLAGS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_OUT_OF_SERVICE</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_NOTIFICATION_FORWARDER</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_STATUS_FLAGS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_RELIABILITY</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_OUT_OF_SERVICE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_RECIPIENT_LIST</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_SUBSCRIBED_RECIPIENTS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_PROCESS_IDENTIFIER_FILTER</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_LOCAL_FORWARDING_ONLY</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_ALERT_ENROLLMENT</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_PRESENT_VALUE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_EVENT_STATE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_EVENT_DETECTION_ENABLE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_NOTIFICATION_CLASS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_EVENT_ENABLE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_ACKED_TRANSITIONS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_NOTIFY_TYPE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_EVENT_TIME_STAMPS</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_CHANNEL</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_PRESENT_VALUE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_LAST_PRIORITY</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_WRITE_STATUS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_STATUS_FLAGS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_OUT_OF_SERVICE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_CHANNEL_NUMBER</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_CONTROL_GROUPS</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+<BacnetObjectDescription>
+    <typeId>OBJECT_LIGHTING_OUTPUT</typeId>
+    <propsId>
+    <BacnetPropertyIds>PROP_TRACKING_VALUE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_PRESENT_VALUE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_LIGHTING_COMMAND</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_IN_PROGRESS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_STATUS_FLAGS</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_OUT_OF_SERVICE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_BLINK_WARN_ENABLE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_EGRESS_TIME</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_EGRESS_ACTIVE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_DEFAULT_FADE_TIME</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_DEFAULT_RAMP_RATE</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_DEFAULT_STEP_INCREMENT</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_PRIORITY_ARRAY</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_RELINQUISH_DEFAULT</BacnetPropertyIds>
+    <BacnetPropertyIds>PROP_LIGHTING_COMMAND_DEFAULT_PRIORITY</BacnetPropertyIds>
+    </propsId>
+</BacnetObjectDescription>
+
+</ArrayOfBacnetObjectDescription>

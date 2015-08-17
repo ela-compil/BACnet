@@ -35,6 +35,7 @@ using System.Diagnostics;
 using System.IO.BACnet;
 using System.IO;
 using System.IO.BACnet.Storage;
+using System.Xml.Serialization;
 
 namespace Yabe
 {
@@ -45,6 +46,7 @@ namespace Yabe
         private uint m_next_subscription_id = 0;
 
         private static DeviceStorage m_storage;
+        private List<BacnetObjectDescription> objectsDescriptionExternal, objectsDescriptionDefault;
 
         private class BacnetDeviceLine
         {
@@ -1083,6 +1085,27 @@ namespace Yabe
 
         private bool ReadAllPropertiesBySingle(BacnetClient comm, BacnetAddress adr, BacnetObjectId object_id, out IList<BacnetReadAccessResult> value_list)
         {
+
+            if (objectsDescriptionDefault == null)  // first call, Read Objects description from internal & optional external xml file
+            {
+                StreamReader sr;
+                XmlSerializer xs = new XmlSerializer(typeof(List<BacnetObjectDescription>));
+
+                // embedded resource
+                System.Reflection.Assembly _assembly;
+                _assembly = System.Reflection.Assembly.GetExecutingAssembly();
+                sr = new StreamReader(_assembly.GetManifestResourceStream("Yabe.ReadSinglePropDescrDefault.xml"));
+                objectsDescriptionDefault = (List<BacnetObjectDescription>)xs.Deserialize(sr);
+
+                try  // External optional file
+                {
+                    sr = new StreamReader("ReadSinglePropDescr.xml");
+                    objectsDescriptionExternal = (List<BacnetObjectDescription>)xs.Deserialize(sr);
+                }
+                catch { }
+
+            }
+
             value_list = null;
 
             IList<BacnetPropertyValue> values = new List<BacnetPropertyValue>();
@@ -1091,687 +1114,36 @@ namespace Yabe
             comm.Retries = 1;       //we don't want to spend too much time on non existing properties
             try
             {
-                if (object_id.type == BacnetObjectTypes.OBJECT_ACCUMULATOR)
-                {
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRESENT_VALUE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_STATUS_FLAGS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_EVENT_STATE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OUT_OF_SERVICE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_UNITS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_SCALE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_MAX_PRES_VALUE, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_ANALOG_INPUT)
-                {
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRESENT_VALUE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_STATUS_FLAGS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_EVENT_STATE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OUT_OF_SERVICE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_UNITS, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_ANALOG_OUTPUT)
-                {
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRESENT_VALUE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_STATUS_FLAGS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_EVENT_STATE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OUT_OF_SERVICE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_UNITS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRIORITY_ARRAY, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_RELINQUISH_DEFAULT, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_ANALOG_VALUE)
-                {
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRESENT_VALUE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_STATUS_FLAGS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_EVENT_STATE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OUT_OF_SERVICE, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_BINARY_INPUT)
-                {
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRESENT_VALUE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_STATUS_FLAGS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_EVENT_STATE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OUT_OF_SERVICE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_POLARITY, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_BINARY_OUTPUT)
-                {
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRESENT_VALUE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_STATUS_FLAGS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_EVENT_STATE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OUT_OF_SERVICE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRIORITY_ARRAY, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_RELINQUISH_DEFAULT, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_BINARY_VALUE)
-                {
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRESENT_VALUE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_MEMBER_STATUS_FLAGS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_EVENT_STATE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OUT_OF_SERVICE, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_CALENDAR)
-                {
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRESENT_VALUE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_IN_PROCESS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_DATE_LIST, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_COMMAND)
-                {
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRESENT_VALUE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_IN_PROCESS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_ALL_WRITES_SUCCESSFUL, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_ACTION, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_DEVICE)
-                {
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_SYSTEM_STATUS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_VENDOR_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_VENDOR_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_MODEL_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_FIRMWARE_REVISION, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_APPLICATION_SOFTWARE_VERSION, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_LOCATION, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_DESCRIPTION, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PROTOCOL_VERSION, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PROTOCOL_REVISION, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PROTOCOL_SERVICES_SUPPORTED, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PROTOCOL_OBJECT_TYPES_SUPPORTED, ref values);
-                    if (!ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_LIST, ref values))
-                    {
-                        //read object list count instead
-                        ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_LIST, ref values, 0);
-                    }
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_MAX_APDU_LENGTH_ACCEPTED, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_SEGMENTATION_SUPPORTED, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_MAX_SEGMENTS_ACCEPTED, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_VT_CLASSES_SUPPORTED, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_ACTIVE_VT_SESSIONS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_LOCAL_DATE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_LOCAL_DATE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_UTC_OFFSET, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_DAYLIGHT_SAVINGS_STATUS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_APDU_SEGMENT_TIMEOUT, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_APDU_TIMEOUT, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_NUMBER_OF_APDU_RETRIES, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_LIST_OF_SESSION_KEYS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_TIME_SYNCHRONIZATION_RECIPIENTS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_MAX_MASTER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_MAX_INFO_FRAMES, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_DEVICE_ADDRESS_BINDING, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_DATABASE_REVISION, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_CONFIGURATION_FILES, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_LAST_RESTORE_TIME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_BACKUP_FAILURE_TIMEOUT, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_ACTIVE_COV_SUBSCRIPTIONS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_SLAVE_PROXY_ENABLE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_MANUAL_SLAVE_ADDRESS_BINDING, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_AUTO_SLAVE_DISCOVERY, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_SLAVE_ADDRESS_BINDING, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PROFILE_NAME, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_EVENT_ENROLLMENT)
-                {
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_EVENT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_NOTIFY_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_EVENT_PARAMETERS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_PROPERTY_REFERENCE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_EVENT_STATE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_EVENT_ENABLE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_ACKED_TRANSITIONS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_NOTIFICATION_CLASS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_EVENT_TIME_STAMPS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_EVENT_DETECTION_ENABLE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_STATUS_FLAGS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_RELIABILITY, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_FILE)
-                {
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_FILE_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_FILE_SIZE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_MODIFICATION_DATE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_ARCHIVE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_READ_ONLY, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_FILE_ACCESS_METHOD, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_GROUP)
-                {
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_LIST_OF_GROUP_MEMBERS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRESENT_VALUE, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_LIFE_SAFETY_POINT)
-                {
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRESENT_VALUE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_TRACKING_VALUE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_STATUS_FLAGS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_EVENT_STATE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_RELIABILITY, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OUT_OF_SERVICE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_MODE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_ACCEPTED_MODES, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_SILENCED, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OPERATION_EXPECTED, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_LIFE_SAFETY_ZONE)
-                {
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRESENT_VALUE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_TRACKING_VALUE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_STATUS_FLAGS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_EVENT_STATE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OUT_OF_SERVICE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_RELIABILITY, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_MODE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_ACCEPTED_MODES, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_SILENCED, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OPERATION_EXPECTED, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_ZONE_MEMBERS, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_LOOP)
-                {
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRESENT_VALUE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_STATUS_FLAGS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_EVENT_STATE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OUT_OF_SERVICE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OUTPUT_UNITS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_MANIPULATED_VARIABLE_REFERENCE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_CONTROLLED_VARIABLE_REFERENCE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_CONTROLLED_VARIABLE_VALUE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_CONTROLLED_VARIABLE_UNITS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_SETPOINT_REFERENCE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_SETPOINT, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_ACTION, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRIORITY_FOR_WRITING, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_MULTI_STATE_INPUT)
-                {
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRESENT_VALUE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_STATUS_FLAGS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_EVENT_STATE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OUT_OF_SERVICE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_NUMBER_OF_STATES, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_MULTI_STATE_OUTPUT)
-                {
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRESENT_VALUE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_STATUS_FLAGS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_EVENT_STATE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OUT_OF_SERVICE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_NUMBER_OF_STATES, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRIORITY_ARRAY, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_RELINQUISH_DEFAULT, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_MULTI_STATE_VALUE)
-                {
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRESENT_VALUE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_STATUS_FLAGS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_EVENT_STATE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OUT_OF_SERVICE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_NUMBER_OF_STATES, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_NOTIFICATION_CLASS)
-                {
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_NOTIFICATION_CLASS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRIORITY, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_ACK_REQUIRED, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_RECIPIENT_LIST, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_PROGRAM)
-                {
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PROGRAM_STATE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PROGRAM_CHANGE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_STATUS_FLAGS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OUT_OF_SERVICE, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_PULSE_CONVERTER)
-                {
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRESENT_VALUE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_STATUS_FLAGS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_EVENT_STATE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OUT_OF_SERVICE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_UNITS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_SCALE_FACTOR, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_ADJUST_VALUE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_COUNT_CHANGE_TIME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_COUNT_BEFORE_CHANGE, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_SCHEDULE)
-                {
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRESENT_VALUE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_EFFECTIVE_PERIOD, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_SCHEDULE_DEFAULT, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRIORITY_FOR_WRITING, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_STATUS_FLAGS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_RELIABILITY, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OUT_OF_SERVICE, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_TRENDLOG)
-                {
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_STATUS_FLAGS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_ENABLE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_STOP_WHEN_FULL, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_BUFFER_SIZE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_LOG_BUFFER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_RECORD_COUNT, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_TOTAL_RECORD_COUNT, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_LOGGING_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_MEMBER_STATUS_FLAGS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_EVENT_STATE, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_ACCESS_DOOR)
-                {
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_STATUS_FLAGS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRESENT_VALUE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_EVENT_STATE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_RELIABILITY, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OUT_OF_SERVICE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRIORITY_ARRAY, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_RELINQUISH_DEFAULT, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_DOOR_PULSE_TIME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_DOOR_EXTENDED_PULSE_TIME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_DOOR_OPEN_TOO_LONG_TIME, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_EVENT_LOG)
-                {
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_STATUS_FLAGS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_EVENT_STATE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_ENABLE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_STOP_WHEN_FULL, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_BUFFER_SIZE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_LOG_BUFFER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_RECORD_COUNT, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_TOTAL_RECORD_COUNT, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_LOAD_CONTROL)
-                {
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRESENT_VALUE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_STATUS_FLAGS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_REQUESTED_SHED_LEVEL, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_START_TIME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_SHED_DURATION, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_DUTY_WINDOW, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_ENABLE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_EXPECTED_SHED_LEVEL, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_ACTUAL_SHED_LEVEL, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_SHED_LEVELS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_SHED_LEVEL_DESCRIPTIONS, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_STRUCTURED_VIEW)
-                {
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_STATUS_FLAGS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_NODE_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_SUBORDINATE_LIST, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_TREND_LOG_MULTIPLE)
-                {
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_STATUS_FLAGS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_EVENT_STATE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_ENABLE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_LOG_DEVICE_OBJECT_PROPERTY, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_LOGGING_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_LOG_INTERVAL, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_STOP_WHEN_FULL, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_BUFFER_SIZE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_RECORD_COUNT, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_TOTAL_RECORD_COUNT, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_ACCESS_POINT)
-                {
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_STATUS_FLAGS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_EVENT_STATE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_RELIABILITY, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OUT_OF_SERVICE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_AUTHENTICATION_STATUS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_ACTIVE_AUTHENTICATION_POLICY, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_NUMBER_OF_AUTHENTICATION_POLICIES, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_AUTHORIZATION_MODE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_ACCESS_DOORS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRIORITY_FOR_WRITING, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_ACCESS_ZONE)
-                {
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_GLOBAL_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OCCUPANCY_STATE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_STATUS_FLAGS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_EVENT_STATE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_RELIABILITY, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OUT_OF_SERVICE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_ENTRY_POINTS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_EXIT_POINTS, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_ACCESS_USER)
-                {
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_GLOBAL_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_STATUS_FLAGS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_RELIABILITY, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_USER_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_CREDENTIALS, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_ACCESS_RIGHTS)
-                {
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_GLOBAL_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_STATUS_FLAGS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_ENABLE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_RELIABILITY, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_NEGATIVE_ACCESS_RULES, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_POSITIVE_ACCESS_RULES, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_ACCESS_CREDENTIAL)
-                {
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_STATUS_FLAGS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_RELIABILITY, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_CREDENTIAL_STATUS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_REASON_FOR_DISABLE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_AUTHENTICATION_FACTORS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_ACTIVATION_TIME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_EXPIRY_TIME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_CREDENTIAL_DISABLE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_ASSIGNED_ACCESS_RIGHTS, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_CREDENTIAL_DATA_INPUT)
-                {
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRESENT_VALUE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_STATUS_FLAGS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_RELIABILITY, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OUT_OF_SERVICE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_SUPPORTED_FORMATS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_UPDATE_TIME, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_CHARACTERSTRING_VALUE)
-                {//CharacterString Value
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRESENT_VALUE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_STATUS_FLAGS, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_DATETIME_VALUE)
-                {//DateTime Value #44
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRESENT_VALUE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_STATUS_FLAGS, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_LARGE_ANALOG_VALUE)
-                {//Large Analog Value
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRESENT_VALUE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_STATUS_FLAGS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_UNITS, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_BITSTRING_VALUE)
-                {//BitString Value
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRESENT_VALUE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_STATUS_FLAGS, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_OCTETSTRING_VALUE)
-                {//Time Value #47
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRESENT_VALUE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_STATUS_FLAGS, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_INTEGER_VALUE)
-                {//Integer Value #45
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRESENT_VALUE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_STATUS_FLAGS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_UNITS, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_POSITIVE_INTEGER_VALUE)
-                {//Positive Integer Value #48
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRESENT_VALUE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_STATUS_FLAGS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_UNITS, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_DATE_VALUE)
-                {//Date Value #42
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRESENT_VALUE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_STATUS_FLAGS, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_DATETIME_PATTERN_VALUE)
-                {//DateTime Pattern Value #43
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRESENT_VALUE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_STATUS_FLAGS, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_TIME_PATTERN_VALUE)
-                {//TIME Pattern Value #49
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRESENT_VALUE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_STATUS_FLAGS, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_DATE_PATTERN_VALUE)
-                {//Date Pattern Value #41
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRESENT_VALUE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_STATUS_FLAGS, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_NETWORK_SECURITY)
-                {//Network Sercurity #38
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_BASE_DEVICE_SECURITY_POLICY, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_NETWORK_ACCESS_SECURITY_POLICIES, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_SECURITY_TIME_WINDOW, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PACKET_REORDER_TIME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_DISTRIBUTION_KEY_REVISION, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_KEY_SETS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_LAST_KEY_SERVER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_SECURITY_PDU_TIMEOUT, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_UPDATE_KEY_SET_TIMEOUT, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_SUPPORTED_SECURITY_ALGORITHM, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_DO_NOT_HIDE, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_GLOBAL_GROUP)
-                {//Global Group # 26
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRESENT_VALUE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_GROUP_MEMBERS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_STATUS_FLAGS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_EVENT_STATE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_MEMBER_STATUS_FLAGS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OUT_OF_SERVICE, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_NOTIFICATION_FORWARDER)
-                {//Notification Forwarder # 51
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_STATUS_FLAGS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_RELIABILITY, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OUT_OF_SERVICE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_RECIPIENT_LIST, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_SUBSCRIBED_RECIPIENTS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PROCESS_IDENTIFIER_FILTER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_LOCAL_FORWARDING_ONLY, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_ALERT_ENROLLMENT)
-                {//Alert Enrollment # 52
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRESENT_VALUE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_EVENT_STATE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_EVENT_DETECTION_ENABLE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_NOTIFICATION_CLASS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_EVENT_ENABLE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_ACKED_TRANSITIONS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_NOTIFY_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_EVENT_TIME_STAMPS, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_CHANNEL)
-                {//Channel # 53
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRESENT_VALUE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_LAST_PRIORITY, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_WRITE_STATUS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_STATUS_FLAGS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OUT_OF_SERVICE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_CHANNEL_NUMBER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_CONTROL_GROUPS, ref values);
-                }
-                else if (object_id.type == BacnetObjectTypes.OBJECT_LIGHTING_OUTPUT)
-                {//Lighting Output # 54
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_TRACKING_VALUE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRESENT_VALUE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_LIGHTING_COMMAND, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_IN_PROGRESS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_STATUS_FLAGS, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OUT_OF_SERVICE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_BLINK_WARN_ENABLE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_EGRESS_TIME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_EGRESS_ACTIVE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_DEFAULT_FADE_TIME, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_DEFAULT_RAMP_RATE, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_DEFAULT_STEP_INCREMENT, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRIORITY_ARRAY, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_RELINQUISH_DEFAULT, ref values);
-                    ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_LIGHTING_COMMAND_DEFAULT_PRIORITY, ref values);
-                }
-                else
-                    throw new NotImplementedException("Haven't got to this yet");
-            }
-            finally
-            {
-                comm.Retries = old_retries;
-            }
+                // Three common properties to all objects
+                ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_IDENTIFIER, ref values);
+                ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_NAME, ref values);
+                ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_OBJECT_TYPE, ref values);
 
+                BacnetObjectDescription objDescr = new BacnetObjectDescription(); ;
+
+                int Idx = -1;
+                // try to find the Object description from the optional external xml file
+                if (objectsDescriptionExternal != null)
+                    Idx = objectsDescriptionExternal.FindIndex(o => o.typeId == object_id.type);
+
+                if (Idx != -1)
+                    objDescr = objectsDescriptionExternal[Idx];
+                else
+                {
+                    // try to find from the embedded resoruce
+                    Idx = objectsDescriptionDefault.FindIndex(o => o.typeId == object_id.type);
+                    if (Idx != -1)
+                        objDescr = objectsDescriptionDefault[Idx];
+                }
+
+                if (Idx != -1)
+                    foreach (BacnetPropertyIds bpi in objDescr.propsId)
+                        // read all specified properties given by the xml file
+                        ReadProperty(comm, adr, object_id, bpi, ref values);
+            }
+            catch { }
+
+            comm.Retries = old_retries;
             value_list = new BacnetReadAccessResult[] { new BacnetReadAccessResult(object_id, values) };
             return true;
         }
