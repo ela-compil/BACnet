@@ -987,7 +987,7 @@ namespace Utilities
             if (name.StartsWith("STATUS_FLAG_")) name = name.Substring(12);
             if (name.StartsWith("EVENT_ENABLE_")) name = name.Substring(13);
             if (name.StartsWith("EVENT_")) name = name.Substring(6);
-            
+
             name = name.Replace('_', ' ');
             name = System.Threading.Thread.CurrentThread.CurrentCulture.TextInfo.ToTitleCase(name.ToLower());
             return name;
@@ -1057,7 +1057,8 @@ namespace Utilities
             if (name.StartsWith("SEGMENTATION_")) name = name.Substring(13);
             if (name.StartsWith("STATUS_")) name = name.Substring(7);
             if (name.StartsWith("NOTIFY_")) name = name.Substring(7);
-     
+            if (name.StartsWith("UNITS_")) name = name.Substring(6);
+
             name = name.Replace('_', ' ');
             name = System.Threading.Thread.CurrentThread.CurrentCulture.TextInfo.ToTitleCase(name.ToLower());
             return name;
@@ -1250,6 +1251,8 @@ namespace Utilities
                         return new BacnetEnumValueConverter(new BacnetEventNotificationData.BacnetEventStates());
                     case BacnetPropertyIds.PROP_POLARITY:
                         return new BacnetEnumValueConverter(new BacnetPolarity());
+                    case BacnetPropertyIds.PROP_UNITS:
+                        return new BacnetEnumValueConverter(new BacnetUnitsId());
                     case BacnetPropertyIds.PROP_RELIABILITY:
                         return new BacnetEnumValueConverter(new BacnetReliability());
                     case BacnetPropertyIds.PROP_SEGMENTATION_SUPPORTED:
@@ -1301,6 +1304,8 @@ namespace Utilities
                     return new BacnetEnumValueDisplay(new BacnetEventNotificationData.BacnetEventStates());
                 case BacnetPropertyIds.PROP_POLARITY:
                     return new BacnetEnumValueDisplay(new BacnetPolarity());
+                case BacnetPropertyIds.PROP_UNITS:
+                    return new BacnetEnumValueDisplay(new BacnetUnitsId());
                 case BacnetPropertyIds.PROP_RELIABILITY:
                     return new BacnetEnumValueDisplay(new BacnetReliability());
                 case BacnetPropertyIds.PROP_SEGMENTATION_SUPPORTED:

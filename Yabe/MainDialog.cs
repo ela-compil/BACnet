@@ -1174,7 +1174,7 @@ namespace Yabe
                     BacnetPropertyReference[] properties = new BacnetPropertyReference[] { new BacnetPropertyReference((uint)BacnetPropertyIds.PROP_ALL, System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL) };
                     IList<BacnetReadAccessResult> multi_value_list;
                     try
-                    {
+                    {                       
                         //fetch properties. This might not be supported (ReadMultiple) or the response might be too long.
                         if (!comm.ReadPropertyMultipleRequest(adr, object_id, properties, out multi_value_list))
                         {
@@ -1240,11 +1240,7 @@ namespace Yabe
                                 catch { }
                                 bag.Add(new Utilities.CustomProperty(GetNiceName((BacnetPropertyIds)p_value.property.propertyIdentifier), value, t != null ? t : typeof(string), false, "", b_values.Length > 0 ? b_values[0].Tag : (BacnetApplicationTags?)null, null, p_value.property));
                                 break;
-                            // PROP_UNITS : Unit nice name
-                            case BacnetPropertyIds.PROP_UNITS:
-                                string str = GetNiceUnitName((BacnetUnitsId)Convert.ToInt32(value));
-                                bag.Add(new Utilities.CustomProperty(GetNiceName((BacnetPropertyIds)p_value.property.propertyIdentifier), str, value != null ? value.GetType() : typeof(string), false, "", b_values.Length > 0 ? b_values[0].Tag : (BacnetApplicationTags?)null, null, p_value.property));
-                                break;
+
                             default:
                                 bag.Add(new Utilities.CustomProperty(GetNiceName((BacnetPropertyIds)p_value.property.propertyIdentifier), value, value != null ? value.GetType() : typeof(string), false, "", b_values.Length > 0 ? b_values[0].Tag : (BacnetApplicationTags?)null, null, p_value.property));
                                 break;
@@ -1265,15 +1261,6 @@ namespace Yabe
             {
                 this.Cursor = Cursors.Default;
             }
-        }
-
-        private static string GetNiceUnitName(BacnetUnitsId Unit)
-        {
-            string unitStr = Unit.ToString();
-            if (unitStr.StartsWith("UNITS_")) unitStr = unitStr.Substring(6);
-            unitStr = unitStr.Replace('_', ' ');
-            unitStr = System.Threading.Thread.CurrentThread.CurrentCulture.TextInfo.ToTitleCase(unitStr.ToLower());
-            return unitStr;
         }
 
         private void m_AddressSpaceTree_AfterSelect(object sender, TreeViewEventArgs e)
