@@ -921,14 +921,14 @@ namespace System.IO.BACnet
 
     public enum BacnetCharacterStringEncodings
     {
-        CHARACTER_ANSI_X34 = 0,     /* deprecated */
+        CHARACTER_ANSI_X34 = 0,  /* deprecated : Addendum 135-2008k  */
         CHARACTER_UTF8 = 0,
         CHARACTER_MS_DBCS = 1,
-        CHARACTER_JISC_6226 = 2,
+        CHARACTER_JISC_6226 = 2, /* deprecated : Addendum 135-2008k  */
+        CHARACTER_JISX_0208 = 2, 
         CHARACTER_UCS4 = 3,
         CHARACTER_UCS2 = 4,
         CHARACTER_ISO8859 = 5,
-        MAX_CHARACTER_STRING_ENCODING = 6
     };
 
     public struct BacnetPropetyState
@@ -3712,11 +3712,13 @@ namespace System.IO.BACnet.Serialize
 
         public static void encode_context_character_string(EncodeBuffer buffer, byte tag_number, string value)
         {
-            int string_len = 0;
 
-            string_len = value.Length + 1 /* for encoding */ ;
-            encode_tag(buffer, tag_number, true, (UInt32)string_len);
-            encode_bacnet_character_string(buffer, value);
+            EncodeBuffer tmp = new EncodeBuffer();
+            encode_bacnet_character_string(tmp, value);
+
+            encode_tag(buffer, tag_number, true, (UInt32)tmp.offset);
+            buffer.Add(tmp.buffer, tmp.offset);
+
         }
 
         public static void encode_context_enumerated(EncodeBuffer buffer, byte tag_number, UInt32 value)
@@ -4269,24 +4271,21 @@ namespace System.IO.BACnet.Serialize
 
         public static void encode_application_character_string(EncodeBuffer buffer, string value)
         {
-            int string_len = 0;
 
-            string_len = value.Length + 1 /* for encoding */ ;
-            encode_tag(buffer, (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_CHARACTER_STRING, false, (UInt32)string_len);
-            encode_bacnet_character_string(buffer, value);
-        }
+            EncodeBuffer tmp = new EncodeBuffer();
+            encode_bacnet_character_string(tmp, value);
 
-        public static void encode_bacnet_character_string_safe(EncodeBuffer buffer, BacnetCharacterStringEncodings encoding, string value, int length)
-        {
-            buffer.Add((byte)encoding);
-            for (int i = 0; i < length; i++)
-                buffer.Add((byte)value[i]);
+            encode_tag(buffer, (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_CHARACTER_STRING, false, (UInt32)tmp.offset);
+            buffer.Add(tmp.buffer, tmp.offset);
+
         }
 
         public static void encode_bacnet_character_string(EncodeBuffer buffer, string value)
         {
-            encode_bacnet_character_string_safe(buffer, BacnetCharacterStringEncodings.CHARACTER_ANSI_X34, value, value.Length);
-        }
+            buffer.Add((byte)BacnetCharacterStringEncodings.CHARACTER_UTF8);
+            byte[] bufUTF8 = Encoding.UTF8.GetBytes(value); // Encoding.ASCII depreciated : Addendum 135-2008k 
+            buffer.Add(bufUTF8, bufUTF8.Length);
+         }
 
         public static void encode_unsigned16(EncodeBuffer buffer, UInt16 value)
         {
@@ -4826,36 +4825,83 @@ namespace System.IO.BACnet.Serialize
             return len;
         }
 
-
-        /* returns false if the string exceeds capacity
-           initialize by using value=NULL */
-        private static bool characterstring_init(byte[] buffer, int offset, int max_length, byte encoding, uint length, out string char_string)
+        private static bool multi_charset_characterstring_decode(byte[] buffer, int offset, int max_length, byte encoding, uint length, out string char_string)
         {
-            bool status = false;        /* return value */
-            int i;
-
             char_string = "";
-            /* save a byte at the end for NULL -
-               note: assumes printable characters */
-            if (length <= max_length)
+            try
             {
-                for (i = 0; i < length; i++)
-                {   //ag150803 JCI adds 0x0 to every character, but its not UTF-16. By Adam Guzik
-                    char oneChar = (char)buffer[offset + i];
-                    if (char.IsControl(oneChar) == false) char_string += oneChar;
+                Encoding e;
+
+                switch ((BacnetCharacterStringEncodings)encoding)
+                {
+                    // 'normal' encoding, backward compatible ANSI_X34 (for decoding only)
+                    case BacnetCharacterStringEncodings.CHARACTER_UTF8:
+                        e = Encoding.UTF8;
+                        break;
+
+                    // UCS2 is backward compatible UTF16 (for decoding only)
+                    // http://hackipedia.org/Character%20sets/Unicode,%20UTF%20and%20UCS%20encodings/UCS-2.htm
+                    // https://en.wikipedia.org/wiki/Byte_order_mark
+                    case BacnetCharacterStringEncodings.CHARACTER_UCS2:
+                        if ((buffer[offset] == 0xFF) && (buffer[offset + 1] == 0xFE)) // Byte Order Mark 
+                            e = Encoding.Unicode; // little endian encoding
+                        else
+                            e = Encoding.BigEndianUnicode; // big endian encoding if BOM is not set, or 0xFE-0xFF
+                        break;
+
+                    // eq. UTF32. In usage somewhere for transmission ? A bad idea !
+                    case BacnetCharacterStringEncodings.CHARACTER_UCS4:
+                        if ((buffer[offset] == 0xFF) && (buffer[offset + 1] == 0xFE) && (buffer[offset + 2] == 0) && (buffer[offset + 3] == 0))
+                            e = Encoding.UTF32; // UTF32 little endian encoding
+                        else
+                            e = Encoding.GetEncoding(12001); // UTF32 big endian encoding if BOM is not set, or 0-0-0xFE-0xFF
+                        break;
+
+                    case BacnetCharacterStringEncodings.CHARACTER_ISO8859:
+                        e = Encoding.GetEncoding(28591); // "iso-8859-1"
+                        break;
+
+                    // FIXME: somebody in Japan (or elsewhere) could help,test&validate if such devices exist ?
+                    // http://cgproducts.johnsoncontrols.com/met_pdf/1201531.pdf?ref=binfind.com/web page 18
+                    case BacnetCharacterStringEncodings.CHARACTER_MS_DBCS:
+                        e = Encoding.GetEncoding("shift_jis");
+                        break;
+
+                    // FIXME: somebody in Japan (or elsewhere) could help,test&validate if such devices exist ?
+                    // http://www.sljfaq.org/afaq/encodings.html
+                    case BacnetCharacterStringEncodings.CHARACTER_JISX_0208:
+                        e = Encoding.GetEncoding("shift_jis"); // maybe "iso-2022-jp" ?
+                        break;
+
+                    // unknown code (wrong code, experimental, ...) 
+                    // decoded as ISO-8859-1 (removing controls) : displays certainly a strange content !
+                    default:
+                        StringBuilder sb = new StringBuilder();
+                        for (int i = 0; i < length; i++)
+                        {
+                            char oneChar = (char)buffer[offset + i]; // byte to char on .NET : ISO-8859-1
+                            if (char.IsSymbol(oneChar)) sb.Append(oneChar);
+                        }
+                        char_string = sb.ToString();
+                        return true;
                 }
-                status = true;
+
+                char_string = e.GetString(buffer, offset, (int)length);
+            }
+            catch 
+            { 
+                char_string = "string decoding error !"; 
             }
 
-            return status;
+            return true; // always OK
         }
-
+        
         public static int decode_character_string(byte[] buffer, int offset, int max_length, uint len_value, out string char_string)
         {
             int len = 0;        /* return value */
             bool status = false;
 
-            status = characterstring_init(buffer, offset + 1, max_length, buffer[offset], len_value - 1, out char_string);
+            status = multi_charset_characterstring_decode(buffer, offset + 1, max_length, buffer[offset], len_value - 1, out char_string);
             if (status)
             {
                 len = (int)len_value;
@@ -4930,7 +4976,7 @@ namespace System.IO.BACnet.Serialize
                     decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value);
 
                 status =
-                    characterstring_init(buffer, offset + 1 + len, max_length, buffer[offset + len], len_value - 1, out char_string);
+                    multi_charset_characterstring_decode(buffer, offset + 1 + len, max_length, buffer[offset + len], len_value - 1, out char_string);
                 if (status)
                 {
                     len += (int)len_value;
