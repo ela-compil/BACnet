@@ -331,7 +331,24 @@ namespace System.IO.BACnet
 
         public BacnetAddress GetBroadcastAddress()
         {
+            // general local broadcast
             System.Net.IPEndPoint ep = new Net.IPEndPoint(System.Net.IPAddress.Parse("255.255.255.255"), m_port);
+            // restricted local boadcast
+            foreach (System.Net.NetworkInformation.NetworkInterface adapter in System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces())
+                foreach (System.Net.NetworkInformation.UnicastIPAddressInformation ip in adapter.GetIPProperties().UnicastAddresses)
+                   if (m_exclusive_conn.Client.LocalEndPoint.Equals(new System.Net.IPEndPoint(ip.Address, m_port)))
+                   {
+                       string[] strCurrentIP = ip.Address.ToString().Split('.');
+                       string[] strIPNetMask = ip.IPv4Mask.ToString().Split('.');
+
+                       StringBuilder BroadcastStr=new StringBuilder();
+                       for (int i = 0; i < 4; i++)
+                       {
+                           BroadcastStr.Append(((byte)(int.Parse(strCurrentIP[i]) | ~int.Parse(strIPNetMask[i]))).ToString());
+                           if (i != 3) BroadcastStr.Append('.');
+                       }
+                       ep = new Net.IPEndPoint(System.Net.IPAddress.Parse(BroadcastStr.ToString()), m_port);
+                   }
             BacnetAddress broadcast;
             Convert(ep, out broadcast);
             broadcast.net = 0xFFFF;
