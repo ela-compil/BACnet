@@ -1051,6 +1051,8 @@ namespace Utilities
 
         public static string GetNiceName(String name)
         {
+            if (name == null) return ""; // Outbound enum (proprietary)
+
             if (name.StartsWith("EVENT_STATE_")) name = name.Substring(12);
             if (name.StartsWith("POLARITY_")) name = name.Substring(9);
             if (name.StartsWith("RELIABILITY_")) name = name.Substring(12);

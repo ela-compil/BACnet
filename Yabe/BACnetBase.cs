@@ -1358,7 +1358,8 @@ namespace System.IO.BACnet
             if (this.type == other.type)
                 return this.instance.CompareTo(other.instance);
             else
-                return this.type.CompareTo(other.type);
+                // cast to int for comparison otherwise unpredictable behaviour with outbound enum (proprietary type)
+                return ((int)(this.type)).CompareTo((int)other.type);
         }
         public static BacnetObjectId Parse(string value)
         {
