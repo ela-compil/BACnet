@@ -70,8 +70,16 @@ namespace BasicReadWrite
             bacnet_client.Start();    // go
 
             // Send WhoIs in order to get back all the Iam responses :  
-            bacnet_client.OnIam += new BacnetClient.IamHandler(handler_OnIam);
+            bacnet_client.OnIam += new BacnetClient.IamHandler(handler_OnIam);            
+            
             bacnet_client.WhoIs();
+
+            /* Optional Remote Registration as A Foreign Device on a BBMD at @192.168.1.1 on the default 0xBAC0 port
+                           
+            bacnet_client.RegisterAsForeignDevice("192.168.1.1", 60);
+            Thread.Sleep(20);
+            bacnet_client.RemoteWhoIs("192.168.1.1");
+            */
         }
 
         /*****************************************************************************************************/
