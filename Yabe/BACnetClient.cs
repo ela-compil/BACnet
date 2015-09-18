@@ -832,7 +832,7 @@ namespace System.IO.BACnet
             BacnetAddress receiver;
 
             // _receiver could be an unicast @ : for direct acces 
-            // usefull for Lonworks nodes under the so bugy Echelon Izot (Izbug) ! Router (fw 1.1.7 !)
+            // usefull on BIP for a known IP:Port, unknown device Id
             if (_receiver !=null)
                 receiver = _receiver; 
             else
