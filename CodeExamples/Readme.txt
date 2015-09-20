@@ -52,3 +52,7 @@ AnotherStorageImplementation
 		Calendar
 		... send us your own code !
 	Objects persistance could be achieved with serialization
+
+Bacnet.Room.Simulator
+	This windows form application "simulates" an heating/cooling room controler.
+	See the Readme file in the application directory.
