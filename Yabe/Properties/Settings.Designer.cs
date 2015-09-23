@@ -370,5 +370,17 @@ namespace Yabe.Properties {
                 this["DefaultBBMD"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("5")]
+        public uint Subscriptions_ReplacementPoolingPeriod {
+            get {
+                return ((uint)(this["Subscriptions_ReplacementPoolingPeriod"]));
+            }
+            set {
+                this["Subscriptions_ReplacementPoolingPeriod"] = value;
+            }
+        }
     }
 }

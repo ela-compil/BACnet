@@ -43,7 +43,7 @@ namespace Yabe
     public partial class MainDialog : Form
     {       
         private Dictionary<BacnetClient, BacnetDeviceLine> m_devices = new Dictionary<BacnetClient, BacnetDeviceLine>();
-        private Dictionary<string, ListViewItem> m_subscription_index = new Dictionary<string, ListViewItem>();
+        private Dictionary<string, ListViewItem> m_subscription_list = new Dictionary<string, ListViewItem>();
         private uint m_next_subscription_id = 0;
 
         private static DeviceStorage m_storage;
@@ -160,12 +160,17 @@ namespace Yabe
         private void OnCOVNotification(BacnetClient sender, BacnetAddress adr, byte invoke_id, uint subscriberProcessIdentifier, BacnetObjectId initiatingDeviceIdentifier, BacnetObjectId monitoredObjectIdentifier, uint timeRemaining, bool need_confirm, ICollection<BacnetPropertyValue> values, BacnetMaxSegments max_segments)
         {
             string sub_key = adr.ToString() + ":" + initiatingDeviceIdentifier.instance + ":" + subscriberProcessIdentifier;
-            if (m_subscription_index.ContainsKey(sub_key))
+            
+            lock (m_subscription_list)
+            if (m_subscription_list.ContainsKey(sub_key))
             {
                 this.BeginInvoke((MethodInvoker)delegate{
                 try
                 {
-                    ListViewItem itm = m_subscription_index[sub_key];
+                    ListViewItem itm;
+                    lock (m_subscription_list)
+                        itm = m_subscription_list[sub_key];
+
                     foreach (BacnetPropertyValue value in values)
                     {
                         switch ((BacnetPropertyIds)value.property.propertyIdentifier)
@@ -644,9 +649,9 @@ namespace Yabe
         private void RemoveSubscriptions(KeyValuePair<BacnetAddress, uint> device)
         {
             LinkedList<string> deletes = new LinkedList<string>();
-            foreach (KeyValuePair<string, ListViewItem> entry in m_subscription_index)
+            foreach (KeyValuePair<string, ListViewItem> entry in m_subscription_list)
             {
-                Subscribtion sub = (Subscribtion)entry.Value.Tag;
+                Subscription sub = (Subscription)entry.Value.Tag;
                 if (sub.adr == device.Key)
                 {
                     m_SubscriptionView.Items.Remove(entry.Value);
@@ -654,15 +659,15 @@ namespace Yabe
                 }
             }
             foreach (string sub_key in deletes)
-                m_subscription_index.Remove(sub_key);
+                m_subscription_list.Remove(sub_key);
         }
 
         private void RemoveSubscriptions(BacnetClient comm)
         {
             LinkedList<string> deletes = new LinkedList<string>();
-            foreach (KeyValuePair<string, ListViewItem> entry in m_subscription_index)
+            foreach (KeyValuePair<string, ListViewItem> entry in m_subscription_list)
             {
-                Subscribtion sub = (Subscribtion)entry.Value.Tag;
+                Subscription sub = (Subscription)entry.Value.Tag;
                 if (sub.comm == comm)
                 {
                     m_SubscriptionView.Items.Remove(entry.Value);
@@ -670,7 +675,7 @@ namespace Yabe
                 }
             }
             foreach (string sub_key in deletes)
-                m_subscription_index.Remove(sub_key);
+                m_subscription_list.Remove(sub_key);
         }
 
         private void removeDeviceToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1714,17 +1719,20 @@ namespace Yabe
             }
         }
 
-        private class Subscribtion
+        private class Subscription
         {
             public BacnetClient comm;
             public BacnetAddress adr;
-            public BacnetObjectId object_id;
+            public BacnetObjectId device_id, object_id;
             public string sub_key;
             public uint subscribe_id;
-            public Subscribtion(BacnetClient comm, BacnetAddress adr, BacnetObjectId object_id, string sub_key, uint subscribe_id)
+            public bool is_active_subscription = true; // false if subscription is refused
+
+            public Subscription(BacnetClient comm, BacnetAddress adr, BacnetObjectId device_id, BacnetObjectId object_id, string sub_key, uint subscribe_id)
             {
                 this.comm = comm;
                 this.adr = adr;
+                this.device_id = device_id;
                 this.object_id = object_id;
                 this.sub_key = sub_key;
                 this.subscribe_id = subscribe_id;
@@ -1753,24 +1761,31 @@ namespace Yabe
                 //add to index
                 m_next_subscription_id++;
                 string sub_key = adr.ToString() + ":" + device_id + ":" + m_next_subscription_id;
-                itm.Tag = new Subscribtion(comm, adr, object_id, sub_key, m_next_subscription_id);
-                m_subscription_index.Add(sub_key, itm);
+
+                Subscription sub = new Subscription(comm, adr, new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, device_id), object_id, sub_key, m_next_subscription_id);
+                itm.Tag = sub;
+
+                lock (m_subscription_list)
+                    m_subscription_list.Add(sub_key, itm);
 
                 //add to device
                 try
                 {
                     if (!comm.SubscribeCOVRequest(adr, object_id, m_next_subscription_id, false, Properties.Settings.Default.Subscriptions_IssueConfirmedNotifies, Properties.Settings.Default.Subscriptions_Lifetime))
                     {
-                        MessageBox.Show(this, "Couldn't subscribe", "Communication Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        sub.is_active_subscription = false;
+                        DialogResult rep = MessageBox.Show(this, "Couldn't subscribe\rReplace by a periodic ReadProperty process ?", "Error", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                        if (rep == DialogResult.Yes)
+                            ThreadPool.QueueUserWorkItem(a => ReadPropertyPoolingRemplacementToCOV(sub)); // echec : launch period acquisiton in the ThreadPool
                         return;
                     }
                 }
                 catch (Exception ex)
                 {
-                    DialogResult rep = MessageBox.Show(this, "Error during subscribe: " + ex.Message + "\rReplace by a periodic ReadProperty process ?", "Error", MessageBoxButtons.YesNo, MessageBoxIcon.Error);
-
+                    sub.is_active_subscription = false;
+                    DialogResult rep = MessageBox.Show(this, "Error during subscribe: " + ex.Message + "\rReplace by a periodic ReadProperty process ?", "Error", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
                     if (rep==DialogResult.Yes)
-                        ThreadPool.QueueUserWorkItem(a => ReadPropertyPoolingRempalcement2COV(comm, adr, m_next_subscription_id, device_id, object_id));
+                        ThreadPool.QueueUserWorkItem(a => ReadPropertyPoolingRemplacementToCOV(sub)); // echec : launch period acquisiton in the ThreadPool
                     return;
                 }
             }
@@ -1781,18 +1796,23 @@ namespace Yabe
         }
 
         // COV echec, PROP_PRESENT_VALUE read replacement method
-        // 5 secondes poolling, during the Subscriptions_Lifetime parameter.
-        private void ReadPropertyPoolingRempalcement2COV(BacnetClient comm, BacnetAddress adr, uint subscriberProcessIdentifier, uint device_id, BacnetObjectId object_id)
+        // x seconds poolling period
+        private void ReadPropertyPoolingRemplacementToCOV(Subscription sub)
         {
-            for (int i = 0; i < Properties.Settings.Default.Subscriptions_Lifetime / 5; i++)
+            for (; ; )
             {
                 IList<BacnetPropertyValue> values = new List<BacnetPropertyValue>();
-                ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRESENT_VALUE, ref values);
+                if (ReadProperty(sub.comm, sub.adr, sub.object_id, BacnetPropertyIds.PROP_PRESENT_VALUE, ref values) == false)
+                    return; // maybe here we could not go away 
 
-                // COVNotification replacement
-                OnCOVNotification(comm, adr, 0, subscriberProcessIdentifier, new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, device_id), object_id, 0, false, values, BacnetMaxSegments.MAX_SEG0);
+                lock (m_subscription_list)
+                    if (m_subscription_list.ContainsKey(sub.sub_key))
+                        // COVNotification replacement
+                        OnCOVNotification(sub.comm, sub.adr, 0, sub.subscribe_id, sub.device_id, sub.object_id, 0, false, values, BacnetMaxSegments.MAX_SEG0);
+                    else
+                        return;
 
-                Thread.Sleep(5000);
+                Thread.Sleep((int)Math.Max(1, Properties.Settings.Default.Subscriptions_ReplacementPoolingPeriod) * 1000);
             }
         }
 
@@ -1846,31 +1866,33 @@ namespace Yabe
         private void m_SubscriptionView_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode != Keys.Delete) return;
+
             if (m_SubscriptionView.SelectedItems.Count == 1)
             {
                 ListViewItem itm = m_SubscriptionView.SelectedItems[0];
-                if (itm.Tag is Subscribtion)    // It's a subscription or not (Event/Alarm)
+                if (itm.Tag is Subscription)    // It's a subscription or not (Event/Alarm)
                 {
-                    Subscribtion sub = (Subscribtion)itm.Tag;
-                    if (m_subscription_index.ContainsKey(sub.sub_key))
+                    Subscription sub = (Subscription)itm.Tag;
+                    if (m_subscription_list.ContainsKey(sub.sub_key))
                     {
                         //remove from device
                         try
                         {
-                            if (!sub.comm.SubscribeCOVRequest(sub.adr, sub.object_id, sub.subscribe_id, true, false, 0))
-                            {
-                                MessageBox.Show(this, "Couldn't unsubscribe", "Communication Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                                return;
-                            }
+                            if (sub.is_active_subscription)
+                                if (!sub.comm.SubscribeCOVRequest(sub.adr, sub.object_id, sub.subscribe_id, true, false, 0))
+                                {
+                                    MessageBox.Show(this, "Couldn't unsubscribe", "Communication Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                }
                         }
                         catch (Exception ex)
                         {
-                            MessageBox.Show(this, "Couldn't delete subscribtion: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            MessageBox.Show(this, "Couldn't delete subscription: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         }
                     }
                     //remove from interface
                     m_SubscriptionView.Items.Remove(itm);
-                    m_subscription_index.Remove(sub.sub_key);
+                    lock (m_subscription_list)
+                        m_subscription_list.Remove(sub.sub_key);
                 }
                 m_SubscriptionView.Items.Remove(itm);
             }
@@ -2034,11 +2056,16 @@ namespace Yabe
 
         private void m_subscriptionRenewTimer_Tick(object sender, EventArgs e)
         {
-            foreach (ListViewItem itm in m_subscription_index.Values)
+            lock (m_subscription_list)
+            foreach (ListViewItem itm in m_subscription_list.Values)
             {
                 try
                 {
-                    Subscribtion sub = (Subscribtion)itm.Tag;
+                    Subscription sub = (Subscription)itm.Tag;
+
+                    if (sub.is_active_subscription == false) // not needs to renew, periodic pooling in operation (or nothing) due to COV subscription refused by the remote device
+                        return;
+
                     if (!sub.comm.SubscribeCOVRequest(sub.adr, sub.object_id, sub.subscribe_id, false, Properties.Settings.Default.Subscriptions_IssueConfirmedNotifies, Properties.Settings.Default.Subscriptions_Lifetime))
                     {
                         SetSubscriptionStatus(itm, "Offline");
