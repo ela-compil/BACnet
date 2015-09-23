@@ -49,7 +49,7 @@
           <Value>1476</Value>
         </Property>
         <Property Id="PROP_SEGMENTATION_SUPPORTED" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
-          <Value>3</Value>
+          <Value>0</Value>
         </Property>
         <Property Id="PROP_APDU_TIMEOUT" Tag="BACNET_APPLICATION_TAG_UNSIGNED_INT">
           <Value>3000</Value>

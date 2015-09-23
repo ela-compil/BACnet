@@ -36,6 +36,7 @@ using System.IO.BACnet;
 using System.IO;
 using System.IO.BACnet.Storage;
 using System.Xml.Serialization;
+using System.Threading;
 
 namespace Yabe
 {
@@ -906,7 +907,7 @@ namespace Yabe
 
                     //fetch normal list
                     if (value_list == null)
-                    {
+                    {                   
                         try
                         {
                             if (!comm.ReadPropertyRequest(adr, new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, device_id), BacnetPropertyIds.PROP_OBJECT_LIST, out value_list))
@@ -1766,13 +1767,32 @@ namespace Yabe
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(this, "Error during subscribe: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    DialogResult rep = MessageBox.Show(this, "Error during subscribe: " + ex.Message + "\rReplace by a periodic ReadProperty process ?", "Error", MessageBoxButtons.YesNo, MessageBoxIcon.Error);
+
+                    if (rep==DialogResult.Yes)
+                        ThreadPool.QueueUserWorkItem(a => ReadPropertyPoolingRempalcement2COV(comm, adr, m_next_subscription_id, device_id, object_id));
                     return;
                 }
             }
             finally
             {
                 this.Cursor = Cursors.Default;
+            }
+        }
+
+        // COV echec, PROP_PRESENT_VALUE read replacement method
+        // 5 secondes poolling, during the Subscriptions_Lifetime parameter.
+        private void ReadPropertyPoolingRempalcement2COV(BacnetClient comm, BacnetAddress adr, uint subscriberProcessIdentifier, uint device_id, BacnetObjectId object_id)
+        {
+            for (int i = 0; i < Properties.Settings.Default.Subscriptions_Lifetime / 5; i++)
+            {
+                IList<BacnetPropertyValue> values = new List<BacnetPropertyValue>();
+                ReadProperty(comm, adr, object_id, BacnetPropertyIds.PROP_PRESENT_VALUE, ref values);
+
+                // COVNotification replacement
+                OnCOVNotification(comm, adr, 0, subscriberProcessIdentifier, new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, device_id), object_id, 0, false, values, BacnetMaxSegments.MAX_SEG0);
+
+                Thread.Sleep(5000);
             }
         }
 
