@@ -685,7 +685,7 @@
             this.tabPage1.Padding = new System.Windows.Forms.Padding(3);
             this.tabPage1.Size = new System.Drawing.Size(388, 386);
             this.tabPage1.TabIndex = 0;
-            this.tabPage1.Text = "Subscriptions, Periodic Pooling, Events/Alarms";
+            this.tabPage1.Text = "Subscriptions, Periodic Polling, Events/Alarms";
             this.tabPage1.UseVisualStyleBackColor = true;
             // 
             // m_SubscriptionView

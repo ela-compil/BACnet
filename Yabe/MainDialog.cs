@@ -1812,7 +1812,7 @@ namespace Yabe
                     else
                         return;
 
-                Thread.Sleep((int)Math.Max(1, Properties.Settings.Default.Subscriptions_ReplacementPoolingPeriod) * 1000);
+                Thread.Sleep((int)Math.Max(1, Properties.Settings.Default.Subscriptions_ReplacementPollingPeriod) * 1000);
             }
         }
 

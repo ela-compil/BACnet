@@ -374,12 +374,12 @@ namespace Yabe.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("5")]
-        public uint Subscriptions_ReplacementPoolingPeriod {
+        public uint Subscriptions_ReplacementPollingPeriod {
             get {
-                return ((uint)(this["Subscriptions_ReplacementPoolingPeriod"]));
+                return ((uint)(this["Subscriptions_ReplacementPollingPeriod"]));
             }
             set {
-                this["Subscriptions_ReplacementPoolingPeriod"] = value;
+                this["Subscriptions_ReplacementPollingPeriod"] = value;
             }
         }
     }
