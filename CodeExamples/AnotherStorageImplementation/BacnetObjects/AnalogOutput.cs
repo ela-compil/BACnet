@@ -64,7 +64,7 @@ namespace BaCSharp
             get { return m_PROP_RELINQUISH_DEFAULT; }
             set { 
                     m_PROP_RELINQUISH_DEFAULT=value;
-                    InternalCOVManagement(BacnetPropertyIds.PROP_RELINQUISH_DEFAULT);
+                    ExternalCOVManagement(BacnetPropertyIds.PROP_RELINQUISH_DEFAULT);
                 }
         }
 

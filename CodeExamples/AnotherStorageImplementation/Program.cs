@@ -89,7 +89,8 @@ namespace AnotherStorageImplementation
         /*****************************************************************************************************/
         static void handler_OnWriteNotify(BaCSharpObject sender, BacnetPropertyIds propId)
         {
-            Console.WriteLine("Write success into object : " + sender.PROP_OBJECT_IDENTIFIER.ToString());
+            // External Write ... could be internaly made !!! for instance by Schedule Object
+            Console.WriteLine("Write success into object : " + sender.ToString());
         }
         /*****************************************************************************************************/
         static void InitDeviceObjects()

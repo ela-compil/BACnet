@@ -64,7 +64,7 @@ namespace BaCSharp
             set
             {
                 m_PROP_RELINQUISH_DEFAULT = value;
-                InternalCOVManagement(BacnetPropertyIds.PROP_PRESENT_VALUE);
+                ExternalCOVManagement(BacnetPropertyIds.PROP_PRESENT_VALUE);
             }
         }
 

@@ -58,7 +58,7 @@ namespace AnotherStorageImplementation
             bacnet_client.OnAtomicWriteFileRequest += new BacnetClient.AtomicWriteFileRequestHandler(handler_OnAtomicWriteFileRequest);
             bacnet_client.OnAtomicReadFileRequest += new BacnetClient.AtomicReadFileRequestHandler(handler_OnAtomicReadFileRequest);
 
-            BaCSharpObject.OnInternalCOVNotify += new BaCSharpObject.WriteNotificationCallbackHandler(handler_OnCOVManagementNotify);
+            BaCSharpObject.OnExternalCOVNotify += new BaCSharpObject.WriteNotificationCallbackHandler(handler_OnCOVManagementNotify);
 
             bacnet_client.Start();    // go
             // Send Iam

@@ -61,7 +61,7 @@ namespace BaCSharp
             {
                 m_PROP_OUT_OF_SERVICE = value;
                 m_PROP_STATUS_FLAGS.SetBit((byte)3, value);
-                InternalCOVManagement(BacnetPropertyIds.PROP_OUT_OF_SERVICE);
+                ExternalCOVManagement(BacnetPropertyIds.PROP_OUT_OF_SERVICE);
             }
         }
 
@@ -78,7 +78,7 @@ namespace BaCSharp
                     if ((value == 0) || (value == 1))
                     {
                         m_PROP_PRESENT_VALUE = value;
-                        InternalCOVManagement(BacnetPropertyIds.PROP_PRESENT_VALUE);
+                        ExternalCOVManagement(BacnetPropertyIds.PROP_PRESENT_VALUE);
                     }
                     else
                         ErrorCode_PropertyWrite = ErrorCodes.OutOfRange;
@@ -93,7 +93,7 @@ namespace BaCSharp
         public virtual uint internal_PROP_PRESENT_VALUE
         {
             get { return m_PROP_PRESENT_VALUE; }
-            set { m_PROP_PRESENT_VALUE = value; }
+            set { m_PROP_PRESENT_VALUE = value; ExternalCOVManagement(BacnetPropertyIds.PROP_PRESENT_VALUE); }
         }
 
         public BinaryObject(BacnetObjectId ObjId, String ObjName, String Description, bool InitialValue)

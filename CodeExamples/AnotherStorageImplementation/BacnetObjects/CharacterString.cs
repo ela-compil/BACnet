@@ -51,11 +51,12 @@ namespace BaCSharp
             set
             {
                 if (m_PRESENT_VALUE_ReadOnly == false)
+                {
                     m_PROP_PRESENT_VALUE = value;
+                    ExternalCOVManagement(BacnetPropertyIds.PROP_PRESENT_VALUE);
+                }
                 else
                     ErrorCode_PropertyWrite = ErrorCodes.WriteAccessDenied;
-
-                InternalCOVManagement(BacnetPropertyIds.PROP_PRESENT_VALUE);
             }
         }
 
@@ -64,7 +65,7 @@ namespace BaCSharp
         public virtual String internal_PROP_PRESENT_VALUE
         {
             get { return m_PROP_PRESENT_VALUE; }
-            set { m_PROP_PRESENT_VALUE = value; }
+            set { m_PROP_PRESENT_VALUE = value; ExternalCOVManagement(BacnetPropertyIds.PROP_PRESENT_VALUE); }
         }
 
         public CharacterString(int ObjId, String ObjName, String Description, String InitialValue, bool ReadOnly)

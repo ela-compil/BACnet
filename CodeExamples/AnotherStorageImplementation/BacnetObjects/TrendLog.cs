@@ -70,7 +70,7 @@ namespace BaCSharp
             set
             {
                 m_PROP_ENABLE = value;
-                InternalCOVManagement(BacnetPropertyIds.PROP_ENABLE);
+                ExternalCOVManagement(BacnetPropertyIds.PROP_ENABLE);
             }
         }
 

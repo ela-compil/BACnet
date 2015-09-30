@@ -91,7 +91,7 @@ namespace BaCSharp
         // One event for each object if needed
         public event WriteNotificationCallbackHandler OnWriteNotify;
         // One global event for all the content
-        public static event WriteNotificationCallbackHandler OnInternalCOVNotify;
+        public static event WriteNotificationCallbackHandler OnExternalCOVNotify;
 
         //To get back the raw buffer for specific decoding if needed
         protected BacnetClient sender;
@@ -121,15 +121,21 @@ namespace BaCSharp
             m_PROP_DESCRIPTION = Description;
         }
 
+        public override string ToString()
+        {
+            return m_PROP_OBJECT_IDENTIFIER.ToString();
+        }
+
         public bool Equals(BacnetObjectId objId)
         {
             return this.m_PROP_OBJECT_IDENTIFIER.Equals(objId);
         }
 
-        public void InternalCOVManagement(BacnetPropertyIds propId)
+        // Managed in BacnetActivity.cs, for COV notification to client
+        public void ExternalCOVManagement(BacnetPropertyIds propId)
         {
-            if (OnInternalCOVNotify != null)
-                OnInternalCOVNotify(this, propId);
+            if (OnExternalCOVNotify != null)
+                OnExternalCOVNotify(this, propId);
         }
 
         public IList<BacnetValue> FindPropValue(String propName)
@@ -282,7 +288,7 @@ namespace BaCSharp
                     if (ErrorCode_PropertyWrite == ErrorCodes.Good)
                     {
                         if (OnWriteNotify != null) OnWriteNotify(this, (BacnetPropertyIds)value.property.propertyIdentifier);
-                        if (OnInternalCOVNotify != null) OnInternalCOVNotify(this, (BacnetPropertyIds)value.property.propertyIdentifier);
+                        if (OnExternalCOVNotify != null) OnExternalCOVNotify(this, (BacnetPropertyIds)value.property.propertyIdentifier);
                     }
 
                     return ErrorCode_PropertyWrite;
@@ -328,7 +334,7 @@ namespace BaCSharp
                     if (ErrorCode_PropertyWrite == ErrorCodes.Good)
                     {
                         if (OnWriteNotify != null) OnWriteNotify(this, (BacnetPropertyIds)value.property.propertyIdentifier);
-                        if (OnInternalCOVNotify != null) OnInternalCOVNotify(this, (BacnetPropertyIds)value.property.propertyIdentifier);
+                        if (OnExternalCOVNotify != null) OnExternalCOVNotify(this, (BacnetPropertyIds)value.property.propertyIdentifier);
                     }
 
                     return ErrorCode_PropertyWrite;

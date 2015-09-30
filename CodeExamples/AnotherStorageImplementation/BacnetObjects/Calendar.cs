@@ -139,7 +139,7 @@ namespace BaCSharp
             if (NewPresentValue != m_PROP_PRESENT_VALUE)
             {
                 m_PROP_PRESENT_VALUE = NewPresentValue;
-                InternalCOVManagement(BacnetPropertyIds.PROP_PRESENT_VALUE);
+                ExternalCOVManagement(BacnetPropertyIds.PROP_PRESENT_VALUE);
             }
 
             // Place a callback for tomorrow 0:0:1
