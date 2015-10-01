@@ -30,6 +30,7 @@ using System.Linq;
 using System.Text;
 using System.IO.BACnet;
 using System.Threading;
+using System.Diagnostics;
 
 namespace BasicReadWrite
 {
@@ -46,6 +47,9 @@ namespace BasicReadWrite
         /*****************************************************************************************************/
         static void Main(string[] args)
         {
+
+            Trace.Listeners.Add(new ConsoleTraceListener());
+
             try
             {
                 StartActivity();
@@ -66,6 +70,8 @@ namespace BasicReadWrite
             bacnet_client = new BacnetClient(new BacnetIpUdpProtocolTransport(0xBAC0, false));
             // or Bacnet Mstp on COM4 à 38400 bps, own master id 8
             // m_bacnet_client = new BacnetClient(new BacnetMstpProtocolTransport("COM4", 38400, 8);
+            // Or Bacnet Ethernet
+            // bacnet_client = new BacnetClient(new BacnetEthernetProtocolTransport("Connexion au réseau local"));          
 
             bacnet_client.Start();    // go
 
@@ -88,9 +94,9 @@ namespace BasicReadWrite
 
             BacnetValue Value;
             bool ret;
-            // Read Present_Value property on the object ANALOG_INPUT:1 provided by the device 1026
+            // Read Present_Value property on the object ANALOG_INPUT:0 provided by the device 12345
             // Scalar value only
-            ret = ReadScalarValue(1026, new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 1), BacnetPropertyIds.PROP_PRESENT_VALUE, out Value);
+            ret = ReadScalarValue(12345, new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 0), BacnetPropertyIds.PROP_PRESENT_VALUE, out Value);
 
             if (ret == true)
             {

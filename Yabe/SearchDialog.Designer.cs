@@ -30,6 +30,8 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(SearchDialog));
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.label10 = new System.Windows.Forms.Label();
+            this.m_localUdpEndpointsCombo = new System.Windows.Forms.ComboBox();
             this.m_AddUdpButton = new System.Windows.Forms.Button();
             this.m_PortValue = new System.Windows.Forms.NumericUpDown();
             this.label1 = new System.Windows.Forms.Label();
@@ -58,8 +60,10 @@
             this.m_AddPtpSerialButton = new System.Windows.Forms.Button();
             this.label13 = new System.Windows.Forms.Label();
             this.m_SerialPtpPortCombo = new System.Windows.Forms.ComboBox();
-            this.m_localUdpEndpointsCombo = new System.Windows.Forms.ComboBox();
-            this.label10 = new System.Windows.Forms.Label();
+            this.groupBox5 = new System.Windows.Forms.GroupBox();
+            this.m_EthernetInterfaceCombo = new System.Windows.Forms.ComboBox();
+            this.label11 = new System.Windows.Forms.Label();
+            this.m_AddEthernetButton = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.m_PortValue)).BeginInit();
             this.groupBox2.SuspendLayout();
@@ -72,6 +76,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.m_RetriesValue)).BeginInit();
             this.groupBox4.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.m_PtpBaudRate)).BeginInit();
+            this.groupBox5.SuspendLayout();
             this.SuspendLayout();
             // 
             // groupBox1
@@ -89,6 +94,25 @@
             this.groupBox1.TabIndex = 0;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "BACnet/IP over Udp";
+            // 
+            // label10
+            // 
+            this.label10.AutoSize = true;
+            this.label10.Location = new System.Drawing.Point(10, 48);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(77, 13);
+            this.label10.TabIndex = 8;
+            this.label10.Text = "Local endpoint";
+            // 
+            // m_localUdpEndpointsCombo
+            // 
+            this.m_localUdpEndpointsCombo.DataBindings.Add(new System.Windows.Forms.Binding("Text", global::Yabe.Properties.Settings.Default, "DefaultUdpIp", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
+            this.m_localUdpEndpointsCombo.FormattingEnabled = true;
+            this.m_localUdpEndpointsCombo.Location = new System.Drawing.Point(98, 45);
+            this.m_localUdpEndpointsCombo.Name = "m_localUdpEndpointsCombo";
+            this.m_localUdpEndpointsCombo.Size = new System.Drawing.Size(100, 21);
+            this.m_localUdpEndpointsCombo.TabIndex = 7;
+            this.m_localUdpEndpointsCombo.Text = global::Yabe.Properties.Settings.Default.DefaultUdpIp;
             // 
             // m_AddUdpButton
             // 
@@ -429,30 +453,52 @@
             this.m_SerialPtpPortCombo.Size = new System.Drawing.Size(100, 21);
             this.m_SerialPtpPortCombo.TabIndex = 0;
             // 
-            // m_localUdpEndpointsCombo
+            // groupBox5
             // 
-            this.m_localUdpEndpointsCombo.DataBindings.Add(new System.Windows.Forms.Binding("Text", global::Yabe.Properties.Settings.Default, "DefaultUdpIp", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
-            this.m_localUdpEndpointsCombo.FormattingEnabled = true;
-            this.m_localUdpEndpointsCombo.Location = new System.Drawing.Point(98, 45);
-            this.m_localUdpEndpointsCombo.Name = "m_localUdpEndpointsCombo";
-            this.m_localUdpEndpointsCombo.Size = new System.Drawing.Size(100, 21);
-            this.m_localUdpEndpointsCombo.TabIndex = 7;
-            this.m_localUdpEndpointsCombo.Text = global::Yabe.Properties.Settings.Default.DefaultUdpIp;
+            this.groupBox5.Controls.Add(this.m_EthernetInterfaceCombo);
+            this.groupBox5.Controls.Add(this.label11);
+            this.groupBox5.Controls.Add(this.m_AddEthernetButton);
+            this.groupBox5.Location = new System.Drawing.Point(12, 438);
+            this.groupBox5.Name = "groupBox5";
+            this.groupBox5.Size = new System.Drawing.Size(274, 85);
+            this.groupBox5.TabIndex = 4;
+            this.groupBox5.TabStop = false;
+            this.groupBox5.Text = "BACnet/Ethernet";
             // 
-            // label10
+            // m_EthernetInterfaceCombo
             // 
-            this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(10, 48);
-            this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(77, 13);
-            this.label10.TabIndex = 8;
-            this.label10.Text = "Local endpoint";
+            this.m_EthernetInterfaceCombo.FormattingEnabled = true;
+            this.m_EthernetInterfaceCombo.Location = new System.Drawing.Point(13, 48);
+            this.m_EthernetInterfaceCombo.Name = "m_EthernetInterfaceCombo";
+            this.m_EthernetInterfaceCombo.Size = new System.Drawing.Size(255, 21);
+            this.m_EthernetInterfaceCombo.TabIndex = 12;
+            // 
+            // label11
+            // 
+            this.label11.AutoSize = true;
+            this.label11.Location = new System.Drawing.Point(10, 26);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(49, 13);
+            this.label11.TabIndex = 12;
+            this.label11.Text = "Interface";
+            // 
+            // m_AddEthernetButton
+            // 
+            this.m_AddEthernetButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.m_AddEthernetButton.Location = new System.Drawing.Point(208, 21);
+            this.m_AddEthernetButton.Name = "m_AddEthernetButton";
+            this.m_AddEthernetButton.Size = new System.Drawing.Size(60, 23);
+            this.m_AddEthernetButton.TabIndex = 12;
+            this.m_AddEthernetButton.Text = "Add";
+            this.m_AddEthernetButton.UseVisualStyleBackColor = true;
+            this.m_AddEthernetButton.Click += new System.EventHandler(this.m_AddEthernetButton_Click);
             // 
             // SearchDialog
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(298, 444);
+            this.ClientSize = new System.Drawing.Size(298, 535);
+            this.Controls.Add(this.groupBox5);
             this.Controls.Add(this.groupBox4);
             this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.groupBox2);
@@ -480,6 +526,8 @@
             this.groupBox4.ResumeLayout(false);
             this.groupBox4.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.m_PtpBaudRate)).EndInit();
+            this.groupBox5.ResumeLayout(false);
+            this.groupBox5.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -517,5 +565,9 @@
         private System.Windows.Forms.Label label9;
         private System.Windows.Forms.Label label10;
         private System.Windows.Forms.ComboBox m_localUdpEndpointsCombo;
+        private System.Windows.Forms.GroupBox groupBox5;
+        private System.Windows.Forms.ComboBox m_EthernetInterfaceCombo;
+        private System.Windows.Forms.Label label11;
+        private System.Windows.Forms.Button m_AddEthernetButton;
     }
 }

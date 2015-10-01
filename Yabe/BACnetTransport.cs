@@ -27,8 +27,11 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Linq;
 using System.IO.BACnet.Serialize;
 using System.Diagnostics;
+using SharpPcap;
+using SharpPcap.LibPcap;
 
 namespace System.IO.BACnet
 {
@@ -2254,6 +2257,213 @@ namespace System.IO.BACnet
                 }
                 m_port = null;
             }
+        }
+    }
+
+    // Copyright (C) 2015 Frederic Chaxel <fchaxel@free.fr>
+    //  
+    // lot of code ported from https://github.com/LorenVS/bacstack
+    //      Copyright (C) 2014 Loren Van Spronsen, thank to him.
+    // Thank to Christopher Gunther for the idea, and the starting code
+
+    class BacnetEthernetProtocolTransport : IBacnetTransport
+    {
+        private string deviceName;
+        private LibPcapLiveDevice _device;
+        private byte[] _deviceMac; // Mac of the device
+
+        public event MessageRecievedHandler MessageRecieved;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="FriendlydeviceName">Something like "Local Lan 1", "Wireless network", ...</param>
+        public BacnetEthernetProtocolTransport(string FriendlydeviceName)
+        {
+            this.deviceName = FriendlydeviceName;
+        }
+
+        public BacnetAddressTypes Type { get { return BacnetAddressTypes.Ethernet; } }
+
+        public BacnetAddress GetBroadcastAddress() { return new BacnetAddress(BacnetAddressTypes.Ethernet, "FF-FF-FF-FF-FF-FF"); }
+        public int HeaderLength { get { return 6 + 6 + 2 + 3; } }
+        public BacnetMaxAdpu MaxAdpuLength { get { return BacnetMaxAdpu.MAX_APDU1476; } }
+        public int MaxBufferLength { get { return 1500; } }
+        public byte MaxInfoFrames { get { return 0xff; } set { /* ignore */ } }     //the ethernet doesn't have max info frames
+
+        public bool WaitForAllTransmits(int timeout) { return true; } // not used 
+
+        public override string ToString()
+        {
+            return "Ethernet";
+        }
+
+        private LibPcapLiveDevice Open()
+        {
+            var devices = LibPcapLiveDeviceList.Instance.Where(dev => dev.Interface != null);
+
+            if ((deviceName != null)&&(deviceName!="")) // specified interface
+            {
+                try
+                {
+                    var device = devices.Where(dev => dev.Interface.FriendlyName == deviceName).FirstOrDefault();
+                    device.Open();
+                    return device;
+                }
+                catch
+                {
+                    return null;
+                }
+
+            }
+            else // no interface specified, open the first Ethernet link layer (included Wifi).
+            {
+                foreach (var device in devices)
+                {
+                    device.Open(DeviceMode.Normal, 10);  // 10 ms read timeout
+                    if (device.LinkType == PacketDotNet.LinkLayers.Ethernet
+                        && device.Interface.MacAddress != null)
+                        return device;
+                    device.Close();
+                }
+
+                return null;
+            }
+        }
+
+        public void Start()
+        {
+            _device = Open();
+            if (_device == null) throw new Exception("Cannot open Ethernet interface");
+
+            _deviceMac = _device.Interface.MacAddress.GetAddressBytes();
+
+            // filter to only bacnet packets
+            _device.Filter = "ether proto 0x82";
+
+            // using this, if a close is not made, the undelying thread does not close
+            // and it's also as slow as the owner thread technic
+            //_device.OnPacketArrival += OnPacketArrival;
+            //_device.StartCapture();
+            
+            System.Threading.Thread th = new Threading.Thread(CaptureThread);
+            th.IsBackground = true;
+            th.Start();
+        }
+
+        void CaptureThread()
+        {
+
+            for (;;)
+            {
+                RawCapture packet = _device.GetNextPacket();
+                if (packet != null)
+                    OnPacketArrival(packet);
+            }
+
+        }
+
+        private bool _isOutboundPacket(byte[] buffer)
+        {
+            // check to see if the source mac 100%
+            // matches the device mac address of the local device
+
+            for (int i = 0; i < 6; i++)
+            {
+                if (buffer[6 + i] != _deviceMac[i])
+                    return false;
+            }
+
+            return true;
+        }
+
+        byte[] Mac(byte[] buffer, int offset)
+        {
+            byte[] b = new byte[6];
+            Buffer.BlockCopy(buffer, offset, b, 0, 6);
+            return b;
+        }
+
+        void OnPacketArrival(object sender, CaptureEventArgs e)
+        {
+            OnPacketArrival(e.Packet);
+        }
+
+        void OnPacketArrival(RawCapture packet)
+        {
+            // don't process any packet too short to not be valid
+            if (packet.Data.Length < 17)
+                return;
+            // don't process any packets sent by the local device
+           // if (_isOutboundPacket(packet.Data))
+            //    return;
+
+            byte[] buffer = packet.Data;
+            int offset = 0;
+
+            int length;
+            byte dsap, ssap, control;
+
+            // don't care the destination field
+            offset += 6;
+
+            // source address
+            BacnetAddress Bac_source = new BacnetAddress(BacnetAddressTypes.Ethernet, 0, Mac(buffer, offset));
+            offset += 6;
+
+            // len
+            length = buffer[offset] * 256 + buffer[offset + 1];
+            offset += 2;
+
+            // 3 bytes LLC hearder
+            dsap = buffer[offset++];
+            ssap = buffer[offset++];
+            control = buffer[offset++];
+
+            length -= 3; // Bacnet content length eq. ethernet lenght minus LLC header length
+
+            // don't process non-BACnet packets
+            if (dsap != 0x82 || ssap != 0x82 || control != 0x03)
+                return;
+
+            if (MessageRecieved != null)
+                MessageRecieved(this, buffer, HeaderLength, length, Bac_source);
+        }
+
+        public int Send(byte[] buffer, int offset, int data_length, BacnetAddress address, bool wait_for_transmission, int timeout)
+        {
+            int hdr_offset = 0;
+
+            for (int i = 0; i < 6; i++)
+                buffer[hdr_offset++] = address.adr[i];
+
+            // write the source mac address bytes
+            for (int i = 0; i < 6; i++)
+                buffer[hdr_offset++] = _deviceMac[i];
+
+            // the next 2 bytes are used for the packet length
+            buffer[hdr_offset++] = (byte)(((data_length + 3) & 0xFF00) >> 8);
+            buffer[hdr_offset++] = (byte)((data_length + 3) & 0xFF);
+
+            // DSAP and SSAP
+            buffer[hdr_offset++] = 0x82;
+            buffer[hdr_offset++] = 0x82;
+
+            // LLC control field
+            buffer[hdr_offset] = 0x03;
+
+            lock (_device)
+            {
+                _device.SendPacket(buffer, data_length + HeaderLength);
+            }
+
+            return data_length + HeaderLength;
+        }
+
+        public void Dispose()
+        {
+            lock (_device)
+                _device.Close();
         }
     }
 }

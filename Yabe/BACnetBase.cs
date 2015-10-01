@@ -2211,6 +2211,16 @@ namespace System.IO.BACnet
                     }
                     catch { throw new Exception(); }
                    break;
+                case BacnetAddressTypes.Ethernet:
+                   try
+                   {
+                       String[] EthStrCut = s.Split('-');
+                       adr=new byte[6];
+                       for (int i = 0; i < 6; i++)
+                           adr[i] = Convert.ToByte(EthStrCut[i], 16);
+                   }
+                   catch { throw new Exception(); }
+                   break;
             }
         }
         public override int GetHashCode()
@@ -2230,6 +2240,15 @@ namespace System.IO.BACnet
                     return adr[0].ToString();
                 case BacnetAddressTypes.PTP:
                     return "x";
+                case BacnetAddressTypes.Ethernet:
+                    StringBuilder sb = new StringBuilder();
+                    for (int i = 0; i < 6; i++)
+                    {
+                        sb.Append(adr[i].ToString("X2"));
+                        if (i != 5) sb.Append('-');
+                    }
+
+                    return sb.ToString();
                 default:
                     return base.ToString();
             }

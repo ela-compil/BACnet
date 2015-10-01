@@ -1,5 +1,6 @@
 http://sourceforge.net/projects/zedgraph/ is under LGPL licence
 http://www.codeproject.com/Articles/38699/A-Professional-Calendar-Agenda-View-That-You-Will
+http://sourceforge.net/projects/sharppcap/
 
 		  GNU LESSER GENERAL PUBLIC LICENSE
 		       Version 2.1, February 1999

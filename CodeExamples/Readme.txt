@@ -6,6 +6,7 @@ LibBacnet
 	Contains all the classes for a new development in the compiled file : LibBacnet.Dll
 	could be useful for instance for Visual Basic programmers (or others)
 	Ready for both client and server applications
+	If using BacnetEthernet, copy also PacketDotNet.dll & SharpPcap.dll side LibBacnet.dll
 
 BasicReadWrite
 	Send a Whois to all devices on the net

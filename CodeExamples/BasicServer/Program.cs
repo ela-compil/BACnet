@@ -31,6 +31,7 @@ using System.Text;
 using System.IO.BACnet;
 using System.Threading;
 using System.IO.BACnet.Storage;
+using System.Diagnostics;
 
 namespace BasicServer
 {
@@ -46,6 +47,9 @@ namespace BasicServer
         /*****************************************************************************************************/
         static void Main(string[] args)
         {
+
+            Trace.Listeners.Add(new ConsoleTraceListener());
+
             try
             {
                 StartActivity();
@@ -89,6 +93,8 @@ namespace BasicServer
             bacnet_client = new BacnetClient(new BacnetIpUdpProtocolTransport(0xBAC0, false));
             // or Bacnet Mstp on COM4 à 38400 bps, own master id 8
             // m_bacnet_client = new BacnetClient(new BacnetMstpProtocolTransport("COM4", 38400, 8);
+            // Or Bacnet Ethernet
+            // bacnet_client = new BacnetClient(new BacnetEthernetProtocolTransport("Connexion au réseau local"));    
 
             bacnet_client.OnWhoIs += new BacnetClient.WhoIsHandler(handler_OnWhoIs);
             bacnet_client.OnReadPropertyRequest += new BacnetClient.ReadPropertyRequestHandler(handler_OnReadPropertyRequest);

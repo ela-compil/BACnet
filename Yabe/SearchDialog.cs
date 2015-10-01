@@ -30,8 +30,10 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Text;
+using System.Linq;
 using System.Windows.Forms;
 using System.IO.BACnet;
+using SharpPcap.LibPcap;
 
 namespace Yabe
 {
@@ -71,6 +73,20 @@ namespace Yabe
             this.Close();
         }
 
+        private void m_AddEthernetButton_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                String[] s = m_EthernetInterfaceCombo.Text.Split(':');
+
+                m_result = new BacnetClient(new BacnetEthernetProtocolTransport(s[0]), (int)m_TimeoutValue.Value, (int)m_RetriesValue.Value);
+                this.DialogResult = System.Windows.Forms.DialogResult.OK;
+            }
+            catch{}
+
+            this.Close();
+        }
+
         private void m_AddSerialButton_Click(object sender, EventArgs e)
         {
             int com_number = 0;
@@ -102,12 +118,34 @@ namespace Yabe
             this.Close();
         }
 
+
+        private void FillEthernetInterface()
+        {
+            var devices = LibPcapLiveDeviceList.Instance.Where(dev => dev.Interface != null);
+
+            foreach (var device in devices)
+            {
+                device.Open();
+                if (device.LinkType == PacketDotNet.LinkLayers.Ethernet
+                    && device.Interface.MacAddress != null)
+                    m_EthernetInterfaceCombo.Items.Add(device.Interface.FriendlyName + ": " + device.Interface.Description);
+                device.Close();
+            }
+        }
+
         private void SearchDialog_Load(object sender, EventArgs e)
         {
             //get all local endpoints for udp
             string[] local_endpoints = GetAvailableIps();
             m_localUdpEndpointsCombo.Items.Clear();
             m_localUdpEndpointsCombo.Items.AddRange(local_endpoints);
+
+            // try to get Ethernet interfaces
+            try
+            {
+                FillEthernetInterface();
+            }
+            catch { }
         }
 
         public static string[] GetAvailableIps()
@@ -131,5 +169,6 @@ namespace Yabe
             }
             return ips.ToArray();
         }
+
     }
 }
