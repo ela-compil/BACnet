@@ -2307,7 +2307,7 @@ namespace System.IO.BACnet
                 try
                 {
                     var device = devices.Where(dev => dev.Interface.FriendlyName == deviceName).FirstOrDefault();
-                    device.Open();
+                    device.Open(DeviceMode.Normal, 1000);  // 1000 ms read timeout
                     return device;
                 }
                 catch
@@ -2340,11 +2340,6 @@ namespace System.IO.BACnet
 
             // filter to only bacnet packets
             _device.Filter = "ether proto 0x82";
-
-            // using this, if a close is not made, the undelying thread does not close
-            // and it's also as slow as the owner thread technic
-            //_device.OnPacketArrival += OnPacketArrival;
-            //_device.StartCapture();
             
             System.Threading.Thread th = new Threading.Thread(CaptureThread);
             th.IsBackground = true;
@@ -2356,21 +2351,26 @@ namespace System.IO.BACnet
             _device.NonBlockingMode = true;  // Without that it's very, very slow
             for (;;)
             {
-                RawCapture packet = _device.GetNextPacket();
-                if (packet != null)
-                    OnPacketArrival(packet);
+                try
+                {
+                    RawCapture packet = _device.GetNextPacket();
+                    if (packet != null)
+                        OnPacketArrival(packet);
+                    else
+                        System.Threading.Thread.Sleep(10);  // NonBlockingMode, we need to slow the overhead
+                }
+                catch { return; } // closed interface sure !
             }
-
         }
 
-        private bool _isOutboundPacket(byte[] buffer)
+        private bool _isOutboundPacket(byte[] buffer, int offset)
         {
             // check to see if the source mac 100%
             // matches the device mac address of the local device
 
             for (int i = 0; i < 6; i++)
             {
-                if (buffer[6 + i] != _deviceMac[i])
+                if (buffer[offset + i] != _deviceMac[i])
                     return false;
             }
 
@@ -2384,19 +2384,11 @@ namespace System.IO.BACnet
             return b;
         }
 
-        void OnPacketArrival(object sender, CaptureEventArgs e)
-        {
-            OnPacketArrival(e.Packet);
-        }
-
         void OnPacketArrival(RawCapture packet)
         {
             // don't process any packet too short to not be valid
-            if (packet.Data.Length < 17)
+            if (packet.Data.Length <= 17)
                 return;
-            // don't process any packets sent by the local device
-           // if (_isOutboundPacket(packet.Data))
-            //    return;
 
             byte[] buffer = packet.Data;
             int offset = 0;
@@ -2404,7 +2396,11 @@ namespace System.IO.BACnet
             int length;
             byte dsap, ssap, control;
 
-            // don't care the destination field
+            // Got frames send by me, not for me, not broadcast
+            byte[] dest = Mac(buffer, offset);
+            if (!_isOutboundPacket(dest, 0) && (dest[0] != 255))
+                return;
+
             offset += 6;
 
             // source address

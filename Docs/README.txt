@@ -124,37 +124,46 @@
 		  far I haven't found any others easy accessible tools that also supports
 		  it. So I haven't been able to test it. It's implemented purely by doc.
 
-	2.4 OPTIONS
+	2.4	BACNET/ETHERNET
+		- pcap/winpcap must be installed on the Pc before usage
+		       go to http://www.tcpdump.org/ or https://www.winpcap.org/
+		       or more simply download wireshark https://www.wireshark.org/#download
+		- Start Yabe.
+		- Select "Add device" under "Functions"
+		- Select an Ethernet or Wifi Interface
+		- Press the "Add" button in the "BACnet/Ethernet" field.
+
+	2.5 OPTIONS
 	A few selected options.
 
-		2.4.1 Udp_ExclusiveUseOfSocket
+		2.5.1 Udp_ExclusiveUseOfSocket
 			Set this to 'true' to force single socket usage on port 0xBAC0. A value of 
 			'false' will create an extra unicast socket and allow multiple clients on
 			same ip/machine.
 
-		2.4.2 Subscriptions_Lifetime
+		2.5.2 Subscriptions_Lifetime
 			Subscriptions will be created with this lifetime. Eg. after 120 seconds the
 			subscription will be removed by device. Set to 0 to disable.
 	
-		2.4.3 Subscriptions_IssueConfirmedNotifies
+		2.5.3 Subscriptions_IssueConfirmedNotifies
 			By default notifications will be sent 'unconfirmed'. If you think your 
 			notifications are important set this to 'true' instead. 
 
-		2.4.4 MSTP_DisplayFreeAddresses
+		2.5.4 MSTP_DisplayFreeAddresses
 			By default a MSTP connection will display all 'free' addresses in the 
 			'Device' tree. This can help select a source_address for the program.
 			If you don't want to see the 'free' entries, set this option to 'false'
 
-		2.4.5 MSTP_LogStateMachine
+		2.5.5 MSTP_LogStateMachine
 			The MSTP code is able to display all state changes in log. This is very
 			verbose. It may help you understand the MSTP better though.
 	
-		2.4.6 Segments_Max
+		2.5.6 Segments_Max
 			This value sets 'allowed max_segments' to send to the client. The client
 			might not support segmentation though. If it gives you trouble, set this 
 			to 0 to disable.
 	
-		2.4.7 DefaultDownloadSpeed
+		2.5.7 DefaultDownloadSpeed
 			This value sets the method for 'file download'. (This is part of the 
 			original tests.) 
 			The default value of '0' will result in a standard 'send request, wait 
@@ -164,24 +173,24 @@
 			Value '2' will result in a 'segmented' sequence. This is the most efficient
 			for both Udp and MSTP. This is the result I sought!
 	
-		2.4.8 Udp_DontFragment
+		2.5.8 Udp_DontFragment
 			This will enforce (if set to 'true') no fragmentation on the udp. It ought
-			to be enforced, but it turns out that MTU is a bit tricky. (See 2.4.9)
+			to be enforced, but it turns out that MTU is a bit tricky. (See 2.5.9)
 
-		2.4.9 Udp_MaxPayload
+		2.5.9 Udp_MaxPayload
 			The max payload for udp seems to differ from the expectations of BACnet.
 			The most common payload is 1472. Which is 1500 when added with the 28 bytes
 			ip headers. This number is determined by your local switch/router through.
 
-		2.4.10 DefaultPreferStructuredView
+		2.5.10 DefaultPreferStructuredView
 			The Addendum 135d defines a 'Structured View' entry in the address space.
 			This enables a hierarchical address space. (Thank you very much.)
 			Though if you like the flat model better, set this to 'false'.
 
-		2.4.11 DefaultWritePriority
+		2.5.11 DefaultWritePriority
 			Priorty level used for write operation. Can be changed without reboot.
 
-		2.4.12 YabeDeviceId
+		2.5.12 YabeDeviceId
 			If this value is positive Yabe send response to Who-Is with this Bacnet
 			device Id. Can be usefull to set recipients list in notification class 
 			objects without using Yabe Ip endpoint. 
@@ -222,15 +231,23 @@
 
 4.  TESTS
 	The DemoServer and Yabe has been tested with other similar programs:
-	- InneaBACnetExplorer
-	- BACnet Stack - By Steve Karg
-	- Wireshark. (This is most likely the same as the BACnet Stack)
-	- CAS BACnet Explorer
-	'Segmentation' has only been verified with Wireshark.
-	'PTP' has not been tested with any 3rd parties.
+	    - InneaBACnetExplorer
+	    - BACnet Stack - By Steve Karg
+	    - Wireshark. (This is most likely the same as the BACnet Stack)
+	    - CAS BACnet Explorer
+	'Segmentation' has been verified with Wireshark, and Wago 750/830
+	BACNET/PTP has not been tested with any 3rd parties.
+    BACnet/MSTP has been tested with an Ftdi Usb/Rs485 adaptor and
+	    - Trane Uc800 (vendor Id 2)
+		- Metz Connect I/O modules (BTR Netcom vendor Id 421)
+		- Contemporary Control MSTP/IP Router (vendor Id 245)
+	BACnet/Ethernet has been tested with
+	    - Delta Controls devices (vendor Id 8)
+	BACnet/IP has been tested with a very long list of devices 
 	BBMD services has been tested with peers :
-	- Wago 750/830
-	- Newron DoGate
+	    - Wago 750/830 (vendor Id 222)
+	    - Newron DoGate (vendor Id 451)
+		- Sauter EY-AS521 (vendor Id 80)
 
 5.  SUPPORT
 	There's no support for the project at this time. That's reserved for our 
