@@ -2320,7 +2320,7 @@ namespace System.IO.BACnet
             {
                 foreach (var device in devices)
                 {
-                    device.Open(DeviceMode.Normal, 10);  // 10 ms read timeout
+                    device.Open(DeviceMode.Normal, 1000);  // 1000 ms read timeout
                     if (device.LinkType == PacketDotNet.LinkLayers.Ethernet
                         && device.Interface.MacAddress != null)
                         return device;
@@ -2353,7 +2353,7 @@ namespace System.IO.BACnet
 
         void CaptureThread()
         {
-
+            _device.NonBlockingMode = true;  // Without that it's very, very slow
             for (;;)
             {
                 RawCapture packet = _device.GetNextPacket();
