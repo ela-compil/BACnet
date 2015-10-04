@@ -89,33 +89,41 @@ namespace Yabe
 
         private void m_AddSerialButton_Click(object sender, EventArgs e)
         {
-            int com_number = 0;
-            if (m_SerialPortCombo.Text.Length >= 3) int.TryParse(m_SerialPortCombo.Text.Substring(3), out com_number);
-            BacnetMstpProtocolTransport transport;
-            if (com_number >= 1000)      //these are my special "pipe" com ports 
-                transport = new BacnetMstpProtocolTransport(new BacnetPipeTransport(m_SerialPortCombo.Text), (short)m_SourceAddressValue.Value, (byte)m_MaxMasterValue.Value, (byte)m_MaxInfoFramesValue.Value);
-            else
-                transport = new BacnetMstpProtocolTransport(m_SerialPortCombo.Text, (int)m_BaudValue.Value, (short)m_SourceAddressValue.Value, (byte)m_MaxMasterValue.Value, (byte)m_MaxInfoFramesValue.Value);
-            transport.StateLogging = Properties.Settings.Default.MSTP_LogStateMachine;
-            m_result = new BacnetClient(transport, (int)m_TimeoutValue.Value, (int)m_RetriesValue.Value);
-            this.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.Close();
+            try
+            {
+                int com_number = 0;
+                if (m_SerialPortCombo.Text.Length >= 3) int.TryParse(m_SerialPortCombo.Text.Substring(3), out com_number);
+                BacnetMstpProtocolTransport transport;
+                if (com_number >= 1000)      //these are my special "pipe" com ports 
+                    transport = new BacnetMstpProtocolTransport(new BacnetPipeTransport(m_SerialPortCombo.Text), (short)m_SourceAddressValue.Value, (byte)m_MaxMasterValue.Value, (byte)m_MaxInfoFramesValue.Value);
+                else
+                    transport = new BacnetMstpProtocolTransport(m_SerialPortCombo.Text, (int)m_BaudValue.Value, (short)m_SourceAddressValue.Value, (byte)m_MaxMasterValue.Value, (byte)m_MaxInfoFramesValue.Value);
+                transport.StateLogging = Properties.Settings.Default.MSTP_LogStateMachine;
+                m_result = new BacnetClient(transport, (int)m_TimeoutValue.Value, (int)m_RetriesValue.Value);
+                this.DialogResult = System.Windows.Forms.DialogResult.OK;
+                this.Close();
+            }
+            catch { }
         }
 
         private void m_AddPtpSerialButton_Click(object sender, EventArgs e)
         {
-            int com_number = 0;
-            if (m_SerialPtpPortCombo.Text.Length >= 3) int.TryParse(m_SerialPtpPortCombo.Text.Substring(3), out com_number);
-            BacnetPtpProtocolTransport transport;
-            if (com_number >= 1000)      //these are my special "pipe" com ports 
-                transport = new BacnetPtpProtocolTransport(new BacnetPipeTransport(m_SerialPtpPortCombo.Text), false);
-            else
-                transport = new BacnetPtpProtocolTransport(m_SerialPtpPortCombo.Text, (int)m_BaudValue.Value, false);
-            transport.Password = m_PasswordText.Text;
-            transport.StateLogging = Properties.Settings.Default.MSTP_LogStateMachine;
-            m_result = new BacnetClient(transport, (int)m_TimeoutValue.Value, (int)m_RetriesValue.Value);
-            this.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.Close();
+            try
+            {
+                int com_number = 0;
+                if (m_SerialPtpPortCombo.Text.Length >= 3) int.TryParse(m_SerialPtpPortCombo.Text.Substring(3), out com_number);
+                BacnetPtpProtocolTransport transport;
+                if (com_number >= 1000)      //these are my special "pipe" com ports 
+                    transport = new BacnetPtpProtocolTransport(new BacnetPipeTransport(m_SerialPtpPortCombo.Text), false);
+                else
+                    transport = new BacnetPtpProtocolTransport(m_SerialPtpPortCombo.Text, (int)m_BaudValue.Value, false);
+                transport.Password = m_PasswordText.Text;
+                transport.StateLogging = Properties.Settings.Default.MSTP_LogStateMachine;
+                m_result = new BacnetClient(transport, (int)m_TimeoutValue.Value, (int)m_RetriesValue.Value);
+                this.DialogResult = System.Windows.Forms.DialogResult.OK;
+                this.Close();
+            }
+            catch { }
         }
 
 

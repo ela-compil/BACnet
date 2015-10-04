@@ -110,11 +110,13 @@ namespace System.IO.BACnet
         {
         }
 
+#if XAMARIN
+#else
         public BacnetClient(string port_name, int baud_rate, int timeout = 1000, int retries = 3) :
             this(new BacnetMstpProtocolTransport(port_name, baud_rate), timeout, retries)
         {
         }
-
+#endif
         public BacnetClient(IBacnetTransport transport, int timeout = 1000, int retries = 3)
         {
             m_client = transport;

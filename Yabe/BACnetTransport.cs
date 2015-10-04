@@ -30,8 +30,11 @@ using System.Text;
 using System.Linq;
 using System.IO.BACnet.Serialize;
 using System.Diagnostics;
-using SharpPcap;
-using SharpPcap.LibPcap;
+#if XAMARIN
+#else
+    using SharpPcap;
+    using SharpPcap.LibPcap;
+#endif
 
 namespace System.IO.BACnet
 {
@@ -379,6 +382,10 @@ namespace System.IO.BACnet
             catch { }
         }
     }
+
+
+#if XAMARIN
+#else
 
     public interface IBacnetSerialTransport : IDisposable
     {
@@ -2265,7 +2272,7 @@ namespace System.IO.BACnet
     // lot of code ported from https://github.com/LorenVS/bacstack
     //      Copyright (C) 2014 Loren Van Spronsen, thank to him.
     // Thank to Christopher Gunther for the idea, and the starting code
-
+   
     class BacnetEthernetProtocolTransport : IBacnetTransport
     {
         private string deviceName;
@@ -2462,4 +2469,6 @@ namespace System.IO.BACnet
                 _device.Close();
         }
     }
+
+#endif
 }

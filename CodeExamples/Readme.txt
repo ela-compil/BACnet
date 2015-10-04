@@ -57,3 +57,6 @@ AnotherStorageImplementation
 Bacnet.Room.Simulator
 	This windows form application "simulates" an heating/cooling room controler.
 	See the Readme file in the application directory.
+
+Xamarin 
+	This directory contains codes for Android devices, using Xamarin developpment environment
