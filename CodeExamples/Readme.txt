@@ -6,7 +6,7 @@ LibBacnet
 	Contains all the classes for a new development in the compiled file : LibBacnet.Dll
 	could be useful for instance for Visual Basic programmers (or others)
 	Ready for both client and server applications
-	If using BacnetEthernet, copy also PacketDotNet.dll & SharpPcap.dll side LibBacnet.dll
+	If using BacnetEthernet, copy also PacketDotNet.dll & SharpPcap.dll with LibBacnet.dll
 
 BasicReadWrite
 	Send a Whois to all devices on the net
@@ -59,4 +59,5 @@ Bacnet.Room.Simulator
 	See the Readme file in the application directory.
 
 Xamarin 
-	This directory contains codes for Android devices, using Xamarin developpment environment
+	This directory contains codes for Android devices, using Xamarin development environment.
+	See the Readme file in the directory.

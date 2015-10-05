@@ -66,6 +66,7 @@
     <Compile Include="BACnetBase.cs" />
     <Compile Include="BACnetClient.cs" />
     <Compile Include="BACnetTransport.cs" />
+    <Compile Include="BacnetTransportEthernet.cs" />
     <Compile Include="CalendarEditor.cs">
       <SubType>Form</SubType>
     </Compile>
