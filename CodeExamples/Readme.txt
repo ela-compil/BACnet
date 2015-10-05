@@ -61,3 +61,21 @@ Bacnet.Room.Simulator
 Xamarin 
 	This directory contains codes for Android devices, using Xamarin development environment.
 	See the Readme file in the directory.
+
+RaspberrySample
+	This application is similar to BasicServer, for Raspberry Pi with Mono.
+	DeviceDescriptor.xml should be modify before compilation in order to access
+	as your want all the GPIO pins :
+		OBJECT_BINARY_INPUT:x - GPIOX will be configured and used as an input
+		OBJECT_BINARY_OUTPUT:x - GPIOX will be configured and used as an output
+			the PRESENT_VALUE will be apply to the output at the begining
+
+	When adding new objects, take care to add it also in the PROP_OBJECT_LIST of the DEVICE_OBJECT
+
+	In the original DeviceDescriptor.xml file one can found
+		GPIO4 as input and GPIO7, GPIO8 as output
+
+	Mono should be installed,
+	and to start the code in sudo mode : sudo mono ./RaspberrySample
+
+	Tested on a Raspberry Pi Model B.
