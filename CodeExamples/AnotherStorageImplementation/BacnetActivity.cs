@@ -63,10 +63,10 @@ namespace AnotherStorageImplementation
             bacnet_client.Start();    // go
             // Send Iam
             bacnet_client.Iam(deviceId, new BacnetSegmentations());
+            bacnet_client.OnWhoIs += new BacnetClient.WhoIsHandler(handler_OnWhoIs);
 
             if ((_device.FindBacnetObjectType(BacnetObjectTypes.OBJECT_NOTIFICATION_CLASS))|| (_device.FindBacnetObjectType(BacnetObjectTypes.OBJECT_SCHEDULE)))
             {
-                bacnet_client.OnWhoIs += new BacnetClient.WhoIsHandler(handler_OnWhoIs);
                 bacnet_client.WhoIs();                          // Send WhoIs : needed BY Notification & Schedule for deviceId<->IP endpoint
                 device.SetIpEndpoint(bacnet_client);            // Register the endpoint for IP Notification usage with IP:Port
             }

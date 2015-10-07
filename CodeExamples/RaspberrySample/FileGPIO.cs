@@ -35,8 +35,10 @@ namespace GPIO
         //contains list of pins exported with an IN direction
         static List<uint> _InExported = new List<uint>();
 
-      //set to true to write whats happening to the screen
-        private const bool DEBUG = true;
+        static FileGPIO()
+        {
+            CleanUpAllPins();
+        }
 
         //this gets called automatically when we try and output to, or input from, a pin
         private static void SetupPin(uint pin, enumDirection direction)
@@ -49,8 +51,6 @@ namespace GPIO
                 //export
                 File.WriteAllText(GPIO_PATH + "export", pin.ToString());
 
-                if (DEBUG) Console.WriteLine("exporting pin GPIO" + pin + " as " + direction);
-
                 // set i/o direction
                 File.WriteAllText(GPIO_PATH +"gpio"+pin.ToString() + "/direction", direction.ToString().ToLower());
 
@@ -60,10 +60,7 @@ namespace GPIO
                 else
                     _InExported.Add(pin);
             }
-            catch
-            {
-                if (DEBUG) Console.WriteLine("error exporting pin GPIO" + pin);
-            }
+            catch{}
         }
 
         //no need to setup pin this is done for you
@@ -76,7 +73,6 @@ namespace GPIO
             if (value) writeValue = "1";
             File.WriteAllText(GPIO_PATH +"gpio"+ pin.ToString() + "/value", writeValue);
 
-            if (DEBUG) Console.WriteLine("output to pin GPIO" + pin + ", value was " + value);
         }
 
         //no need to setup pin this is done for you
@@ -95,8 +91,6 @@ namespace GPIO
             }
             else
                 throw new Exception(string.Format("Cannot read from {0}. File does not exist", pin));
-
-            if (DEBUG) Console.WriteLine("input from pin GPIO" + pin + ", value was " + returnValue);
 
             return returnValue;
         }
@@ -119,7 +113,6 @@ namespace GPIO
             if (found)
             {
                 File.WriteAllText(GPIO_PATH + "unexport", pin.ToString());
-                if (DEBUG) Console.WriteLine("unexporting  pin " + pin);
             }
         }
 

@@ -64,8 +64,8 @@ Xamarin
 
 RaspberrySample
 	This application is similar to BasicServer, for Raspberry Pi with Mono.
-	DeviceDescriptor.xml should be modify before compilation in order to access
-	as your want all the GPIO pins :
+	DeviceDescriptor.xml should be modify in order to access as your want
+	the GPIO pins :
 		OBJECT_BINARY_INPUT:x - GPIOX will be configured and used as an input
 		OBJECT_BINARY_OUTPUT:x - GPIOX will be configured and used as an output
 			the PRESENT_VALUE will be apply to the output at the begining
@@ -76,6 +76,7 @@ RaspberrySample
 		GPIO4 as input and GPIO7, GPIO8 as output
 
 	Mono should be installed,
-	and to start the code in sudo mode : sudo mono ./RaspberrySample
+	and to start the code in sudo mode : sudo mono ./RaspberrySample.exe
+	DeviceDescriptor.xml must be in the application directory
 
 	Tested on a Raspberry Pi Model B.

@@ -96,7 +96,7 @@ namespace DemoBBMD
                  m_ip_server.Iam(m_storage.DeviceId, m_supported_segmentation);
  
             }
-            catch (Exception ex)
+            catch 
             {
                 OpenError = true; 
             }
@@ -209,7 +209,7 @@ namespace DemoBBMD
             {
                 BacnetValue v = new BacnetValue();
                 v.Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED;
-                v.Value = (uint)BacnetDeviceStatus.STATUS_OPERATIONAL;      //can we be in any other mode I wonder?
+                v.Value = (uint)BacnetDeviceStatus.OPERATIONAL;      //can we be in any other mode I wonder?
                 value = new BacnetValue[] { v };
             }
             else if (object_id.type == BacnetObjectTypes.OBJECT_DEVICE && object_id.instance == m_storage.DeviceId && property_id == BacnetPropertyIds.PROP_ACTIVE_COV_SUBSCRIPTIONS)

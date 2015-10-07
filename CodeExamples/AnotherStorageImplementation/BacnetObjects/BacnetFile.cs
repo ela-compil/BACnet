@@ -61,8 +61,12 @@ namespace BaCSharp
         public virtual uint PROP_FILE_SIZE
         {
             get {
-                FileInfo fi = new FileInfo(FilePath);
-                return (uint)fi.Length; 
+                try
+                {
+                    FileInfo fi = new FileInfo(FilePath);
+                    return (uint)fi.Length;
+                }
+                catch { return 0; } // no way to return -1 or other
             }
         }
 

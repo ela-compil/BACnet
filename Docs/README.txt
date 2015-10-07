@@ -231,22 +231,22 @@
 
 4.  TESTS
 	The DemoServer and Yabe has been tested with other similar programs:
-	    - InneaBACnetExplorer
-	    - BACnet Stack - By Steve Karg
-	    - Wireshark. (This is most likely the same as the BACnet Stack)
-	    - CAS BACnet Explorer
+		- InneaBACnetExplorer
+		- BACnet Stack - By Steve Karg
+		- Wireshark. (This is most likely the same as the BACnet Stack)
+		- CAS BACnet Explorer
 	'Segmentation' has been verified with Wireshark, and Wago 750/830
 	BACNET/PTP has not been tested with any 3rd parties.
-    BACnet/MSTP has been tested with an Ftdi Usb/Rs485 adaptor and
-	    - Trane Uc800 (vendor Id 2)
+    	BACnet/MSTP has been tested with an Ftdi Usb/Rs485 adaptor and
+	    	- Trane Uc800 (vendor Id 2)
 		- Metz Connect I/O modules (BTR Netcom vendor Id 421)
 		- Contemporary Control MSTP/IP Router (vendor Id 245)
 	BACnet/Ethernet has been tested with
-	    - Delta Controls devices (vendor Id 8)
+		- Delta Controls devices (vendor Id 8)
 	BACnet/IP has been tested with a very long list of devices 
 	BBMD services has been tested with peers :
-	    - Wago 750/830 (vendor Id 222)
-	    - Newron DoGate (vendor Id 451)
+		- Wago 750/830 (vendor Id 222)
+		- Newron DoGate (vendor Id 451)
 		- Sauter EY-AS521 (vendor Id 80)
 
 5.  SUPPORT
