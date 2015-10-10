@@ -125,13 +125,23 @@ namespace BasicServer
             bacnet_client.OnReadPropertyRequest += new BacnetClient.ReadPropertyRequestHandler(handler_OnReadPropertyRequest);
             bacnet_client.OnReadPropertyMultipleRequest += new BacnetClient.ReadPropertyMultipleRequestHandler(handler_OnReadPropertyMultipleRequest);
             bacnet_client.OnWritePropertyRequest += new BacnetClient.WritePropertyRequestHandler(handler_OnWritePropertyRequest);
+            bacnet_client.OnTimeSynchronize += new BacnetClient.TimeSynchronizeHandler(handler_OnTimeSynchronize);
 
             bacnet_client.Start();    // go
             // Send Iam
             bacnet_client.Iam(m_storage.DeviceId, new BacnetSegmentations());
-
+            BacnetServicesSupported.SERVICE_SUPPORTED_I_AM
         }
-
+        /*****************************************************************************************************/
+        static void handler_OnTimeSynchronize(BacnetClient sender, BacnetAddress adr, DateTime dateTime, bool utc)
+        {
+            try
+            {
+                System.Diagnostics.Process.Start("date", dateTime.ToString("MMddHHmmyy.ss"));
+                System.Diagnostics.Process.Start("hwclock", "--systohc");
+            }
+            catch { }
+        }
         /*****************************************************************************************************/
         static void handler_OnWritePropertyRequest(BacnetClient sender, BacnetAddress adr, byte invoke_id, BacnetObjectId object_id, BacnetPropertyValue value, BacnetMaxSegments max_segments)
         {
