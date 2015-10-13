@@ -166,7 +166,7 @@ namespace BaCSharp
                 // Find the receiver endPoint
                 KeyValuePair<BacnetClient, BacnetAddress>? recipient = null;
 
-                if (devReportEntry.adr != null)
+                if ((devReportEntry.adr != null)&&(Mydevice.DirectIp!=null))
                     recipient = new KeyValuePair<BacnetClient, BacnetAddress>
                         (
                         Mydevice.DirectIp,

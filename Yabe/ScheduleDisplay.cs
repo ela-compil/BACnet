@@ -54,9 +54,18 @@ namespace Yabe
             this.adr = adr;
             this.schedule_id = object_id;
 
-            // Yes it could be done in one time but
-            // decoding is sometimes made by the stack, sometimes no
-            // ... so no way !
+            // Get the Present_Value data Type, used for new value in the schedule
+            // ... replaced if some other values found in the scheduling
+            try
+            {
+                IList<BacnetValue> value;
+                comm.ReadPropertyRequest(adr, object_id, BacnetPropertyIds.PROP_PRESENT_VALUE, out value);
+
+                if ((value != null) && (value.Count != 0))
+                    ScheduleType = value[0].Tag;
+            }
+            catch { }
+
             ReadEffectivePeriod();
             ReadEffectiveWeeklySchedule();
             ReadObjectsPropertiesReferences();

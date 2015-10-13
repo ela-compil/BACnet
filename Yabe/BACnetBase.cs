@@ -2844,6 +2844,7 @@ namespace System.IO.BACnet.Serialize
     public class BVLC
     {
         BacnetIpUdpProtocolTransport MyBBMDTransport;
+        String BroadcastAdd;
 
         bool BBMD_FD_ServiceActivated = false;
 
@@ -2858,6 +2859,7 @@ namespace System.IO.BACnet.Serialize
         public BVLC(BacnetIpUdpProtocolTransport Transport)
         {
             MyBBMDTransport = Transport;
+            BroadcastAdd = MyBBMDTransport.GetBroadcastAddress().ToString().Split(':')[0];
         }
 
         public string FDList()
@@ -2993,7 +2995,7 @@ namespace System.IO.BACnet.Serialize
             SendToFDs(b, msg_length + 6, EPsender);
             // Broadcast if required
             if (ToGlobalBroadcast == true)
-                MyBBMDTransport.Send(b, msg_length+6, new Net.IPEndPoint(Net.IPAddress.Parse("255.255.255.255"), MyBBMDTransport.SharedPort));
+                MyBBMDTransport.Send(b, msg_length + 6, new Net.IPEndPoint(Net.IPAddress.Parse(BroadcastAdd), MyBBMDTransport.SharedPort));
         }
 
         // Send ack or nack
@@ -3068,7 +3070,7 @@ namespace System.IO.BACnet.Serialize
                             // ie my mask must be 255.255.255.255 in the others BBMD tables
                             // If not, it's not really a big problem, devices on the local net will 
                             // receive two times the message (after all it's just WhoIs, Iam, ...)
-                            MyBBMDTransport.Send(buffer, msg_length, new Net.IPEndPoint(Net.IPAddress.Parse("255.255.255.255"), MyBBMDTransport.SharedPort));
+                            MyBBMDTransport.Send(buffer, msg_length, new Net.IPEndPoint(Net.IPAddress.Parse(BroadcastAdd), MyBBMDTransport.SharedPort));
                         }
                     }
                     

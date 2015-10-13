@@ -144,7 +144,7 @@ namespace System.IO.BACnet
                 m_exclusive_conn = new Net.Sockets.UdpClient();
                 m_exclusive_conn.ExclusiveAddressUse = true;
                 m_exclusive_conn.Client.Bind((Net.IPEndPoint)ep);
-                m_exclusive_conn.DontFragment = m_dont_fragment;
+                m_exclusive_conn.DontFragment = m_dont_fragment; m_exclusive_conn.EnableBroadcast = true;
             }
 
             bvlc = new BVLC(this);
@@ -330,25 +330,32 @@ namespace System.IO.BACnet
             ep = new System.Net.IPEndPoint(ip_address, (int)port);
         }
 
-        public BacnetAddress GetBroadcastAddress()
+        // A lot of problems on Mono (Raspberry) to get the correct broadcast @
+        // so this method is overridable (this allows the implementation of operating system specific code)
+        // Marc solution http://stackoverflow.com/questions/8119414/how-to-query-the-subnet-masks-using-mono-on-linux for instance
+        //
+        protected virtual BacnetAddress _GetBroadcastAddress()
         {
-            // general local broadcast
+            // general broadcast
             System.Net.IPEndPoint ep = new Net.IPEndPoint(System.Net.IPAddress.Parse("255.255.255.255"), m_port);
-            // restricted local boadcast
+            // restricted local broadcast (directed ... routable)
             foreach (System.Net.NetworkInformation.NetworkInterface adapter in System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces())
                 foreach (System.Net.NetworkInformation.UnicastIPAddressInformation ip in adapter.GetIPProperties().UnicastAddresses)
-                   if (m_exclusive_conn.Client.LocalEndPoint.Equals(new System.Net.IPEndPoint(ip.Address, m_port)))
+                   if (LocalEndPoint.Address.Equals(ip.Address))
                    {
-                       string[] strCurrentIP = ip.Address.ToString().Split('.');
-                       string[] strIPNetMask = ip.IPv4Mask.ToString().Split('.');
-
-                       StringBuilder BroadcastStr=new StringBuilder();
-                       for (int i = 0; i < 4; i++)
+                       try
                        {
-                           BroadcastStr.Append(((byte)(int.Parse(strCurrentIP[i]) | ~int.Parse(strIPNetMask[i]))).ToString());
-                           if (i != 3) BroadcastStr.Append('.');
+                           string[] strCurrentIP = ip.Address.ToString().Split('.');
+                           string[] strIPNetMask = ip.IPv4Mask.ToString().Split('.');
+                           StringBuilder BroadcastStr = new StringBuilder();
+                           for (int i = 0; i < 4; i++)
+                           {
+                               BroadcastStr.Append(((byte)(int.Parse(strCurrentIP[i]) | ~int.Parse(strIPNetMask[i]))).ToString());
+                               if (i != 3) BroadcastStr.Append('.');
+                           }
+                           ep = new Net.IPEndPoint(System.Net.IPAddress.Parse(BroadcastStr.ToString()), m_port);
                        }
-                       ep = new Net.IPEndPoint(System.Net.IPAddress.Parse(BroadcastStr.ToString()), m_port);
+                       catch { }  //On mono IPv4Mask feature not implemented
                    }
             BacnetAddress broadcast;
             Convert(ep, out broadcast);
@@ -356,11 +363,20 @@ namespace System.IO.BACnet
             return broadcast;
         }
 
-        public System.Net.IPEndPoint LocalEndPoint
+        BacnetAddress BroadcastAddress = null;
+        public BacnetAddress GetBroadcastAddress()
+        {
+            if (BroadcastAddress == null) BroadcastAddress = _GetBroadcastAddress();
+            return BroadcastAddress;
+        }
+
+        // Give 0.0.0.0:xxxx if the socket is open with System.Net.IPAddress.Any
+        // Today only used by _GetBroadcastAddress method & the bvlc layer class in BBMD mode
+        // Some more complex solutions could avoid this, that's why this property is virtual
+        public virtual System.Net.IPEndPoint LocalEndPoint
         {
             get
             {
-                // give 0.0.0.0:xxxx if the socket is open with System.Net.IPAddress.Any
                 return (System.Net.IPEndPoint)m_exclusive_conn.Client.LocalEndPoint;
             }
         }

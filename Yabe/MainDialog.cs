@@ -1184,8 +1184,12 @@ namespace Yabe
                         //fetch properties. This might not be supported (ReadMultiple) or the response might be too long.
                         if (!comm.ReadPropertyMultipleRequest(adr, object_id, properties, out multi_value_list))
                         {
-                            MessageBox.Show(this, "Couldn't fetch properties", "Communication Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                            return;
+                            Trace.TraceWarning("Couldn't perform ReadPropertyMultiple ... Trying ReadProperty instead");
+                            if (!ReadAllPropertiesBySingle(comm, adr, object_id, out multi_value_list))
+                            {
+                                MessageBox.Show(this, "Couldn't fetch properties", "Communication Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                return;
+                            }
                         }
                     }
                     catch (Exception)
@@ -1968,6 +1972,9 @@ namespace Yabe
 
             this.Cursor = Cursors.WaitCursor;
             Application.DoEvents();
+
+            bool removeObject = false;
+
             try
             {
                 //get all objects
@@ -1976,7 +1983,12 @@ namespace Yabe
                 comm.ReadPropertyRequest(adr, new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, device_id), BacnetPropertyIds.PROP_OBJECT_LIST, out value_list);
                 LinkedList<BacnetObjectId> object_list = new LinkedList<BacnetObjectId>();
                 foreach (BacnetValue value in value_list)
-                    object_list.AddLast((BacnetObjectId)value.Value);
+                {
+                    if (Enum.IsDefined(typeof(BacnetObjectTypes), ((BacnetObjectId)value.Value).Type))
+                        object_list.AddLast((BacnetObjectId)value.Value);
+                    else
+                        removeObject = true;
+                }
 
                 foreach (BacnetObjectId object_id in object_list)
                 {
@@ -1988,7 +2000,11 @@ namespace Yabe
                     //store
                     foreach (BacnetPropertyValue value in multi_value_list[0].values)
                     {
-                        storage.WriteProperty(object_id, (BacnetPropertyIds)value.property.propertyIdentifier, value.property.propertyArrayIndex, value.value, true);
+                        try
+                        {
+                            storage.WriteProperty(object_id, (BacnetPropertyIds)value.property.propertyIdentifier, value.property.propertyArrayIndex, value.value, true);
+                        }
+                        catch { }
                     }
                 }
 
@@ -2005,6 +2021,8 @@ namespace Yabe
             finally
             {
                 this.Cursor = Cursors.Default;
+                if (removeObject == true)
+                    Trace.TraceWarning("All proprietary Objects removed from export");
             }
         }
 

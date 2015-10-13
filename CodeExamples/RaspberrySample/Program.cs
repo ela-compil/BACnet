@@ -130,7 +130,7 @@ namespace BasicServer
             bacnet_client.Start();    // go
             // Send Iam
             bacnet_client.Iam(m_storage.DeviceId, new BacnetSegmentations());
-            BacnetServicesSupported.SERVICE_SUPPORTED_I_AM
+
         }
         /*****************************************************************************************************/
         static void handler_OnTimeSynchronize(BacnetClient sender, BacnetAddress adr, DateTime dateTime, bool utc)
