@@ -41,7 +41,7 @@ namespace System.IO.BACnet
         private ushort m_vendor_id = 260;
         private int m_timeout;
         private int m_transmit_timeout = 30000;     //long transmit timeout due to MSTP
-        private int m_retries;
+        private int m_retries;                      // understand here the number of tentatives
         private byte m_invoke_id = 0;
         private BacnetMaxSegments m_max_segments = BacnetMaxSegments.MAX_SEG0;
         private byte m_last_sequence_number = 0;
@@ -57,7 +57,7 @@ namespace System.IO.BACnet
         public IBacnetTransport Transport { get { return m_client; } }
         public int Timeout { get { return m_timeout; } set { m_timeout = value; } }
         public int TransmitTimeout { get { return m_transmit_timeout; } set { m_transmit_timeout = value; } }
-        public int Retries { get { return m_retries; } set { m_retries = value; } }
+        public int Retries { get { return m_retries; } set { m_retries = Math.Max(1,value); } } // used as the number of tentatives
         public uint WritePriority { get { return m_writepriority; } set { if (value<17) m_writepriority = value; } }
         public BacnetMaxSegments MaxSegments { get { return m_max_segments; } set { m_max_segments = value; } }
         public byte ProposedWindowSize { get { return m_proposed_window_size; } set { m_proposed_window_size = value; } }
@@ -121,7 +121,7 @@ namespace System.IO.BACnet
         {
             m_client = transport;
             m_timeout = timeout;
-            m_retries = retries;
+            Retries = retries;
             DefaultSegmentationHandling = true;
         }
 
@@ -939,7 +939,8 @@ namespace System.IO.BACnet
                         if (ex != null) throw ex;
                         else return true;
                     }
-                    result.Resend();
+                    if (r < (m_retries - 1))
+                        result.Resend();
                 }
             }
             return false;
@@ -1108,7 +1109,8 @@ namespace System.IO.BACnet
                         if (ex != null) throw ex;
                         else return true;
                     }
-                    result.Resend();
+                    if (r < (m_retries - 1))
+                        result.Resend();
                 }
             }
             return false;
@@ -1127,7 +1129,8 @@ namespace System.IO.BACnet
                         if (ex != null) throw ex;
                         else return true;
                     }
-                    result.Resend();
+                    if (r < (m_retries - 1))
+                        result.Resend();
                 }
             }
             return false;
@@ -1182,7 +1185,8 @@ namespace System.IO.BACnet
                         if (ex != null) throw ex;
                         else return true;
                     }
-                    result.Resend();
+                    if (r < (m_retries - 1))
+                        result.Resend();
                 }
             }
             return false;
@@ -1237,7 +1241,8 @@ namespace System.IO.BACnet
                         if (ex != null) throw ex;
                         else return true;
                     }
-                    result.Resend();
+                    if (r < (m_retries - 1))
+                        result.Resend();
                 }
             }
             value_list = null;
@@ -1297,7 +1302,8 @@ namespace System.IO.BACnet
                         if (ex != null) throw ex;
                         else return true;
                     }
-                    result.Resend();
+                    if (r < (m_retries - 1))
+                        result.Resend();
                 }
             }
             value_list = null;
@@ -1317,7 +1323,8 @@ namespace System.IO.BACnet
                         if (ex != null) throw ex;
                         else return true;
                     }
-                    result.Resend();
+                    if (r < (m_retries - 1))
+                        result.Resend();
                 }
             }
             value_list = null;
@@ -1391,7 +1398,8 @@ namespace System.IO.BACnet
                         if (ex != null) throw ex;
                         else return true;
                     }
-                    result.Resend();
+                    if (r < (m_retries - 1))
+                        result.Resend();
                 }
             }
             value_list = null;
@@ -1430,7 +1438,8 @@ namespace System.IO.BACnet
                         if (ex != null) throw ex;
                         else return true;
                     }
-                    result.Resend();
+                    if (r < (m_retries - 1))
+                        result.Resend();
                 }
             }
             values = null;
@@ -1468,7 +1477,8 @@ namespace System.IO.BACnet
                         if (ex != null) throw ex;
                         else return true;
                     }
-                    result.Resend();
+                    if (r < (m_retries - 1))
+                        result.Resend();
                 }
             }
             values = null;
@@ -1528,7 +1538,8 @@ namespace System.IO.BACnet
                         if (ex != null) throw ex;
                         else return true;
                     }
-                    result.Resend();
+                    if (r < (m_retries - 1))
+                        result.Resend();
                 }
             }
             value_list = null;
@@ -1587,7 +1598,8 @@ namespace System.IO.BACnet
                         if (ex != null) throw ex;
                         else return true;
                     }
-                    result.Resend();
+                    if (r < (m_retries - 1))
+                        result.Resend();
                 }
             }
 
@@ -1649,7 +1661,8 @@ namespace System.IO.BACnet
                         if (ex != null) throw ex;
                         else return true;
                     }
-                    result.Resend();
+                    if (r < (m_retries - 1))
+                        result.Resend();
                 }
             }
             //values = null;
@@ -1670,7 +1683,8 @@ namespace System.IO.BACnet
                         if (ex != null) throw ex;
                         else return true;
                     }
-                    result.Resend();
+                    if (r < (m_retries - 1))
+                        result.Resend();
                 }
             }
             //values = null;
@@ -1746,7 +1760,8 @@ namespace System.IO.BACnet
                         if (ex != null) throw ex;
                         else return true;
                     }
-                    result.Resend();
+                    if (r < (m_retries - 1))
+                        result.Resend();
                 }
             }
             InOutBuffer = null;
@@ -1830,7 +1845,8 @@ namespace System.IO.BACnet
                         if (ex != null) return false;
                         else return true;
                     }
-                    result.Resend();
+                    if (r < (m_retries - 1))
+                        result.Resend();
                 }
             }
             return false;
@@ -1883,7 +1899,8 @@ namespace System.IO.BACnet
                         if (ex != null) return false;
                         else return true;
                     }
-                    result.Resend();
+                    if (r < (m_retries - 1))
+                        result.Resend();
                 }
             }
             return false;
@@ -1986,7 +2003,8 @@ namespace System.IO.BACnet
                             if (ex != null) throw ex;
                             else return true;
                         }
-                        result.Resend();
+                        if (r < (m_retries - 1))
+                            result.Resend();
                     }
                 }
                 return false;
