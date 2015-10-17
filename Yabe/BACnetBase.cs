@@ -34,6 +34,7 @@ using System.Text;
 using System.IO.BACnet.Serialize;
 using System.Net;
 using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace System.IO.BACnet
 {
@@ -2856,6 +2857,10 @@ namespace System.IO.BACnet.Serialize
         List<KeyValuePair<System.Net.IPEndPoint, DateTime>> ForeignDevices = new List<KeyValuePair<System.Net.IPEndPoint, DateTime>>();
         List<KeyValuePair<System.Net.IPEndPoint, System.Net.IPAddress>> BBMDs = new List<KeyValuePair<System.Net.IPEndPoint, System.Net.IPAddress>>();
 
+        // Contains the rules to accept FRD based on the IP adress
+        // If empty it's equal to *.*.*.*, everyone allows
+        List<Regex> AutorizedFDR = new List<Regex>();
+
         public BVLC(BacnetIpUdpProtocolTransport Transport)
         {
             MyBBMDTransport = Transport;
@@ -2881,6 +2886,11 @@ namespace System.IO.BACnet.Serialize
             return sb.ToString();
         }
 
+        public void AddFDRAutorisationRule(Regex IpRule)
+        {
+            AutorizedFDR.Add(IpRule);
+        }
+
         // Used to initiate the BBMD & FD behaviour, if BBMD is null it start the FD activity only
         public void AddBBMDPeer(Net.IPEndPoint BBMD, Net.IPAddress Mask)
         {
@@ -2901,7 +2911,21 @@ namespace System.IO.BACnet.Serialize
                 // TTL + 30s grace period
                 DateTime Expiration = DateTime.Now.AddSeconds(TTL + 30);
                 // add it
-                ForeignDevices.Add(new KeyValuePair<System.Net.IPEndPoint, DateTime>(sender, Expiration));
+                if (AutorizedFDR.Count == 0) // No rules, accept all
+                {
+                    ForeignDevices.Add(new KeyValuePair<System.Net.IPEndPoint, DateTime>(sender, Expiration));
+                    return;
+                }
+                else
+                    foreach (Regex r in AutorizedFDR)
+                    {
+                        if (r.Match(sender.Address.ToString()).Success)
+                        {
+                            ForeignDevices.Add(new KeyValuePair<System.Net.IPEndPoint, DateTime>(sender, Expiration));
+                            return;
+                        }
+                    }
+                System.Diagnostics.Trace.TraceInformation("Rejected FDR registration, IP : " + sender.Address.ToString());
             }
         }
 
