@@ -42,9 +42,11 @@ AnotherStorageImplementation
 	Actual objects types are :
 		Device
 		Structured View
-		Analog Input, Analog Value, Analog Output (With Intrinsect reporting)
+		Analog Input, Analog Value, Analog Output
+			(With Intrinsect reporting)
 		Digital Input, Digial Value, Digital Output
-		Multistates Input, Multistates Value, Multistates Output (With Intrinsect reporting)
+		Multistates Input, Multistates Value, Multistates Output
+			(With Intrinsect reporting)
 		Characters String
 		File
 		Trendlog
@@ -59,8 +61,8 @@ Bacnet.Room.Simulator
 	See the Readme file in the application directory.
 
 Xamarin 
-	This directory contains codes for Android devices, using Xamarin development environment.
-	See the Readme file in the directory.
+	This directory contains codes for Android devices, using Xamarin development 
+	environment. See the Readme file in the directory.
 
 RaspberrySample
 	This application is similar to BasicServer, for Raspberry Pi with Mono.
@@ -70,13 +72,18 @@ RaspberrySample
 		OBJECT_BINARY_OUTPUT:x - GPIOX will be configured and used as an output
 			the PRESENT_VALUE will be apply to the output at the begining
 
-	When adding new objects, take care to add it also in the PROP_OBJECT_LIST of the DEVICE_OBJECT
+	When adding new objects, take care to add it also in the PROP_OBJECT_LIST of 
+	the DEVICE_OBJECT
 
 	In the original DeviceDescriptor.xml file one can found
 		GPIO4 as input and GPIO7, GPIO8 as output
 
-	Mono should be installed,
-	and to start the code in sudo mode : sudo mono ./RaspberrySample.exe
+	Mono should be installed, and to start the code in sudo mode : 
+		sudo mono ./RaspberrySample.exe
 	DeviceDescriptor.xml must be in the application directory
 
-	Tested on a Raspberry Pi Model B.
+	Tested on a Raspberry Pi Model B. Similar code based on AnotherStorageImplementation  
+	run 24/24 acting also as a BBMD somewhere in France.
+ 
+	Ready with small modifications (Gpio) for Intel/Edison, Texas/BeagleBone, and a  
+	lot of Linux plateforms with Mono installed.

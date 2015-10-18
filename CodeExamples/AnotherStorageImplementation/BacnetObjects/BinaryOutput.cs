@@ -116,14 +116,14 @@ namespace BaCSharp
                 {
                     if (m_PROP_PRIORITY_ARRAY[i].Value != null)    // A value is OK
                     {
-                        m_PROP_PRESENT_VALUE = (uint)m_PROP_PRIORITY_ARRAY[i].Value;
+                        PROP_PRESENT_VALUE = (uint)m_PROP_PRIORITY_ARRAY[i].Value;
                         done = true;
                         break;
                     }
                 }
                 if (done == false)  // Nothing in the array : PROP_PRESENT_VALUE = PROP_RELINQUISH_DEFAULT
                 {
-                    m_PROP_PRESENT_VALUE = m_PROP_RELINQUISH_DEFAULT;
+                    PROP_PRESENT_VALUE = m_PROP_RELINQUISH_DEFAULT;
                 }
 
                 return;
