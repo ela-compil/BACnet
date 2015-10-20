@@ -343,6 +343,7 @@ namespace System.IO.BACnet
                 else
                 {
                     Trace.TraceWarning("Confirmed service not handled: " + service.ToString());
+                    SendConfirmedServiceReject(adr, invoke_id, BacnetRejectReasons.REJECT_REASON_UNRECOGNIZED_SERVICE);
                 }
             }
             catch (Exception ex)
@@ -431,6 +432,7 @@ namespace System.IO.BACnet
                 else
                 {
                     Trace.TraceWarning("Unconfirmed service not handled: " + service.ToString());
+                    // SendUnConfirmedServiceReject(adr); ? exists ?
                 }
             }
             catch (Exception ex)
@@ -868,6 +870,17 @@ namespace System.IO.BACnet
             NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, adr, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, 0);
             APDU.EncodeUnconfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_EVENT_NOTIFICATION);
             Services.EncodeEventNotifyUnconfirmed(b, eventData);
+            m_client.Send(b.buffer, m_client.HeaderLength, b.offset - m_client.HeaderLength, adr, false, 0);
+        }
+
+        public void SendConfirmedServiceReject(BacnetAddress adr, byte invoke_id, BacnetRejectReasons reason)
+        {
+            Trace.WriteLine("Sending Service reject ... ", null);
+
+            EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);
+
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, adr, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, 0);
+            APDU.EncodeError(b, BacnetPduTypes.PDU_TYPE_REJECT, (BacnetConfirmedServices)reason, invoke_id);
             m_client.Send(b.buffer, m_client.HeaderLength, b.offset - m_client.HeaderLength, adr, false, 0);
         }
 

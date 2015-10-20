@@ -282,7 +282,9 @@ namespace System.IO.BACnet
         {
             try
             {
-                return m_exclusive_conn.Send(buffer, data_length, ep);
+                // return m_exclusive_conn.Send(buffer, data_length, ep);
+                System.Threading.ThreadPool.QueueUserWorkItem((o) =>m_exclusive_conn.Send(buffer, data_length, ep), null);
+                return data_length;
             }
             catch
             {
