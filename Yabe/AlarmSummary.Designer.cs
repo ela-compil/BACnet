@@ -41,16 +41,16 @@
             this.TAlarmList.Location = new System.Drawing.Point(24, 25);
             this.TAlarmList.Name = "TAlarmList";
             this.TAlarmList.ShowNodeToolTips = true;
-            this.TAlarmList.Size = new System.Drawing.Size(281, 194);
+            this.TAlarmList.Size = new System.Drawing.Size(328, 344);
             this.TAlarmList.TabIndex = 1;
             this.TAlarmList.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.TAlarmList_AfterSelect);
             // 
             // AckText
             // 
             this.AckText.Enabled = false;
-            this.AckText.Location = new System.Drawing.Point(199, 261);
+            this.AckText.Location = new System.Drawing.Point(208, 387);
             this.AckText.Name = "AckText";
-            this.AckText.Size = new System.Drawing.Size(106, 20);
+            this.AckText.Size = new System.Drawing.Size(144, 20);
             this.AckText.TabIndex = 2;
             this.AckText.Text = "Ack by Yabe";
             // 
@@ -59,7 +59,7 @@
             this.LblInfo.BackColor = System.Drawing.SystemColors.ButtonHighlight;
             this.LblInfo.Location = new System.Drawing.Point(36, 109);
             this.LblInfo.Name = "LblInfo";
-            this.LblInfo.Size = new System.Drawing.Size(258, 15);
+            this.LblInfo.Size = new System.Drawing.Size(302, 15);
             this.LblInfo.TabIndex = 3;
             this.LblInfo.Text = "Service not available on this device";
             this.LblInfo.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -67,7 +67,7 @@
             // AckBt
             // 
             this.AckBt.Enabled = false;
-            this.AckBt.Location = new System.Drawing.Point(24, 261);
+            this.AckBt.Location = new System.Drawing.Point(24, 384);
             this.AckBt.Name = "AckBt";
             this.AckBt.Size = new System.Drawing.Size(145, 23);
             this.AckBt.TabIndex = 4;
@@ -78,7 +78,7 @@
             // PartialLabel
             // 
             this.PartialLabel.AutoSize = true;
-            this.PartialLabel.Location = new System.Drawing.Point(24, 226);
+            this.PartialLabel.Location = new System.Drawing.Point(21, 9);
             this.PartialLabel.Name = "PartialLabel";
             this.PartialLabel.Size = new System.Drawing.Size(185, 13);
             this.PartialLabel.TabIndex = 5;
@@ -89,7 +89,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(331, 296);
+            this.ClientSize = new System.Drawing.Size(374, 425);
             this.Controls.Add(this.PartialLabel);
             this.Controls.Add(this.AckBt);
             this.Controls.Add(this.LblInfo);

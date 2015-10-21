@@ -40,6 +40,7 @@ namespace Yabe
     public partial class AlarmSummary : Form
     {
         BacnetClient comm; BacnetAddress adr;
+        IList<BacnetGetEventInformationData> Alarms;
 
         public AlarmSummary(ImageList img_List, BacnetClient comm, BacnetAddress adr, uint device_id)
         {
@@ -48,7 +49,6 @@ namespace Yabe
             this.comm = comm;
             this.adr = adr;            
 
-            IList<BacnetGetEventInformationData> Alarms;
             bool MoreEvent;
             TAlarmList.ImageList = img_List;
 
@@ -59,35 +59,75 @@ namespace Yabe
             {
                 LblInfo.Visible = false;
                 AckText.Enabled = AckBt.Enabled = true;
-                
-                // fill the Treenode
-                foreach (BacnetGetEventInformationData alarm in Alarms)
-                {
-                    int icon = MainDialog.GetIconNum(alarm.objectIdentifier.type);
-                    TreeNode tn=new TreeNode(alarm.objectIdentifier.ToString(),icon,icon);
-                    tn.Tag = alarm;
-                    TAlarmList.Nodes.Add(tn);
 
-                    icon = img_List.Images.Count; // out bound
-                    tn.Nodes.Add(new TreeNode("Alarm state : "+GetEventNiceName(alarm.eventState.ToString()), icon, icon));
-                    tn.Nodes.Add(new TreeNode(alarm.acknowledgedTransitions.ToString(), icon, icon));
-                }
-
-                if (Alarms.Count == 0)
-                {
-                    LblInfo.Visible = true;
-                    LblInfo.Text = "Empty event list ... all is OK";
-                }
+                FillTreeNode();
             }
             if (MoreEvent == true)
                 PartialLabel.Visible = true;
         }
-        private static string GetEventNiceName(String name)
+        private static string GetEventStateNiceName(String name)
         {
             name = name.Substring(12);
             name = name.Replace('_', ' ');
             name = System.Threading.Thread.CurrentThread.CurrentCulture.TextInfo.ToTitleCase(name.ToLower());
             return name;
+        }
+        private static string GetEventEnableNiceName(String name)
+        {
+            name = name.Substring(13);
+            name = name.Replace('_', ' ');
+            name = System.Threading.Thread.CurrentThread.CurrentCulture.TextInfo.ToTitleCase(name.ToLower());
+            return name;
+        }
+
+        private void FillTreeNode()
+        {
+            TAlarmList.BeginUpdate();
+
+            TAlarmList.Nodes.Clear();
+
+            // fill the Treenode
+            foreach (BacnetGetEventInformationData alarm in Alarms)
+            {
+                IList<BacnetValue> name;
+                comm.ReadPropertyRequest(adr, alarm.objectIdentifier, BacnetPropertyIds.PROP_OBJECT_NAME, out name);
+
+                int icon = MainDialog.GetIconNum(alarm.objectIdentifier.type);
+                TreeNode tn = new TreeNode(name[0].Value.ToString(), icon, icon);
+                tn.ToolTipText = alarm.objectIdentifier.ToString();
+                tn.Tag = alarm;
+                TAlarmList.Nodes.Add(tn);
+
+                icon = Int32.MaxValue; // out bound
+                tn.Nodes.Add(new TreeNode("Alarm state : " + GetEventStateNiceName(alarm.eventState.ToString()), icon, icon));
+
+                bool SomeTodo = false;
+
+                TreeNode tn2 = new TreeNode("Ack Required :", icon, icon);               
+                for (int i = 0; i < 3; i++)
+                {
+                    if (alarm.acknowledgedTransitions.ToString()[i] == '0')
+                    {
+                        BacnetEventNotificationData.BacnetEventEnable bee = (BacnetEventNotificationData.BacnetEventEnable)(1 << i);
+                        String text = GetEventEnableNiceName(bee.ToString()) + " since " + alarm.eventTimeStamps[i].Time.ToString();
+                        tn2.Nodes.Add(new TreeNode(text, icon, icon));
+                        SomeTodo = true;
+                    }
+                }
+
+                if (SomeTodo == false) tn2 = new TreeNode("No Ack Required, all is OK", icon, icon); //tn2.Nodes.Add(new TreeNode("Nothing to do, all is OK", icon, icon));
+                tn.Nodes.Add(tn2);
+
+                TAlarmList.EndUpdate();
+
+                TAlarmList.ExpandAll();
+            }
+
+            if (Alarms.Count == 0)
+            {
+                LblInfo.Visible = true;
+                LblInfo.Text = "Empty event list ... all is OK";
+            }
         }
 
         private void AckBt_Click(object sender, EventArgs e)
@@ -98,30 +138,47 @@ namespace Yabe
    
             BacnetGetEventInformationData alarm = (BacnetGetEventInformationData)tn.Tag; // the alam content
 
-            // Read the TO_OFF_NORMAL event time stamp
-            IList<BacnetValue> values;
-            if (comm.ReadPropertyRequest(adr, alarm.objectIdentifier, BacnetPropertyIds.PROP_EVENT_TIME_STAMPS, out values, 0, 1)==false)
+            bool SomeChanges = false;
+            for (int i = 0; i < 3; i++)
             {
-                Trace.TraceWarning("Error reading PROP_EVENT_TIME_STAMPS");
-                return;
+                if (alarm.acknowledgedTransitions.ToString()[i] == '0') // Transition to be ack
+                {
+                    BacnetGenericTime bgt;
+
+                    if (alarm.eventTimeStamps != null)
+                        bgt = alarm.eventTimeStamps[i];
+                    else // Deprecate Execution of GetAlarmSummary
+                    {
+                        // Read the event time stamp
+                        IList<BacnetValue> values;
+                        if (comm.ReadPropertyRequest(adr, alarm.objectIdentifier, BacnetPropertyIds.PROP_EVENT_TIME_STAMPS, out values, 0, (uint)i) == false)
+                        {
+                            Trace.TraceWarning("Error reading PROP_EVENT_TIME_STAMPS");
+                            return;
+                        }
+                        String s1 = ((BacnetValue[])(values[0].Value))[0].ToString(); // Date & 00:00:00 for Hour
+                        String s2 = ((BacnetValue[])(values[0].Value))[1].ToString(); // 00:00:00 & Time
+                        DateTime dt = Convert.ToDateTime(s1.Split(' ')[0] + " " + s2.Split(' ')[1]);
+                        bgt = new BacnetGenericTime(dt, BacnetTimestampTags.TIME_STAMP_DATETIME);
+                    }
+
+                    // something to clarify : BacnetEventStates & BacnetEventEnable !!!
+                    BacnetEventNotificationData.BacnetEventStates eventstate = (BacnetEventNotificationData.BacnetEventStates)(2 - i);
+
+                    if (comm.AlarmAcknowledgement(adr, alarm.objectIdentifier, eventstate, AckText.Text, bgt,
+                                new BacnetGenericTime(DateTime.Now, BacnetTimestampTags.TIME_STAMP_DATETIME)) == true)
+                    {
+                        alarm.acknowledgedTransitions.SetBit((byte)i, true);
+                        SomeChanges = true;
+                    }
+                }
+
+                if (SomeChanges)
+                    FillTreeNode();
             }
-
-            String s1 = ((BacnetValue[])(values[0].Value))[0].ToString(); // Date & 00:00:00 for Hour
-            String s2 = ((BacnetValue[])(values[0].Value))[1].ToString(); // 00:00:00 & Time
-
-            DateTime dt = Convert.ToDateTime(s1.Split(' ')[0] + " " + s2.Split(' ')[1]);
-            BacnetGenericTime bgt = new BacnetGenericTime(dt, BacnetTimestampTags.TIME_STAMP_DATETIME);
-
-            EncodeBuffer b = comm.GetEncodeBuffer(BVLC.BVLC_HEADER_LENGTH);
-            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, adr.RoutedSource, null, 0, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, 0);
-            APDU.EncodeConfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST, BacnetConfirmedServices.SERVICE_CONFIRMED_ACKNOWLEDGE_ALARM, 0, BacnetMaxAdpu.MAX_APDU1476, 0, 0, 0);
-            Services.EncodeAlarmAcknowledge(b, 57, alarm.objectIdentifier, (uint)alarm.eventState, AckText.Text, bgt,  new BacnetGenericTime(DateTime.Now, BacnetTimestampTags.TIME_STAMP_DATETIME));
-
-            BacnetAsyncResult ret = new BacnetAsyncResult(comm, adr, 0, b.buffer, b.offset - BVLC.BVLC_HEADER_LENGTH, false, 0);
-            ret.Resend();
-            
         }
 
+        // No more used
         private void TAlarmList_AfterSelect(object sender, TreeViewEventArgs e)
         {
             TreeNode tn=e.Node;
