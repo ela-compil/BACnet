@@ -63,6 +63,12 @@
     <Compile Include="..\DemoServer\DeviceStorage.cs">
       <Link>DeviceStorage.cs</Link>
     </Compile>
+    <Compile Include="AlarmSummary.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="AlarmSummary.Designer.cs">
+      <DependentUpon>AlarmSummary.cs</DependentUpon>
+    </Compile>
     <Compile Include="BACnetBase.cs" />
     <Compile Include="BACnetClient.cs" />
     <Compile Include="BACnetTransport.cs" />
@@ -137,6 +143,9 @@
     <Compile Include="SourceAddressDialog.Designer.cs">
       <DependentUpon>SourceAddressDialog.cs</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="AlarmSummary.resx">
+      <DependentUpon>AlarmSummary.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="CalendarEditor.resx">
       <DependentUpon>CalendarEditor.cs</DependentUpon>
     </EmbeddedResource>
@@ -218,6 +227,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <EmbeddedResource Include="ReadSinglePropDescrDefault.xml" />
+    <None Include="Resources\error.png" />
     <Content Include="Search.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -927,7 +927,7 @@ namespace Yabe
                             value_list = null;
                         }
                     }
-
+                    
                     //fetch list one-by-one
                     if (value_list == null)
                     {
@@ -2360,6 +2360,37 @@ namespace Yabe
             F.ShowDialog();
         }
 
+        private void alarmSummaryToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            alarmSummaryToolStripMenuItem_Click(sender, e);
+        }
+
+        private void alarmSummaryToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            //fetch end point
+            BacnetClient comm = null;
+            BacnetAddress adr;
+            uint device_id;
+            try
+            {
+                if (m_DeviceTree.SelectedNode == null) return;
+                else if (m_DeviceTree.SelectedNode.Tag == null) return;
+                else if (!(m_DeviceTree.SelectedNode.Tag is KeyValuePair<BacnetAddress, uint>)) return;
+                KeyValuePair<BacnetAddress, uint> entry = (KeyValuePair<BacnetAddress, uint>)m_DeviceTree.SelectedNode.Tag;
+                adr = entry.Key;
+                device_id = entry.Value;
+                if (m_DeviceTree.SelectedNode.Parent.Tag is BacnetClient)
+                    comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag;
+                else
+                    comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Parent.Tag; // When device is under a Router
+
+                new AlarmSummary(m_AddressSpaceTree.ImageList, comm, adr, device_id).ShowDialog();
+            }
+            finally
+            {
+                if (comm == null) MessageBox.Show(this, "Please select a device node", "Wrong node", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
 
     }
 }

@@ -1899,6 +1899,68 @@ namespace System.IO.BACnet
             res.Dispose();
         }
 
+        // FChaxel
+        public bool GetAlarmSummaryOrEventRequest(BacnetAddress adr, bool GetEvent, out IList<BacnetGetEventInformationData> Alarms, out bool MoreEvent, byte invoke_id = 0)
+        {
+            Alarms = null; MoreEvent = false;
+            using (BacnetAsyncResult result = (BacnetAsyncResult)BeginGetAlarmSummaryOrEventRequest(adr, GetEvent, true, invoke_id))
+            {
+                for (int r = 0; r < m_retries; r++)
+                {
+                    if (result.WaitForDone(m_timeout))
+                    {
+                        Exception ex;
+                        EndGetAlarmSummaryOrEventRequest(result, GetEvent, out Alarms, out MoreEvent, out ex);
+                        if (ex != null) return false;
+                        else return true;
+                    }
+                    if (r < (m_retries - 1))
+                        result.Resend();
+                }
+            }
+            return false;
+        }
+
+        public IAsyncResult BeginGetAlarmSummaryOrEventRequest(BacnetAddress adr, bool GetEvent, bool wait_for_transmit, byte invoke_id = 0)
+        {
+            Trace.WriteLine("Sending ReinitializeRequest ... ", null);
+            if (invoke_id == 0) invoke_id = unchecked(m_invoke_id++);
+
+            EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);            
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, adr.RoutedSource, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, 0);
+            
+            if (GetEvent==false)
+                APDU.EncodeConfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST | (m_max_segments != BacnetMaxSegments.MAX_SEG0 ? BacnetPduTypes.SEGMENTED_RESPONSE_ACCEPTED : 0), BacnetConfirmedServices.SERVICE_CONFIRMED_GET_ALARM_SUMMARY, m_max_segments, m_client.MaxAdpuLength, invoke_id, 0, 0);
+            else
+                APDU.EncodeConfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST | (m_max_segments != BacnetMaxSegments.MAX_SEG0 ? BacnetPduTypes.SEGMENTED_RESPONSE_ACCEPTED : 0), BacnetConfirmedServices.SERVICE_CONFIRMED_GET_EVENT_INFORMATION, m_max_segments, m_client.MaxAdpuLength, invoke_id, 0, 0);
+            //send
+            BacnetAsyncResult ret = new BacnetAsyncResult(this, adr, invoke_id, b.buffer, b.offset - m_client.HeaderLength, wait_for_transmit, m_transmit_timeout);
+            ret.Resend();
+
+            return ret;
+        }
+
+        public void EndGetAlarmSummaryOrEventRequest(IAsyncResult result, bool GetEvent, out IList<BacnetGetEventInformationData> Alarms, out bool MoreEvent, out Exception ex)
+        {
+            Alarms = null; MoreEvent = false;
+            BacnetAsyncResult res = (BacnetAsyncResult)result;
+            ex = res.Error;
+            if (ex == null && !res.WaitForDone(m_timeout))
+                ex = new Exception("Wait Timeout");
+
+            if (ex == null)
+            {
+                if (Services.DecodeAlarmSummaryOrEvent(res.Result, 0, res.Result.Length, GetEvent, out Alarms, out MoreEvent) < 0)
+                    ex = new Exception("Decode");
+            }
+            else
+            {
+                ex = new Exception("Service not available");
+            }
+
+            res.Dispose();
+        }
+
         public bool ReinitializeRequest(BacnetAddress adr, BacnetReinitializedStates state, string password, byte invoke_id = 0)
         {
             using (BacnetAsyncResult result = (BacnetAsyncResult)BeginReinitializeRequest(adr, state, password, true, invoke_id))

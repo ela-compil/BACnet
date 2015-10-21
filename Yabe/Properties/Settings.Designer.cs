@@ -382,5 +382,17 @@ namespace Yabe.Properties {
                 this["Subscriptions_ReplacementPollingPeriod"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool AlarmByGetEventInformation {
+            get {
+                return ((bool)(this["AlarmByGetEventInformation"]));
+            }
+            set {
+                this["AlarmByGetEventInformation"] = value;
+            }
+        }
     }
 }

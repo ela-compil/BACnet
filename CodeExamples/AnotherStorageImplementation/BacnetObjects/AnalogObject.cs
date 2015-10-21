@@ -77,9 +77,6 @@ namespace BaCSharp
                 if (m_PRESENT_VALUE_ReadOnly == false)
                 {
                     internal_PROP_PRESENT_VALUE = value;
-
-                    ExternalCOVManagement(BacnetPropertyIds.PROP_PRESENT_VALUE);
-                    IntrinsicReportingManagement();
                 }
                 else
                     ErrorCode_PropertyWrite = ErrorCodes.WriteAccessDenied;
@@ -92,10 +89,13 @@ namespace BaCSharp
         {
             get { return m_PROP_PRESENT_VALUE; }
             set 
-            { 
-                m_PROP_PRESENT_VALUE = value; 
-                ExternalCOVManagement(BacnetPropertyIds.PROP_PRESENT_VALUE);                 
-                IntrinsicReportingManagement(); 
+            {
+                if (!value.Equals(m_PROP_PRESENT_VALUE))
+                {
+                    m_PROP_PRESENT_VALUE = value;
+                    ExternalCOVManagement(BacnetPropertyIds.PROP_PRESENT_VALUE);
+                    IntrinsicReportingManagement();
+                }
             }
         }
 

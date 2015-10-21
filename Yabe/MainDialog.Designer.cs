@@ -48,6 +48,7 @@
             this.exportDeviceEDEFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.timeSynchronizeToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.communicationControlToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.alarmSummaryToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripSeparator();
             this.downloadFileToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.uploadFileToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
@@ -73,6 +74,7 @@
             this.exportDeviceDBToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.timeSynchronizeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.communicationControlToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.alarmSummaryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.label2 = new System.Windows.Forms.Label();
             this.m_AddressSpaceTree = new System.Windows.Forms.TreeView();
             this.m_AddressSpaceMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
@@ -144,6 +146,7 @@
             m_ImageList.Images.SetKeyName(13, "bell.png");
             m_ImageList.Images.SetKeyName(14, "calendar.png");
             m_ImageList.Images.SetKeyName(15, "date.png");
+            m_ImageList.Images.SetKeyName(16, "error.png");
             // 
             // toolStrip1
             // 
@@ -217,6 +220,7 @@
             this.exportDeviceEDEFileToolStripMenuItem,
             this.timeSynchronizeToolStripMenuItem1,
             this.communicationControlToolStripMenuItem1,
+            this.alarmSummaryToolStripMenuItem1,
             this.toolStripMenuItem2,
             this.downloadFileToolStripMenuItem1,
             this.uploadFileToolStripMenuItem1,
@@ -301,6 +305,14 @@
             this.communicationControlToolStripMenuItem1.Size = new System.Drawing.Size(211, 22);
             this.communicationControlToolStripMenuItem1.Text = "Device control";
             this.communicationControlToolStripMenuItem1.Click += new System.EventHandler(this.communicationControlToolStripMenuItem1_Click);
+            // 
+            // alarmSummaryToolStripMenuItem1
+            // 
+            this.alarmSummaryToolStripMenuItem1.Image = global::Yabe.Properties.Resources.error;
+            this.alarmSummaryToolStripMenuItem1.Name = "alarmSummaryToolStripMenuItem1";
+            this.alarmSummaryToolStripMenuItem1.Size = new System.Drawing.Size(211, 22);
+            this.alarmSummaryToolStripMenuItem1.Text = "Alarm Summary";
+            this.alarmSummaryToolStripMenuItem1.Click += new System.EventHandler(this.alarmSummaryToolStripMenuItem1_Click);
             // 
             // toolStripMenuItem2
             // 
@@ -488,9 +500,10 @@
             this.sendWhoIsToolStripMenuItem,
             this.exportDeviceDBToolStripMenuItem,
             this.timeSynchronizeToolStripMenuItem,
-            this.communicationControlToolStripMenuItem});
+            this.communicationControlToolStripMenuItem,
+            this.alarmSummaryToolStripMenuItem});
             this.m_DeviceTreeMenuStrip.Name = "m_DeviceTreeMenuStrip";
-            this.m_DeviceTreeMenuStrip.Size = new System.Drawing.Size(168, 142);
+            this.m_DeviceTreeMenuStrip.Size = new System.Drawing.Size(168, 164);
             // 
             // addDeviceToolStripMenuItem
             // 
@@ -544,6 +557,14 @@
             this.communicationControlToolStripMenuItem.Size = new System.Drawing.Size(167, 22);
             this.communicationControlToolStripMenuItem.Text = "Device control";
             this.communicationControlToolStripMenuItem.Click += new System.EventHandler(this.communicationControlToolStripMenuItem_Click);
+            // 
+            // alarmSummaryToolStripMenuItem
+            // 
+            this.alarmSummaryToolStripMenuItem.Image = global::Yabe.Properties.Resources.error;
+            this.alarmSummaryToolStripMenuItem.Name = "alarmSummaryToolStripMenuItem";
+            this.alarmSummaryToolStripMenuItem.Size = new System.Drawing.Size(167, 22);
+            this.alarmSummaryToolStripMenuItem.Text = "Alarm Summary";
+            this.alarmSummaryToolStripMenuItem.Click += new System.EventHandler(this.alarmSummaryToolStripMenuItem_Click);
             // 
             // label2
             // 
@@ -894,6 +915,8 @@
         private System.Windows.Forms.TreeView m_AddressSpaceTree;
         private System.Windows.Forms.ToolStripMenuItem showCalendarToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showCalendarToolStripMenuItem1;
+        private System.Windows.Forms.ToolStripMenuItem alarmSummaryToolStripMenuItem1;
+        private System.Windows.Forms.ToolStripMenuItem alarmSummaryToolStripMenuItem;
     }
 }
 

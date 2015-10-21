@@ -75,7 +75,7 @@ namespace BaCSharp
             {
                 if (m_PRESENT_VALUE_ReadOnly == false)
                 {
-                    if ((value == 0) || (value == 1))
+                    if (((value == 0) || (value == 1))&&(value!=m_PROP_PRESENT_VALUE))
                     {
                         m_PROP_PRESENT_VALUE = value;
                         ExternalCOVManagement(BacnetPropertyIds.PROP_PRESENT_VALUE);

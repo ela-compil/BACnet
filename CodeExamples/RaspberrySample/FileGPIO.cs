@@ -64,8 +64,10 @@ namespace GPIO
         }
 
         //no need to setup pin this is done for you
-        public static void OutputPin(uint pin, bool value)
+        public static void OutputPin(uint pin, bool value) 
         {
+            if (Environment.OSVersion.Platform != System.PlatformID.Unix) return;
+
             //if we havent used the pin before,  or if we used it as an input before, set it up
             if (!_OutExported.Contains(pin) || _InExported.Contains(pin)) SetupPin(pin, enumDirection.OUT);
 
@@ -78,6 +80,8 @@ namespace GPIO
         //no need to setup pin this is done for you
         public static bool InputPin(uint pin)
         {
+            if (Environment.OSVersion.Platform != System.PlatformID.Unix) return false;
+
             bool returnValue = false;
 
             //if we havent used the pin before, or if we used it as an output before, set it up
@@ -96,7 +100,7 @@ namespace GPIO
         }
 
         //if for any reason you want to unexport a particular pin use this, otherwise just call CleanUpAllPins when you're done
-        public static void UnexportPin(uint pin)
+        private static void UnexportPin(uint pin)
         {
             bool found = false;
             if (_OutExported.Contains(pin))
@@ -118,6 +122,8 @@ namespace GPIO
 
         public static void CleanUpAllPins()
         {
+            if (Environment.OSVersion.Platform != System.PlatformID.Unix) return;
+
             for (int i=0;i<30;i++)
                 try
                 {

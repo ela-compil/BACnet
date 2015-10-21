@@ -7083,6 +7083,91 @@ namespace System.IO.BACnet.Serialize
             /* tag 2 - Acknowledged Transitions */
             ASN1.encode_application_bitstring(buffer, acknowledgedTransitions);
         }
+        
+        // FChaxel
+        public static int DecodeAlarmSummaryOrEvent(byte[] buffer, int offset, int apdu_len, bool GetEvent, out IList<BacnetGetEventInformationData> Alarms, out bool MoreEvent)
+        {
+            int len = 0;;
+
+            // only the three first fields are used int this struct
+            List<BacnetGetEventInformationData> _values = new List<BacnetGetEventInformationData>();
+            Alarms = null;
+
+            if (GetEvent) len++;  // peut être tag 0
+
+            while ((apdu_len - 3 - len) > 0)
+            {
+                byte tag_number = 0;
+                uint len_value = 0;
+                uint tmp;
+
+                BacnetGetEventInformationData value=new BacnetGetEventInformationData();
+
+                len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value);
+                len += ASN1.decode_object_id(buffer, offset + len, out value.objectIdentifier.type, out value.objectIdentifier.instance);
+                len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value);
+                len += ASN1.decode_enumerated(buffer, offset + len, len_value, out tmp);
+                value.eventState = (BacnetEventNotificationData.BacnetEventStates)tmp;
+                len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value);
+                len += ASN1.decode_bitstring(buffer, offset + len, len_value, out value.acknowledgedTransitions);
+
+                if (GetEvent)
+                {
+                    len++;  // opening Tag 3
+                    value.eventTimeStamps = new BacnetGenericTime[3];
+
+                    for (int i = 0; i < 3; i++)
+                    {
+                        DateTime dt1, dt2;
+
+                        len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value); // opening tag
+
+                        if (tag_number != (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_NULL)
+                        {
+                            len += ASN1.decode_application_date(buffer, offset + len, out dt1);
+                            len += ASN1.decode_application_time(buffer, offset + len, out dt2);
+                            // oh ... a strange way to do that !
+                            DateTime dt = Convert.ToDateTime(dt1.ToString().Split(' ')[0] + " " + dt2.ToString().Split(' ')[1]);
+                            value.eventTimeStamps[i] = new BacnetGenericTime(dt, BacnetTimestampTags.TIME_STAMP_DATETIME);
+                            len++; // closing tag
+                        }
+                        else
+                            len += (int)len_value;
+
+
+                    }
+                    len++;  // closing Tag 3
+
+                    len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value);
+                    len += ASN1.decode_enumerated(buffer, offset + len, len_value, out tmp);
+                    value.notifyType = (BacnetEventNotificationData.BacnetNotifyTypes)tmp;
+
+                    len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value);
+                    len += ASN1.decode_bitstring(buffer, offset + len, len_value, out value.eventEnable);
+
+                    len++; // opening tag 6;
+                    value.eventPriorities = new uint[3];
+                    for (int i = 0; i < 3; i++)
+                    {
+                        len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value);
+                        len += ASN1.decode_unsigned(buffer, offset + len, len_value, out value.eventPriorities[i]);
+                    }
+                    len++;  // closing Tag 6
+                }
+
+                _values.Add(value);
+
+            }
+
+            Alarms = _values;
+
+            if (GetEvent)
+                MoreEvent = (buffer[apdu_len - 1] == 1);
+            else
+                MoreEvent = false;
+
+            return len;
+        }
 
         public static void EncodeGetEventInformation(EncodeBuffer buffer, bool send_last, BacnetObjectId lastReceivedObjectIdentifier)
         {

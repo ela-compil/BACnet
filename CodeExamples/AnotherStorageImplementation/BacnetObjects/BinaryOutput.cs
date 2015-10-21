@@ -104,7 +104,7 @@ namespace BaCSharp
         {
             if (UsePriorityArray == false)
             {
-                m_PROP_PRESENT_VALUE = (uint)Value[0].Value;
+                PROP_PRESENT_VALUE = (uint)Value[0].Value;
                 return;
             }
             else
