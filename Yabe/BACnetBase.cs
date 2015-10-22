@@ -7085,13 +7085,9 @@ namespace System.IO.BACnet.Serialize
         }
         
         // FChaxel
-        public static int DecodeAlarmSummaryOrEvent(byte[] buffer, int offset, int apdu_len, bool GetEvent, out IList<BacnetGetEventInformationData> Alarms, out bool MoreEvent)
+        public static int DecodeAlarmSummaryOrEvent(byte[] buffer, int offset, int apdu_len, bool GetEvent, ref IList<BacnetGetEventInformationData> Alarms, out bool MoreEvent)
         {
             int len = 0;;
-
-            // only the three first fields are used int this struct
-            List<BacnetGetEventInformationData> _values = new List<BacnetGetEventInformationData>();
-            Alarms = null;
 
             if (GetEvent) len++;  // peut être tag 0
 
@@ -7155,11 +7151,9 @@ namespace System.IO.BACnet.Serialize
                     len++;  // closing Tag 6
                 }
 
-                _values.Add(value);
+                Alarms.Add(value);
 
             }
-
-            Alarms = _values;
 
             if (GetEvent)
                 MoreEvent = (buffer[apdu_len - 1] == 1);
@@ -8096,7 +8090,98 @@ namespace System.IO.BACnet.Serialize
             foreach (BacnetReadAccessResult r_value in value_list)
                 EncodeWritePropertyMultiple(buffer, r_value.objectIdentifier, r_value.values);
         }
+        // By C. Gunter
+        // quite the same as DecodeWritePropertyMultiple
+        public static int DecodeCreateObject(byte[] buffer, int offset, int apdu_len, out BacnetObjectId object_id, out ICollection<BacnetPropertyValue> values_refs)
+        {
+            int len = 0;
+            byte tag_number;
+            uint len_value;
+            uint ulVal;
+            uint property_id;
 
+            object_id = new BacnetObjectId();
+            values_refs = null;
+
+            //object id
+            len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value);
+
+            if ((tag_number == 0) && (apdu_len > len))
+            {
+                apdu_len -= len;
+                if (apdu_len >= 4)
+                {
+                    ushort typenr;
+
+                    len += ASN1.decode_context_object_id(buffer, offset + len, 1, out typenr, out object_id.instance);
+                    object_id.type = (BacnetObjectTypes)typenr;
+                }
+                else
+                    return -1;
+            }
+            else
+                return -1;
+            if (ASN1.decode_is_closing_tag(buffer, offset + len))
+                len++;
+            //end objectid
+
+            /* Tag 1: sequence of WriteAccessSpecification */
+            if (!ASN1.decode_is_opening_tag_number(buffer, offset + len, 1))
+                return -1;
+            len++;
+
+            LinkedList<BacnetPropertyValue> _values = new LinkedList<BacnetPropertyValue>();
+            while ((apdu_len - len) > 1)
+            {
+                BacnetPropertyValue new_entry = new BacnetPropertyValue();
+
+                /* tag 0 - Property Identifier */
+                len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value);
+                if (tag_number == 0)
+                    len += ASN1.decode_enumerated(buffer, offset + len, len_value, out property_id);
+                else
+                    return -1;
+
+                /* tag 1 - Property Array Index - optional */
+                ulVal = ASN1.BACNET_ARRAY_ALL;
+                len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value);
+                if (tag_number == 1)
+                {
+                    len += ASN1.decode_unsigned(buffer, offset + len, len_value, out ulVal);
+                    len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value);
+                }
+                new_entry.property = new BacnetPropertyReference(property_id, ulVal);
+
+                /* tag 2 - Property Value */
+                if ((tag_number == 2) && (ASN1.decode_is_opening_tag(buffer, offset + len - 1)))
+                {
+                    List<BacnetValue> values = new List<BacnetValue>();
+                    while (!ASN1.decode_is_closing_tag(buffer, offset + len))
+                    {
+                        BacnetValue value;
+                        int l = ASN1.bacapp_decode_application_data(buffer, offset + len, apdu_len + offset, object_id.type, (BacnetPropertyIds)property_id, out value);
+                        if (l <= 0) return -1;
+                        len += l;
+                        values.Add(value);
+                    }
+                    len++;
+                    new_entry.value = values;
+                }
+                else
+                    return -1;
+
+                _values.AddLast(new_entry);
+            }
+
+            /* Closing tag 1 - List of Properties */
+            if (!ASN1.decode_is_closing_tag_number(buffer, offset + len, 1))
+                return -1;
+            len++;
+
+            values_refs = _values;
+
+            return len;
+        }
         public static int DecodeWritePropertyMultiple(byte[] buffer, int offset, int apdu_len, out BacnetObjectId object_id, out ICollection<BacnetPropertyValue> values_refs)
         {
             int len = 0;

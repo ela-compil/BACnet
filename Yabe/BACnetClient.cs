@@ -181,6 +181,8 @@ namespace System.IO.BACnet
         public event ReinitializedRequestHandler OnReinitializedDevice;
         public delegate void ReadRangeHandler(BacnetClient sender, BacnetAddress adr, byte invoke_id, BacnetObjectId objectId, BacnetPropertyReference property, BacnetReadRangeRequestTypes requestType, uint position, DateTime time, int count, BacnetMaxSegments max_segments);
         public event ReadRangeHandler OnReadRange;
+        public delegate void CreateObjectRequestHandler(BacnetClient sender, BacnetAddress adr, byte invoke_id, BacnetObjectId object_id, ICollection<BacnetPropertyValue> values, BacnetMaxSegments max_segments);
+        public event CreateObjectRequestHandler OnCreateObjectRequest;
 
         protected void ProcessConfirmedServiceRequest(BacnetAddress adr, BacnetPduTypes type, BacnetConfirmedServices service, BacnetMaxSegments max_segments, BacnetMaxAdpu max_adpu, byte invoke_id, byte[] buffer, int offset, int length)
         {
@@ -339,6 +341,17 @@ namespace System.IO.BACnet
                     }
                     else
                         Trace.TraceWarning("Couldn't decode ReadRange");
+                }
+                else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_CREATE_OBJECT && OnCreateObjectRequest != null)
+                {
+                    BacnetObjectId object_id;
+                    ICollection<BacnetPropertyValue> values;                   
+                    if (Services.DecodeCreateObject(buffer, offset, length, out object_id, out values) >= 0)
+                        OnCreateObjectRequest(this, adr, invoke_id, object_id, values, max_segments);
+                    else
+                    {
+                        Trace.TraceWarning("Couldn't decode CreateObject");
+                    }
                 }
                 else
                 {
@@ -1900,19 +1913,25 @@ namespace System.IO.BACnet
         }
 
         // FChaxel
-        public bool GetAlarmSummaryOrEventRequest(BacnetAddress adr, bool GetEvent, out IList<BacnetGetEventInformationData> Alarms, out bool MoreEvent, byte invoke_id = 0)
+        public bool GetAlarmSummaryOrEventRequest(BacnetAddress adr, bool GetEvent, ref IList<BacnetGetEventInformationData> Alarms, byte invoke_id = 0)
         {
-            Alarms = null; MoreEvent = false;
-            using (BacnetAsyncResult result = (BacnetAsyncResult)BeginGetAlarmSummaryOrEventRequest(adr, GetEvent, true, invoke_id))
+            using (BacnetAsyncResult result = (BacnetAsyncResult)BeginGetAlarmSummaryOrEventRequest(adr, GetEvent, Alarms, true, invoke_id))
             {
                 for (int r = 0; r < m_retries; r++)
                 {
                     if (result.WaitForDone(m_timeout))
                     {
                         Exception ex;
-                        EndGetAlarmSummaryOrEventRequest(result, GetEvent, out Alarms, out MoreEvent, out ex);
+                        bool MoreEvent;
+
+                        EndGetAlarmSummaryOrEventRequest(result, GetEvent, ref Alarms, out MoreEvent, out ex);
                         if (ex != null) return false;
-                        else return true;
+                        else
+                        {
+                            if (MoreEvent == true) // never true if GetAlarmSummary is used
+                                return GetAlarmSummaryOrEventRequest(adr, GetEvent, ref Alarms);
+                            return true;
+                        };
                     }
                     if (r < (m_retries - 1))
                         result.Resend();
@@ -1921,9 +1940,9 @@ namespace System.IO.BACnet
             return false;
         }
 
-        public IAsyncResult BeginGetAlarmSummaryOrEventRequest(BacnetAddress adr, bool GetEvent, bool wait_for_transmit, byte invoke_id = 0)
+        public IAsyncResult BeginGetAlarmSummaryOrEventRequest(BacnetAddress adr, bool GetEvent, IList<BacnetGetEventInformationData> Alarms, bool wait_for_transmit, byte invoke_id = 0)
         {
-            Trace.WriteLine("Sending ReinitializeRequest ... ", null);
+            Trace.WriteLine("Sending Alarm summary request... ", null);
             if (invoke_id == 0) invoke_id = unchecked(m_invoke_id++);
 
             EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);            
@@ -1933,6 +1952,11 @@ namespace System.IO.BACnet
                 APDU.EncodeConfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST | (m_max_segments != BacnetMaxSegments.MAX_SEG0 ? BacnetPduTypes.SEGMENTED_RESPONSE_ACCEPTED : 0), BacnetConfirmedServices.SERVICE_CONFIRMED_GET_ALARM_SUMMARY, m_max_segments, m_client.MaxAdpuLength, invoke_id, 0, 0);
             else
                 APDU.EncodeConfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST | (m_max_segments != BacnetMaxSegments.MAX_SEG0 ? BacnetPduTypes.SEGMENTED_RESPONSE_ACCEPTED : 0), BacnetConfirmedServices.SERVICE_CONFIRMED_GET_EVENT_INFORMATION, m_max_segments, m_client.MaxAdpuLength, invoke_id, 0, 0);
+
+            // Get Next, never true if GetAlarmSummary is usee
+            if (Alarms.Count != 0)
+                ASN1.encode_context_object_id(b, 0, Alarms[Alarms.Count - 1].objectIdentifier.type, Alarms[Alarms.Count - 1].objectIdentifier.instance);
+
             //send
             BacnetAsyncResult ret = new BacnetAsyncResult(this, adr, invoke_id, b.buffer, b.offset - m_client.HeaderLength, wait_for_transmit, m_transmit_timeout);
             ret.Resend();
@@ -1940,9 +1964,9 @@ namespace System.IO.BACnet
             return ret;
         }
 
-        public void EndGetAlarmSummaryOrEventRequest(IAsyncResult result, bool GetEvent, out IList<BacnetGetEventInformationData> Alarms, out bool MoreEvent, out Exception ex)
+        public void EndGetAlarmSummaryOrEventRequest(IAsyncResult result, bool GetEvent, ref IList<BacnetGetEventInformationData> Alarms, out bool MoreEvent, out Exception ex)
         {
-            Alarms = null; MoreEvent = false;
+            MoreEvent = false;
             BacnetAsyncResult res = (BacnetAsyncResult)result;
             ex = res.Error;
             if (ex == null && !res.WaitForDone(m_timeout))
@@ -1950,7 +1974,7 @@ namespace System.IO.BACnet
 
             if (ex == null)
             {
-                if (Services.DecodeAlarmSummaryOrEvent(res.Result, 0, res.Result.Length, GetEvent, out Alarms, out MoreEvent) < 0)
+                if (Services.DecodeAlarmSummaryOrEvent(res.Result, 0, res.Result.Length, GetEvent, ref Alarms, out MoreEvent) < 0)
                     ex = new Exception("Decode");
             }
             else

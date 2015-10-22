@@ -195,6 +195,11 @@
 			device Id. Can be usefull to set recipients list in notification class 
 			objects without using Yabe Ip endpoint. 
 
+		2.5.13 AlarmByGetEventInformation
+			Two services to get the alarm list : GetAlarmSummary or GetEventInformation. 
+			GetAlarmSummary is deprecated since 2012, so it's not the default behaviour
+			for Yabe. Trys to set this option to false with old devices if needed.
+
 3.  TECHNICAL
     
 	3.1 MULTIPLE UDP CLIENTS ON SAME IP

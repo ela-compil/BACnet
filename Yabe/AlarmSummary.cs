@@ -40,7 +40,7 @@ namespace Yabe
     public partial class AlarmSummary : Form
     {
         BacnetClient comm; BacnetAddress adr;
-        IList<BacnetGetEventInformationData> Alarms;
+        IList<BacnetGetEventInformationData> Alarms=new List<BacnetGetEventInformationData>();
 
         public AlarmSummary(ImageList img_List, BacnetClient comm, BacnetAddress adr, uint device_id)
         {
@@ -49,21 +49,28 @@ namespace Yabe
             this.comm = comm;
             this.adr = adr;            
 
-            bool MoreEvent;
             TAlarmList.ImageList = img_List;
 
+            Application.UseWaitCursor = true;
+        }
+
+        private void tmr_Tick(object sender, EventArgs e)
+        {
+            tmr.Enabled = false;
             // get the Alarm summary
             // Addentum 135-2012av-1 : Deprecate Execution of GetAlarmSummary, GetEVentInformation instead
             // -> parameter 2 in the method call
-             if (comm.GetAlarmSummaryOrEventRequest(adr, Properties.Settings.Default.AlarmByGetEventInformation, out Alarms, out MoreEvent) == true)
+            if (comm.GetAlarmSummaryOrEventRequest(adr, Properties.Settings.Default.AlarmByGetEventInformation, ref Alarms) == true)
             {
+                FillTreeNode();
                 LblInfo.Visible = false;
                 AckText.Enabled = AckBt.Enabled = true;
-
-                FillTreeNode();
             }
-            if (MoreEvent == true)
-                PartialLabel.Visible = true;
+            else
+                LblInfo.Text = "Service not available on this device";
+            
+            Application.UseWaitCursor = false;
+            
         }
         private static string GetEventStateNiceName(String name)
         {
@@ -82,24 +89,49 @@ namespace Yabe
 
         private void FillTreeNode()
         {
+            bool EmptyList = (TAlarmList.Nodes.Count == 0);
+            int icon;
+
             TAlarmList.BeginUpdate();
 
-            TAlarmList.Nodes.Clear();
+            // Only one network read request to get the object name
+            int _retries = comm.Retries;
+            comm.Retries = 1;
+
+            int Idx = 0;
 
             // fill the Treenode
             foreach (BacnetGetEventInformationData alarm in Alarms)
             {
-                IList<BacnetValue> name;
-                comm.ReadPropertyRequest(adr, alarm.objectIdentifier, BacnetPropertyIds.PROP_OBJECT_NAME, out name);
+                TreeNode currentTn;
 
-                int icon = MainDialog.GetIconNum(alarm.objectIdentifier.type);
-                TreeNode tn = new TreeNode(name[0].Value.ToString(), icon, icon);
-                tn.ToolTipText = alarm.objectIdentifier.ToString();
-                tn.Tag = alarm;
-                TAlarmList.Nodes.Add(tn);
+                // get or set the Node
+                if (EmptyList == true)
+                {
+                    // Get the property Name, network activity, time consuming
+                    IList<BacnetValue> name;
+                    bool retcode=comm.ReadPropertyRequest(adr, alarm.objectIdentifier, BacnetPropertyIds.PROP_OBJECT_NAME, out name);
+      
+                    icon = MainDialog.GetIconNum(alarm.objectIdentifier.type);
+                    if (retcode)
+                    {
+                        currentTn = new TreeNode(name[0].Value.ToString(), icon, icon);
+                        currentTn.ToolTipText = alarm.objectIdentifier.ToString();
+                    }
+                    else
+                        currentTn = new TreeNode(alarm.objectIdentifier.ToString(), icon, icon);
+
+                    currentTn.Tag = alarm;
+                    TAlarmList.Nodes.Add(currentTn);
+                }
+                else
+                {
+                    currentTn = TAlarmList.Nodes[Idx++];
+                    currentTn.Nodes.Clear();
+                }
 
                 icon = Int32.MaxValue; // out bound
-                tn.Nodes.Add(new TreeNode("Alarm state : " + GetEventStateNiceName(alarm.eventState.ToString()), icon, icon));
+                currentTn.Nodes.Add(new TreeNode("Alarm state : " + GetEventStateNiceName(alarm.eventState.ToString()), icon, icon));
 
                 bool SomeTodo = false;
 
@@ -115,13 +147,17 @@ namespace Yabe
                     }
                 }
 
-                if (SomeTodo == false) tn2 = new TreeNode("No Ack Required, all is OK", icon, icon); //tn2.Nodes.Add(new TreeNode("Nothing to do, all is OK", icon, icon));
-                tn.Nodes.Add(tn2);
+                if (SomeTodo == false) tn2 = new TreeNode("No Ack Required, already done", icon, icon); 
+                currentTn.Nodes.Add(tn2);
 
-                TAlarmList.EndUpdate();
-
-                TAlarmList.ExpandAll();
             }
+
+            // set back the request retries number
+            comm.Retries = _retries;
+
+            TAlarmList.EndUpdate();
+
+            TAlarmList.ExpandAll();
 
             if (Alarms.Count == 0)
             {
@@ -139,9 +175,9 @@ namespace Yabe
             BacnetGetEventInformationData alarm = (BacnetGetEventInformationData)tn.Tag; // the alam content
 
             bool SomeChanges = false;
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < 3; i++) // 3 transitions maybe to be ack To_Normal, To_OfNormal, To_Fault
             {
-                if (alarm.acknowledgedTransitions.ToString()[i] == '0') // Transition to be ack
+                if (alarm.acknowledgedTransitions.ToString()[i] == '0') // Transition to be ack, 1 means ok/already done
                 {
                     BacnetGenericTime bgt;
 
@@ -149,7 +185,7 @@ namespace Yabe
                         bgt = alarm.eventTimeStamps[i];
                     else // Deprecate Execution of GetAlarmSummary
                     {
-                        // Read the event time stamp
+                        // Read the event time stamp, we do not have it 
                         IList<BacnetValue> values;
                         if (comm.ReadPropertyRequest(adr, alarm.objectIdentifier, BacnetPropertyIds.PROP_EVENT_TIME_STAMPS, out values, 0, (uint)i) == false)
                         {
@@ -162,7 +198,7 @@ namespace Yabe
                         bgt = new BacnetGenericTime(dt, BacnetTimestampTags.TIME_STAMP_DATETIME);
                     }
 
-                    // something to clarify : BacnetEventStates & BacnetEventEnable !!!
+                    // something to clarify : BacnetEventStates or BacnetEventEnable !!!
                     BacnetEventNotificationData.BacnetEventStates eventstate = (BacnetEventNotificationData.BacnetEventStates)(2 - i);
 
                     if (comm.AlarmAcknowledgement(adr, alarm.objectIdentifier, eventstate, AckText.Text, bgt,
@@ -178,7 +214,7 @@ namespace Yabe
             }
         }
 
-        // No more used
+        // Used if the Read without retries has fail
         private void TAlarmList_AfterSelect(object sender, TreeViewEventArgs e)
         {
             TreeNode tn=e.Node;
