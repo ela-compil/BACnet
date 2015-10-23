@@ -458,7 +458,8 @@ namespace Yabe
                 "\nReference: http://www.unified-automation.com/products/development-tools/uaexpert.html" +
                 "\nReference: http://www.famfamfam.com/"+
                 "\nReference: http://sourceforge.net/projects/zedgraph/"+
-                "\nReference: http://www.codeproject.com/Articles/38699/A-Professional-Calendar-Agenda-View-That-You-Will"
+                "\nReference: http://www.codeproject.com/Articles/38699/A-Professional-Calendar-Agenda-View-That-You-Will"+
+                "\nReference: https://github.com/chmorgan/sharppcap"
                 
                 , "About", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
@@ -1920,22 +1921,15 @@ namespace Yabe
 
         private void sendWhoIsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            //fetch end point
-            BacnetClient comm = null;
             try
             {
-                if (m_DeviceTree.SelectedNode == null) return;
-                else if (m_DeviceTree.SelectedNode.Tag == null) return;
-                else if (!(m_DeviceTree.SelectedNode.Tag is BacnetClient)) return;
-                comm = (BacnetClient)m_DeviceTree.SelectedNode.Tag;
+                BacnetClient comm = (BacnetClient)m_DeviceTree.SelectedNode.Tag;
+                comm.WhoIs();
             }
-            finally
+            catch
             {
-                if (comm == null) MessageBox.Show(this, "Please select a \"transport\" node first", "Wrong node", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show(this, "Please select a \"transport\" node first", "Wrong node", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
-
-            //send
-            comm.WhoIs();
         }
 
         private void helpToolStripMenuItem1_Click(object sender, EventArgs e)
@@ -1963,23 +1957,15 @@ namespace Yabe
             BacnetClient comm = null;
             BacnetAddress adr;
             uint device_id;
-            try
+
+            FetchEndPoint(out comm, out adr, out device_id);
+
+            if (comm == null)
             {
-                if (m_DeviceTree.SelectedNode == null) return;
-                else if (m_DeviceTree.SelectedNode.Tag == null) return;
-                else if (!(m_DeviceTree.SelectedNode.Tag is KeyValuePair<BacnetAddress, uint>)) return;
-                KeyValuePair<BacnetAddress, uint> entry = (KeyValuePair<BacnetAddress, uint>)m_DeviceTree.SelectedNode.Tag;
-                adr = entry.Key;
-                device_id = entry.Value;
-                if (m_DeviceTree.SelectedNode.Parent.Tag is BacnetClient)
-                    comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag;
-                else
-                    comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Parent.Tag; // When device is under a Router
+                MessageBox.Show(this, "Please select a device node", "Wrong node", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
             }
-            finally
-            {
-                if (comm == null) MessageBox.Show(this, "Please select a device node", "Wrong node", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
+  
 
             //select file to store
             SaveFileDialog dlg = new SaveFileDialog();
@@ -2162,12 +2148,10 @@ namespace Yabe
             timeSynchronizeToolStripMenuItem_Click(this, null);
         }
 
-        private void timeSynchronizeToolStripMenuItem_Click(object sender, EventArgs e)
+        // retreive the BacnetClient, BacnetAddress, device id of the selected node
+        private void FetchEndPoint(out BacnetClient comm, out BacnetAddress adr, out uint device_id)
         {
-            //fetch end point
-            BacnetClient comm = null;
-            BacnetAddress adr;
-            uint device_id;
+            comm = null; adr = null; device_id = 0;
             try
             {
                 if (m_DeviceTree.SelectedNode == null) return;
@@ -2181,9 +2165,25 @@ namespace Yabe
                 else
                     comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Parent.Tag; // When device is under a Router
             }
-            finally
+            catch
             {
-                if (comm == null) MessageBox.Show(this, "Please select a device node", "Wrong node", MessageBoxButtons.OK, MessageBoxIcon.Information);
+   
+            }
+        }
+
+        private void timeSynchronizeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            //fetch end point
+            BacnetClient comm = null;
+            BacnetAddress adr;
+            uint device_id;
+
+            FetchEndPoint(out comm, out adr, out device_id);
+
+            if (comm == null)
+            {
+                MessageBox.Show(this, "Please select a device node", "Wrong node", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
             }
 
             //send
@@ -2202,22 +2202,13 @@ namespace Yabe
             BacnetClient comm = null;
             BacnetAddress adr;
             uint device_id;
-            try
+
+            FetchEndPoint(out comm, out adr, out device_id);
+
+            if (comm == null)
             {
-                if (m_DeviceTree.SelectedNode == null) return;
-                else if (m_DeviceTree.SelectedNode.Tag == null) return;
-                else if (!(m_DeviceTree.SelectedNode.Tag is KeyValuePair<BacnetAddress, uint>)) return;
-                KeyValuePair<BacnetAddress, uint> entry = (KeyValuePair<BacnetAddress, uint>)m_DeviceTree.SelectedNode.Tag;
-                adr = entry.Key;
-                device_id = entry.Value;
-                if (m_DeviceTree.SelectedNode.Parent.Tag is BacnetClient)
-                    comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag;
-                else
-                    comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Parent.Tag; // When device is under a Router
-            }
-            finally
-            {
-                if (comm == null) MessageBox.Show(this, "Please select a device node", "Wrong node", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show(this, "Please select a device node", "Wrong node", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
             }
 
             //Options
@@ -2255,24 +2246,15 @@ namespace Yabe
             BacnetClient comm = null;
             BacnetAddress adr;
             uint device_id;
-            try
-            {
-                if (m_DeviceTree.SelectedNode == null) return;
-                else if (m_DeviceTree.SelectedNode.Tag == null) return;
-                else if (!(m_DeviceTree.SelectedNode.Tag is KeyValuePair<BacnetAddress, uint>)) return;
-                KeyValuePair<BacnetAddress, uint> entry = (KeyValuePair<BacnetAddress, uint>)m_DeviceTree.SelectedNode.Tag;
-                adr = entry.Key;
-                device_id = entry.Value;
-                if (m_DeviceTree.SelectedNode.Parent.Tag is BacnetClient)
-                    comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag;
-                else
-                    comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Parent.Tag; // When device is under a Router
-            }
-            finally
-            {
-                if (comm == null) MessageBox.Show(this, "Please select a device node", "Wrong node", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
 
+            FetchEndPoint(out comm, out adr, out device_id);
+
+            if (comm == null)
+            {
+                MessageBox.Show(this, "Please select a device node", "Wrong node", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+  
             //select file to store
             SaveFileDialog dlg = new SaveFileDialog();
             dlg.Filter = "csv|*.csv";
@@ -2371,24 +2353,66 @@ namespace Yabe
             BacnetClient comm = null;
             BacnetAddress adr;
             uint device_id;
-            try
-            {
-                if (m_DeviceTree.SelectedNode == null) return;
-                else if (m_DeviceTree.SelectedNode.Tag == null) return;
-                else if (!(m_DeviceTree.SelectedNode.Tag is KeyValuePair<BacnetAddress, uint>)) return;
-                KeyValuePair<BacnetAddress, uint> entry = (KeyValuePair<BacnetAddress, uint>)m_DeviceTree.SelectedNode.Tag;
-                adr = entry.Key;
-                device_id = entry.Value;
-                if (m_DeviceTree.SelectedNode.Parent.Tag is BacnetClient)
-                    comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Tag;
-                else
-                    comm = (BacnetClient)m_DeviceTree.SelectedNode.Parent.Parent.Tag; // When device is under a Router
 
-                new AlarmSummary(m_AddressSpaceTree.ImageList, comm, adr, device_id).ShowDialog();
-            }
-            finally
+            FetchEndPoint(out comm, out adr, out device_id);
+
+            if (comm == null)
             {
-                if (comm == null) MessageBox.Show(this, "Please select a device node", "Wrong node", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show(this, "Please select a device node", "Wrong node", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+  
+            new AlarmSummary(m_AddressSpaceTree.ImageList, comm, adr, device_id).ShowDialog();
+        }
+
+        // Read the Adress Space, and change all object Id by name (using synchronous network access)
+        // Popup Menu Get Properties Name
+        private void readPropertiesNameToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            //fetch end point
+            BacnetClient comm = null;
+            BacnetAddress adr;
+            uint device_id;
+
+            FetchEndPoint(out comm, out adr, out device_id);
+
+            if (comm == null)
+            {
+                MessageBox.Show(this, "Please select a device node", "Wrong node", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+           
+            // Go
+            int _retries = comm.Retries;
+            comm.Retries = 1;
+            Application.UseWaitCursor = true;
+            Application.DoEvents();
+
+            ChangeObjectIdByName(m_AddressSpaceTree.Nodes, comm, adr);
+
+            Application.UseWaitCursor = false;
+            Cursor.Current = Cursors.Default; // sometimes required, else not back since a click !
+
+            comm.Retries = _retries;
+
+        }
+
+        private void ChangeObjectIdByName(TreeNodeCollection tnc, BacnetClient comm, BacnetAddress adr)
+        {
+            foreach (TreeNode tn in tnc)
+            {
+                if (tn.ToolTipText == "")
+                {
+                    IList<BacnetValue> name;
+                    if (comm.ReadPropertyRequest(adr, (BacnetObjectId)tn.Tag, BacnetPropertyIds.PROP_OBJECT_NAME, out name) == true)
+                    {
+                        tn.ToolTipText = tn.Text;
+                        tn.Text = name[0].Value.ToString();
+                    }
+                }
+
+                if (tn.Nodes != null)
+                    ChangeObjectIdByName(tn.Nodes, comm, adr);
             }
         }
 

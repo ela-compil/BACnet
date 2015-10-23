@@ -89,10 +89,25 @@ namespace BaCSharp
         public virtual BacnetBitString PROP_EVENT_ENABLE
         {
             get { return m_PROP_EVENT_ENABLE; }
-            set { m_PROP_EVENT_ENABLE = value; }
+            set 
+            {
+                if (value.bits_used == 3)
+                    m_PROP_EVENT_ENABLE = value; 
+            }
         }
 
-        // do no works ... that's why it _PROP_xxx and not PROP_xxx
+        public BacnetBitString m_PROP_ACKED_TRANSITIONS = new BacnetBitString();
+        [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_BIT_STRING)]
+        public virtual BacnetBitString PROP_ACKED_TRANSITIONS
+        {
+            get { return m_PROP_ACKED_TRANSITIONS; }
+            set 
+            { 
+                if (value.bits_used==3)
+                    m_PROP_ACKED_TRANSITIONS = value; 
+            }
+        }
+
         public BacnetValue[] m_PROP_EVENT_TIME_STAMPS = new BacnetValue[3];
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_NULL)]
         public virtual BacnetValue[] PROP_EVENT_TIME_STAMPS
@@ -131,6 +146,10 @@ namespace BaCSharp
             m_PROP_EVENT_ENABLE.SetBit((byte)0, State); // TO_OFFNORMAL (High or Low)
             m_PROP_EVENT_ENABLE.SetBit((byte)1, State); // TO_FAULT (not used here)
             m_PROP_EVENT_ENABLE.SetBit((byte)2, State); // TO_NORMAL (back to a good value)
+
+            m_PROP_ACKED_TRANSITIONS.SetBit((byte)0, true);
+            m_PROP_ACKED_TRANSITIONS.SetBit((byte)1, true);
+            m_PROP_ACKED_TRANSITIONS.SetBit((byte)2, true);
 
             m_PROP_NOTIFICATION_CLASS = NotificationClassId;
         }

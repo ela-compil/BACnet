@@ -2320,6 +2320,14 @@ namespace System.IO.BACnet
             });
         }
 
+        public void CreateObjectResponse(BacnetAddress adr, byte invoke_id, Segmentation segmentation, BacnetObjectId object_id)
+        {
+            SendComplexAck(adr, invoke_id, segmentation, BacnetConfirmedServices.SERVICE_CONFIRMED_CREATE_OBJECT, (b) =>
+            {
+                Services.EncodeCreateObjectAcknowledge(b, object_id);
+            });
+
+        }
         public void ReadPropertyMultipleResponse(BacnetAddress adr, byte invoke_id, Segmentation segmentation, IList<BacnetReadAccessResult> values)
         {
             SendComplexAck(adr, invoke_id, segmentation, BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROP_MULTIPLE, (b) => 

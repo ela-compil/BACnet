@@ -57,6 +57,9 @@ namespace AnotherStorageImplementation
             bacnet_client.OnReadRange += new BacnetClient.ReadRangeHandler(handler_OnReadRange);
             bacnet_client.OnAtomicWriteFileRequest += new BacnetClient.AtomicWriteFileRequestHandler(handler_OnAtomicWriteFileRequest);
             bacnet_client.OnAtomicReadFileRequest += new BacnetClient.AtomicReadFileRequestHandler(handler_OnAtomicReadFileRequest);
+            // A sample to shows CreateObject
+            bacnet_client.OnCreateObjectRequest += new BacnetClient.CreateObjectRequestHandler(handler_OnCreateObjectRequest);
+            device.m_PROP_PROTOCOL_SERVICES_SUPPORTED.SetBit((byte)BacnetServicesSupported.SERVICE_SUPPORTED_CREATE_OBJECT, true);
 
             BaCSharpObject.OnExternalCOVNotify += new BaCSharpObject.WriteNotificationCallbackHandler(handler_OnCOVManagementNotify);
 
@@ -367,6 +370,63 @@ namespace AnotherStorageImplementation
             if (low_limit != -1 && deviceId < low_limit) return;
             else if (high_limit != -1 && deviceId > high_limit) return;
             sender.Iam(deviceId, new BacnetSegmentations());
+        }
+
+        /*****************************************************************************************************/
+        // Create OBJECT_ANALOG_INPUT sample by C. Gunter
+        static void handler_OnCreateObjectRequest(BacnetClient sender, BacnetAddress adr, byte invoke_id, BacnetObjectId object_id, ICollection<BacnetPropertyValue> values, BacnetMaxSegments max_segments)
+        {
+            // simple not all errortypes!!!!!!!! and for now only Analog inputs
+            if (device.FindBacnetObject(object_id) != null)
+            {
+                sender.ErrorResponse(adr, BacnetConfirmedServices.SERVICE_CONFIRMED_CREATE_OBJECT, invoke_id, BacnetErrorClasses.ERROR_CLASS_OBJECT, BacnetErrorCodes.ERROR_CODE_OBJECT_IDENTIFIER_ALREADY_EXISTS);
+                return;
+            }
+
+            // some default values
+            string obj_name = object_id.type.ToString() + object_id.instance.ToString(); 
+            string obj_description = "Sample for you by C. Günter";
+            BacnetUnitsId obj_unit = BacnetUnitsId.UNITS_NO_UNITS;
+            double obj_value = 0;
+
+            // normally only needs objid, these properties values are sent or not by the client
+            foreach (BacnetPropertyValue value in values)
+            {
+                switch (value.property.propertyIdentifier)
+                {
+                    case (uint)BacnetPropertyIds.PROP_DESCRIPTION:
+                        obj_description = (string)value.value[0].Value;
+                        break;
+                    case (uint)BacnetPropertyIds.PROP_OBJECT_NAME:
+                        obj_name = (string)value.value[0].Value;
+                        break;
+                    case (uint)BacnetPropertyIds.PROP_UNITS:
+                        obj_unit = (BacnetUnitsId)value.value[0].Value;
+                        break;
+                    case (uint)BacnetPropertyIds.PROP_PRESENT_VALUE:
+                        try
+                        {
+                            obj_value = Convert.ToDouble(value.value[0].Value); // double is the simplest, quite all values convertible to it
+                        }
+                        catch { }
+                        break;
+                }
+            }
+            //add to device
+            switch (object_id.type)
+            {
+                case BacnetObjectTypes.OBJECT_ANALOG_INPUT:
+                    AnalogInput<double> newAI = new AnalogInput<double>(object_id, obj_name, obj_description, obj_value, obj_unit);
+                    device.AddBacnetObject(newAI);
+                    break;
+                /* to be added by yourself according to your project requirement
+                */
+                default:
+                    sender.ErrorResponse(adr, BacnetConfirmedServices.SERVICE_CONFIRMED_CREATE_OBJECT, invoke_id, BacnetErrorClasses.ERROR_CLASS_OBJECT, BacnetErrorCodes.ERROR_CODE_UNSUPPORTED_OBJECT_TYPE);
+                    return;
+            }
+            //send ack that has been created
+            sender.CreateObjectResponse(adr, invoke_id, sender.GetSegmentBuffer(max_segments), object_id);
         }
     }
 }

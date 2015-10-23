@@ -75,6 +75,7 @@
             this.timeSynchronizeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.communicationControlToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.alarmSummaryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.readPropertiesNameToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.label2 = new System.Windows.Forms.Label();
             this.m_AddressSpaceTree = new System.Windows.Forms.TreeView();
             this.m_AddressSpaceMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
@@ -310,6 +311,8 @@
             // 
             this.alarmSummaryToolStripMenuItem1.Image = global::Yabe.Properties.Resources.error;
             this.alarmSummaryToolStripMenuItem1.Name = "alarmSummaryToolStripMenuItem1";
+            this.alarmSummaryToolStripMenuItem1.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.A)));
+            this.alarmSummaryToolStripMenuItem1.ShowShortcutKeys = false;
             this.alarmSummaryToolStripMenuItem1.Size = new System.Drawing.Size(211, 22);
             this.alarmSummaryToolStripMenuItem1.Text = "Alarm Summary";
             this.alarmSummaryToolStripMenuItem1.Click += new System.EventHandler(this.alarmSummaryToolStripMenuItem1_Click);
@@ -501,15 +504,16 @@
             this.exportDeviceDBToolStripMenuItem,
             this.timeSynchronizeToolStripMenuItem,
             this.communicationControlToolStripMenuItem,
-            this.alarmSummaryToolStripMenuItem});
+            this.alarmSummaryToolStripMenuItem,
+            this.readPropertiesNameToolStripMenuItem});
             this.m_DeviceTreeMenuStrip.Name = "m_DeviceTreeMenuStrip";
-            this.m_DeviceTreeMenuStrip.Size = new System.Drawing.Size(168, 164);
+            this.m_DeviceTreeMenuStrip.Size = new System.Drawing.Size(225, 208);
             // 
             // addDeviceToolStripMenuItem
             // 
             this.addDeviceToolStripMenuItem.Image = global::Yabe.Properties.Resources.add;
             this.addDeviceToolStripMenuItem.Name = "addDeviceToolStripMenuItem";
-            this.addDeviceToolStripMenuItem.Size = new System.Drawing.Size(167, 22);
+            this.addDeviceToolStripMenuItem.Size = new System.Drawing.Size(224, 22);
             this.addDeviceToolStripMenuItem.Text = "Add device";
             this.addDeviceToolStripMenuItem.Click += new System.EventHandler(this.addDeviceToolStripMenuItem_Click);
             // 
@@ -517,20 +521,21 @@
             // 
             this.removeDeviceToolStripMenuItem1.Image = global::Yabe.Properties.Resources.cross;
             this.removeDeviceToolStripMenuItem1.Name = "removeDeviceToolStripMenuItem1";
-            this.removeDeviceToolStripMenuItem1.Size = new System.Drawing.Size(167, 22);
+            this.removeDeviceToolStripMenuItem1.Size = new System.Drawing.Size(224, 22);
             this.removeDeviceToolStripMenuItem1.Text = "Remove device";
             this.removeDeviceToolStripMenuItem1.Click += new System.EventHandler(this.removeDeviceToolStripMenuItem1_Click);
             // 
             // toolStripMenuItem1
             // 
             this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-            this.toolStripMenuItem1.Size = new System.Drawing.Size(164, 6);
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(221, 6);
             // 
             // sendWhoIsToolStripMenuItem
             // 
             this.sendWhoIsToolStripMenuItem.Image = global::Yabe.Properties.Resources.magnifier;
             this.sendWhoIsToolStripMenuItem.Name = "sendWhoIsToolStripMenuItem";
-            this.sendWhoIsToolStripMenuItem.Size = new System.Drawing.Size(167, 22);
+            this.sendWhoIsToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F2;
+            this.sendWhoIsToolStripMenuItem.Size = new System.Drawing.Size(224, 22);
             this.sendWhoIsToolStripMenuItem.Text = "Send WhoIs";
             this.sendWhoIsToolStripMenuItem.Click += new System.EventHandler(this.sendWhoIsToolStripMenuItem_Click);
             // 
@@ -538,7 +543,7 @@
             // 
             this.exportDeviceDBToolStripMenuItem.Image = global::Yabe.Properties.Resources.database;
             this.exportDeviceDBToolStripMenuItem.Name = "exportDeviceDBToolStripMenuItem";
-            this.exportDeviceDBToolStripMenuItem.Size = new System.Drawing.Size(167, 22);
+            this.exportDeviceDBToolStripMenuItem.Size = new System.Drawing.Size(224, 22);
             this.exportDeviceDBToolStripMenuItem.Text = "Export device DB";
             this.exportDeviceDBToolStripMenuItem.Click += new System.EventHandler(this.exportDeviceDBToolStripMenuItem_Click);
             // 
@@ -546,7 +551,8 @@
             // 
             this.timeSynchronizeToolStripMenuItem.Image = global::Yabe.Properties.Resources.clock;
             this.timeSynchronizeToolStripMenuItem.Name = "timeSynchronizeToolStripMenuItem";
-            this.timeSynchronizeToolStripMenuItem.Size = new System.Drawing.Size(167, 22);
+            this.timeSynchronizeToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.T)));
+            this.timeSynchronizeToolStripMenuItem.Size = new System.Drawing.Size(224, 22);
             this.timeSynchronizeToolStripMenuItem.Text = "Time synchronize";
             this.timeSynchronizeToolStripMenuItem.Click += new System.EventHandler(this.timeSynchronizeToolStripMenuItem_Click);
             // 
@@ -554,7 +560,8 @@
             // 
             this.communicationControlToolStripMenuItem.Image = global::Yabe.Properties.Resources.transmit;
             this.communicationControlToolStripMenuItem.Name = "communicationControlToolStripMenuItem";
-            this.communicationControlToolStripMenuItem.Size = new System.Drawing.Size(167, 22);
+            this.communicationControlToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.D)));
+            this.communicationControlToolStripMenuItem.Size = new System.Drawing.Size(224, 22);
             this.communicationControlToolStripMenuItem.Text = "Device control";
             this.communicationControlToolStripMenuItem.Click += new System.EventHandler(this.communicationControlToolStripMenuItem_Click);
             // 
@@ -562,9 +569,19 @@
             // 
             this.alarmSummaryToolStripMenuItem.Image = global::Yabe.Properties.Resources.error;
             this.alarmSummaryToolStripMenuItem.Name = "alarmSummaryToolStripMenuItem";
-            this.alarmSummaryToolStripMenuItem.Size = new System.Drawing.Size(167, 22);
+            this.alarmSummaryToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.A)));
+            this.alarmSummaryToolStripMenuItem.Size = new System.Drawing.Size(224, 22);
             this.alarmSummaryToolStripMenuItem.Text = "Alarm Summary";
             this.alarmSummaryToolStripMenuItem.Click += new System.EventHandler(this.alarmSummaryToolStripMenuItem_Click);
+            // 
+            // readPropertiesNameToolStripMenuItem
+            // 
+            this.readPropertiesNameToolStripMenuItem.Image = global::Yabe.Properties.Resources.book_open;
+            this.readPropertiesNameToolStripMenuItem.Name = "readPropertiesNameToolStripMenuItem";
+            this.readPropertiesNameToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.N)));
+            this.readPropertiesNameToolStripMenuItem.Size = new System.Drawing.Size(224, 22);
+            this.readPropertiesNameToolStripMenuItem.Text = "Get Properties name";
+            this.readPropertiesNameToolStripMenuItem.Click += new System.EventHandler(this.readPropertiesNameToolStripMenuItem_Click);
             // 
             // label2
             // 
@@ -917,6 +934,7 @@
         private System.Windows.Forms.ToolStripMenuItem showCalendarToolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem alarmSummaryToolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem alarmSummaryToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem readPropertiesNameToolStripMenuItem;
     }
 }
 

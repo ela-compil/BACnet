@@ -70,6 +70,7 @@ namespace Yabe
                 LblInfo.Text = "Service not available on this device";
             
             Application.UseWaitCursor = false;
+            Cursor.Current = Cursors.Default; // sometimes required, else not back since a click !
             
         }
         private static string GetEventStateNiceName(String name)

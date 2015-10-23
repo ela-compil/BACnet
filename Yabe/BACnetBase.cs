@@ -8182,6 +8182,12 @@ namespace System.IO.BACnet.Serialize
 
             return len;
         }
+
+        public static void EncodeCreateObjectAcknowledge(EncodeBuffer buffer, BacnetObjectId object_id)
+        {
+            ASN1.encode_application_object_id(buffer, object_id.type, object_id.instance);
+        }
+
         public static int DecodeWritePropertyMultiple(byte[] buffer, int offset, int apdu_len, out BacnetObjectId object_id, out ICollection<BacnetPropertyValue> values_refs)
         {
             int len = 0;
