@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Yabe", "Yabe\Yabe.csproj", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DemoServer", "DemoServer\DemoServer.csproj", "{ACF2683C-BDA5-445F-BF9D-196D133D2460}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DemoBBMD", "DemoBBMD\DemoBBMD.csproj", "{A2CE9357-71B6-40F7-97C7-74AF1E5659A5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DemoBBMD", "CodeExamples\DemoBBMD\DemoBBMD.csproj", "{A2CE9357-71B6-40F7-97C7-74AF1E5659A5}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnotherStorageImplementation", "CodeExamples\AnotherStorageImplementation\AnotherStorageImplementation.csproj", "{EE8E3C58-371E-4164-93DA-13D055D5BDDE}"
 EndProject

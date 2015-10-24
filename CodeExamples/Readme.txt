@@ -32,6 +32,14 @@ BasicServer
 	Only OBJECT_ANALOG_VALUE:0.PRESENT_VALUE could be write
 	OBJECT_ANALOG_INPUT_0.PRESENT_VALUE change continously :
 		PRESENT_VALUE = OBJECT_ANALOG_VALUE_0.PRESENT_VALUE * Sin (w.t);
+BBMDDemo
+	BBMD services on a simple device server with only one Device Object.
+	Foreign devices accepted.
+	Tested with
+		- Wago 750/830 (vendor Id 222)
+		- Newron DoGate (vendor Id 451)
+		- Sauter EY-AS521 (vendor Id 80)
+	Also running on a Raspberry Pi on Linux/Mono
 
 AnotherStorageImplementation
 	Shows another way, much complex than the original one in DeviceStorage.cs file

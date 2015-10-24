@@ -43,16 +43,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\DemoServer\DeviceStorage.cs">
+    <Compile Include="..\..\DemoServer\DeviceStorage.cs">
       <Link>DeviceStorage.cs</Link>
     </Compile>
-    <Compile Include="..\Yabe\BACnetBase.cs">
+    <Compile Include="..\..\Yabe\BACnetBase.cs">
       <Link>BACnetBase.cs</Link>
     </Compile>
-    <Compile Include="..\Yabe\BACnetClient.cs">
+    <Compile Include="..\..\Yabe\BACnetClient.cs">
       <Link>BACnetClient.cs</Link>
     </Compile>
-    <Compile Include="..\Yabe\BACnetTransport.cs">
+    <Compile Include="..\..\Yabe\BACnetTransport.cs">
       <Link>BACnetTransport.cs</Link>
     </Compile>
     <Compile Include="BACnetActivity.cs" />
