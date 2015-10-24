@@ -183,6 +183,8 @@ namespace System.IO.BACnet
         public event ReadRangeHandler OnReadRange;
         public delegate void CreateObjectRequestHandler(BacnetClient sender, BacnetAddress adr, byte invoke_id, BacnetObjectId object_id, ICollection<BacnetPropertyValue> values, BacnetMaxSegments max_segments);
         public event CreateObjectRequestHandler OnCreateObjectRequest;
+        public delegate void DeleteObjectRequestHandler(BacnetClient sender, BacnetAddress adr, byte invoke_id, BacnetObjectId object_id, BacnetMaxSegments max_segments);
+        public event DeleteObjectRequestHandler OnDeleteObjectRequest;
 
         protected void ProcessConfirmedServiceRequest(BacnetAddress adr, BacnetPduTypes type, BacnetConfirmedServices service, BacnetMaxSegments max_segments, BacnetMaxAdpu max_adpu, byte invoke_id, byte[] buffer, int offset, int length)
         {
@@ -353,6 +355,18 @@ namespace System.IO.BACnet
                         Trace.TraceWarning("Couldn't decode CreateObject");
                     }
                 }
+                else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_DELETE_OBJECT && OnDeleteObjectRequest != null)
+                {
+
+                    BacnetObjectId object_id;
+                    if (Services.DecodeDeleteObject(buffer, offset, length, out object_id) >= 0)
+                        OnDeleteObjectRequest(this, adr, invoke_id, object_id, max_segments);
+                    else
+                    {
+                        Trace.TraceWarning("Couldn't decode DecodeDeleteObject");
+                    }
+                }
+
                 else
                 {
                     Trace.TraceWarning("Confirmed service not handled: " + service.ToString());

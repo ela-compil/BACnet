@@ -213,6 +213,18 @@ namespace BaCSharp
             return false;
         }
 
+        public virtual bool RemoveBacnetObject(BacnetObjectId objId)
+        {
+            BaCSharpObject obj = FindBacnetObject(objId);
+            if (obj != this)
+            {
+                obj.Dispose();
+                return ObjectsList.Remove(obj); //since we wont remove object device!!!! using LIST Remove!!
+            }
+            else
+                return false;
+        }
+
         protected override uint BacnetMethodNametoId(String Name)
         {
             if ((Name == "get_PROP_STRUCTURED_OBJECT_LIST") && (!this.UseStructuredView))  // Hide this property

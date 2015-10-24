@@ -62,6 +62,7 @@ namespace BaCSharp
         }
 
         private int tmrId = 0;
+        private object LockObj = new object();
 
         public Calendar(int ObjId, String ObjName, String Description)
              : base(new BacnetObjectId(BacnetObjectTypes.OBJECT_CALENDAR,(uint)ObjId), ObjName, Description)
@@ -103,50 +104,57 @@ namespace BaCSharp
         {
             CalenarEntry.Entries.Add(bwd);
         }
+        public override void Dispose()
+        {
+            lock (LockObj)
+                tmrId++; // it is used to 'desactivate the effect' of the timer call sleeping in the ThreadPool
+        }
 
         Timer tmr;
         protected virtual void DayChanged(object o)
         {
-            if ((int)o != tmrId)
-                return;
-
-            tmrId++; // it is used to 'desactivate the effect' of the timer call sleeping in the ThreadPool 
-
-            bool NewPresentValue=false;
-            // Update Present_Value
-            foreach (object entry in CalenarEntry.Entries)
+            lock (LockObj)
             {
-                if (entry is BacnetDate)
-                    if (((BacnetDate)entry).IsAFittingDate(DateTime.Now))
-                    {
-                        NewPresentValue = true;
-                        break;
-                    }
-                if (entry is BacnetDateRange)
-                    if (((BacnetDateRange)entry).IsAFittingDate(DateTime.Now))
-                    {
-                        NewPresentValue = true;
-                        break;
-                    }
-                if (entry is BacnetweekNDay)
-                    if (((BacnetweekNDay)entry).IsAFittingDate(DateTime.Now))
-                    {
-                        NewPresentValue = true;
-                        break;
-                    }
+                if ((int)o != tmrId)
+                    return;
+
+                tmrId++; // it is used to 'desactivate the effect' of the timer call sleeping in the ThreadPool 
+
+                bool NewPresentValue = false;
+                // Update Present_Value
+                foreach (object entry in CalenarEntry.Entries)
+                {
+                    if (entry is BacnetDate)
+                        if (((BacnetDate)entry).IsAFittingDate(DateTime.Now))
+                        {
+                            NewPresentValue = true;
+                            break;
+                        }
+                    if (entry is BacnetDateRange)
+                        if (((BacnetDateRange)entry).IsAFittingDate(DateTime.Now))
+                        {
+                            NewPresentValue = true;
+                            break;
+                        }
+                    if (entry is BacnetweekNDay)
+                        if (((BacnetweekNDay)entry).IsAFittingDate(DateTime.Now))
+                        {
+                            NewPresentValue = true;
+                            break;
+                        }
+                }
+
+                if (NewPresentValue != m_PROP_PRESENT_VALUE)
+                {
+                    m_PROP_PRESENT_VALUE = NewPresentValue;
+                    ExternalCOVManagement(BacnetPropertyIds.PROP_PRESENT_VALUE);
+                }
+
+                // Place a callback for tomorrow 0:0:1
+                DateTime Now = DateTime.Now;
+                DateTime Tomorrow = new DateTime(Now.Year, Now.Month, Now.Day, 0, 0, 1).AddDays(1);
+                tmr = new Timer(new TimerCallback(DayChanged), tmrId, (long)((Tomorrow - Now).TotalMilliseconds), Timeout.Infinite);
             }
-
-            if (NewPresentValue != m_PROP_PRESENT_VALUE)
-            {
-                m_PROP_PRESENT_VALUE = NewPresentValue;
-                ExternalCOVManagement(BacnetPropertyIds.PROP_PRESENT_VALUE);
-            }
-
-            // Place a callback for tomorrow 0:0:1
-            DateTime Now = DateTime.Now;
-            DateTime Tomorrow = new DateTime(Now.Year, Now.Month, Now.Day, 0, 0, 1).AddDays(1);
-            tmr = new Timer(new TimerCallback(DayChanged), tmrId, (long)((Tomorrow-Now).TotalMilliseconds), Timeout.Infinite);
-
         }
     }
 }

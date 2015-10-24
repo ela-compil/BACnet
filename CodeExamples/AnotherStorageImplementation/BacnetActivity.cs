@@ -57,9 +57,11 @@ namespace AnotherStorageImplementation
             bacnet_client.OnReadRange += new BacnetClient.ReadRangeHandler(handler_OnReadRange);
             bacnet_client.OnAtomicWriteFileRequest += new BacnetClient.AtomicWriteFileRequestHandler(handler_OnAtomicWriteFileRequest);
             bacnet_client.OnAtomicReadFileRequest += new BacnetClient.AtomicReadFileRequestHandler(handler_OnAtomicReadFileRequest);
-            // A sample to shows CreateObject
+            // A sample to shows CreateObject & DeleteObject
             bacnet_client.OnCreateObjectRequest += new BacnetClient.CreateObjectRequestHandler(handler_OnCreateObjectRequest);
             device.m_PROP_PROTOCOL_SERVICES_SUPPORTED.SetBit((byte)BacnetServicesSupported.SERVICE_SUPPORTED_CREATE_OBJECT, true);
+            bacnet_client.OnDeleteObjectRequest += new BacnetClient.DeleteObjectRequestHandler(handler_OnDeleteObjectRequest);
+            device.m_PROP_PROTOCOL_SERVICES_SUPPORTED.SetBit((byte)BacnetServicesSupported.SERVICE_SUPPORTED_DELETE_OBJECT, true);
 
             BaCSharpObject.OnExternalCOVNotify += new BaCSharpObject.WriteNotificationCallbackHandler(handler_OnCOVManagementNotify);
 
@@ -373,7 +375,8 @@ namespace AnotherStorageImplementation
         }
 
         /*****************************************************************************************************/
-        // Create OBJECT_ANALOG_INPUT sample by C. Gunter
+        // Create & Delete Object by C. Gunter
+        //  OBJECT_ANALOG_INPUT sample
         static void handler_OnCreateObjectRequest(BacnetClient sender, BacnetAddress adr, byte invoke_id, BacnetObjectId object_id, ICollection<BacnetPropertyValue> values, BacnetMaxSegments max_segments)
         {
             // simple not all errortypes!!!!!!!! and for now only Analog inputs
@@ -428,5 +431,34 @@ namespace AnotherStorageImplementation
             //send ack that has been created
             sender.CreateObjectResponse(adr, invoke_id, sender.GetSegmentBuffer(max_segments), object_id);
         }
+
+        static void handler_OnDeleteObjectRequest(BacnetClient sender, BacnetAddress adr, byte invoke_id, BacnetObjectId object_id, BacnetMaxSegments max_segments)
+        {
+            //check if exists; if doesn't send error Unknown_Object
+            if (device.FindBacnetObject(object_id) == null)
+            {
+                sender.ErrorResponse(adr, BacnetConfirmedServices.SERVICE_CONFIRMED_CREATE_OBJECT, invoke_id, BacnetErrorClasses.ERROR_CLASS_OBJECT, BacnetErrorCodes.ERROR_CODE_UNKNOWN_OBJECT);
+                return;
+            }
+
+            // check if objecttype is allowed to be deleted, like for example Device switch() for adding more types which cant be deleted
+            // Device not removable, no need to check
+            switch (object_id.type)
+            {
+                case BacnetObjectTypes.OBJECT_ACCESS_DOOR : // just to shows how to do
+                    sender.ErrorResponse(adr, BacnetConfirmedServices.SERVICE_CONFIRMED_CREATE_OBJECT, invoke_id, BacnetErrorClasses.ERROR_CLASS_OBJECT, BacnetErrorCodes.ERROR_CODE_OBJECT_DELETION_NOT_PERMITTED);
+                    return;
+                default:
+                    break;
+            }
+            //remove from device and send ACK normally there should be no error!!!!!!!
+            if (device.RemoveBacnetObject(object_id) == true)
+                sender.SimpleAckResponse(adr, BacnetConfirmedServices.SERVICE_CONFIRMED_DELETE_OBJECT, invoke_id);
+            else
+                Console.WriteLine("unknown Error while deleting object!");
+            return;
+        }
+
+
     }
 }

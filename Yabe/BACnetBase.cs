@@ -8182,6 +8182,25 @@ namespace System.IO.BACnet.Serialize
 
             return len;
         }
+        public static int DecodeDeleteObject(byte[] buffer, int offset, int apdu_len, out BacnetObjectId object_id)
+        {
+            int len = 0;
+            byte tag_number;
+            uint lenght;
+            object_id = new BacnetObjectId();
+            ASN1.decode_tag_number_and_value(buffer, offset, out tag_number, out lenght);
+
+            if (tag_number != 12)
+                return -1;
+
+            len = 1;
+            len += ASN1.decode_object_id(buffer, offset + len, out object_id.type, out object_id.instance);
+
+            if (len == apdu_len) //check if packet was correct!
+                return len;
+            else
+                return -1;
+        }
 
         public static void EncodeCreateObjectAcknowledge(EncodeBuffer buffer, BacnetObjectId object_id)
         {

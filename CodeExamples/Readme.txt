@@ -39,6 +39,7 @@ AnotherStorageImplementation
 	Each Bacnetobject is a object in the C# code.
 	So a class must be written for each Bacnet object type, but this give the
 	possibility to have a complex behaviour in objects code.
+	Shows also dynamic creation/destruction of objects by a remote client.
 	Actual objects types are :
 		Device
 		Structured View

@@ -393,7 +393,11 @@ namespace BaCSharp
                     tmr = new Timer(new TimerCallback(TimeSchedule), new object[] { tmrId, NewValue }, delay * 1000, Timeout.Infinite);
                 }
             }
-
+        }
+        public override void Dispose()
+        {
+            lock (lockObj)
+                tmrId++; // this will devalidate thread pool tasks
         }
     }
 

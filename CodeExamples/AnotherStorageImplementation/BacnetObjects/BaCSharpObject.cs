@@ -121,6 +121,8 @@ namespace BaCSharp
             m_PROP_DESCRIPTION = Description;
         }
 
+        public virtual void Dispose(){}
+
         public override string ToString()
         {
             return m_PROP_OBJECT_IDENTIFIER.ToString();
