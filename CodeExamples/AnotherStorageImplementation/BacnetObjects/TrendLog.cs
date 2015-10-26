@@ -32,10 +32,8 @@ using System.Runtime.InteropServices;
 
 namespace BaCSharp
 {
-    [Serializable]
     public class TrendLog : BaCSharpObject
     {
-        [NonSerialized()]
         public uint m_PROP_RECORD_COUNT = 0; 
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT)]
         public virtual uint PROP_RECORD_COUNT
@@ -80,7 +78,7 @@ namespace BaCSharp
             get { return false; }
         }
 
-        // protected : not serialized 
+        // protected : not serialized, please use a separate process than json serialisation
         protected  BacnetLogRecord[] Trend;
         protected int LogPtr = 0;
 
@@ -99,6 +97,12 @@ namespace BaCSharp
         }
 
         public TrendLog() { }
+
+        public override void Post_NewtonSoft_Json_Deserialization(DeviceObject device)
+        {
+            base.Post_NewtonSoft_Json_Deserialization(device);
+            m_PROP_RECORD_COUNT = 0;
+        }
 
         public virtual void AddValue(object Value, DateTime TimeStamp, uint Status, BacnetTrendLogValueType? ValueType=null)
         {

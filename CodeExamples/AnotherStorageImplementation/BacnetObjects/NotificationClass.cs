@@ -32,7 +32,6 @@ using System.IO.BACnet.Serialize;
 
 namespace BaCSharp
 {
-    [Serializable]
     public class NotificationClass : BaCSharpObject
     {
         // Don't understand the reason of this redondancy value, already in PROP_OBJECT_IDENTIFIER !

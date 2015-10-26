@@ -31,10 +31,9 @@ using System.IO.BACnet;
 
 namespace BaCSharp
 {
-    // Not Serializable since deviceobject is not serializable
     public class StructuredView : BaCSharpObject
     {
-        public List<BacnetValue> m_PROP_SUBORDINATE_LIST = new List<BacnetValue>();
+        protected List<BacnetValue> m_PROP_SUBORDINATE_LIST = new List<BacnetValue>();
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID)]
         public virtual List<BacnetValue> PROP_SUBORDINATE_LIST
         {

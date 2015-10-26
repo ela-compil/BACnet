@@ -133,6 +133,15 @@ namespace BaCSharp
             return this.m_PROP_OBJECT_IDENTIFIER.Equals(objId);
         }
 
+        // Object was not created with a new in the code but by a Deserialization
+        // using the default constructor
+        // some additionnal up to run code must be executed 
+        // Only a call to the method (without parameter) on the device object should be made
+        public virtual void Post_NewtonSoft_Json_Deserialization(DeviceObject device)
+        {
+            Mydevice = device;
+        }
+
         // Managed in BacnetActivity.cs, for COV notification to client
         public void ExternalCOVManagement(BacnetPropertyIds propId)
         {

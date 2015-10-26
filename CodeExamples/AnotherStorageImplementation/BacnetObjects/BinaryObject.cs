@@ -31,7 +31,6 @@ using System.IO.BACnet;
 
 namespace BaCSharp
 {
-    [Serializable]
     public abstract class BinaryObject : BaCSharpObject
     {
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED)]

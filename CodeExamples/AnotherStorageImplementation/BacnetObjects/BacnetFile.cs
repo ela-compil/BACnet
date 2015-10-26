@@ -32,7 +32,6 @@ using System.IO;
 
 namespace BaCSharp
 {
-    [Serializable]
     public class BacnetFile:BaCSharpObject
     {
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_CHARACTER_STRING)]

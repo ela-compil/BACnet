@@ -31,7 +31,6 @@ using System.IO.BACnet;
 
 namespace BaCSharp
 {
-    [Serializable]
     public class AnalogInput<T> : AnalogObject<T>
     {
         public AnalogInput(int ObjId, String ObjName, String Description, T InitialValue, BacnetUnitsId Unit)

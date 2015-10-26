@@ -32,7 +32,6 @@ using System.IO.BACnet;
 namespace BaCSharp
 {
 
-    [Serializable]
     public class AnalogOutput<T> : AnalogValueAndOutput<T>
     {
         public AnalogOutput(int ObjId, String ObjName, String Description, T InitialValue, BacnetUnitsId Unit)
@@ -42,7 +41,6 @@ namespace BaCSharp
         public AnalogOutput() { }
     }
 
-    [Serializable]
     public class AnalogValue<T> : AnalogValueAndOutput<T>
     {
         public AnalogValue(int ObjId, String ObjName, String Description, T InitialValue, BacnetUnitsId Unit, bool WithPriorityArray)
@@ -52,7 +50,6 @@ namespace BaCSharp
         public AnalogValue() { }
     }
 
-    [Serializable]
     public class AnalogValueAndOutput<T> : AnalogObject<T>
     {
         protected bool UsePriorityArray = false;

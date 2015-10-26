@@ -33,7 +33,6 @@ using System.Threading;
 
 namespace BaCSharp
 {
-    [Serializable]
     class Schedule : BaCSharpObject
     {
         protected int tmrId;
@@ -74,6 +73,12 @@ namespace BaCSharp
             {
                 lock (lockObj)
                 {
+                    if (value.GetType() == typeof(BacnetDeviceObjectPropertyReferenceList)) // during deseralization, this one is used
+                    {
+                        m_PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES=(BacnetDeviceObjectPropertyReferenceList)value;
+                        return;
+                    }
+
                     m_PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES.references = new List<BacnetDeviceObjectPropertyReference>();
                     if (value == null) return;
                     if (value is BacnetDeviceObjectPropertyReference)
@@ -170,6 +175,12 @@ namespace BaCSharp
             {
                 lock (lockObj)
                 {
+                    if (value.GetType() == typeof(BacnetWeeklySchedule)) // during deseralization, this one is used
+                    {
+                        m_PROP_WEEKLY_SCHEDULE = (BacnetWeeklySchedule)value;
+                        return;
+                    }
+
                     int day = 0;
 
                     m_PROP_WEEKLY_SCHEDULE = new BacnetWeeklySchedule();
@@ -273,7 +284,7 @@ namespace BaCSharp
         // Copy the Present value into each reference properties value
         protected virtual void DoDispatchValue()
         {
-            if (m_PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES.references == null)
+            if ((m_PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES.references == null)||(Mydevice==null))
                 return;
 
             foreach (object obj in m_PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES.references)
@@ -328,7 +339,7 @@ namespace BaCSharp
         Timer tmr;
         protected virtual void DoScheduling()
         {
-            if (m_PROP_OUT_OF_SERVICE == true)
+            if ((m_PROP_OUT_OF_SERVICE == true)||(Mydevice==null))
             {
                 tmrId++;    // in order to invalidate the action of the timer in the ThreadPool
                 return;

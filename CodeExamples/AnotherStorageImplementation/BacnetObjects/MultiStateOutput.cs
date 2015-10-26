@@ -31,7 +31,7 @@ using System.IO.BACnet;
 
 namespace BaCSharp
 {
-    [Serializable]
+   
     public class MultiStateOutput : MultiStateValueAndOutput
     {
         public MultiStateOutput(int ObjId, String ObjName, String Description, uint InitialValue, uint StatesNumber)

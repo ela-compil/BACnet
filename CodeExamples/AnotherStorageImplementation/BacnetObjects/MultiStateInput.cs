@@ -33,7 +33,6 @@ using System.IO.BACnet;
 namespace BaCSharp
 {
 
-    [Serializable]
     public class MultiStateInput : AnalogInput<uint>
     {
 

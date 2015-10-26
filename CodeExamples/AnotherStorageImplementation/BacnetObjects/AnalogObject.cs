@@ -31,7 +31,6 @@ using System.IO.BACnet;
 
 namespace BaCSharp
 {
-    [Serializable] 
     public abstract partial class AnalogObject<T> : BaCSharpObject
     {
         public uint m_PROP_UNITS;

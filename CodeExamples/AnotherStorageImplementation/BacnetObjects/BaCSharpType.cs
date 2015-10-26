@@ -31,7 +31,6 @@ using System.IO.BACnet;
 
 namespace BaCSharp
 {
-    [Serializable]
     class BaCSharpTypeAttribute : Attribute
     {
         public BacnetApplicationTags BacnetNativeType;

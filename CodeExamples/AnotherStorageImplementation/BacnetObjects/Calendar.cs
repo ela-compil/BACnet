@@ -32,7 +32,6 @@ using System.Threading;
 
 namespace BaCSharp
 {
-    [Serializable]
     class Calendar: BaCSharpObject
     { 
 

@@ -31,7 +31,6 @@ using System.IO.BACnet;
 
 namespace BaCSharp
 {
-    [Serializable]
     public class BinaryOutput : BinaryValueAndOutput
     {
         public BinaryOutput(int ObjId, String ObjName, String Description, bool InitialValue)

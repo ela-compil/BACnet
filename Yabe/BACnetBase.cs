@@ -2224,6 +2224,10 @@ namespace System.IO.BACnet
                    break;
             }
         }
+        public BacnetAddress()
+        {
+            type = BacnetAddressTypes.None;
+        }
         public override int GetHashCode()
         {
             return adr.GetHashCode();

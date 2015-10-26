@@ -51,6 +51,8 @@ using System.IO.BACnet.Serialize;
 // solutions are present (property and set2 ...)
 //
 
+// Remove the reference to the NewtonSoft.Json dll if data persistence is not required
+
 namespace AnotherStorageImplementation
 {   
 
@@ -65,6 +67,8 @@ namespace AnotherStorageImplementation
         static void Main(string[] args)
         {
             InitDeviceObjects();
+
+            SaveAndRestoreBackSample();
 
             BacnetActivity.StartActivity(device);
 
@@ -113,9 +117,9 @@ namespace AnotherStorageImplementation
             ana0.m_PROP_LOW_LIMIT = -50;
             ana0.m_PROP_DEADBAND = 5;
             ana0.Enable_Reporting(true, 0);
-
+            
             device.AddBacnetObject(ana0);   // don't forget to do this
-
+            
             // Create A StructuredView
             StructuredView s = new StructuredView(0, "Content","A View");
             // register it
@@ -193,7 +197,7 @@ namespace AnotherStorageImplementation
                 false
                 );
             s2.AddBacnetObject(b); // in the second level view
-
+            
             NotificationClass nc = new NotificationClass
                 (
                 0, 
@@ -239,9 +243,10 @@ namespace AnotherStorageImplementation
             );
 
             nc.AddReportingRecipient(r);
-
+            
             // Create a Schedule
             Schedule sch = new Schedule(0, "Schedule", "Schedule");
+            // MUST be added to the device list before modification
             device.AddBacnetObject(sch);
 
             // a link to the internal analog output
@@ -270,6 +275,36 @@ namespace AnotherStorageImplementation
             Calendar cal = new Calendar(0, "Test Calendar", "A Yabe calendar");
             device.AddBacnetObject(cal);
 
+        }
+
+        // This shows how presistence could be achieved
+        // only partial tests since today, complex objects not really operational
+        // but all basic one seems OK
+        // 
+        // Leave a reference to the NewtonSoft.Json dll
+        // also have a look to http://www.newtonsoft.com/json
+
+        static void SaveAndRestoreBackSample()
+        {
+            /*
+             
+            // Serialization
+            Newtonsoft.Json.JsonSerializerSettings v = new Newtonsoft.Json.JsonSerializerSettings();
+            v.TypeNameHandling=Newtonsoft.Json.TypeNameHandling.All;
+            String s=Newtonsoft.Json.JsonConvert.SerializeObject(device, v);
+            // s could be put on a file
+
+            // Deserialization
+            DeviceObject o = Newtonsoft.Json.JsonConvert.DeserializeObject<DeviceObject>(s, v);
+            o.Post_NewtonSoft_Json_Deserialization();
+
+            // Change the oldest by the newest
+            device = o;
+            // retreive the newest copies of differents objects
+            ana0=(AnalogInput<double>)device.FindBacnetObject(new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT,0));
+            trend0 = (TrendLog)device.FindBacnetObject(new BacnetObjectId(BacnetObjectTypes.OBJECT_TRENDLOG, 0));
+
+           */
         }
     }
 }

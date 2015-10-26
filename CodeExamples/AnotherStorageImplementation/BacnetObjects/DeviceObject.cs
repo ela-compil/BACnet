@@ -39,14 +39,14 @@ namespace BaCSharp
     {
         public List<BaCSharpObject> ObjectsList=new List<BaCSharpObject>();
 
-        public List<BacnetValue> m_PROP_OBJECT_LIST = new List<BacnetValue>();
+        protected List<BacnetValue> m_PROP_OBJECT_LIST = new List<BacnetValue>();
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID)]
         public virtual List<BacnetValue> PROP_OBJECT_LIST
         {
             get { return m_PROP_OBJECT_LIST; }
         }
 
-        public List<BacnetValue> m_PROP_STRUCTURED_OBJECT_LIST = new List<BacnetValue>();
+        protected List<BacnetValue> m_PROP_STRUCTURED_OBJECT_LIST = new List<BacnetValue>();
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID)]
         public virtual List<BacnetValue> PROP_STRUCTURED_OBJECT_LIST
         {
@@ -169,8 +169,17 @@ namespace BaCSharp
             m_PROP_PROTOCOL_SERVICES_SUPPORTED.SetBit((byte)BacnetServicesSupported.SERVICE_SUPPORTED_ATOMIC_READ_FILE, true);
             m_PROP_PROTOCOL_SERVICES_SUPPORTED.SetBit((byte)BacnetServicesSupported.SERVICE_SUPPORTED_ATOMIC_WRITE_FILE, true);
         }
-
+        // Only call when deserialisation
         public DeviceObject() { }
+
+        public void Post_NewtonSoft_Json_Deserialization()
+        {
+            
+            SuroundingDevices = new Dictionary<uint, KeyValuePair<BacnetClient, BacnetAddress>>();
+            foreach (BaCSharpObject bo in ObjectsList)
+                bo.Post_NewtonSoft_Json_Deserialization(this);
+        }
+
         // Each object provided by the server must be added one by one to the DeviceObject
         public virtual void AddBacnetObject(BaCSharpObject newObj)
         {
