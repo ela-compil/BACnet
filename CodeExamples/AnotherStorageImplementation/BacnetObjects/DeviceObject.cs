@@ -172,6 +172,12 @@ namespace BaCSharp
         // Only call when deserialisation
         public DeviceObject() { }
 
+        public override void Dispose()
+        {
+            foreach (BaCSharpObject bo in ObjectsList)
+                bo.Dispose();
+        }
+
         public void Post_NewtonSoft_Json_Deserialization()
         {
             

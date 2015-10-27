@@ -1297,29 +1297,31 @@ namespace System.IO.BACnet
 
             //guess at the tag
             if (value != null)
-            {
-                Type t = value.GetType();
-                if (t == typeof(string))
-                    Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_CHARACTER_STRING;
-                else if (t == typeof(int) || t == typeof(short) || t == typeof(sbyte))
-                    Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_SIGNED_INT;
-                else if (t == typeof(uint) || t == typeof(ushort) || t == typeof(byte))
-                    Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT;
-                else if (t == typeof(bool))
-                    Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_BOOLEAN;
-                else if (t == typeof(float))
-                    Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_REAL;
-                else if (t == typeof(double))
-                    Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_DOUBLE;
-                else if (t == typeof(BacnetBitString))
-                    Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_BIT_STRING;
-                else if (t == typeof(BacnetObjectId))
-                    Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID;
-                else
-                    Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC_ENCODED;
-                    //throw new NotImplementedException("This type (" + t.Name + ") is not yet implemented");
-            }
+                Tag=TagFromType(value.GetType());                           
         }
+
+        public BacnetApplicationTags TagFromType(Type t)
+        {
+            if (t == typeof(string))
+                return BacnetApplicationTags.BACNET_APPLICATION_TAG_CHARACTER_STRING;
+            else if (t == typeof(int) || t == typeof(short) || t == typeof(sbyte))
+                return BacnetApplicationTags.BACNET_APPLICATION_TAG_SIGNED_INT;
+            else if (t == typeof(uint) || t == typeof(ushort) || t == typeof(byte))
+                return BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT;
+            else if (t == typeof(bool))
+                return BacnetApplicationTags.BACNET_APPLICATION_TAG_BOOLEAN;
+            else if (t == typeof(float))
+                return BacnetApplicationTags.BACNET_APPLICATION_TAG_REAL;
+            else if (t == typeof(double))
+                return BacnetApplicationTags.BACNET_APPLICATION_TAG_DOUBLE;
+            else if (t == typeof(BacnetBitString))
+                return BacnetApplicationTags.BACNET_APPLICATION_TAG_BIT_STRING;
+            else if (t == typeof(BacnetObjectId))
+                return BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID;
+            else
+                return BacnetApplicationTags.BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC_ENCODED;
+        }
+
         public override string ToString()
         {
             if (Value == null)

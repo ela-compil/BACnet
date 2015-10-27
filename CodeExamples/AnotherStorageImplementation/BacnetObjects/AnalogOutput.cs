@@ -52,7 +52,7 @@ namespace BaCSharp
 
     public class AnalogValueAndOutput<T> : AnalogObject<T>
     {
-        protected bool UsePriorityArray = false;
+        public bool UsePriorityArray = false;
 
         protected T m_PROP_RELINQUISH_DEFAULT;
         // BacnetSerialize made freely by the stack depending on the type
@@ -65,7 +65,7 @@ namespace BaCSharp
                 }
         }
 
-        protected BacnetValue[] m_PROP_PRIORITY_ARRAY = new BacnetValue[16];
+        public BacnetValue[] m_PROP_PRIORITY_ARRAY = new BacnetValue[16];
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_NULL)]
         public virtual BacnetValue[] PROP_PRIORITY_ARRAY
         {
@@ -86,6 +86,16 @@ namespace BaCSharp
 
         public AnalogValueAndOutput() { }
 
+        public override void Post_NewtonSoft_Json_Deserialization(DeviceObject device)
+        {
+            base.Post_NewtonSoft_Json_Deserialization(device);
+
+            // basic int becom int64 for instance during serialization/deserialization
+            for (int i = 0; i < 16; i++)
+                if  (m_PROP_PRIORITY_ARRAY[i].Tag!=BacnetApplicationTags.BACNET_APPLICATION_TAG_NULL)
+                    m_PROP_PRIORITY_ARRAY[i] = new BacnetValue(m_PROP_PRIORITY_ARRAY[i].Tag,Convert.ChangeType(m_PROP_PRIORITY_ARRAY[i].Value,typeof(T)));
+        }
+
         // Do not shows PROP_PRIORITY_ARRAY &  PROP_RELINQUISH_DEFAULT if not in use
         protected override uint BacnetMethodNametoId(String Name)
         {
@@ -102,7 +112,8 @@ namespace BaCSharp
         {
             if (UsePriorityArray == false)
             {
-                PROP_PRESENT_VALUE = (T) Value[0].Value;
+                PROP_PRESENT_VALUE = (T)Convert.ChangeType(Value[0].Value, typeof(T));
+                //PROP_PRESENT_VALUE = (T) Value[0].Value;
                 return;
             }
             else
@@ -114,7 +125,8 @@ namespace BaCSharp
                 {
                     if (m_PROP_PRIORITY_ARRAY[i].Value != null)    // A value is OK
                     {
-                        PROP_PRESENT_VALUE = (T)m_PROP_PRIORITY_ARRAY[i].Value;
+                        PROP_PRESENT_VALUE = (T)(T)Convert.ChangeType(m_PROP_PRIORITY_ARRAY[i].Value, typeof(T));
+                        //PROP_PRESENT_VALUE = (T)m_PROP_PRIORITY_ARRAY[i].Value;
                         done = true;
                         break;
                     }

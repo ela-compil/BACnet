@@ -41,12 +41,14 @@ namespace BaCSharp
             get { return m_PROP_OBJECT_IDENTIFIER.instance; }
         }
 
-        public List<BacnetValue> m_PROP_PRIORITY = new List<BacnetValue>();
+        protected IList<BacnetValue> m_PROP_PRIORITY = new BacnetValue[3];
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_NULL)]
-        public virtual List<BacnetValue> PROP_PRIORITY
+        public virtual IList<BacnetValue> PROP_PRIORITY
         {
             get { return m_PROP_PRIORITY; }
-            set { m_PROP_PRIORITY = value; }
+            set {
+                m_PROP_PRIORITY = value; 
+            }
         }
 
         public List<BacnetValue> m_PROP_RECIPIENT_LIST = new List<BacnetValue>();
@@ -91,7 +93,7 @@ namespace BaCSharp
             this.Device = Device;
 
             for (int i = 0; i < 3; i++)
-                m_PROP_PRIORITY.Add(new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT, (uint)127));
+                m_PROP_PRIORITY[i]=new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT, (uint)127);
 
             m_PROP_ACK_REQUIRED.SetBit((byte)0, false);
             m_PROP_ACK_REQUIRED.SetBit((byte)1, false);
@@ -99,6 +101,15 @@ namespace BaCSharp
 
         }
         public NotificationClass() { }
+
+        public override void Post_NewtonSoft_Json_Deserialization(DeviceObject device)
+        {
+            base.Post_NewtonSoft_Json_Deserialization(device);
+
+            // In this copy the type become int64
+            for (int i=0; i<3;i++)
+                m_PROP_PRIORITY[i] = new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT,(uint)Convert.ToUInt16(m_PROP_PRIORITY[i].Value));
+        }
 
         public void AddReportingRecipient(DeviceReportingRecipient recipient)
         {

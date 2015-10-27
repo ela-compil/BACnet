@@ -231,6 +231,42 @@ namespace BaCSharp
             m_PROP_EFFECTIVE_PERIOD.Add(new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_DATE, DateTime.Now.AddYears(10)));
         }
 
+        public override void Post_NewtonSoft_Json_Deserialization(DeviceObject device)
+        {
+            base.Post_NewtonSoft_Json_Deserialization(device);
+            // uint a int change to int64, uint64
+            foreach (List<DaySchedule> dsl in  m_PROP_WEEKLY_SCHEDULE.days)
+                if (dsl!=null)
+                foreach (DaySchedule ds in dsl)
+                {
+                    if (ds.Value.GetType() == typeof(Int64))
+                    {
+                        ds.Value=Convert.ChangeType(ds.Value, typeof(Int32));
+                    }
+                    if (ds.Value.GetType() == typeof(UInt64))
+                    {
+                        ds.Value = Convert.ChangeType(ds.Value, typeof(UInt32));
+                    }
+                }
+            try
+            {
+                if (m_PROP_PRESENT_VALUE.GetType() == typeof(Int64))
+                    m_PROP_PRESENT_VALUE = Convert.ChangeType(m_PROP_PRESENT_VALUE, typeof(Int32));
+                if (m_PROP_PRESENT_VALUE.GetType() == typeof(UInt64))
+                    m_PROP_PRESENT_VALUE = Convert.ChangeType(m_PROP_PRESENT_VALUE, typeof(UInt32));
+            }
+            catch { }
+            try
+            {
+            if (m_PROP_SCHEDULE_DEFAULT.GetType() == typeof(Int64))
+                m_PROP_SCHEDULE_DEFAULT = Convert.ChangeType(m_PROP_SCHEDULE_DEFAULT, typeof(Int32));
+            if (m_PROP_SCHEDULE_DEFAULT.GetType() == typeof(UInt64))
+                m_PROP_SCHEDULE_DEFAULT = Convert.ChangeType(m_PROP_SCHEDULE_DEFAULT, typeof(UInt32));
+            }
+            catch { }
+            DoScheduling();
+        }
+
         public void AddSchedule(int day, DateTime time, object value)
         {
             lock (lockObj)
@@ -239,6 +275,9 @@ namespace BaCSharp
                     m_PROP_WEEKLY_SCHEDULE.days[day] = new List<DaySchedule>();
 
                 m_PROP_WEEKLY_SCHEDULE.days[day].Add(new DaySchedule(time, value));
+
+                // this will set the PropPresent value to the given type
+                if (m_PROP_PRESENT_VALUE == null) m_PROP_PRESENT_VALUE = value;
 
                 DoScheduling();
             }
@@ -305,7 +344,9 @@ namespace BaCSharp
                             value.priority = (byte)m_PROP_PRIORITY;
 
                         value.property = new BacnetPropertyReference((uint)reference.propertyIdentifier, reference.arrayIndex);
+
                         value.value = new BacnetValue[] { new BacnetValue(m_PROP_PRESENT_VALUE) };
+
                         bcs.WritePropertyValue(value, false);
                     }
                 }
@@ -339,14 +380,14 @@ namespace BaCSharp
         Timer tmr;
         protected virtual void DoScheduling()
         {
-            if ((m_PROP_OUT_OF_SERVICE == true)||(Mydevice==null))
-            {
-                tmrId++;    // in order to invalidate the action of the timer in the ThreadPool
-                return;
-            }
-
             lock (lockObj)
             {
+
+                if ((m_PROP_OUT_OF_SERVICE == true)||(Mydevice==null))
+                {
+                    tmrId++;    // in order to invalidate the action of the timer in the ThreadPool
+                    return;
+                }
 
                 DateTime Now = DateTime.Now; 
 

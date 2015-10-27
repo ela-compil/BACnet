@@ -68,6 +68,8 @@ namespace AnotherStorageImplementation
         {
             InitDeviceObjects();
 
+            // Remove reference to the NewtonSoft.Json dll if persistence
+            // not required or simplest solution implemented
             SaveAndRestoreBackSample();
 
             BacnetActivity.StartActivity(device);
@@ -274,15 +276,15 @@ namespace AnotherStorageImplementation
 
             Calendar cal = new Calendar(0, "Test Calendar", "A Yabe calendar");
             device.AddBacnetObject(cal);
-
         }
 
         // This shows how presistence could be achieved
-        // only partial tests since today, complex objects not really operational
-        // but all basic one seems OK
+        // only partial tests since today, complex objects seems operational
         // 
         // Leave a reference to the NewtonSoft.Json dll
         // also have a look to http://www.newtonsoft.com/json
+        //
+        // certainly a lightest solution could be used for simple application
 
         static void SaveAndRestoreBackSample()
         {
@@ -290,13 +292,17 @@ namespace AnotherStorageImplementation
              
             // Serialization
             Newtonsoft.Json.JsonSerializerSettings v = new Newtonsoft.Json.JsonSerializerSettings();
-            v.TypeNameHandling=Newtonsoft.Json.TypeNameHandling.All;
+            v.TypeNameHandling = Newtonsoft.Json.TypeNameHandling.Auto;
+
             String s=Newtonsoft.Json.JsonConvert.SerializeObject(device, v);
             // s could be put on a file
 
             // Deserialization
             DeviceObject o = Newtonsoft.Json.JsonConvert.DeserializeObject<DeviceObject>(s, v);
-            o.Post_NewtonSoft_Json_Deserialization();
+            
+            // Required
+            o.Post_NewtonSoft_Json_Deserialization();   // some cleanning
+            device.Dispose();                           // remove at least thread pool tasks
 
             // Change the oldest by the newest
             device = o;
@@ -304,7 +310,11 @@ namespace AnotherStorageImplementation
             ana0=(AnalogInput<double>)device.FindBacnetObject(new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT,0));
             trend0 = (TrendLog)device.FindBacnetObject(new BacnetObjectId(BacnetObjectTypes.OBJECT_TRENDLOG, 0));
 
-           */
+            // all callback to OnWriteNotify should be replaced also
+            ana0.OnWriteNotify += new BaCSharpObject.WriteNotificationCallbackHandler(handler_OnWriteNotify);
+            device.FindBacnetObject(new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 1)).OnWriteNotify += new BaCSharpObject.WriteNotificationCallbackHandler(handler_OnWriteNotify);
+            
+            */
         }
     }
 }
