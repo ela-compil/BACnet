@@ -78,9 +78,9 @@ namespace BaCSharp
             get { return false; }
         }
 
-        // protected : not serialized, please use a separate process than json serialisation
-        protected  BacnetLogRecord[] Trend;
-        protected int LogPtr = 0;
+        // serializable, take care to the size
+        public  BacnetLogRecord[] TrendBuffer;
+        public int LogPtr = 0;
 
         public  BacnetTrendLogValueType DefaultValueType;
 
@@ -98,24 +98,25 @@ namespace BaCSharp
 
         public TrendLog() { }
 
-        public override void Post_NewtonSoft_Json_Deserialization(DeviceObject device)
+        public virtual void Clear()
         {
-            base.Post_NewtonSoft_Json_Deserialization(device);
+            TrendBuffer = null;
+            LogPtr = 0;
             m_PROP_RECORD_COUNT = 0;
         }
 
         public virtual void AddValue(object Value, DateTime TimeStamp, uint Status, BacnetTrendLogValueType? ValueType=null)
         {
-            if (Trend == null)
-                Trend = new BacnetLogRecord[m_PROP_BUFFER_SIZE];
+            if (TrendBuffer == null)
+                TrendBuffer = new BacnetLogRecord[m_PROP_BUFFER_SIZE];
 
             if (ValueType!=null)
-                Trend[LogPtr] = new BacnetLogRecord((BacnetTrendLogValueType)ValueType, Value, TimeStamp, Status);
+                TrendBuffer[LogPtr] = new BacnetLogRecord((BacnetTrendLogValueType)ValueType, Value, TimeStamp, Status);
             else
-                Trend[LogPtr] = new BacnetLogRecord(DefaultValueType, Value, TimeStamp, Status);
+                TrendBuffer[LogPtr] = new BacnetLogRecord(DefaultValueType, Value, TimeStamp, Status);
 
-            LogPtr = (LogPtr + 1) % Trend.Length;   // circular buffer
-            if (m_PROP_RECORD_COUNT < Trend.Length)
+            LogPtr = (LogPtr + 1) % TrendBuffer.Length;   // circular buffer
+            if (m_PROP_RECORD_COUNT < TrendBuffer.Length)
                 m_PROP_RECORD_COUNT++;
         }
 
@@ -149,7 +150,7 @@ namespace BaCSharp
 
             for (uint i = start; i < (start + count); i++)
             {
-                System.IO.BACnet.Serialize.Services.EncodeLogRecord(buffer, Trend[(offset + i) % Trend.Length]);
+                System.IO.BACnet.Serialize.Services.EncodeLogRecord(buffer, TrendBuffer[(offset + i) % TrendBuffer.Length]);
             }
 
             return buffer.ToArray();

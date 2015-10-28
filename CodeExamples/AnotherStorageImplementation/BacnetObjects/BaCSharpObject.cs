@@ -29,7 +29,6 @@ using System.Linq;
 using System.Text;
 using System.IO.BACnet;
 using System.Reflection;
-using System.Xml.Serialization;
 using System.Diagnostics;
 
 namespace BaCSharp
@@ -295,13 +294,13 @@ namespace BaCSharp
                     // Yes Invoke
                     ErrorCode_PropertyWrite = ErrorCodes.Good;
                     m.Invoke(this, new object[] { value.value, value.priority });
-
+                    
                     if (ErrorCode_PropertyWrite == ErrorCodes.Good)
                     {
                         if (OnWriteNotify != null) OnWriteNotify(this, (BacnetPropertyIds)value.property.propertyIdentifier);
                         if (OnExternalCOVNotify != null) OnExternalCOVNotify(this, (BacnetPropertyIds)value.property.propertyIdentifier);
                     }
-
+                    
                     return ErrorCode_PropertyWrite;
                 }
             }

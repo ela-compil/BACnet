@@ -71,6 +71,18 @@ namespace BaCSharp
 
         }
 
+        public override void Post_NewtonSoft_Json_Deserialization(DeviceObject device)
+        {
+            base.Post_NewtonSoft_Json_Deserialization(device);
+            DayChanged(tmrId);
+        }
+
+        public override void Dispose()
+        {
+            lock (LockObj)
+                tmrId++; // it is used to 'desactivate the effect' of the timer call sleeping in the ThreadPool
+        }
+
         // Two simple methods to add .NET date and range
         public void AddDate(DateTime date)
         {
@@ -102,11 +114,6 @@ namespace BaCSharp
         public void AddEntry(BacnetweekNDay bwd)
         {
             CalenarEntry.Entries.Add(bwd);
-        }
-        public override void Dispose()
-        {
-            lock (LockObj)
-                tmrId++; // it is used to 'desactivate the effect' of the timer call sleeping in the ThreadPool
         }
 
         Timer tmr;

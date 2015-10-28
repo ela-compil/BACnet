@@ -34,7 +34,6 @@ using System.Reflection;
 
 namespace BaCSharp
 {
-    // Not serializable, quite complexe in a polymorphic context
     public class DeviceObject : BaCSharpObject
     {
         public List<BaCSharpObject> ObjectsList=new List<BaCSharpObject>();

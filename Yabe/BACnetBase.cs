@@ -1995,7 +1995,10 @@ namespace System.IO.BACnet
                     case BacnetTrendLogValueType.TL_TYPE_ENUM:
                         return (uint)Convert.ChangeType(any_value, typeof(uint));
                     case BacnetTrendLogValueType.TL_TYPE_ERROR:
-                        return (BacnetError)Convert.ChangeType(any_value, typeof(BacnetError));
+                        if (any_value != null)
+                            return (BacnetError)Convert.ChangeType(any_value, typeof(BacnetError));
+                        else
+                            return new BacnetError(BacnetErrorClasses.ERROR_CLASS_DEVICE, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
                     case BacnetTrendLogValueType.TL_TYPE_NULL:
                         return null;
                     case BacnetTrendLogValueType.TL_TYPE_REAL:

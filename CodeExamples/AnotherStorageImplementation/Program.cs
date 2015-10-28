@@ -32,7 +32,6 @@ using System.IO.BACnet;
 using System.Threading;
 using System.Diagnostics;
 using BaCSharp;
-using System.Xml.Serialization;
 using System.IO.BACnet.Serialize;
 //
 // This code shows a way to map bacnet objects in C# objects
@@ -108,13 +107,13 @@ namespace AnotherStorageImplementation
             // ANALOG_INPUT:0 uint
             // initial value 0           
             ana0 = new AnalogInput<double>
-                (
+            (
                 0,
                 "Ana0 Sin double",
                 "Ana0 Sin double",
                 0,
                 BacnetUnitsId.UNITS_AMPERES
-                );
+            );
             ana0.m_PROP_HIGH_LIMIT = 50;
             ana0.m_PROP_LOW_LIMIT = -50;
             ana0.m_PROP_DEADBAND = 5;
@@ -131,40 +130,40 @@ namespace AnotherStorageImplementation
             // ANALOG_VALUE:0 double with Priority Array
             //
             b = new AnalogValue<double>
-                (
+            (
                 0,
                 "Ana0 Double",
                 "Ana0 Double",
                 5465.23,
                 BacnetUnitsId.UNITS_BARS,
                 true
-                );
+            );
             s.AddBacnetObject(b); // Put it in the view
 
             b.OnWriteNotify += new BaCSharpObject.WriteNotificationCallbackHandler(handler_OnWriteNotify);
 
             // ANALOG_OUTPUT:1 int with Priority Array on Present Value
             b = new AnalogOutput<int>
-                (
+            (
                 1,
                 "Ana1 int",
                 "Ana1 int",
                 (int)56,
                 BacnetUnitsId.UNITS_DEGREES_CELSIUS
-                );
+            );
             s.AddBacnetObject(b); // Put it in the view
 
             b.OnWriteNotify += new BaCSharpObject.WriteNotificationCallbackHandler(handler_OnWriteNotify);
 
             // MULTI_STATE_OUTPUT:4 with 6 states
             MultiStateOutput m = new MultiStateOutput
-                (
+            (
                 4,
                 "MultiStates",
                 "MultiStates",
                 1,
                 6
-                );
+            );
             for (int i = 1; i < 7; i++) m.m_PROP_STATE_TEXT[i-1] = new BacnetValue("Text Level " + i.ToString());
 
             s.AddBacnetObject(m); // in the view
@@ -191,22 +190,22 @@ namespace AnotherStorageImplementation
             // File access right me be allowed to the current user
             // for read and for write if any
             b = new BacnetFile
-                (
+            (
                 0,
                 "A file",
                 "File description",
                 "c:\\RemoteObject.xml",
                 false
-                );
+            );
             s2.AddBacnetObject(b); // in the second level view
             
             NotificationClass nc = new NotificationClass
-                (
+            (
                 0, 
                 "An alarm sender",
                 "Alarm description",
                 device.PROP_OBJECT_IDENTIFIER
-                );
+            );
 
             device.AddBacnetObject(nc); 
 
@@ -253,23 +252,26 @@ namespace AnotherStorageImplementation
 
             // a link to the internal analog output
             sch.AddPropertyReference(new BacnetDeviceObjectPropertyReference
-                     (new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_OUTPUT, 1),
-                     BacnetPropertyIds.PROP_PRESENT_VALUE));
+            (
+                new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_OUTPUT, 1),
+                BacnetPropertyIds.PROP_PRESENT_VALUE)
+             );
             // a link to analog output through the network : could be on another device than itself
             sch.AddPropertyReference(new BacnetDeviceObjectPropertyReference
             (
-                  new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_OUTPUT, 1),
-                  BacnetPropertyIds.PROP_PRESENT_VALUE,
-                  new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, 1234)));
+                new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_OUTPUT, 1),
+                BacnetPropertyIds.PROP_PRESENT_VALUE,
+                new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, 4000))
+             );
             
             sch.PROP_SCHEDULE_DEFAULT = (int)452;
 
             // Schedule a change today in 60 seconds
             sch.AddSchedule
-                ( 
+            ( 
                 DateTime.Now.DayOfWeek == 0 ? 6 : (int)DateTime.Now.DayOfWeek - 1, // Monday=0, Sunday=6                 
                 DateTime.Now.AddSeconds(10), (int)900                
-                );    
+            );    
             sch.PROP_OUT_OF_SERVICE = false;    // needed after all initialization to start the service
 
             // One empty Calendar, could be fullfill with yabe
@@ -288,17 +290,24 @@ namespace AnotherStorageImplementation
 
         static void SaveAndRestoreBackSample()
         {
-            /*
-             
-            // Serialization
-            Newtonsoft.Json.JsonSerializerSettings v = new Newtonsoft.Json.JsonSerializerSettings();
-            v.TypeNameHandling = Newtonsoft.Json.TypeNameHandling.Auto;
+            /*           
+          
+            // Trend logs could be clear if the large volume of data is not required to be save in this way
+            // ... certainly another solution (binary) is better, since 
+            // for serialization purpose essential members TrendBuffer, LogPtr & m_PROP_RECORD_COUNT are public.
+            trend0.Clear();
 
-            String s=Newtonsoft.Json.JsonConvert.SerializeObject(device, v);
+            // Serialization
+            Newtonsoft.Json.JsonSerializerSettings settings = new Newtonsoft.Json.JsonSerializerSettings();
+            settings.TypeNameHandling = Newtonsoft.Json.TypeNameHandling.Auto;
+
+            lock (device)
+                String s=Newtonsoft.Json.JsonConvert.SerializeObject(device, settings);
+            
             // s could be put on a file
 
             // Deserialization
-            DeviceObject o = Newtonsoft.Json.JsonConvert.DeserializeObject<DeviceObject>(s, v);
+            DeviceObject o = Newtonsoft.Json.JsonConvert.DeserializeObject<DeviceObject>(s, settings);
             
             // Required
             o.Post_NewtonSoft_Json_Deserialization();   // some cleanning
@@ -312,7 +321,7 @@ namespace AnotherStorageImplementation
 
             // all callback to OnWriteNotify should be replaced also
             ana0.OnWriteNotify += new BaCSharpObject.WriteNotificationCallbackHandler(handler_OnWriteNotify);
-            device.FindBacnetObject(new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 1)).OnWriteNotify += new BaCSharpObject.WriteNotificationCallbackHandler(handler_OnWriteNotify);
+            device.FindBacnetObject(new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_OUTPUT, 1)).OnWriteNotify += new BaCSharpObject.WriteNotificationCallbackHandler(handler_OnWriteNotify);
             
             */
         }
