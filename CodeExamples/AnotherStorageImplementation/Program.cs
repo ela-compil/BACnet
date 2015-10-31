@@ -280,8 +280,8 @@ namespace AnotherStorageImplementation
             device.AddBacnetObject(cal);
         }
 
-        // This shows how presistence could be achieved
-        // only partial tests since today, complex objects seems operational
+        // This shows how persistence could be achieved
+        // only partial tests since today, also complex objects (schedule, calendar, notification, trendlog) are OK
         // 
         // Leave a reference to the NewtonSoft.Json dll
         // also have a look to http://www.newtonsoft.com/json
@@ -295,14 +295,16 @@ namespace AnotherStorageImplementation
             // Trend logs could be clear if the large volume of data is not required to be save in this way
             // ... certainly another solution (binary) is better, since 
             // for serialization purpose essential members TrendBuffer, LogPtr & m_PROP_RECORD_COUNT are public.
-            trend0.Clear();
+             
+            // trend0.Clear();
 
             // Serialization
             Newtonsoft.Json.JsonSerializerSettings settings = new Newtonsoft.Json.JsonSerializerSettings();
             settings.TypeNameHandling = Newtonsoft.Json.TypeNameHandling.Auto;
 
+            String s;
             lock (device)
-                String s=Newtonsoft.Json.JsonConvert.SerializeObject(device, settings);
+                s=Newtonsoft.Json.JsonConvert.SerializeObject(device, settings);
             
             // s could be put on a file
 

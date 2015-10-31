@@ -152,10 +152,14 @@ namespace BaCSharp
             m_PROP_ACKED_TRANSITIONS.SetBit((byte)2, true);
 
             m_PROP_NOTIFICATION_CLASS = NotificationClassId;
+
+            IntrinsicReportingManagement();
         }
 
         private void IntrinsicReportingManagement()
         {
+            if (Mydevice == null) return;
+
             if (m_PROP_LIMIT_ENABLE.value[0] == 0)
             {
                 Last_PRESENT_VALUE = m_PROP_PRESENT_VALUE;

@@ -2385,13 +2385,12 @@ namespace Yabe
             // Go
             int _retries = comm.Retries;
             comm.Retries = 1;
-            Application.UseWaitCursor = true;
+            Cursor.Current = Cursors.WaitCursor;
             Application.DoEvents();
 
             ChangeObjectIdByName(m_AddressSpaceTree.Nodes, comm, adr);
 
-            Application.UseWaitCursor = false;
-            Cursor.Current = Cursors.Default; // sometimes required, else not back since a click !
+            Cursor.Current = Cursors.Default;
 
             comm.Retries = _retries;
 

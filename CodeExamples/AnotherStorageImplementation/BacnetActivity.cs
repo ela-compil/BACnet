@@ -75,7 +75,7 @@ namespace AnotherStorageImplementation
                 bacnet_client.WhoIs();                          // Send WhoIs : needed BY Notification & Schedule for deviceId<->IP endpoint
                 device.SetIpEndpoint(bacnet_client);            // Register the endpoint for IP Notification usage with IP:Port
             }
-        }
+        }         
 
         static void handler_OnIam(BacnetClient sender, BacnetAddress adr, uint device_id, uint max_apdu, BacnetSegmentations segmentation, ushort vendor_id)
         {

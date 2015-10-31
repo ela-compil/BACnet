@@ -32,6 +32,7 @@ using System.Threading;
 using System.IO.BACnet.Storage;
 using System.Diagnostics;
 using GPIO;
+using System.IO;
 
 namespace BasicServer
 {
@@ -57,6 +58,8 @@ namespace BasicServer
             {
                 StartActivity();
                 Console.WriteLine("Running");
+                
+                BacnetObjectId Temp = new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 0);
 
                 for (;;)
                 {
@@ -81,6 +84,18 @@ namespace BasicServer
                         bool val = Convert.ToBoolean(valtoread[0].Value);
                         FileGPIO.OutputPin(o.instance, val);
                     }
+                    
+                    // Refresh CPU Temp
+                    try
+                    {
+                        string readValue = File.ReadAllText("/sys/class/thermal/thermal_zone0/temp");
+                        int tc = Convert.ToInt32(readValue);
+                        tc = tc / 100;
+                        Console.WriteLine(readValue);
+                        lock (m_storage)
+                            m_storage.WriteProperty(Temp, BacnetPropertyIds.PROP_PRESENT_VALUE, 0, new BacnetValue[1] { new BacnetValue((double)(((double)tc) / 10.0)) });
+                    }
+                    catch { }
                 }
             }
             catch { }

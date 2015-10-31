@@ -143,8 +143,10 @@ namespace BaCSharp
         // Two element used by Notification & Scheduling to send external data
         // All the known devices on the net
         public Dictionary<uint, KeyValuePair<BacnetClient, BacnetAddress>> SuroundingDevices = new Dictionary<uint, KeyValuePair<BacnetClient, BacnetAddress>>();
+        public bool ShouldSerializeSuroundingDevices() { return false; } // for NewtonJson
         // We assume here that direct Ip are sent using only one endpoint 
         public BacnetClient DirectIp;
+        public bool ShouldSerializeDirectIp() { return false; } // for NewtonJson
 
         public DeviceObject(uint Id, String DeviceName, String Description, bool UseStructuredView)
             : base(new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, Id), DeviceName, Description)
@@ -178,9 +180,7 @@ namespace BaCSharp
         }
 
         public void Post_NewtonSoft_Json_Deserialization()
-        {
-            
-            SuroundingDevices = new Dictionary<uint, KeyValuePair<BacnetClient, BacnetAddress>>();
+        {            
             foreach (BaCSharpObject bo in ObjectsList)
                 bo.Post_NewtonSoft_Json_Deserialization(this);
         }
@@ -200,7 +200,7 @@ namespace BaCSharp
             // but only if the caller is not a view
             // check by caller method type class appartenance
             MethodBase m = new StackFrame(1).GetMethod();
-            bool CallerIsView = (m.DeclaringType == typeof(StructuredView));
+            bool CallerIsView = (m.DeclaringType.Name == "StructuredView");
 
             if (!CallerIsView)
                 m_PROP_STRUCTURED_OBJECT_LIST.Add(new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID, newObj.PROP_OBJECT_IDENTIFIER));

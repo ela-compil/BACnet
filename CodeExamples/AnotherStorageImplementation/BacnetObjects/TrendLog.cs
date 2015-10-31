@@ -72,10 +72,11 @@ namespace BaCSharp
             }
         }
 
+        public bool m_PROP_STOP_WHEN_FULL = false;
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_BOOLEAN)]
         public virtual bool PROP_STOP_WHEN_FULL
         {
-            get { return false; }
+            get { return m_PROP_STOP_WHEN_FULL; }
         }
 
         // serializable, take care to the size
@@ -98,6 +99,18 @@ namespace BaCSharp
 
         public TrendLog() { }
 
+        public override void Post_NewtonSoft_Json_Deserialization(DeviceObject device)
+        {
+            base.Post_NewtonSoft_Json_Deserialization(device);
+            if (TrendBuffer != null)
+                Shift_DateTime();
+            else
+            {   
+                LogPtr = 0;
+                m_PROP_RECORD_COUNT = 0;
+            }
+        }
+
         public virtual void Clear()
         {
             TrendBuffer = null;
@@ -105,8 +118,17 @@ namespace BaCSharp
             m_PROP_RECORD_COUNT = 0;
         }
 
+        public void Shift_DateTime()
+        {
+            if (TrendBuffer != null)
+                AddValue(0, 0, BacnetTrendLogValueType.TL_TYPE_DELTA); // certainly here the value could be the time shift (in second ?)
+        }
+
         public virtual void AddValue(object Value, DateTime TimeStamp, uint Status, BacnetTrendLogValueType? ValueType=null)
         {
+            if ((m_PROP_RECORD_COUNT == m_PROP_BUFFER_SIZE) && (m_PROP_STOP_WHEN_FULL == true))
+                return;
+
             if (TrendBuffer == null)
                 TrendBuffer = new BacnetLogRecord[m_PROP_BUFFER_SIZE];
 

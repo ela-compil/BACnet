@@ -62,8 +62,8 @@ namespace Yabe
             // -> parameter 2 in the method call
             if (comm.GetAlarmSummaryOrEventRequest(adr, Properties.Settings.Default.AlarmByGetEventInformation, ref Alarms) == true)
             {
-                FillTreeNode();
                 LblInfo.Visible = false;
+                FillTreeNode();
                 AckText.Enabled = AckBt.Enabled = true;
             }
             else
