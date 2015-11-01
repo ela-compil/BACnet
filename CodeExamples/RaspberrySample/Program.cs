@@ -39,6 +39,13 @@ namespace BasicServer
     //
     // Raspberry GPIO Server based on Yabe code
     //
+    // An bug on Mono with locale generates problems with float & double serialisation/deserialisation
+    // due to the decimal separator where it's not a dot (in France for instance).
+    // ANALOG_INPUT appears a lot of time in error in this sample.
+    // Even a change in the CultureInfo has no effect.
+    // Application must be start with the english culture using the command line :
+    //      LANG="en-US.UTF8" mono ./RasberrySample.exe
+    //
     class Program
     {
         static BacnetClient bacnet_client;
@@ -50,6 +57,8 @@ namespace BasicServer
         /*****************************************************************************************************/
         static void Main(string[] args)
         {
+
+            //Trace.Listeners.Add(new ConsoleTraceListener());
 
             Input = new List<BacnetObjectId>();
             Output = new List<BacnetObjectId>();
@@ -70,7 +79,7 @@ namespace BasicServer
                     {
                         IList<BacnetValue> valtowrite = new BacnetValue[1] { new BacnetValue(Convert.ToUInt16(FileGPIO.InputPin(o.instance))) };
                         lock (m_storage)
-                            m_storage.WriteProperty(o, BacnetPropertyIds.PROP_PRESENT_VALUE, 0, valtowrite, true);
+                            m_storage.WriteProperty(o, BacnetPropertyIds.PROP_PRESENT_VALUE, 1, valtowrite);
                     }
                     
                     foreach (BacnetObjectId o in Output)
@@ -91,9 +100,10 @@ namespace BasicServer
                         string readValue = File.ReadAllText("/sys/class/thermal/thermal_zone0/temp");
                         int tc = Convert.ToInt32(readValue);
                         tc = tc / 100;
-                        Console.WriteLine(readValue);
+                        IList<BacnetValue> valtowrite = new BacnetValue[1] { new BacnetValue(((double)tc) / 10.0) };
                         lock (m_storage)
-                            m_storage.WriteProperty(Temp, BacnetPropertyIds.PROP_PRESENT_VALUE, 0, new BacnetValue[1] { new BacnetValue((double)(((double)tc) / 10.0)) });
+                            m_storage.WriteProperty(Temp, BacnetPropertyIds.PROP_PRESENT_VALUE, 1, valtowrite);
+
                     }
                     catch { }
                 }

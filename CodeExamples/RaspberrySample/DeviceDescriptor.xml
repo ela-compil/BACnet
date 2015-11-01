@@ -88,7 +88,7 @@
           <Value>False</Value>
         </Property>
         <Property Id="PROP_PRESENT_VALUE" Tag="BACNET_APPLICATION_TAG_DOUBLE">
-          <Value>0</Value>
+          <Value>0.0</Value>
         </Property>
         <Property Id="PROP_RELIABILITY" Tag="BACNET_APPLICATION_TAG_ENUMERATED">
           <Value>0</Value>
