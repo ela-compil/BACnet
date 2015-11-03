@@ -40,6 +40,13 @@ namespace BaCSharp
         {
             get { return m_PROP_RECORD_COUNT; }
         }
+        public uint m_PROP_TOTAL_RECORD_COUNT = 0;
+        [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT)]
+        public virtual uint PROP_TOTAL_RECORD_COUNT
+        {
+            get { return m_PROP_TOTAL_RECORD_COUNT; }
+        }
+
         public uint m_PROP_BUFFER_SIZE;
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT)]
         public virtual uint PROP_BUFFER_SIZE
@@ -118,7 +125,7 @@ namespace BaCSharp
             m_PROP_RECORD_COUNT = 0;
         }
 
-        public void Shift_DateTime()
+        public virtual void Shift_DateTime()
         {
             if (TrendBuffer != null)
                 AddValue(0, 0, BacnetTrendLogValueType.TL_TYPE_DELTA); // certainly here the value could be the time shift (in second ?)
@@ -140,6 +147,8 @@ namespace BaCSharp
             LogPtr = (LogPtr + 1) % TrendBuffer.Length;   // circular buffer
             if (m_PROP_RECORD_COUNT < TrendBuffer.Length)
                 m_PROP_RECORD_COUNT++;
+
+            m_PROP_TOTAL_RECORD_COUNT++;
         }
 
         public virtual void AddValue(object Value, uint Status, BacnetTrendLogValueType? ValueType=null)

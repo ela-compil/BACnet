@@ -202,7 +202,12 @@ namespace BaCSharp
 
             try
             {
-                propVal = FindPropValue(PropRef.ToString());
+
+                string PropName = PropRef.ToString();
+                if (PropName[0] != 'P') PropName = "PROP_"+PropName; // private property, not in the Enum list
+
+                propVal = FindPropValue(PropName);
+
                 if (propVal == null)
                     return ErrorCodes.NotExist;
 
@@ -254,6 +259,14 @@ namespace BaCSharp
         // see MultiStateOutput for instance
         protected virtual uint BacnetMethodNametoId(String Name)
         {
+            
+            try
+            {
+                if ((Name.Substring(0, 9) == "get_PROP_")&&Char.IsDigit(Name,9))
+                    return Convert.ToUInt32(Name.Substring(9)); // Private property get_PROP_number
+            }
+            catch { }
+           
             try
             {
                 if (Name.Substring(0, 4) == "get_")

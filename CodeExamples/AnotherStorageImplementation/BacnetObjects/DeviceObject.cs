@@ -249,7 +249,7 @@ namespace BaCSharp
 
         public void SetIpEndpoint(BacnetClient client)
         {
-            if (client.Transport.GetType() == typeof(BacnetIpUdpProtocolTransport))
+            if ((client.Transport.GetType() == typeof(BacnetIpUdpProtocolTransport))||(client.Transport.GetType().IsSubclassOf(typeof(BacnetIpUdpProtocolTransport))))
                 DirectIp = client;
         }
         public void ReceivedIam(BacnetClient client, BacnetAddress Bacdevice, uint device_id)

@@ -49,6 +49,9 @@ using System.IO.BACnet.Serialize;
 // two methods set2_xxx and get2_xxx which are used in priority if the two 
 // solutions are present (property and set2 ...)
 //
+// Have a look to TrendLogCustom (not used here) to see how you can customize
+// classes for your own requirements wihout modifying the originals one, 
+// it also shows private properties syntax
 
 // Remove the reference to the NewtonSoft.Json dll if data persistence is not required
 
@@ -172,6 +175,7 @@ namespace AnotherStorageImplementation
             s.AddBacnetObject(s2);
 
             // TREND_LOG:0 with int values
+            // new TrendLog can be changed by new TrendLogCustom
             trend0 = new TrendLog(0, "Trend signed int", "Trend signed int", 200, BacnetTrendLogValueType.TL_TYPE_SIGN);
             s2.AddBacnetObject(trend0); // in the second level view
             // fill Log with more values than the size
