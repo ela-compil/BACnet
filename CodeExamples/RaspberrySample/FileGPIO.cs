@@ -7,6 +7,10 @@ using System.IO;
 // some light modifications from the original
 // https://www.raspberrypi.org/forums/viewtopic.php?p=88063#p88063
 
+//
+// This class works also on Beaglebone, Intel Edison, and a lot of others plateforms
+//
+
 namespace GPIO
 {
     public static class FileGPIO

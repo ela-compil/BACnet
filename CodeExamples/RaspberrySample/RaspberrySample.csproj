@@ -77,6 +77,7 @@
       <Link>BACnetTransport.cs</Link>
     </Compile>
     <Compile Include="FileGPIO.cs" />
+    <Compile Include="MemGPIO.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

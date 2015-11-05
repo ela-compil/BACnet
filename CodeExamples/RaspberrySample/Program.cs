@@ -77,6 +77,7 @@ namespace BasicServer
                     
                     foreach (BacnetObjectId o in Input)
                     {
+                        // MemGPIO could be used in place of FileGPIO on Raspberry, not Edison, Beagle, ...
                         IList<BacnetValue> valtowrite = new BacnetValue[1] { new BacnetValue(Convert.ToUInt16(FileGPIO.InputPin(o.instance))) };
                         lock (m_storage)
                             m_storage.WriteProperty(o, BacnetPropertyIds.PROP_PRESENT_VALUE, 1, valtowrite);
@@ -91,6 +92,7 @@ namespace BasicServer
                             m_storage.ReadProperty(o, BacnetPropertyIds.PROP_PRESENT_VALUE, 1, out valtoread);
                         // Get the first ... and here the only element
                         bool val = Convert.ToBoolean(valtoread[0].Value);
+                        // MemGPIO could be used in place of FileGPIO on Raspberry, not Edison, Beagle, ...
                         FileGPIO.OutputPin(o.instance, val);
                     }
                     
