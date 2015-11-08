@@ -43,7 +43,7 @@ namespace BaCSharp
     [Serializable]
     public class BinaryValue : BinaryValueAndOutput
     {
-        public BinaryValue(int ObjId, String ObjName, String Description, bool InitialValue, BacnetUnitsId Unit, bool WithPriorityArray)
+        public BinaryValue(int ObjId, String ObjName, String Description, bool InitialValue, bool WithPriorityArray)
             : base(new BacnetObjectId(BacnetObjectTypes.OBJECT_BINARY_VALUE, (uint)ObjId), ObjName, Description, InitialValue, WithPriorityArray)
         {
         }
