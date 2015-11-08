@@ -133,7 +133,7 @@ namespace GPIO
 
             lock (lockObj)
             {
-                if (_In.Contains(pin))    // configuration already done in this mode ?
+                if (!_In.Contains(pin))    // configuration already done in this mode ?
                 {
                     SetupPin(pin, 0);
                     _In.Add(pin); _Out.Remove(pin);
