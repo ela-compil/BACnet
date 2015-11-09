@@ -37,14 +37,15 @@ using System.IO;
 namespace BasicServer
 {
     //
-    // Raspberry GPIO Server based on Yabe code
+    // Raspberry GPIO Server based on Yabe code : Bacnet/IP or Bacnet/Mstp see StartActivity() method
+    // also running & tested on Beaglebone black & Intel Edison
     //
     // An bug on Mono with locale generates problems with float & double serialisation/deserialisation
     // due to the decimal separator where it's not a dot (in France for instance).
     // ANALOG_INPUT appears a lot of time in error in this sample.
     // Even a change in the CultureInfo has no effect.
     // Application must be start with the english culture using the command line :
-    //      LANG="en-US.UTF8" mono ./RasberrySample.exe
+    //      LANG="en-US.UTF8" sudo mono ./RasberrySample.exe
     //
     class Program
     {
@@ -77,7 +78,7 @@ namespace BasicServer
                     
                     foreach (BacnetObjectId o in Input)
                     {
-                        // MemGPIO could be used in place of FileGPIO on Raspberry, not Edison, Beagle, ...
+                        // MemGPIO could be used in place of FileGPIO only on Raspberry, not Edison, Beaglebone, ...
                         IList<BacnetValue> valtowrite = new BacnetValue[1] { new BacnetValue(Convert.ToUInt16(FileGPIO.InputPin(o.instance))) };
                         lock (m_storage)
                             m_storage.WriteProperty(o, BacnetPropertyIds.PROP_PRESENT_VALUE, 1, valtowrite);
@@ -92,13 +93,15 @@ namespace BasicServer
                             m_storage.ReadProperty(o, BacnetPropertyIds.PROP_PRESENT_VALUE, 1, out valtoread);
                         // Get the first ... and here the only element
                         bool val = Convert.ToBoolean(valtoread[0].Value);
-                        // MemGPIO could be used in place of FileGPIO on Raspberry, not Edison, Beagle, ...
+                        // MemGPIO could be used in place of FileGPIO only on Raspberry, not Edison, Beaglebone, ...
                         FileGPIO.OutputPin(o.instance, val);
                     }
                     
                     // Refresh CPU Temp
                     try
                     {
+                        // Change to /sys/class/hwmon/hwmon0/device/temp1_input for Beaglebone
+                        // Change to /sys/class/thermal/thermal_zone3/temp ou /sys/class/thermal/thermal_zone4/temp for Intel Edison
                         string readValue = File.ReadAllText("/sys/class/thermal/thermal_zone0/temp");
                         int tc = Convert.ToInt32(readValue);
                         tc = tc / 100;
@@ -146,7 +149,20 @@ namespace BasicServer
             RaspberryGpioConfig();
 
             // Bacnet on UDP/IP/Ethernet
-            bacnet_client = new BacnetClient(new BacnetIpUdpProtocolTransport(0xBAC0, false)); 
+            bacnet_client = new BacnetClient(new BacnetIpUdpProtocolTransport(0xBAC0, false));
+            
+            // Bacnet Mstp using an Usb to Rs485 adapter :
+            //      bacnet_client = new BacnetClient(new BacnetMstpProtocolTransport("/dev/ttyUSB0", 38400,4,10)); 
+            // Master id 4, Max master 10, usb adapter attached on ttyUSB0
+            // For MSTP, you should :
+            //      1) avoid using the JIT compiler (since token passing timing will be unpredicable when accessing the first time bacnet objects)
+            //      for that provide a native code in place of the CLI one using this command line :
+            //           mono --aot ./RaspberrySample.exe 
+            //      this will create a file RaspberrySample.exe.so, let it close to the original CLI .exe code
+            //      2) launch the process with a high priority :
+            //          sudo nice --20 mono ./RaspberrySample.exe or LANG="en-US.UTF8" sudo nice --20 mono ./RaspberrySample.exe
+            // Tested with Ftdi Usb/Rs485 adapter, Trane UC800 devices & Contemporary Control Bacnet router
+            // ... sometimes Rs845 activity is lost ! So not fiable today, only for learing purpose.
 
             bacnet_client.OnWhoIs += new BacnetClient.WhoIsHandler(handler_OnWhoIs);
             bacnet_client.OnReadPropertyRequest += new BacnetClient.ReadPropertyRequestHandler(handler_OnReadPropertyRequest);
