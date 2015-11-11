@@ -2274,36 +2274,56 @@ namespace Yabe
                 Sw.WriteLine("VERSION_OF_LAYOUT;2.2");
                 Sw.WriteLine("#mandatory;mandator;mandatory;mandatory;mandatory;optional;optional;optional;optional;optional;optional;optional;optional;optional;optional;optional");
                 Sw.WriteLine("# keyname;device obj.-instance;object-name;object-type;object-instance;description;present-value-default;min-present-value;max-present-value;settable;supports COV;hi-limit;low-limit;state-text-reference;unit-code;vendor-specific-addres");
-                //get all objects
-                IList<BacnetValue> value_list;
-                comm.ReadPropertyRequest(adr, new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, device_id), BacnetPropertyIds.PROP_OBJECT_LIST, out value_list);
-                LinkedList<BacnetObjectId> object_list = new LinkedList<BacnetObjectId>();
-                foreach (BacnetValue value in value_list)
+
+                BacnetPropertyReference[] properties = new BacnetPropertyReference[2] 
+                                                                {   
+                                                                    new BacnetPropertyReference((uint)BacnetPropertyIds.PROP_OBJECT_NAME, System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL), 
+                                                                    new BacnetPropertyReference((uint)BacnetPropertyIds.PROP_DESCRIPTION, System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL),
+                                                                };
+
+                bool ReadPropertyMultipleSupported = true;
+
+                // Object list is already in the AddressSpaceTree, so no need to query it again
+                foreach (TreeNode t in m_AddressSpaceTree.Nodes)
                 {
-                    BacnetObjectId Bacobj = (BacnetObjectId)value.Value;
-
-                    IList<BacnetReadAccessResult> multi_value_list;
-                    BacnetPropertyReference[] properties = new BacnetPropertyReference[] { new BacnetPropertyReference((uint)BacnetPropertyIds.PROP_ALL, System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL) };
-                    comm.ReadPropertyMultipleRequest(adr, (BacnetObjectId)value.Value, properties, out multi_value_list);
-
-                    BacnetReadAccessResult br = multi_value_list[0];
-
+                    BacnetObjectId Bacobj = (BacnetObjectId)t.Tag; 
                     string Identifier = "";
                     string Description = "";
-                    string UnitCode = "";
+                    string UnitCode = ""; // No actualy in usage
 
-                    foreach (BacnetPropertyValue pv in br.values)
+                    if (ReadPropertyMultipleSupported)
                     {
-                        if ((BacnetPropertyIds)pv.property.propertyIdentifier == BacnetPropertyIds.PROP_OBJECT_NAME)
-                            Identifier = pv.value[0].Value.ToString();
-                        if ((BacnetPropertyIds)pv.property.propertyIdentifier == BacnetPropertyIds.PROP_DESCRIPTION)
-                            Description = pv.value[0].Value.ToString(); ;
-                        if ((BacnetPropertyIds)pv.property.propertyIdentifier == BacnetPropertyIds.PROP_UNITS)
-                            UnitCode = pv.value[0].Value.ToString(); ;
+                        try
+                        {
+                            IList<BacnetReadAccessResult> multi_value_list;
+                            BacnetReadAccessSpecification[] propToRead = new BacnetReadAccessSpecification[] { new BacnetReadAccessSpecification(Bacobj, properties) };
+                            comm.ReadPropertyMultipleRequest(adr, propToRead, out multi_value_list);
+                            BacnetReadAccessResult br = multi_value_list[0];
+
+                            foreach (BacnetPropertyValue pv in br.values)
+                            {
+                                if ((BacnetPropertyIds)pv.property.propertyIdentifier == BacnetPropertyIds.PROP_OBJECT_NAME)
+                                    Identifier = pv.value[0].Value.ToString();
+                                if ((BacnetPropertyIds)pv.property.propertyIdentifier == BacnetPropertyIds.PROP_DESCRIPTION)
+                                    if (!(pv.value[0].Value is BacnetError))
+                                        Description = pv.value[0].Value.ToString(); ;
+                            }
+                        }
+                        catch { ReadPropertyMultipleSupported = false; }
+                    }
+                    else
+                    {
+                        IList<BacnetValue> out_value;
+
+                        comm.ReadPropertyRequest(adr, Bacobj, BacnetPropertyIds.PROP_OBJECT_NAME, out out_value);
+                        Identifier = out_value[0].Value.ToString();
+
+                        comm.ReadPropertyRequest(adr, Bacobj, BacnetPropertyIds.PROP_DESCRIPTION, out out_value);
+                        if (!(out_value[0].Value is BacnetError))
+                            Identifier = out_value[0].Value.ToString();
                     }
 
-                    Sw.WriteLine(value.ToString() + ";" + device_id.ToString() + ";" + Identifier + ";" + ((int)Bacobj.type).ToString() + ";" + Bacobj.instance.ToString() + ";" + Description + ";;;;;;;;;" + UnitCode);
-
+                    Sw.WriteLine(Bacobj.ToString() + ";" + device_id.ToString() + ";" + Identifier + ";" + ((int)Bacobj.type).ToString() + ";" + Bacobj.instance.ToString() + ";" + Description + ";;;;;;;;;" + UnitCode);
                 }
 
                 Sw.Close();
