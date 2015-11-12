@@ -44,6 +44,10 @@ namespace Yabe
     {       
         private Dictionary<BacnetClient, BacnetDeviceLine> m_devices = new Dictionary<BacnetClient, BacnetDeviceLine>();
         private Dictionary<string, ListViewItem> m_subscription_list = new Dictionary<string, ListViewItem>();
+        // Memory of all object names already discovered, first string in the Tuple is the device network address hash
+        // The tuple contains two value types, so it's ok for cross session
+        Dictionary<Tuple<String, BacnetObjectId>, String> DevicesObjectsName = new Dictionary<Tuple<String, BacnetObjectId>, String>();
+
         private uint m_next_subscription_id = 0;
 
         private static DeviceStorage m_storage;
@@ -415,6 +419,12 @@ namespace Yabe
                 TreeNode parent = FindCommTreeNode(sender);
                 if (parent == null) return;
 
+                bool Prop_Object_NameOK = false;
+                String Identifier=null;
+
+                lock (DevicesObjectsName)
+                    Prop_Object_NameOK = DevicesObjectsName.TryGetValue(new Tuple<String, BacnetObjectId>(adr.FullHashString(), new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, device_id)), out Identifier);
+
                 //update existing (this can happen in MSTP)
                 foreach (TreeNode s in parent.Nodes)
                 {
@@ -423,6 +433,11 @@ namespace Yabe
                     {
                         s.Text = new_entry.Key + " - " + new_entry.Value;
                         s.Tag = new_entry;
+                        if (Prop_Object_NameOK)
+                        {
+                            s.ToolTipText = s.Text;
+                            s.Text = Identifier + " [" + device_id.ToString() + "] ";
+                        }
                         return;
                     }
                 }
@@ -436,6 +451,11 @@ namespace Yabe
                         node.ImageIndex = 2;
                         node.SelectedImageIndex = node.ImageIndex;
                         node.Tag = new_entry;
+                        if (Prop_Object_NameOK)
+                        {
+                            s.ToolTipText = s.Text;
+                            s.Text = Identifier + " [" + device_id.ToString() + "] ";
+                        }
                         m_DeviceTree.ExpandAll();
                         return;
                     }
@@ -447,6 +467,11 @@ namespace Yabe
                 basicnode.ImageIndex = 2;
                 basicnode.SelectedImageIndex = basicnode.ImageIndex;
                 basicnode.Tag = new_entry;
+                if (Prop_Object_NameOK)
+                {
+                    basicnode.ToolTipText = basicnode.Text;
+                    basicnode.Text = Identifier + " [" + device_id.ToString() + "] ";
+                }
                 m_DeviceTree.ExpandAll();
             });
         }
@@ -780,6 +805,16 @@ namespace Yabe
             //icon
             SetNodeIcon(object_id.type, node);
 
+            // Get the property name if already known
+            String PropName;
+
+            lock(DevicesObjectsName)
+                if (DevicesObjectsName.TryGetValue(new Tuple<String, BacnetObjectId>(adr.FullHashString(), object_id), out PropName) == true)
+                {
+                    node.ToolTipText = node.Text;
+                    node.Text = PropName;
+                }
+           
             //fetch sub properties
             if (object_id.type == BacnetObjectTypes.OBJECT_GROUP)
                 FetchGroupProperties(comm, adr, object_id, node.Nodes);
@@ -963,27 +998,44 @@ namespace Yabe
                     List<BacnetObjectId> objectList= SortBacnetObjects(value_list);
                     //add to tree
                     foreach (BacnetObjectId bobj_id in objectList)
-                    {
-                        AddObjectEntry(comm, adr, null, bobj_id, m_AddressSpaceTree.Nodes);//AddObjectEntry(comm, adr, null, bobj_id, e.Node.Nodes);
-                        
+                    {                                                
                         // Add FC
                         // If the Device name not set, try to update it
                         if (bobj_id.type == BacnetObjectTypes.OBJECT_DEVICE)
                         {
                             if (e.Node.ToolTipText=="")   // already update with the device name
                             {
-                                try
+                                bool Prop_Object_NameOK = false;
+                                String Identifier;
+
+                                lock (DevicesObjectsName)
+                                    Prop_Object_NameOK = DevicesObjectsName.TryGetValue(new Tuple<String, BacnetObjectId>(adr.FullHashString(), bobj_id), out Identifier);
+                                if (Prop_Object_NameOK)
                                 {
-                                    IList<BacnetValue> values;
-                                    if (comm.ReadPropertyRequest(adr, bobj_id, BacnetPropertyIds.PROP_OBJECT_NAME, out values))
-                                    {
-                                            e.Node.ToolTipText = e.Node.Text;   // IP or MSTP node id -> in the Tooltip
-                                            e.Node.Text = values[0].ToString() + " ["+device_id.ToString()+"] ";  // change @ by the Name                                       
-                                    }
+                                    e.Node.ToolTipText = e.Node.Text;
+                                    e.Node.Text = Identifier+" ["+device_id.ToString()+"] ";
                                 }
-                                catch { }
+                                else
+                                    try
+                                    {
+                                        IList<BacnetValue> values;
+                                        if (comm.ReadPropertyRequest(adr, bobj_id, BacnetPropertyIds.PROP_OBJECT_NAME, out values))
+                                        {
+                                                e.Node.ToolTipText = e.Node.Text;   // IP or MSTP node id -> in the Tooltip
+                                                e.Node.Text = values[0].ToString() + " ["+device_id.ToString()+"] ";  // change @ by the Name    
+                                                lock (DevicesObjectsName)
+                                                {
+                                                    Tuple<String, BacnetObjectId> t = new Tuple<String, BacnetObjectId>(adr.FullHashString(), bobj_id);
+                                                    DevicesObjectsName.Remove(t);
+                                                    DevicesObjectsName.Add(t, values[0].ToString());
+                                                }
+                                        }
+                                    }
+                                    catch { }
                             }
-                         }                         
+                         }
+
+                        AddObjectEntry(comm, adr, null, bobj_id, m_AddressSpaceTree.Nodes);//AddObjectEntry(comm, adr, null, bobj_id, e.Node.Nodes); 
                     }
                 }
                 finally
@@ -1275,11 +1327,18 @@ namespace Yabe
 
                         // The Prop Name replace the PropId into the Treenode 
                         if (p_value.property.propertyIdentifier == (byte)BacnetPropertyIds.PROP_OBJECT_NAME)
-                            if (selected_node.ToolTipText=="")  // Tooltip not set is not null, strange !
-                            {
+                        {
+                            if (selected_node.ToolTipText == "")  // Tooltip not set is not null, strange !
                                 selected_node.ToolTipText = selected_node.Text;
-                                selected_node.Text = value.ToString();
+
+                            selected_node.Text = value.ToString(); // Update the object name if needed
+                            lock (DevicesObjectsName)
+                            {
+                                Tuple<String, BacnetObjectId> t = new Tuple<String, BacnetObjectId>(adr.FullHashString(), object_id);
+                                DevicesObjectsName.Remove(t);
+                                DevicesObjectsName.Add(t, value.ToString());
                             }
+                        }
                     }
                     m_DataGrid.SelectedObject = bag;
                 }
@@ -2291,7 +2350,11 @@ namespace Yabe
                     string Description = "";
                     string UnitCode = ""; // No actualy in usage
 
-                    if (ReadPropertyMultipleSupported)
+                    bool Prop_Object_NameOK=false;
+                    lock (DevicesObjectsName)
+                        Prop_Object_NameOK = DevicesObjectsName.TryGetValue(new Tuple<String, BacnetObjectId>(adr.FullHashString(), Bacobj), out Identifier);
+
+                    if ((ReadPropertyMultipleSupported)&&(!Prop_Object_NameOK))
                     {
                         try
                         {
@@ -2315,8 +2378,11 @@ namespace Yabe
                     {
                         IList<BacnetValue> out_value;
 
-                        comm.ReadPropertyRequest(adr, Bacobj, BacnetPropertyIds.PROP_OBJECT_NAME, out out_value);
-                        Identifier = out_value[0].Value.ToString();
+                        if (!Prop_Object_NameOK)
+                        {
+                            comm.ReadPropertyRequest(adr, Bacobj, BacnetPropertyIds.PROP_OBJECT_NAME, out out_value);
+                            Identifier = out_value[0].Value.ToString();                           
+                        }
 
                         comm.ReadPropertyRequest(adr, Bacobj, BacnetPropertyIds.PROP_DESCRIPTION, out out_value);
                         if (!(out_value[0].Value is BacnetError))
@@ -2324,6 +2390,15 @@ namespace Yabe
                     }
 
                     Sw.WriteLine(Bacobj.ToString() + ";" + device_id.ToString() + ";" + Identifier + ";" + ((int)Bacobj.type).ToString() + ";" + Bacobj.instance.ToString() + ";" + Description + ";;;;;;;;;" + UnitCode);
+
+                    // Update also the Dictonary of known object name and the treenode
+                    if (t.ToolTipText == "")
+                    {
+                        lock (DevicesObjectsName)
+                            DevicesObjectsName.Add(new Tuple<String, BacnetObjectId>(adr.FullHashString(), Bacobj), Identifier);
+                        t.ToolTipText = t.Text;
+                        t.Text = Identifier;
+                    }
                 }
 
                 Sw.Close();
@@ -2427,6 +2502,8 @@ namespace Yabe
                     {
                         tn.ToolTipText = tn.Text;
                         tn.Text = name[0].Value.ToString();
+                        lock (DevicesObjectsName)
+                            DevicesObjectsName.Add(new Tuple<String, BacnetObjectId>(adr.FullHashString(), (BacnetObjectId)tn.Tag), tn.Text);
                     }
                 }
 

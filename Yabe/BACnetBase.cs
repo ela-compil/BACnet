@@ -1338,7 +1338,7 @@ namespace System.IO.BACnet
                 return Value.ToString();
         }
     }
-
+    [Serializable]
     public struct BacnetObjectId : IComparable<BacnetObjectId>
     {
         public BacnetObjectTypes type;
@@ -2283,6 +2283,7 @@ namespace System.IO.BACnet
                 return RoutedSource.Equals(d.RoutedSource);
 
             }
+
         }
 
         // checked if device is routed by curent equipement
@@ -2304,6 +2305,18 @@ namespace System.IO.BACnet
             ASN1.encode_application_unsigned(buffer, net);
             ASN1.encode_application_octet_string(buffer, adr, 0, adr.Length);
             ASN1.encode_closing_tag(buffer, 1);
+        }
+
+        public string FullHashString()
+        {
+            StringBuilder s = new StringBuilder(((uint)type).ToString() + net.ToString());
+            for (int i=0;i<adr.Length;i++)
+                s.Append(adr[i].ToString());
+            if (RoutedSource != null)
+                s.Append("/"+RoutedSource.FullHashString());
+
+            return s.ToString();
+
         }
     }
 
