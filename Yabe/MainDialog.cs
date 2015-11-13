@@ -37,6 +37,7 @@ using System.IO;
 using System.IO.BACnet.Storage;
 using System.Xml.Serialization;
 using System.Threading;
+using System.Runtime.Serialization.Formatters.Binary;
 
 namespace Yabe
 {
@@ -85,6 +86,14 @@ namespace Yabe
                     m_SplitContainerLeft.SplitterDistance = Properties.Settings.Default.GUI_SplitterLeft;
                 if (Properties.Settings.Default.GUI_SplitterRight != -1)
                     m_SplitContainerRight.SplitterDistance = Properties.Settings.Default.GUI_SplitterRight;
+
+                // Try to open the current (if exist) object Id<-> object name mapping file
+                Stream stream = File.Open(Properties.Settings.Default.ObjectNameFile, FileMode.Open);
+                BinaryFormatter bf = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+                var d = (Dictionary<Tuple<String, BacnetObjectId>, String>)bf.Deserialize(stream);
+                stream.Close();
+
+                if (d != null) DevicesObjectsName = d;
             }
             catch
             {
@@ -432,12 +441,13 @@ namespace Yabe
                     if(entry != null && entry.Value.Key.Equals(adr))
                     {
                         s.Text = new_entry.Key + " - " + new_entry.Value;
-                        s.Tag = new_entry;
+                        s.Tag = new_entry;                       
                         if (Prop_Object_NameOK)
                         {
                             s.ToolTipText = s.Text;
                             s.Text = Identifier + " [" + device_id.ToString() + "] ";
                         }
+                        
                         return;
                     }
                 }
@@ -453,8 +463,8 @@ namespace Yabe
                         node.Tag = new_entry;
                         if (Prop_Object_NameOK)
                         {
-                            s.ToolTipText = s.Text;
-                            s.Text = Identifier + " [" + device_id.ToString() + "] ";
+                            node.ToolTipText = s.Text;
+                            node.Text = Identifier + " [" + device_id.ToString() + "] ";
                         }
                         m_DeviceTree.ExpandAll();
                         return;
@@ -1936,6 +1946,13 @@ namespace Yabe
 
                 //save
                 Properties.Settings.Default.Save();
+
+                // save object name<->id file
+                Stream stream = File.Open(Properties.Settings.Default.ObjectNameFile, FileMode.Create);
+                BinaryFormatter bf = new BinaryFormatter();
+                bf.Serialize(stream, DevicesObjectsName);
+                stream.Close();
+
             }
             catch
             {
@@ -2510,6 +2527,65 @@ namespace Yabe
                 if (tn.Nodes != null)
                     ChangeObjectIdByName(tn.Nodes, comm, adr);
             }
+        }
+
+        // Open a serialized Dictionnay of object id <-> object name file
+        private void openToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            //which file to upload?
+            OpenFileDialog dlg = new OpenFileDialog();
+            dlg.FileName = Properties.Settings.Default.ObjectNameFile;
+            dlg.DefaultExt = "YabeMap";
+            dlg.Filter = "Yabe Map files (*.YabeMap)|*.YabeMap|All files (*.*)|*.*";
+            if (dlg.ShowDialog(this) != System.Windows.Forms.DialogResult.OK) return;
+            string filename = dlg.FileName;
+            Properties.Settings.Default.ObjectNameFile = filename;
+
+            try
+            {
+                Stream stream = File.Open(Properties.Settings.Default.ObjectNameFile, FileMode.Open);
+                BinaryFormatter bf = new BinaryFormatter();
+                var d = (Dictionary<Tuple<String, BacnetObjectId>, String>)bf.Deserialize(stream);
+                stream.Close();
+
+                if (d != null) DevicesObjectsName = d;
+            }
+            catch
+            {
+                MessageBox.Show(this, "File error", "Wrong file", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+        // save a serialized Dictionnay of object id <-> object name file
+        private void saveAsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+            SaveFileDialog dlg = new SaveFileDialog();
+            dlg.FileName = Properties.Settings.Default.ObjectNameFile;
+            dlg.DefaultExt = "YabeMap";
+            dlg.Filter = "Yabe Map files (*.YabeMap)|*.YabeMap|All files (*.*)|*.*";
+            if (dlg.ShowDialog(this) != System.Windows.Forms.DialogResult.OK) return;
+            string filename = dlg.FileName;
+            Properties.Settings.Default.ObjectNameFile = filename;
+
+            try
+            {
+                Stream stream = File.Open(Properties.Settings.Default.ObjectNameFile, FileMode.Create);
+                BinaryFormatter bf = new BinaryFormatter();
+                bf.Serialize(stream, DevicesObjectsName);
+                stream.Close();
+            }
+            catch
+            {
+                MessageBox.Show(this, "File error", "Wrong file", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+
+        }
+
+        private void cleanToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            DevicesObjectsName = new Dictionary<Tuple<String, BacnetObjectId>, String>();
+            MessageBox.Show(this, "Done", "Done", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
     }

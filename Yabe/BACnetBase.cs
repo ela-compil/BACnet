@@ -2309,11 +2309,11 @@ namespace System.IO.BACnet
 
         public string FullHashString()
         {
-            StringBuilder s = new StringBuilder(((uint)type).ToString() + net.ToString());
+            StringBuilder s = new StringBuilder(((uint)type).ToString()+"." + net.ToString()+".");
             for (int i=0;i<adr.Length;i++)
-                s.Append(adr[i].ToString());
+                s.Append(adr[i].ToString("X2"));
             if (RoutedSource != null)
-                s.Append("/"+RoutedSource.FullHashString());
+                s.Append(":"+RoutedSource.FullHashString());
 
             return s.ToString();
 

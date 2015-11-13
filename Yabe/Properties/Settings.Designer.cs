@@ -394,5 +394,17 @@ namespace Yabe.Properties {
                 this["AlarmByGetEventInformation"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string ObjectNameFile {
+            get {
+                return ((string)(this["ObjectNameFile"]));
+            }
+            set {
+                this["ObjectNameFile"] = value;
+            }
+        }
     }
 }

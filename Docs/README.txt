@@ -200,6 +200,38 @@
 			GetAlarmSummary is deprecated since 2012, so it's not the default behaviour
 			for Yabe. Trys to set this option to false with old devices if needed.
 
+	2.5 Bacnet Object name
+			By default Bacnet objects are displayed using the object identifier eg : 
+			ANALOG_INPUT:0, DEVICE:333 ...
+			During network exploration, when object properties are read this
+			ANALOG_INPUT:0 is replaced by the value present in the PROP_NAME field
+			eg : Outdoor_Temperature. The id always appears in the help tooltip.
+
+			This mapping between identifier and name can be rendered persistent
+			over Yabe sessions, using the 'Object Names database' menus.
+			By default this behaviour is not active. It can also be desactivated
+			if enabled by setting an empty string in the option parameter
+			'ObjectNameFile' instead of a file reference.
+			In order to enable the option, just go to the menu 'Save As' and choose
+			a new file somewhere on your disk. That's all. Automatic saving of new
+			explored name is done when closing Yabe.
+			It doesn't matter if objects are created or deleted, if name are changed,
+			Yabe changes it's database each time read operations are perform on objects.
+
+			'Open' can be used to open a particular data file (do it just after Yabe is
+			started, before any other operation, it's better), this file become the 
+			current one, and new devices/objects are added into it.
+			'Clean' can be used to remove all values.
+			'Save As' can be used to create a new file (after a clean operation maybe),
+			this new file become the current one.
+			
+			If Yabe is used on severals differents networks take care to use a file
+			for each one.
+			When a physical device address is modified, for Yabe it apears as a new 
+			one, and the old object mapping will never be cleanned in the file.
+			If a device got a physical address of an old one, the mapping is wrong, but
+			after all read operations in the Address space, it's OK.
+			
 3.  TECHNICAL
     
 	3.1 MULTIPLE UDP CLIENTS ON SAME IP

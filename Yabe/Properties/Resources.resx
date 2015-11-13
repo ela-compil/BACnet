@@ -127,14 +127,17 @@
   <data name="clock" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\clock.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="book_open" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\book_open.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="bell" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\bell.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="information" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\information.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="add" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\add.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="chart_line" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\chart_line.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="calendar_view_week" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\calendar_view_week.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -148,11 +151,17 @@
   <data name="calendar_view_week1" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\calendar_view_week.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="database_delete" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\database_delete.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="database_go" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\database_go1.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="eye" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\eye.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="chart_line" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\chart_line.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="add" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\add.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="world" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\world.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
@@ -166,10 +175,13 @@
   <data name="error" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\error.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="database_edit" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\database_edit.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="transmit" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\transmit.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="book_open" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\book_open.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="text_smallcaps" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\text_smallcaps.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

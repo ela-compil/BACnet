@@ -229,6 +229,10 @@
     <EmbeddedResource Include="ReadSinglePropDescrDefault.xml" />
     <None Include="Resources\error.png" />
     <None Include="Resources\book_open.png" />
+    <None Include="Resources\database_go1.png" />
+    <None Include="Resources\database_edit.png" />
+    <None Include="Resources\database_delete.png" />
+    <None Include="Resources\text_smallcaps.png" />
     <Content Include="Search.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

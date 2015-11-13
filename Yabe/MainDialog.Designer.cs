@@ -37,6 +37,10 @@
             this.m_RemoveToolButton = new System.Windows.Forms.ToolStripButton();
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.objectNameBaseToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.saveAsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.cleanToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.quitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.searchToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.addDevicesearchToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -196,16 +200,52 @@
             // fileToolStripMenuItem
             // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.objectNameBaseToolStripMenuItem,
             this.quitToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.fileToolStripMenuItem.Text = "File";
             // 
+            // objectNameBaseToolStripMenuItem
+            // 
+            this.objectNameBaseToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.openToolStripMenuItem,
+            this.saveAsToolStripMenuItem,
+            this.cleanToolStripMenuItem});
+            this.objectNameBaseToolStripMenuItem.Image = global::Yabe.Properties.Resources.text_smallcaps;
+            this.objectNameBaseToolStripMenuItem.Name = "objectNameBaseToolStripMenuItem";
+            this.objectNameBaseToolStripMenuItem.Size = new System.Drawing.Size(199, 22);
+            this.objectNameBaseToolStripMenuItem.Text = "Object Names database";
+            // 
+            // openToolStripMenuItem
+            // 
+            this.openToolStripMenuItem.Image = global::Yabe.Properties.Resources.database_go;
+            this.openToolStripMenuItem.Name = "openToolStripMenuItem";
+            this.openToolStripMenuItem.Size = new System.Drawing.Size(114, 22);
+            this.openToolStripMenuItem.Text = "Open";
+            this.openToolStripMenuItem.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
+            // 
+            // saveAsToolStripMenuItem
+            // 
+            this.saveAsToolStripMenuItem.Image = global::Yabe.Properties.Resources.database_edit;
+            this.saveAsToolStripMenuItem.Name = "saveAsToolStripMenuItem";
+            this.saveAsToolStripMenuItem.Size = new System.Drawing.Size(114, 22);
+            this.saveAsToolStripMenuItem.Text = "Save As";
+            this.saveAsToolStripMenuItem.Click += new System.EventHandler(this.saveAsToolStripMenuItem_Click);
+            // 
+            // cleanToolStripMenuItem
+            // 
+            this.cleanToolStripMenuItem.Image = global::Yabe.Properties.Resources.database_delete;
+            this.cleanToolStripMenuItem.Name = "cleanToolStripMenuItem";
+            this.cleanToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.cleanToolStripMenuItem.Text = "Clean all";
+            this.cleanToolStripMenuItem.Click += new System.EventHandler(this.cleanToolStripMenuItem_Click);
+            // 
             // quitToolStripMenuItem
             // 
             this.quitToolStripMenuItem.Image = global::Yabe.Properties.Resources.cross;
             this.quitToolStripMenuItem.Name = "quitToolStripMenuItem";
-            this.quitToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.quitToolStripMenuItem.Size = new System.Drawing.Size(195, 22);
             this.quitToolStripMenuItem.Text = "Quit";
             this.quitToolStripMenuItem.Click += new System.EventHandler(this.quitToolStripMenuItem_Click);
             // 
@@ -935,6 +975,10 @@
         private System.Windows.Forms.ToolStripMenuItem alarmSummaryToolStripMenuItem1;
         private System.Windows.Forms.ToolStripMenuItem alarmSummaryToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem readPropertiesNameToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem objectNameBaseToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem openToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem saveAsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem cleanToolStripMenuItem;
     }
 }
 

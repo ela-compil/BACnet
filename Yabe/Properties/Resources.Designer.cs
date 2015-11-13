@@ -163,6 +163,36 @@ namespace Yabe.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap database_delete {
+            get {
+                object obj = ResourceManager.GetObject("database_delete", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap database_edit {
+            get {
+                object obj = ResourceManager.GetObject("database_edit", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap database_go {
+            get {
+                object obj = ResourceManager.GetObject("database_go", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap date {
             get {
                 object obj = ResourceManager.GetObject("date", resourceCulture);
@@ -216,6 +246,16 @@ namespace Yabe.Properties {
         internal static System.Drawing.Bitmap note {
             get {
                 object obj = ResourceManager.GetObject("note", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap text_smallcaps {
+            get {
+                object obj = ResourceManager.GetObject("text_smallcaps", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
