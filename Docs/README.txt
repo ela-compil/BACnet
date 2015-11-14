@@ -279,6 +279,7 @@
 		- Metz Connect I/O modules (BTR Netcom vendor Id 421)
 			: shows a questionable Bacnet implementation on their products
 			(no acknowledgement to a lot of requests at least)
+		- Schneider Electric SE8350 (vendor Id 10)
 		- Contemporary Control MSTP/IP Router (vendor Id 245)
 	BACnet/Ethernet has been tested with
 		- Delta Controls devices (vendor Id 8)

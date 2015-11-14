@@ -66,6 +66,8 @@ namespace Yabe
             }
         }
 
+        private int AsynchRequestId=0;
+
         public MainDialog()
         {
             InitializeComponent();
@@ -857,38 +859,41 @@ namespace Yabe
             }
         }
 
-        private void AddObjectListOneByOneAsync(BacnetClient comm, BacnetAddress adr, uint device_id, uint count)
+        private void AddObjectListOneByOneAsync(BacnetClient comm, BacnetAddress adr, uint device_id, uint count, int AsynchRequestId)
         {
             System.Threading.ThreadPool.QueueUserWorkItem((o) =>
+            {
+                IList<BacnetValue> value_list;
+                try
+                {
+                    for (int i = 1; i <= count; i++)
+                    {
+                        value_list = null;
+                        if (!comm.ReadPropertyRequest(adr, new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, device_id), BacnetPropertyIds.PROP_OBJECT_LIST, out value_list, 0, (uint)i))
                         {
-                            IList<BacnetValue> value_list;
-                            try
-                            {
-                                for (int i = 1; i <= count; i++)
-                                {
-                                    value_list = null;
-                                    if (!comm.ReadPropertyRequest(adr, new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, device_id), BacnetPropertyIds.PROP_OBJECT_LIST, out value_list, 0, (uint)i))
-                                    {
-                                        MessageBox.Show("Couldn't fetch object list index", "Communication Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                                        return;
-                                    }
+                            MessageBox.Show("Couldn't fetch object list index", "Communication Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            return;
+                        }
 
-                                    //add to tree
-                                    foreach (BacnetValue value in value_list)
-                                    {
-                                        this.Invoke((MethodInvoker)delegate
-                                        {
-                                            AddObjectEntry(comm, adr, null, (BacnetObjectId)value.Value, m_AddressSpaceTree.Nodes);
-                                        });
-                                    }
-                                }
-                            }
-                            catch (Exception ex)
+                        if (AsynchRequestId != this.AsynchRequestId) return; // Selected device is no more the good one
+
+                        //add to tree
+                        foreach (BacnetValue value in value_list)
+                        {
+                            this.Invoke((MethodInvoker)delegate
                             {
-                                MessageBox.Show("Error during read: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                                return;
-                            }
-                        });
+                                if (AsynchRequestId != this.AsynchRequestId) return;  // another test in the GUI thread
+                                AddObjectEntry(comm, adr, null, (BacnetObjectId)value.Value, m_AddressSpaceTree.Nodes);
+                            });
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Error during read: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+            });
         }
 
         private List<BacnetObjectId> SortBacnetObjects(IList<BacnetValue> RawList)
@@ -905,6 +910,8 @@ namespace Yabe
 
         private void m_DeviceTree_AfterSelect(object sender, TreeViewEventArgs e)
         {
+            AsynchRequestId++; // disabled a possible thread pool work (update) on the AddressSpaceTree
+
             KeyValuePair<BacnetAddress, uint>? entry = e.Node.Tag as KeyValuePair<BacnetAddress, uint>?;
             if (entry != null)
             {
@@ -995,7 +1002,7 @@ namespace Yabe
                         if (value_list != null && value_list.Count == 1 && value_list[0].Value is uint)
                         {
                             uint list_count = (uint)value_list[0].Value;
-                            AddObjectListOneByOneAsync(comm, adr, device_id, list_count);
+                            AddObjectListOneByOneAsync(comm, adr, device_id, list_count, AsynchRequestId);
                             return;
                         }
                         else
@@ -2495,21 +2502,18 @@ namespace Yabe
             }
            
             // Go
-            int _retries = comm.Retries;
-            comm.Retries = 1;
-            Cursor.Current = Cursors.WaitCursor;
-            Application.DoEvents();
-
-            ChangeObjectIdByName(m_AddressSpaceTree.Nodes, comm, adr);
-
-            Cursor.Current = Cursors.Default;
-
-            comm.Retries = _retries;
+            System.Threading.ThreadPool.QueueUserWorkItem((o) =>
+            {
+                ChangeObjectIdByName(m_AddressSpaceTree.Nodes, comm, adr, AsynchRequestId);
+            });
 
         }
 
-        private void ChangeObjectIdByName(TreeNodeCollection tnc, BacnetClient comm, BacnetAddress adr)
+        private void ChangeObjectIdByName(TreeNodeCollection tnc, BacnetClient comm, BacnetAddress adr, int AsynchRequestId)
         {
+            int _retries = comm.Retries;
+            comm.Retries = 1;
+
             foreach (TreeNode tn in tnc)
             {
                 if (tn.ToolTipText == "")
@@ -2517,15 +2521,26 @@ namespace Yabe
                     IList<BacnetValue> name;
                     if (comm.ReadPropertyRequest(adr, (BacnetObjectId)tn.Tag, BacnetPropertyIds.PROP_OBJECT_NAME, out name) == true)
                     {
-                        tn.ToolTipText = tn.Text;
-                        tn.Text = name[0].Value.ToString();
-                        lock (DevicesObjectsName)
-                            DevicesObjectsName.Add(new Tuple<String, BacnetObjectId>(adr.FullHashString(), (BacnetObjectId)tn.Tag), tn.Text);
+                        if (AsynchRequestId != this.AsynchRequestId) // Selected device is no more the good one
+                        {
+                            comm.Retries = _retries;
+                            return;
+                        }
+
+                        this.Invoke((MethodInvoker)delegate
+                        {
+                            if (AsynchRequestId != this.AsynchRequestId) return; // another test in the GUI thread
+
+                            tn.ToolTipText = tn.Text;
+                            tn.Text = name[0].Value.ToString();
+                            lock (DevicesObjectsName)
+                                DevicesObjectsName.Add(new Tuple<String, BacnetObjectId>(adr.FullHashString(), (BacnetObjectId)tn.Tag), tn.Text);
+                        });
                     }
                 }
 
                 if (tn.Nodes != null)
-                    ChangeObjectIdByName(tn.Nodes, comm, adr);
+                    ChangeObjectIdByName(tn.Nodes, comm, adr, AsynchRequestId);
             }
         }
 
