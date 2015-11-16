@@ -40,27 +40,39 @@ namespace Yabe
     public partial class AlarmSummary : Form
     {
         BacnetClient comm; BacnetAddress adr;
+
+        Dictionary<Tuple<String, BacnetObjectId>, String> DevicesObjectsName = new Dictionary<Tuple<String, BacnetObjectId>, String>();
+
         IList<BacnetGetEventInformationData> Alarms=new List<BacnetGetEventInformationData>();
 
-        public AlarmSummary(ImageList img_List, BacnetClient comm, BacnetAddress adr, uint device_id)
+        public AlarmSummary(ImageList img_List, BacnetClient comm, BacnetAddress adr, uint device_id, Dictionary<Tuple<String, BacnetObjectId>, String> DevicesObjectsName)
         {
             InitializeComponent();
             this.Text = "Active Alarms on Device Id " + device_id.ToString();
             this.comm = comm;
-            this.adr = adr;            
+            this.adr = adr;
+
+            this.DevicesObjectsName = DevicesObjectsName;
 
             TAlarmList.ImageList = img_List;
 
             Application.UseWaitCursor = true;
+
+            Application.DoEvents();
         }
 
-        private void tmr_Tick(object sender, EventArgs e)
+        private void AlarmSummary_Shown(object sender, EventArgs e)
         {
-            tmr.Enabled = false;
             // get the Alarm summary
             // Addentum 135-2012av-1 : Deprecate Execution of GetAlarmSummary, GetEVentInformation instead
             // -> parameter 2 in the method call
-            if (comm.GetAlarmSummaryOrEventRequest(adr, Properties.Settings.Default.AlarmByGetEventInformation, ref Alarms) == true)
+            bool Ret;
+            Ret = comm.GetAlarmSummaryOrEventRequest(adr, true, ref Alarms); // try GetEVentInformation
+
+            if (!Ret)
+                Ret = comm.GetAlarmSummaryOrEventRequest(adr, false, ref Alarms); // try GetAlarmSummary
+
+            if (Ret)
             {
                 LblInfo.Visible = false;
                 FillTreeNode();
@@ -109,14 +121,29 @@ namespace Yabe
                 // get or set the Node
                 if (EmptyList == true)
                 {
-                    // Get the property Name, network activity, time consuming
-                    IList<BacnetValue> name;
-                    bool retcode=comm.ReadPropertyRequest(adr, alarm.objectIdentifier, BacnetPropertyIds.PROP_OBJECT_NAME, out name);
-      
-                    icon = MainDialog.GetIconNum(alarm.objectIdentifier.type);
-                    if (retcode)
+                    String nameStr = null;
+
+                    lock (DevicesObjectsName)
+                        DevicesObjectsName.TryGetValue(new Tuple<String, BacnetObjectId>(adr.FullHashString(), alarm.objectIdentifier), out nameStr);
+
+                    if (nameStr == null)
                     {
-                        currentTn = new TreeNode(name[0].Value.ToString(), icon, icon);
+                        // Get the property Name, network activity, time consuming
+                        IList<BacnetValue> name;
+                        bool retcode = comm.ReadPropertyRequest(adr, alarm.objectIdentifier, BacnetPropertyIds.PROP_OBJECT_NAME, out name);
+
+                        if (retcode)
+                        {
+                            nameStr = name[0].Value.ToString();
+                            lock (DevicesObjectsName)
+                                DevicesObjectsName.Add(new Tuple<String, BacnetObjectId>(adr.FullHashString(), alarm.objectIdentifier), nameStr);
+                        }
+                    }
+                    
+                    icon = MainDialog.GetIconNum(alarm.objectIdentifier.type);
+                    if (nameStr!=null)
+                    {
+                        currentTn = new TreeNode(nameStr, icon, icon);
                         currentTn.ToolTipText = alarm.objectIdentifier.ToString();
                     }
                     else

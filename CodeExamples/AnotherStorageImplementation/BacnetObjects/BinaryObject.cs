@@ -92,7 +92,13 @@ namespace BaCSharp
         public virtual uint internal_PROP_PRESENT_VALUE
         {
             get { return m_PROP_PRESENT_VALUE; }
-            set { m_PROP_PRESENT_VALUE = value; ExternalCOVManagement(BacnetPropertyIds.PROP_PRESENT_VALUE); }
+            set 
+            {
+                if (value != m_PROP_PRESENT_VALUE)
+                {
+                    m_PROP_PRESENT_VALUE = value; ExternalCOVManagement(BacnetPropertyIds.PROP_PRESENT_VALUE);
+                }
+            }
         }
 
         public BinaryObject(BacnetObjectId ObjId, String ObjName, String Description, bool InitialValue)

@@ -57,16 +57,18 @@
 	1.3 CREDITS
 		The projected is created by me, Morten Kvistgaard, anno 2014. 
 		A few patches and input has been given by the community.
-		F. Chaxel has contributed a lot of the later additions. (eg Foreign Device
-		Registration, BBMD services, TrendLog & Schedule display)
+		F. Chaxel has contributed a lot of the later additions (eg Foreign Device
+		Registration, BBMD services, TrendLog & Schedule display, Calendar editor,
+		Alarms summary, Bacnet on Ethernet).
 		Graphics are the usual FamFamFam: http://www.famfamfam.com/
 		Serializing (most/some) is ported from project by Steve Karg:
 		http://bacnet.sourceforge.net/
 		GUI and concept is inspired by UaExpert:
 		http://www.unified-automation.com/products/development-tools/uaexpert.html
 		Zedgraph come from http://sourceforge.net/projects/zedgraph/
-		Calendar control come from 
+		Calendar control come from :
 		http://www.codeproject.com/Articles/38699/A-Professional-Calendar-Agenda-View-That-You-Will
+		Sharppcap comme from : http://sourceforge.net/projects/sharppcap/
 
 2.  USAGE
 
@@ -194,11 +196,6 @@
 			If this value is positive Yabe send response to Who-Is with this Bacnet
 			device Id. Can be usefull to set recipients list in notification class 
 			objects without using Yabe Ip endpoint. 
-
-		2.5.13 AlarmByGetEventInformation
-			Two services to get the alarm list : GetAlarmSummary or GetEventInformation. 
-			GetAlarmSummary is deprecated since 2012, so it's not the default behaviour
-			for Yabe. Trys to set this option to false with old devices if needed.
 
 	2.5 Bacnet Object name
 			By default Bacnet objects are displayed using the object identifier eg : 

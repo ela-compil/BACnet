@@ -129,7 +129,7 @@ namespace BaCSharp
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED)]
         public virtual uint PROP_SEGMENTATION_SUPPORTED
         {
-            get { return 3; }
+            get { return 0; } // Both
         }
 
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_NULL)]

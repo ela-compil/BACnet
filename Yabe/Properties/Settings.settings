@@ -92,9 +92,6 @@
     <Setting Name="Subscriptions_ReplacementPollingPeriod" Type="System.UInt32" Scope="User">
       <Value Profile="(Default)">5</Value>
     </Setting>
-    <Setting Name="AlarmByGetEventInformation" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">True</Value>
-    </Setting>
     <Setting Name="ObjectNameFile" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>

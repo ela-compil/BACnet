@@ -2480,8 +2480,8 @@ namespace Yabe
                 MessageBox.Show(this, "Please select a device node", "Wrong node", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
-  
-            new AlarmSummary(m_AddressSpaceTree.ImageList, comm, adr, device_id).ShowDialog();
+
+            new AlarmSummary(m_AddressSpaceTree.ImageList, comm, adr, device_id, DevicesObjectsName).ShowDialog();
         }
 
         // Read the Adress Space, and change all object Id by name (using synchronous network access)

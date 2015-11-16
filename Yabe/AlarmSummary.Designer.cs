@@ -28,13 +28,11 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(AlarmSummary));
             this.TAlarmList = new System.Windows.Forms.TreeView();
             this.AckText = new System.Windows.Forms.TextBox();
             this.LblInfo = new System.Windows.Forms.Label();
             this.AckBt = new System.Windows.Forms.Button();
-            this.tmr = new System.Windows.Forms.Timer(this.components);
             this.SuspendLayout();
             // 
             // TAlarmList
@@ -76,11 +74,6 @@
             this.AckBt.UseVisualStyleBackColor = true;
             this.AckBt.Click += new System.EventHandler(this.AckBt_Click);
             // 
-            // tmr
-            // 
-            this.tmr.Enabled = true;
-            this.tmr.Tick += new System.EventHandler(this.tmr_Tick);
-            // 
             // AlarmSummary
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -96,6 +89,7 @@
             this.MinimizeBox = false;
             this.Name = "AlarmSummary";
             this.Text = "Active Alarms on Device";
+            this.Shown += new System.EventHandler(this.AlarmSummary_Shown);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -107,6 +101,5 @@
         private System.Windows.Forms.TextBox AckText;
         private System.Windows.Forms.Label LblInfo;
         private System.Windows.Forms.Button AckBt;
-        private System.Windows.Forms.Timer tmr;
     }
 }
