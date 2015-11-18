@@ -185,6 +185,19 @@ namespace BaCSharp
                 bo.Post_NewtonSoft_Json_Deserialization(this);
         }
 
+        public void Cli2Native()
+        {
+            IList<BacnetPropertyValue> value;
+
+            // This will force the access to all Bacnet properties on all objects
+            // ... to get the properties list & transforming some Cli code to native code
+            // So this speed up the first network access
+            foreach (BaCSharpObject bacobj in ObjectsList)
+                bacobj.ReadPropertyAll(null, null, out value);
+
+            this.ReadPropertyAll(null, null, out value);
+        }
+
         // Each object provided by the server must be added one by one to the DeviceObject
         public virtual void AddBacnetObject(BaCSharpObject newObj)
         {

@@ -69,6 +69,8 @@ namespace AnotherStorageImplementation
         static void Main(string[] args)
         {
             InitDeviceObjects();
+            // Force the JIT compiler to make some job before network access
+            device.Cli2Native();
 
             // Remove reference to the NewtonSoft.Json dll if persistence
             // not required or simplest solution implemented

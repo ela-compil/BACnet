@@ -96,7 +96,9 @@ namespace BaCSharp
         protected BacnetClient sender;
 
         protected ErrorCodes ErrorCode_PropertyWrite;
-        
+
+        IList<BacnetPropertyReference> AllMyProperties = null;
+
         // Somes classes needs to access to the device object
         protected DeviceObject Mydevice;
         public virtual DeviceObject deviceOwner
@@ -281,19 +283,27 @@ namespace BaCSharp
 
         public bool ReadPropertyAll(BacnetClient sender, BacnetAddress adr, out IList<BacnetPropertyValue> values)
         {
-            IList<BacnetPropertyReference> properties = new List<BacnetPropertyReference>();
 
-            MethodInfo[] allmethod = this.GetType().GetMethods();   // all the methods in this class
-
-            foreach (MethodInfo m in allmethod)
+            if (AllMyProperties == null)
             {
-                uint PropId = BacnetMethodNametoId(m.Name);         // looking for all with a 'Bacnet name'
-                if (PropId < (uint)BacnetPropertyIds.MAX_BACNET_PROPERTY_ID)
-                    if (properties.Count(o => o.propertyIdentifier == (uint)PropId) == 0) // could be get_ and get2_, only one is required
-                        properties.Add(new BacnetPropertyReference(PropId, System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL));
+                AllMyProperties = new List<BacnetPropertyReference>();
+
+                MethodInfo[] allmethod = this.GetType().GetMethods();   // all the methods in this class
+
+                foreach (MethodInfo m in allmethod)
+                {
+                    uint PropId = BacnetMethodNametoId(m.Name);         // looking for all with a 'Bacnet name'
+                    if (PropId < (uint)BacnetPropertyIds.MAX_BACNET_PROPERTY_ID)
+                    {
+                        BacnetPropertyReference propref = new BacnetPropertyReference(PropId, System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL);
+                        // could be get_ and get2_, only one is required
+                        if (!AllMyProperties.Contains(propref))
+                            AllMyProperties.Add(propref);
+                    }
+                }
             }
 
-            return ReadPropertyMultiple(sender, adr, properties, out values);
+            return ReadPropertyMultiple(sender, adr, AllMyProperties, out values);
         }
 
         public ErrorCodes WritePropertyValue(BacnetPropertyValue value, bool writeFromNetwork)
