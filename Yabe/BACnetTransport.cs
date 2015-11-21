@@ -1386,6 +1386,7 @@ namespace System.IO.BACnet
         private bool m_sole_master = false;
         private byte m_retry_token = 1;
         private byte m_reply_source;
+        private bool m_is_running = true;
         private System.Threading.ManualResetEvent m_reply_mutex = new Threading.ManualResetEvent(false);
         private MessageFrame m_reply = null;
         private LinkedList<MessageFrame> m_send_queue = new LinkedList<MessageFrame>();
@@ -1402,6 +1403,8 @@ namespace System.IO.BACnet
         public byte MaxMaster { get { return m_max_master; } set { m_max_master = value; } }
         public byte MaxInfoFrames { get { return m_max_info_frames; } set { m_max_info_frames = value; } }
         public bool StateLogging { get; set; }
+
+        public bool IsRunning { get { return m_is_running; }}
 
         public int HeaderLength { get { return MSTP.MSTP_HEADER_LENGTH; } }
         public int MaxBufferLength { get { return 502; } }
@@ -1543,7 +1546,8 @@ namespace System.IO.BACnet
 
         private void QueueFrame(BacnetMstpFrameTypes frame_type, byte destination_address)
         {
-            m_send_queue.AddLast(new MessageFrame(frame_type, destination_address, null, 0));
+            lock(m_send_queue)
+                m_send_queue.AddLast(new MessageFrame(frame_type, destination_address, null, 0));
         }
 
         private void SendFrame(BacnetMstpFrameTypes frame_type, byte destination_address)
@@ -1824,8 +1828,12 @@ namespace System.IO.BACnet
             else
             {
                 /* SendNoWait / SendAndWait */
-                MessageFrame message_frame = m_send_queue.First.Value;
-                m_send_queue.RemoveFirst();
+                MessageFrame message_frame;
+                lock (m_send_queue)
+                {
+                    message_frame = m_send_queue.First.Value;
+                    m_send_queue.RemoveFirst();
+                }
                 SendFrame(message_frame);
                 m_frame_count++;
                 if (message_frame.frame_type == BacnetMstpFrameTypes.FRAME_TYPE_BACNET_DATA_EXPECTING_REPLY || message_frame.frame_type == BacnetMstpFrameTypes.FRAME_TYPE_TEST_REQUEST)
@@ -1968,7 +1976,8 @@ namespace System.IO.BACnet
             if (m_reply_mutex.WaitOne(T_REPLY_DELAY))
             {
                 SendFrame(m_reply);
-                m_send_queue.Remove(m_reply);
+                lock (m_send_queue)
+                    m_send_queue.Remove(m_reply);
                 return StateChanges.Reply;
             }
             else
@@ -2050,6 +2059,8 @@ namespace System.IO.BACnet
             {
                 Trace.TraceError("Exception in MSTP thread: " + ex.Message);
             }
+
+            m_is_running = false;
         }
 
         private void RemoveGarbage()
@@ -2234,7 +2245,8 @@ namespace System.IO.BACnet
             byte[] copy = new byte[data_length + MSTP.MSTP_HEADER_LENGTH + 2];
             Array.Copy(buffer, offset, copy, MSTP.MSTP_HEADER_LENGTH, data_length);
             MessageFrame f = new MessageFrame(frame_type, address.adr[0], copy, data_length);
-            m_send_queue.AddLast(f);
+            lock (m_send_queue)
+                m_send_queue.AddLast(f);
             if (m_reply == null)
             {
                 m_reply = f;
@@ -2253,7 +2265,11 @@ namespace System.IO.BACnet
         {
             while (m_send_queue.Count > 0)
             {
-                if (!m_send_queue.First.Value.send_mutex.WaitOne(timeout))
+                System.Threading.ManualResetEvent ev;
+                lock (m_send_queue) 
+                    ev = m_send_queue.First.Value.send_mutex;
+
+                if (ev.WaitOne(timeout))
                     return false;
             }
             return true;
