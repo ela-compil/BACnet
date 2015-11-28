@@ -2598,9 +2598,10 @@ namespace Yabe
         }
 
         private void cleanToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            DevicesObjectsName = new Dictionary<Tuple<String, BacnetObjectId>, String>();
-            MessageBox.Show(this, "Done", "Done", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        {             
+            DialogResult res = MessageBox.Show(this, "Clean all "+DevicesObjectsName.Count.ToString()+" entries, really ?", "Name database suppression", MessageBoxButtons.OKCancel, MessageBoxIcon.Information);
+            if (res==DialogResult.OK)
+                DevicesObjectsName = new Dictionary<Tuple<String, BacnetObjectId>, String>();
         }
 
     }
