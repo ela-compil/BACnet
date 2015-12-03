@@ -73,6 +73,12 @@ namespace BaCSharp
         }
 
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_CHARACTER_STRING)]
+        public virtual String PROP_MODEL_NAME
+        {
+            get { return "Model A"; }
+        }
+
+        [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_CHARACTER_STRING)]
         public virtual String PROP_FIRMWARE_REVISION
         {
             get { return "Version Beta 1"; }
@@ -84,10 +90,10 @@ namespace BaCSharp
             get { return 61440; }
         }
 
-        [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT)]
-        public virtual uint PROP_APPLICATION_SOFTWARE_VERSION
+        [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_CHARACTER_STRING)]
+        public virtual String PROP_APPLICATION_SOFTWARE_VERSION
         {
-            get { return 1; }
+            get { return "1"; }
         }
 
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT)]
@@ -130,6 +136,18 @@ namespace BaCSharp
         public virtual uint PROP_SEGMENTATION_SUPPORTED
         {
             get { return 0; } // Both
+        }
+
+        [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT)]
+        public virtual uint PROP_MAX_SEGMENTS_ACCEPTED
+        {
+            get { return (uint)BacnetMaxSegments.MAX_SEG64; } 
+        }
+
+        [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED)]
+        public virtual uint PROP_SYSTEM_STATUS
+        {
+            get { return (uint)BacnetDeviceStatus.OPERATIONAL; } 
         }
 
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_NULL)]
