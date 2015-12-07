@@ -442,7 +442,7 @@ namespace Yabe
                     KeyValuePair<BacnetAddress, uint>? entry = s.Tag as KeyValuePair<BacnetAddress, uint>?;
                     if(entry != null && entry.Value.Key.Equals(adr))
                     {
-                        s.Text = new_entry.Key + " - " + new_entry.Value;
+                        s.Text="Device "+new_entry.Value+ " - "+ new_entry.Key.ToString(s.Parent.Parent!=null);
                         s.Tag = new_entry;                       
                         if (Prop_Object_NameOK)
                         {
@@ -459,23 +459,22 @@ namespace Yabe
                     KeyValuePair<BacnetAddress, uint>? entry = s.Tag as KeyValuePair<BacnetAddress, uint>?;
                     if (entry!=null && entry.Value.Key.IsMyRouter(adr))
                     {
-                        TreeNode node = s.Nodes.Add(new_entry.Key + " - " + new_entry.Value);
+                        TreeNode node = s.Nodes.Add("Device "+new_entry.Value+ " - "+ new_entry.Key.ToString(true));
                         node.ImageIndex = 2;
                         node.SelectedImageIndex = node.ImageIndex;
                         node.Tag = new_entry;
                         if (Prop_Object_NameOK)
                         {
-                            node.ToolTipText = s.Text;
+                            node.ToolTipText = node.Text;
                             node.Text = Identifier + " [" + device_id.ToString() + "] ";
                         }
                         m_DeviceTree.ExpandAll();
                         return;
                     }
-
                 }
 
                 //add simply
-                TreeNode basicnode = parent.Nodes.Add(new_entry.Key + " - " + new_entry.Value);
+                TreeNode basicnode = parent.Nodes.Add("Device " + new_entry.Value + " - " + new_entry.Key.ToString(false));
                 basicnode.ImageIndex = 2;
                 basicnode.SelectedImageIndex = basicnode.ImageIndex;
                 basicnode.Tag = new_entry;
@@ -2533,8 +2532,13 @@ namespace Yabe
 
                             tn.ToolTipText = tn.Text;
                             tn.Text = name[0].Value.ToString();
+
                             lock (DevicesObjectsName)
-                                DevicesObjectsName.Add(new Tuple<String, BacnetObjectId>(adr.FullHashString(), (BacnetObjectId)tn.Tag), tn.Text);
+                            {
+                                var t=new Tuple<String, BacnetObjectId>(adr.FullHashString(), (BacnetObjectId)tn.Tag);
+                                DevicesObjectsName.Remove(t); // sometimes the same object appears at several place (in Groups for instance).
+                                DevicesObjectsName.Add(t, tn.Text);
+                            }
                         });
                     }
                 }

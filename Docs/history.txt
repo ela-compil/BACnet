@@ -2,6 +2,11 @@
                    YABE - YET ANOTHER BACNET EXPLORER
 -------------------------------------------------------------------------------
 
+1.0.4 - 20151207
+ - Bacnet/Ethernet support
+ - Persistant object names database
+ - Alamr summary
+
 1.0.3 - 20150930
  - Fix version inconsistencies (installer/inprogram/db)
  - A lot minor adjusts by F. Chaxel

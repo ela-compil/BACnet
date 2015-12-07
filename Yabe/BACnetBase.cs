@@ -2243,25 +2243,40 @@ namespace System.IO.BACnet
             {
                 case BacnetAddressTypes.IP:
                     if(adr == null || adr.Length < 6) return "0.0.0.0";
-                    ushort port = (ushort)((adr[4] << 8) | (adr[5] << 0));
-                    return adr[0] + "." + adr[1] + "." + adr[2] + "." + adr[3] + ":" + port;
+                    return adr[0] + "." + adr[1] + "." + adr[2] + "." + adr[3] + ":" + ((adr[4] << 8) | (adr[5] << 0));
                 case BacnetAddressTypes.MSTP:
                     if(adr == null || adr.Length < 1) return "-1";
                     return adr[0].ToString();
                 case BacnetAddressTypes.PTP:
                     return "x";
                 case BacnetAddressTypes.Ethernet:
-                    StringBuilder sb = new StringBuilder();
+                    StringBuilder sb1 = new StringBuilder();
                     for (int i = 0; i < 6; i++)
                     {
-                        sb.Append(adr[i].ToString("X2"));
-                        if (i != 5) sb.Append('-');
+                        sb1.Append(adr[i].ToString("X2"));
+                        if (i != 5) sb1.Append('-');
                     }
 
-                    return sb.ToString();
-                default:
-                    return base.ToString();
+                    return sb1.ToString();
+                default: // Routed @ are always like this, NPDU do not contains the MAC type, only the lenght
+                    if (adr == null) return "?";
+                    StringBuilder sb2 = new StringBuilder();
+                    if (adr.Length==6) // certainly IP, but not sure
+                        return adr[0] + "." + adr[1] + "." + adr[2] + "." + adr[3] + ":" + ((adr[4] << 8) | (adr[5] << 0));
+                    for (int i = 0; i < adr.Length; i++)
+                        sb2.Append(adr[i] + " ");
+                    return sb2.ToString();
             }
+        }
+
+        public String ToString(bool SourceOnly)
+        {
+            if (this.RoutedSource == null) 
+                return ToString();
+            if (SourceOnly)
+                return this.RoutedSource.ToString();
+            else
+                return this.RoutedSource.ToString() + " via " + ToString();
         }
 
         public override bool Equals(object obj)
