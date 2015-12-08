@@ -66,6 +66,9 @@
     <Compile Include="..\..\Yabe\BACnetTransportEthernet.cs">
       <Link>BACnetTransport.cs</Link>
     </Compile>
+    <Compile Include="..\..\Yabe\BACnetTransportIPv6.cs">
+      <Link>BACnetTransportIPv6.cs</Link>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -394,5 +394,17 @@ namespace Yabe.Properties {
                 this["ObjectNameFile"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool IPv6_Support {
+            get {
+                return ((bool)(this["IPv6_Support"]));
+            }
+            set {
+                this["IPv6_Support"] = value;
+            }
+        }
     }
 }

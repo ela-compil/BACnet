@@ -68,7 +68,12 @@ namespace Yabe
 
         private void m_SearchIpButton_Click(object sender, EventArgs e)
         {
-            m_result = new BacnetClient(new BacnetIpUdpProtocolTransport((int)m_PortValue.Value, Properties.Settings.Default.Udp_ExclusiveUseOfSocket, Properties.Settings.Default.Udp_DontFragment, Properties.Settings.Default.Udp_MaxPayload, Properties.Settings.Default.DefaultUdpIp), (int)m_TimeoutValue.Value, (int)m_RetriesValue.Value);
+            String adr = Properties.Settings.Default.DefaultUdpIp;
+            if (adr.Contains(':'))
+                m_result = new BacnetClient(new BacnetIpV6UdpProtocolTransport((int)m_PortValue.Value, Properties.Settings.Default.YabeDeviceId, Properties.Settings.Default.Udp_ExclusiveUseOfSocket, Properties.Settings.Default.Udp_DontFragment, Properties.Settings.Default.Udp_MaxPayload, adr), (int)m_TimeoutValue.Value, (int)m_RetriesValue.Value);
+            else
+                m_result = new BacnetClient(new BacnetIpUdpProtocolTransport((int)m_PortValue.Value, Properties.Settings.Default.Udp_ExclusiveUseOfSocket, Properties.Settings.Default.Udp_DontFragment, Properties.Settings.Default.Udp_MaxPayload, adr), (int)m_TimeoutValue.Value, (int)m_RetriesValue.Value);
+
             this.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.Close();
         }
@@ -171,7 +176,8 @@ namespace Yabe
                     if (ipinfo.GatewayAddresses == null || ipinfo.GatewayAddresses.Count == 0 || (ipinfo.GatewayAddresses.Count == 1 && ipinfo.GatewayAddresses[0].Address.ToString() == "0.0.0.0")) continue;
                     foreach (System.Net.NetworkInformation.UnicastIPAddressInformation addr in ipinfo.UnicastAddresses)
                     {
-                        if (addr.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+                        if ( (addr.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork) || 
+                            ((addr.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)&&Properties.Settings.Default.IPv6_Support))
                         {
                             ips.Add(addr.Address.ToString());
                         }

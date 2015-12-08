@@ -55,6 +55,9 @@
     <Compile Include="..\..\Yabe\BACnetTransport.cs">
       <Link>BACnetTransport.cs</Link>
     </Compile>
+    <Compile Include="..\..\Yabe\BACnetTransportIPv6.cs">
+      <Link>BACnetTransportIPv6.cs</Link>
+    </Compile>
     <Compile Include="Main.cs">
       <SubType>Form</SubType>
     </Compile>

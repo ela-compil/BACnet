@@ -103,7 +103,18 @@
 		- To send out a new "WhoIs" right click the transport in the "Devices" tree
 		  and select "WhoIs".
 
-	2.2 BACNET/MSTP OVER PIPE
+	2.2 BACNET/IP V6 over UDP
+		- Experimental, not tested, Wireshark don't help also.
+
+		- Start Yabe.
+		- In the Options/settings menu set IPv6_support to true
+		- Do the same as explain in 2.1, but the Local endpoint combo box shows now
+		  IpV4 & IPv6 available interfaces. Choose an IPv6 one.	If the combo is empty
+		  it's always IPv4 !
+		- If the option YabeDeviceId is -1, a random VMac (without duplication test)
+		  is used.
+
+	2.3 BACNET/MSTP OVER PIPE
 		- For general usage refer to section 2.1. 
 		- In the "Search" dialog select "COM1003" in the port combo box and press
 		  "Add". This will add a MSTP pipe created by the DemoServer. 
@@ -118,7 +129,7 @@
 		  configured to "-1" the program will ask if you will define a new one.
 		  You must do so, in order to continue communication. 
 	  
-	2.3	BACNET/PTP OVER PIPE
+	2.4	BACNET/PTP OVER PIPE
 		- For general usage refer to section 2.1. 
 		- In the "Search" dialog select "COM1004" in the port combo box and press
 		  "Add". This will add a PTP pipe created by the DemoServer. 
@@ -126,7 +137,7 @@
 		  far I haven't found any others easy accessible tools that also supports
 		  it. So I haven't been able to test it. It's implemented purely by doc.
 
-	2.4	BACNET/ETHERNET
+	2.5	BACNET/ETHERNET
 		- pcap/winpcap must be installed on the Pc before usage
 		       go to http://www.tcpdump.org/ or https://www.winpcap.org/
 		       or more simply download wireshark https://www.wireshark.org/#download

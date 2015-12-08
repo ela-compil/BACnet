@@ -97,6 +97,8 @@ namespace BasicServer
             // m_bacnet_client = new BacnetClient(new BacnetMstpProtocolTransport("COM4", 38400, 8);
             // Or Bacnet Ethernet
             // bacnet_client = new BacnetClient(new BacnetEthernetProtocolTransport("Connexion au réseau local"));    
+            // Or Bacnet on IPV6
+            // bacnet_client = new BacnetClient(new BacnetIpV6UdpProtocolTransport(0xBAC0));
 
             bacnet_client.OnWhoIs += new BacnetClient.WhoIsHandler(handler_OnWhoIs);
             bacnet_client.OnReadPropertyRequest += new BacnetClient.ReadPropertyRequestHandler(handler_OnReadPropertyRequest);
