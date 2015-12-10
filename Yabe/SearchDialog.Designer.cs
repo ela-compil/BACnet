@@ -110,14 +110,14 @@
             this.m_localUdpEndpointsCombo.FormattingEnabled = true;
             this.m_localUdpEndpointsCombo.Location = new System.Drawing.Point(98, 45);
             this.m_localUdpEndpointsCombo.Name = "m_localUdpEndpointsCombo";
-            this.m_localUdpEndpointsCombo.Size = new System.Drawing.Size(100, 21);
+            this.m_localUdpEndpointsCombo.Size = new System.Drawing.Size(170, 21);
             this.m_localUdpEndpointsCombo.TabIndex = 7;
             this.m_localUdpEndpointsCombo.Text = global::Yabe.Properties.Settings.Default.DefaultUdpIp;
             // 
             // m_AddUdpButton
             // 
             this.m_AddUdpButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.m_AddUdpButton.Location = new System.Drawing.Point(208, 44);
+            this.m_AddUdpButton.Location = new System.Drawing.Point(208, 16);
             this.m_AddUdpButton.Name = "m_AddUdpButton";
             this.m_AddUdpButton.Size = new System.Drawing.Size(60, 23);
             this.m_AddUdpButton.TabIndex = 6;

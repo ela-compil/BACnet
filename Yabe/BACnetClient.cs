@@ -805,7 +805,7 @@ namespace System.IO.BACnet
         {
             if (!(m_client is BacnetIpUdpProtocolTransport))
             {
-                Trace.TraceWarning("Wrong Transport : IP only");
+                Trace.TraceWarning("Wrong Transport : IPv4 only");
                 return;
             }
 
@@ -831,7 +831,7 @@ namespace System.IO.BACnet
         {
             if (!(m_client is BacnetIpUdpProtocolTransport))
             {
-                Trace.TraceWarning("Wrong Transport : IP only");
+                Trace.TraceWarning("Wrong Transport : IPv4 only");
                 return;
             }
 
