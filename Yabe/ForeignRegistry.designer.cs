@@ -47,11 +47,11 @@
             // 
             // label1
             // 
-            this.label1.Location = new System.Drawing.Point(31, 17);
+            this.label1.Location = new System.Drawing.Point(14, 17);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(156, 21);
+            this.label1.Size = new System.Drawing.Size(187, 21);
             this.label1.TabIndex = 1;
-            this.label1.Text = "Remote BBMD IP Endpoint";
+            this.label1.Text = "Remote BBMD IPv4, IPv6 Endpoint";
             this.label1.TextAlign = System.Drawing.ContentAlignment.TopCenter;
             // 
             // sendFDR

@@ -29,6 +29,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO.BACnet.Serialize;
 using System.Diagnostics;
+using System.Net.Sockets;
 
 namespace System.IO.BACnet
 {
@@ -803,37 +804,29 @@ namespace System.IO.BACnet
         // Modif FC
         public void RegisterAsForeignDevice(String BBMD_IP, short TTL, int Port = 0xbac0)
         {
-            if (!(m_client is BacnetIpUdpProtocolTransport))
-            {
-                Trace.TraceWarning("Wrong Transport : IPv4 only");
-                return;
-            }
+            bool sent = false;
 
             try
             {
                 System.Net.IPEndPoint ep = new Net.IPEndPoint(Net.IPAddress.Parse(BBMD_IP), Port);
 
-                EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);
-                (m_client as BacnetIpUdpProtocolTransport).Bvlc.Encode(b.buffer, 0, BacnetBvlcFunctions.BVLC_REGISTER_FOREIGN_DEVICE, 6);
-                b.buffer[4] = (byte)((TTL & 0xFF00) >> 8);
-                b.buffer[5] = (byte)(TTL & 0xFF);
+                // dynamic avoid reference to BacnetIpUdpProtocolTransport or BacnetIpV6UdpProtocolTransport classes
+                dynamic m_client_dyn = m_client;
+                sent = m_client_dyn.SendRegisterAsForeignDevice(ep, TTL);
 
-                Trace.WriteLine("Sending Register as a Foreign Device ... ", null);
-                (m_client as BacnetIpUdpProtocolTransport).Send(b.buffer, 6, ep);
+                if (sent==false)
+                    Trace.TraceWarning("The given address do not match with the IP version");
+                else
+                    Trace.WriteLine("Sending Register as a Foreign Device ... ", null);
             }
             catch (Exception ex)
             {
-                Trace.TraceError("Error on RegisterAsForeignDevice" + ex.Message);
+                Trace.TraceError("Error on RegisterAsForeignDevice (Wrong Transport, not IP ?)" + ex.Message);
             }
         }
 
         public void RemoteWhoIs(String BBMD_IP, int Port = 0xbac0, int low_limit = -1, int high_limit = -1)
         {
-            if (!(m_client is BacnetIpUdpProtocolTransport))
-            {
-                Trace.TraceWarning("Wrong Transport : IPv4 only");
-                return;
-            }
 
             try
             {
@@ -844,14 +837,21 @@ namespace System.IO.BACnet
                 NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, broadcast, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, 0);
                 APDU.EncodeUnconfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_WHO_IS);
                 Services.EncodeWhoIsBroadcast(b, low_limit, high_limit);
-                (m_client as BacnetIpUdpProtocolTransport).Bvlc.Encode(b.buffer, 0, BacnetBvlcFunctions.BVLC_DISTRIBUTE_BROADCAST_TO_NETWORK, b.offset);
+               
+                bool sent = false;
 
-                Trace.WriteLine("Sending Whois to remote BBMD ", null);
-                (m_client as BacnetIpUdpProtocolTransport).Send(b.buffer, b.offset, ep);
+                // dynamic avoid reference to BacnetIpUdpProtocolTransport or BacnetIpV6UdpProtocolTransport classes
+                dynamic m_client_dyn = m_client;
+                sent = m_client_dyn.SendRemoteWhois(b.buffer, ep, b.offset);
+
+                if (sent == false)
+                    Trace.TraceWarning("The given address do not match with the IP version");
+                else
+                    Trace.WriteLine("Sending Remote Whois ... ", null);
             }
             catch (Exception ex)
             {
-                Trace.TraceError("Sending Whois to remote BBMD " + ex.Message);
+                Trace.TraceError("Error on Sending Whois to remote BBMD (Wrong Transport, not IP ?)" + ex.Message);
             }
 
         }

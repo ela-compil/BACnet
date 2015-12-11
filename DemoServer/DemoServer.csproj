@@ -51,7 +51,7 @@
     <Compile Include="..\Yabe\BACnetTransport.cs">
       <Link>BACnetTransport.cs</Link>
     </Compile>
-    <Compile Include="..\..\Yabe\BACnetTransportIPv6.cs">
+    <Compile Include="..\Yabe\BACnetTransportIPv6.cs">
       <Link>BACnetTransportIPv6.cs</Link>
     </Compile>
     <Compile Include="DeviceStorage.cs" />

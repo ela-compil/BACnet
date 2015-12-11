@@ -45,6 +45,8 @@ namespace System.IO.BACnet
 
         private BVLCV6 bvlc;
 
+        public BVLCV6 Bvlc { get { return bvlc; } }
+
         private bool m_exclusive_port = false;
         private bool m_dont_fragment;
         private int m_max_payload;
@@ -63,11 +65,6 @@ namespace System.IO.BACnet
         public BacnetMaxAdpu MaxAdpuLength { get { return BVLCV6.BVLC_MAX_APDU; } }
         public byte MaxInfoFrames { get { return 0xff; } set { /* ignore */ } }     //the udp doesn't have max info frames
         public int MaxBufferLength { get { return m_max_payload; } }
-
-        public BVLCV6 Bvlc
-        {
-            get { return bvlc; }
-        }
 
         public BacnetIpV6UdpProtocolTransport(int port, int VMac=-1, bool use_exclusive_port = false, bool dont_fragment = false, int max_payload = 1472, string local_endpoint_ip = "")
         {
@@ -93,7 +90,7 @@ namespace System.IO.BACnet
 
         public override string ToString()
         {
-            return "UdpV6:" + m_port;
+            return "Udp IPv6:" + m_port;
         }
 
         private void Open()
@@ -214,6 +211,8 @@ namespace System.IO.BACnet
                         // Basic Header lenght
                         int HEADER_LENGTH = bvlc.Decode(local_buffer, 0, out function, out msg_length, ep, remote_address);
 
+                        if (HEADER_LENGTH == 0) return;
+
                         if (HEADER_LENGTH == -1)
                         {
                             Trace.WriteLine("Unknow BVLC Header");
@@ -323,6 +322,30 @@ namespace System.IO.BACnet
             }
         }
 
+        public bool SendRegisterAsForeignDevice (System.Net.IPEndPoint BBMD, short TTL)
+        {
+            if (BBMD.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
+            {
+                bvlc.SendRegisterAsForeignDevice(BBMD, TTL);
+                return true;
+            }
+            return false;
+        }
+        public bool SendRemoteWhois(byte[] buffer, System.Net.IPEndPoint BBMD, int msg_length)
+        {
+            if (BBMD.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6)
+            {
+                // This message was build using the default (10) header lenght, but it's smaller (7)
+                byte[] newBuffer = new byte[msg_length - 3];
+                Array.Copy(buffer, 3, newBuffer, 0, msg_length - 3);
+                msg_length -= 3;
+
+                bvlc.SendRemoteWhois(newBuffer, BBMD, msg_length);
+                return true;
+            }
+            return false;
+        }
+
         public static void Convert(System.Net.IPEndPoint ep, out BacnetAddress addr)
         {
             byte[] tmp1 = ep.Address.GetAddressBytes();
@@ -395,11 +418,11 @@ namespace System.IO.BACnet
 
     public enum BacnetBvlcV6Results : ushort
     {
-        BVLC_RESULT_SUCCESSFUL_COMPLETION = 0x0000,
-        BVLC_RESULT_ADDRESS_RESOLUTION_NAK = 0x0030,
-        BVLC_RESULT_VIRTUAL_ADDRESS_RESOLUTION_NAK = 0x0060,
-        BVLC_RESULT_REGISTER_FOREIGN_DEVICE_NAK = 0X0090,
-        BVLC_RESULT_DISTRIBUTE_BROADCAST_TO_NETWORK_NAK = 0x00B0
+        SUCCESSFUL_COMPLETION = 0x0000,
+        ADDRESS_RESOLUTION_NAK = 0x0030,
+        VIRTUAL_ADDRESS_RESOLUTION_NAK = 0x0060,
+        REGISTER_FOREIGN_DEVICE_NAK = 0X0090,
+        DISTRIBUTE_BROADCAST_TO_NETWORK_NAK = 0x00B0
     };
 
     // Only some elements here are really tested
@@ -429,7 +452,7 @@ namespace System.IO.BACnet
         {
             MyTransport = Transport;
             BroadcastAdd = MyTransport.GetBroadcastAddress();
-            VMAC = -1;
+
             if (VMAC == -1)
             {
                 RandomVmac = true;
@@ -437,9 +460,11 @@ namespace System.IO.BACnet
                 this.VMAC[0] = (byte)((this.VMAC[0] & 0x7F) | 0x40); // ensure 01xxxxxx on the High byte    
 
                 // Open with default interface specified, cannot send it or 
-                // it will generate an uncheckable continus local loopback
+                // it will generate an uncheckable continuous local loopback
                 if (!MyTransport.LocalEndPoint.ToString().Contains("[::]"))
                     SendAddressResolutionRequest(this.VMAC);
+                else
+                    RandomVmac = false; // back to false avoiding loop back
             }
             else // Device Id is the Vmac Id
             {
@@ -523,9 +548,9 @@ namespace System.IO.BACnet
         // Never tested
         private void Forward_NPDU(byte[] buffer, int msg_length, bool ToGlobalBroadcast, Net.IPEndPoint EPsender, BacnetAddress BacSender )
         {
-            // Forms the forwarded NPDU from the original one, and send it to all
+            // Forms the forwarded NPDU from the original (broadcast npdu), and send it to all
 
-            // copy, 18 bytes shifted
+            // copy, 18 bytes shifted (orignal bvlc header : 7 bytes, new one : 25 bytes)
             byte[] b = new byte[msg_length + 18];    // normaly only 'small' frames are present here, so no need to check if it's to big for Udp
             Array.Copy(buffer, 0, b, 18, msg_length);
 
@@ -567,6 +592,22 @@ namespace System.IO.BACnet
             MyTransport.Send(b, 9, sender);
         }
 
+        public void SendRegisterAsForeignDevice(System.Net.IPEndPoint BBMD, short TTL)
+        {
+            byte[] b = new byte[9];
+            First7BytesHeaderEncode(b, BacnetBvlcV6Functions.BVLC_REGISTER_FOREIGN_DEVICE, 9);
+            b[7] = (byte)((TTL & 0xFF00) >> 8);
+            b[8] = (byte)(TTL & 0xFF);
+            MyTransport.Send(b, 9, BBMD);
+        }
+
+        public void SendRemoteWhois(byte[] buffer, System.Net.IPEndPoint BBMD, int msg_length)
+        {
+            // 7 bytes for the BVLC Header
+            First7BytesHeaderEncode(buffer, BacnetBvlcV6Functions.BVLC_DISTRIBUTE_BROADCAST_TO_NETWORK, msg_length);
+            MyTransport.Send(buffer, msg_length, BBMD);
+        }
+
         // Send ack
         private void SendAddressResolutionAck(System.Net.IPEndPoint sender, byte[] VMacDest, BacnetBvlcV6Functions function)
         {
@@ -576,7 +617,7 @@ namespace System.IO.BACnet
             MyTransport.Send(b, 10, sender);
         }
 
-        // same frame as the previous one
+        // quite the same frame as the previous one
         private void SendAddressResolutionRequest(byte[] VMacDest)
         {
             IPEndPoint ep;
@@ -595,16 +636,15 @@ namespace System.IO.BACnet
 
             First7BytesHeaderEncode(buffer, function, msg_length);
 
-            // do the job
-            if (function == BacnetBvlcV6Functions.BVLC_ORIGINAL_BROADCAST_NPDU)
+            // BBMD service
+            if ((function == BacnetBvlcV6Functions.BVLC_ORIGINAL_BROADCAST_NPDU)&&(BBMD_FD_ServiceActivated==true))
             {
                 Net.IPEndPoint me = MyTransport.LocalEndPoint;
                 BacnetAddress Bacme;
                 BacnetIpV6UdpProtocolTransport.Convert(me, out Bacme);
+                Array.Copy(VMAC, Bacme.VMac, 3);
 
-                // optional BBMD service
-                if (BBMD_FD_ServiceActivated==true)
-                    Forward_NPDU(buffer, msg_length, false, me, Bacme);   // send to all BBMDs and FDs
+                Forward_NPDU(buffer, msg_length, false, me, Bacme);   // send to all BBMDs and FDs
 
                 return 7; // ready to send
             }
@@ -649,7 +689,7 @@ namespace System.IO.BACnet
                         SendAddressResolutionAck(sender,remote_address.VMac ,BacnetBvlcV6Functions.BVLC_ADDRESS_RESOLUTION_ACK);
                     return 0;  // not for the upper layers
                 case BacnetBvlcV6Functions.BVLC_FORWARDED_ADDRESS_RESOLUTION:
-                    // no need to verify the target VMAC
+                    // no need to verify the target VMAC, should be OK
                     SendAddressResolutionAck(sender,remote_address.VMac, BacnetBvlcV6Functions.BVLC_ADDRESS_RESOLUTION_ACK);
                     return 0;  // not for the upper layers
                 case BacnetBvlcV6Functions.BVLC_ADDRESS_RESOLUTION_ACK: // adresse conflict
@@ -665,15 +705,18 @@ namespace System.IO.BACnet
                     }
                     return 0;  // not for the upper layers
                 case BacnetBvlcV6Functions.BVLC_VIRTUAL_ADDRESS_RESOLUTION:
-                    // no need to verify the target VMAC
+                    // no need to verify the target VMAC, should be OK
                     SendAddressResolutionAck(sender, remote_address.VMac, BacnetBvlcV6Functions.BVLC_VIRTUAL_ADDRESS_RESOLUTION_ACK); 
                     return 0;  // not for the upper layers
                 case BacnetBvlcV6Functions.BVLC_VIRTUAL_ADDRESS_RESOLUTION_ACK:
                     return 0;  // not for the upper layers
-                case BacnetBvlcV6Functions.BVLC_FORWARDED_NPDU:   
+                case BacnetBvlcV6Functions.BVLC_FORWARDED_NPDU:
+                    if (MyTransport.LocalEndPoint.Equals(sender)) return 0;
+                    
                     // certainly TODO the same code I've put in the IPV4 implementation
                     if ((BBMD_FD_ServiceActivated == true) && (msg_length >= 25))
                     {
+
                         bool ret;
                         lock (BBMDs)
                             ret = BBMDs.Exists(items => items.Equals(sender));    // verify sender presence in the table
@@ -691,9 +734,14 @@ namespace System.IO.BACnet
                             MyTransport.Send(buffer, msg_length, ep);
                         }
                     }
-
                     return 25;  //only  for the upper layers
                 case BacnetBvlcV6Functions.BVLC_REGISTER_FOREIGN_DEVICE:
+                    if ((BBMD_FD_ServiceActivated == true) && (msg_length == 9))
+                    {
+                        int TTL = (buffer[7] << 8) + buffer[8]; // unit is second
+                        RegisterForeignDevice(sender, TTL);
+                        SendResult(sender, BacnetBvlcV6Results.SUCCESSFUL_COMPLETION);  // ack
+                    }
                     return 0;  // not for the upper layers
                 case BacnetBvlcV6Functions.BVLC_DELETE_FOREIGN_DEVICE_TABLE_ENTRY:
                     return -1;  // not for the upper layers    
@@ -708,7 +756,7 @@ namespace System.IO.BACnet
                             if (ForeignDevices.Exists(item => item.Key.Equals(sender))) // verify previous registration
                                 Forward_NPDU(buffer, msg_length, true, sender, remote_address);
                             else
-                                SendResult(sender, BacnetBvlcV6Results.BVLC_RESULT_DISTRIBUTE_BROADCAST_TO_NETWORK_NAK);
+                                SendResult(sender, BacnetBvlcV6Results.DISTRIBUTE_BROADCAST_TO_NETWORK_NAK);
                         }
                     }
                     return 0;  // not for the upper layers

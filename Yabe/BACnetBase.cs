@@ -3087,11 +3087,27 @@ namespace System.IO.BACnet.Serialize
         {
             byte[] b = new byte[6];
             First4BytesHeaderEncode (b, BacnetBvlcFunctions.BVLC_RESULT, 6);
-            b[4] = (byte)(((ushort)ResultCode&0xFF00)>>8); 
-            b[5] = (byte)((ushort)ResultCode&0xFF); 
+            b[4] = (byte)(((ushort)ResultCode & 0xFF00) >> 8);
+            b[5] = (byte)((ushort)ResultCode & 0xFF);
+
             MyBBMDTransport.Send(b, 6, sender);
         }
 
+        public void SendRegisterAsForeignDevice (System.Net.IPEndPoint BBMD, short TTL)
+        {
+            byte[] b = new byte[6];
+            First4BytesHeaderEncode(b, BacnetBvlcFunctions.BVLC_REGISTER_FOREIGN_DEVICE, 6);
+            b[4] = (byte)((TTL & 0xFF00) >> 8);
+            b[5] = (byte)(TTL & 0xFF);
+            MyBBMDTransport.Send(b, 6, BBMD);
+        }
+
+        public void SendRemoteWhois(byte[] buffer, System.Net.IPEndPoint BBMD, int msg_length)
+        {
+            Encode(buffer, 0, BacnetBvlcFunctions.BVLC_DISTRIBUTE_BROADCAST_TO_NETWORK, msg_length);
+            MyBBMDTransport.Send(buffer, msg_length, BBMD);
+
+        }
         // Encode is called by internal services if the BBMD is also an active device
         public int Encode(byte[] buffer, int offset, BacnetBvlcFunctions function, int msg_length)
         {

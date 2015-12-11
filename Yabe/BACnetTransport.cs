@@ -62,6 +62,8 @@ namespace System.IO.BACnet
 
         private BVLC bvlc;
 
+        public BVLC Bvlc { get { return bvlc; } }
+
         private bool m_exclusive_port = false;
         private bool m_dont_fragment;
         private int m_max_payload;
@@ -76,11 +78,6 @@ namespace System.IO.BACnet
         public BacnetMaxAdpu MaxAdpuLength { get { return BVLC.BVLC_MAX_APDU; } }
         public byte MaxInfoFrames { get { return 0xff; } set { /* ignore */ } }     //the udp doesn't have max info frames
         public int MaxBufferLength { get { return m_max_payload; } }
-
-        public BVLC Bvlc
-        {
-            get { return bvlc; }
-        }
 
         public BacnetIpUdpProtocolTransport(int port, bool use_exclusive_port = false, bool dont_fragment = false, int max_payload = 1472, string local_endpoint_ip = "")
         {
@@ -259,6 +256,25 @@ namespace System.IO.BACnet
                     conn.BeginReceive(OnReceiveData, conn);
                 }
             }
+        }
+
+        public bool SendRegisterAsForeignDevice(System.Net.IPEndPoint BBMD, short TTL)
+        {
+            if (BBMD.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+            {
+                bvlc.SendRegisterAsForeignDevice(BBMD, TTL);
+                return true;
+            }
+            return false;
+        }
+        public bool SendRemoteWhois(byte[] buffer, System.Net.IPEndPoint BBMD, int msg_length)
+        {
+            if (BBMD.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
+            {
+                bvlc.SendRemoteWhois(buffer, BBMD, msg_length);
+                return true;
+            }
+            return false;
         }
 
         public bool WaitForAllTransmits(int timeout)

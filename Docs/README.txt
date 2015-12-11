@@ -103,16 +103,18 @@
 		- To send out a new "WhoIs" right click the transport in the "Devices" tree
 		  and select "WhoIs".
 
-	2.2 BACNET/IP V6 over UDP
-		- Experimental, not tested, Wireshark don't help also.
-
+	2.2 BACNET/IPv6 over UDP
+		- Experimental NOT TESTED with third party device or software, and 
+		  unfortunately Wireshark don't help also.
 		- Start Yabe.
 		- In the Options/settings menu set IPv6_support to true
 		- Do the same as explain in 2.1, but the Local endpoint combo box shows now
-		  IpV4 & IPv6 available interfaces. Choose an IPv6 one.	If the combo is empty
-		  it's always IPv4 !
-		- If the option YabeDeviceId is -1, a random VMac (without duplication test)
+		  IpV4 & IPv6 available interfaces. Choose an IPv6 one (the [FE80::...] will
+		  be generaly OK, or simply try [::] ). If the combo is empty it's equal to
+		  the default IPv4 address !
+		- If the option YabeDeviceId is -1, a random VMac (with duplication test)
 		  is used.
+		- Register as a foreign device & BBMD services also working on IPv6.
 
 	2.3 BACNET/MSTP OVER PIPE
 		- For general usage refer to section 2.1. 
