@@ -686,7 +686,9 @@ namespace System.IO.BACnet
                 case BacnetBvlcV6Functions.BVLC_ADDRESS_RESOLUTION:
                     // need to verify that the VMAC is mine
                     if ((VMAC[0]==buffer[7])&&(VMAC[1]==buffer[8])&&(VMAC[2]==buffer[9]))
-                        SendAddressResolutionAck(sender,remote_address.VMac ,BacnetBvlcV6Functions.BVLC_ADDRESS_RESOLUTION_ACK);
+                        // coming from myself ? avoid loopback
+                        if (!MyTransport.LocalEndPoint.Equals(sender))
+                            SendAddressResolutionAck(sender,remote_address.VMac ,BacnetBvlcV6Functions.BVLC_ADDRESS_RESOLUTION_ACK);
                     return 0;  // not for the upper layers
                 case BacnetBvlcV6Functions.BVLC_FORWARDED_ADDRESS_RESOLUTION:
                     // no need to verify the target VMAC, should be OK
@@ -695,17 +697,12 @@ namespace System.IO.BACnet
                 case BacnetBvlcV6Functions.BVLC_ADDRESS_RESOLUTION_ACK: // adresse conflict
                     if ((VMAC[0] == buffer[4]) && (VMAC[1] == buffer[5]) && (VMAC[2] == buffer[6]) && RandomVmac)
                     {
-                        // coming from myself ? avoid loopback
-                        if (!MyTransport.LocalEndPoint.Equals(sender))
-                        {
-                            new Random().NextBytes(this.VMAC);
-                            this.VMAC[0] = (byte)((this.VMAC[0] & 0x7F) | 0x40);
-                            SendAddressResolutionRequest(VMAC);
-                        }
+                        new Random().NextBytes(this.VMAC);
+                        this.VMAC[0] = (byte)((this.VMAC[0] & 0x7F) | 0x40);
+                        SendAddressResolutionRequest(VMAC);
                     }
                     return 0;  // not for the upper layers
                 case BacnetBvlcV6Functions.BVLC_VIRTUAL_ADDRESS_RESOLUTION:
-                    // no need to verify the target VMAC, should be OK
                     SendAddressResolutionAck(sender, remote_address.VMac, BacnetBvlcV6Functions.BVLC_VIRTUAL_ADDRESS_RESOLUTION_ACK); 
                     return 0;  // not for the upper layers
                 case BacnetBvlcV6Functions.BVLC_VIRTUAL_ADDRESS_RESOLUTION_ACK:
@@ -734,7 +731,7 @@ namespace System.IO.BACnet
                             MyTransport.Send(buffer, msg_length, ep);
                         }
                     }
-                    return 25;  //only  for the upper layers
+                    return 25;  // for the upper layers
                 case BacnetBvlcV6Functions.BVLC_REGISTER_FOREIGN_DEVICE:
                     if ((BBMD_FD_ServiceActivated == true) && (msg_length == 9))
                     {
@@ -744,9 +741,9 @@ namespace System.IO.BACnet
                     }
                     return 0;  // not for the upper layers
                 case BacnetBvlcV6Functions.BVLC_DELETE_FOREIGN_DEVICE_TABLE_ENTRY:
-                    return -1;  // not for the upper layers    
+                    return 0;  // not for the upper layers    
                 case BacnetBvlcV6Functions.BVLC_SECURE_BVLC:
-                    return -1;  // not for the upper layers
+                    return 0;  // not for the upper layers
                 case BacnetBvlcV6Functions.BVLC_DISTRIBUTE_BROADCAST_TO_NETWORK:  // Sent by a Foreign Device, not a BBMD
                     if (BBMD_FD_ServiceActivated == true)
                     {

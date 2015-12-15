@@ -5,6 +5,9 @@ using System.Text;
 using System.Windows.Forms;
 using System.IO.BACnet;
 using System.Threading;
+using System.Net;
+using System.Linq;
+using System.Net.Sockets;
 
 namespace Yabe
 {
@@ -28,15 +31,41 @@ namespace Yabe
         }
         private void sendFDR_Click(object sender, EventArgs e)
         {
-            client.RegisterAsForeignDevice(BBMD_IP.Text, 30, PortNumber());
-            Thread.Sleep(50);
-            client.RemoteWhoIs(BBMD_IP.Text, PortNumber());
-            SendWhois.Enabled = true;
+            try
+            {
+                IPAddress[] IPs = Dns.GetHostAddresses(BBMD_IP.Text);
+
+                IPAddress IP;
+
+                if (client.Transport is BacnetIpUdpProtocolTransport)
+                    IP = IPs.First<IPAddress>(o => o.AddressFamily == AddressFamily.InterNetwork);
+                else
+                    IP = IPs.First<IPAddress>(o => o.AddressFamily == AddressFamily.InterNetworkV6);
+
+                client.RegisterAsForeignDevice(IP.ToString(), 30, PortNumber());
+                Thread.Sleep(50);
+                client.RemoteWhoIs(IP.ToString(), PortNumber());
+                SendWhois.Enabled = true;
+            }
+            catch { }
         }
 
         private void SendWhois_Click(object sender, EventArgs e)
         {
-            client.RemoteWhoIs(BBMD_IP.Text, PortNumber());
+            try
+            {
+                IPAddress[] IPs = Dns.GetHostAddresses(BBMD_IP.Text);
+
+                IPAddress IP;
+
+                if (client.Transport is BacnetIpUdpProtocolTransport)
+                    IP = IPs.First<IPAddress>(o => o.AddressFamily == AddressFamily.InterNetwork);
+                else
+                    IP = IPs.First<IPAddress>(o => o.AddressFamily == AddressFamily.InterNetworkV6);
+
+                client.RemoteWhoIs(IP.ToString(), PortNumber());
+            }
+            catch { }
         }
 
         private void BBMD_IP_KeyDown(object sender, KeyEventArgs e)

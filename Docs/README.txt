@@ -59,7 +59,7 @@
 		A few patches and input has been given by the community.
 		F. Chaxel has contributed a lot of the later additions (eg Foreign Device
 		Registration, BBMD services, TrendLog & Schedule display, Calendar editor,
-		Alarms summary, Bacnet on Ethernet).
+		Alarms summary, Bacnet on Ethernet, Bacnet IPv6).
 		Graphics are the usual FamFamFam: http://www.famfamfam.com/
 		Serializing (most/some) is ported from project by Steve Karg:
 		http://bacnet.sourceforge.net/
@@ -68,7 +68,7 @@
 		Zedgraph come from http://sourceforge.net/projects/zedgraph/
 		Calendar control come from :
 		http://www.codeproject.com/Articles/38699/A-Professional-Calendar-Agenda-View-That-You-Will
-		Sharppcap comme from : http://sourceforge.net/projects/sharppcap/
+		Sharppcap come from : http://sourceforge.net/projects/sharppcap/
 
 2.  USAGE
 
@@ -114,7 +114,11 @@
 		  the default IPv4 address !
 		- If the option YabeDeviceId is -1, a random VMac (with duplication test)
 		  is used.
-		- Register as a foreign device & BBMD services also working on IPv6.
+		- Register as a foreign device & BBMD services also working on IPv6. In the
+		  Foreign Device Registry form one can give an IPv6 remote address or also
+		  the host name.
+
+		- Feedback is very welcome.
 
 	2.3 BACNET/MSTP OVER PIPE
 		- For general usage refer to section 2.1. 
