@@ -41,7 +41,8 @@ namespace DemoBBMD
 
     static class BacnetActivity
     {
-        static BacnetIpUdpProtocolTransport udp_transport;
+        static BacnetIpUdpProtocolTransport udp_transport=null;
+        static BacnetIpV6UdpProtocolTransport udp_transportV6=null;
         private static BacnetClient m_ip_server;
         private static Dictionary<BacnetObjectId, List<Subscription>> m_subscriptions = new Dictionary<BacnetObjectId, List<Subscription>>();
         private static object m_lockObject = new object();
@@ -76,6 +77,12 @@ namespace DemoBBMD
                 // not specifying the local_endpoint_ip is a little bugy problem for broadcast when exists multiple active interfaces
                 // with some chance it's Ok !
                 udp_transport = new BacnetIpUdpProtocolTransport(0xBAC0, true);
+
+                // For IPV6, uncomment this, and comment out the previous line
+                // 187 is the device id : see DeviceStorage.xml
+                //udp_transportV6 = new BacnetIpV6UdpProtocolTransport(0xBAC0, 187, true);
+                
+                
                 m_ip_server = new BacnetClient(udp_transport);
 
                 m_ip_server.OnWhoIs += new BacnetClient.WhoIsHandler(OnWhoIs);
@@ -105,12 +112,18 @@ namespace DemoBBMD
 
         public static string GetFDList()
         {
-            return udp_transport.Bvlc.FDList();
+            if (udp_transport != null)
+                return udp_transport.Bvlc.FDList();
+            else
+                return "";
         }
 
         public static void AddPeerBBMD(IPEndPoint BBMD, IPAddress Mask)
         {
-            udp_transport.Bvlc.AddBBMDPeer(BBMD, Mask);
+            if (udp_transport != null)
+                udp_transport.Bvlc.AddBBMDPeer(BBMD, Mask);
+            else
+                udp_transportV6.Bvlc.AddBBMDPeer(BBMD);
         }
 
         public static BacnetValue GetBacObjectPresentValue(BacnetObjectId id)

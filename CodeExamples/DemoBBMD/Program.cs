@@ -34,6 +34,8 @@ using System.Net;
 using System.IO;
 using System.Diagnostics;
 
+// See BacnetActivity arround line 83 to swith form IPV4 to IPV6
+
 namespace DemoBBMD
 {
     class Program
