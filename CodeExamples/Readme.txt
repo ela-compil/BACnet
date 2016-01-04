@@ -89,7 +89,8 @@ RaspberrySample
 
 	Also OBJECT_ANALOG_INPUT:0 get the CPU temperature
 
-	Mono should be installed, and to start the code in sudo mode : 
+	Mono should be installed (mono complete not mono runtime it's not enough !), 
+	and to start the code in sudo mode : 
 		sudo mono ./RaspberrySample.exe
 	DeviceDescriptor.xml must be in the application directory
 
