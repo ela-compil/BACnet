@@ -125,7 +125,10 @@ namespace AnotherStorageImplementation
             ana0.Enable_Reporting(true, 0);
             
             device.AddBacnetObject(ana0);   // don't forget to do this
-            
+          
+            // Binary Output
+            device.AddBacnetObject (new BinaryOutput(0, "Bin Out", "An output", false));
+
             // Create A StructuredView
             StructuredView s = new StructuredView(0, "Content","A View");
             // register it

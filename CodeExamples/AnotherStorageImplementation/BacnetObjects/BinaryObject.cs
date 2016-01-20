@@ -74,10 +74,13 @@ namespace BaCSharp
             {
                 if (m_PRESENT_VALUE_ReadOnly == false)
                 {
-                    if (((value == 0) || (value == 1))&&(value!=m_PROP_PRESENT_VALUE))
+                    if (((value == 0) || (value == 1)))
                     {
-                        m_PROP_PRESENT_VALUE = value;
-                        ExternalCOVManagement(BacnetPropertyIds.PROP_PRESENT_VALUE);
+                        if (value != m_PROP_PRESENT_VALUE)
+                        {
+                            m_PROP_PRESENT_VALUE = value;
+                            ExternalCOVManagement(BacnetPropertyIds.PROP_PRESENT_VALUE);
+                        }
                     }
                     else
                         ErrorCode_PropertyWrite = ErrorCodes.OutOfRange;
