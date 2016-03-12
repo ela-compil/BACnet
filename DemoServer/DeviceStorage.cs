@@ -29,6 +29,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO.BACnet;
 using System.Reflection;
+using System.Linq;
 
 namespace System.IO.BACnet.Storage
 {
