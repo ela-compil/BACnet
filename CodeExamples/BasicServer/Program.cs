@@ -101,7 +101,6 @@ namespace BasicServer
             // bacnet_client = new BacnetClient(new BacnetIpV6UdpProtocolTransport(0xBAC0));
 
             bacnet_client.OnWhoIs += new BacnetClient.WhoIsHandler(handler_OnWhoIs);
-            bacnet_client.OnWhoHas += new BacnetClient.WhoHasHandler(bacnet_client_OnWhoHas);
             bacnet_client.OnIam += new BacnetClient.IamHandler(bacnet_client_OnIam);
             bacnet_client.OnReadPropertyRequest += new BacnetClient.ReadPropertyRequestHandler(handler_OnReadPropertyRequest);
             bacnet_client.OnReadPropertyMultipleRequest += new BacnetClient.ReadPropertyMultipleRequestHandler(handler_OnReadPropertyMultipleRequest);
@@ -117,53 +116,7 @@ namespace BasicServer
         {
             //ignore Iams from other devices. (Also loopbacks)
         }
-
-        /*****************************************************************************************************/
-        // OnWhoHas by thamersalek
-        static void bacnet_client_OnWhoHas(BacnetClient sender, BacnetAddress adr, int low_limit, int high_limit, BacnetObjectId ObjId, string ObjName)
-        {
-            if ((low_limit == -1 && high_limit == -1) || (m_storage.DeviceId >= low_limit && m_storage.DeviceId <= high_limit))
-            {
-                BacnetObjectId deviceid1 = new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, m_storage.DeviceId);
-                BacnetObjectId objid1 = new BacnetObjectId((BacnetObjectTypes)ObjId.Type, ObjId.Instance);
-                lock (m_storage)
-                {
-                    if (objid1.Instance == 0x3FFFFF && ObjName != "")
-                    {
-                        
-                        foreach (System.IO.BACnet.Storage.Object OBJ in m_storage.Objects)
-                        {
-                            
-                            foreach (Property p in OBJ.Properties)
-                            {
-                                
-                                if (!(p.Tag==BacnetApplicationTags.BACNET_APPLICATION_TAG_NULL))
-                                {
-                                    if (p.Value[0] == ObjName)
-                                    {
-                                        BacnetObjectId objid2 = new BacnetObjectId((BacnetObjectTypes)OBJ.Type, OBJ.Instance);
-                                        bacnet_client.IHave(deviceid1, objid2, ObjName);
-                                    }
-
-                                }
-                            }
-                        }
-                        
-                    }
-
-                    else if (ObjName == "")
-                    {
-                        System.IO.BACnet.Storage.Object obj = m_storage.FindObject(ObjId);
-                        if (!(obj == null))
-                        {
-                            bacnet_client.IHave(deviceid1, objid1, ObjName);
-                        }
-
-                    }
-                    
-                }
-            }
-        }
+        
         /*****************************************************************************************************/
         static void handler_OnWritePropertyRequest(BacnetClient sender, BacnetAddress adr, byte invoke_id, BacnetObjectId object_id, BacnetPropertyValue value, BacnetMaxSegments max_segments)
         {

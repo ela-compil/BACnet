@@ -57,6 +57,7 @@ namespace DemoServer
                 BacnetIpUdpProtocolTransport udp_transport = new BacnetIpUdpProtocolTransport(0xBAC0, false);       //set to true to force "single socket" usage
                 m_ip_server = new BacnetClient(udp_transport);
                 m_ip_server.OnWhoIs += new BacnetClient.WhoIsHandler(OnWhoIs);
+                m_ip_server.OnWhoHas += new BacnetClient.WhoHasHandler(OnWhoHas);
                 m_ip_server.OnReadPropertyRequest += new BacnetClient.ReadPropertyRequestHandler(OnReadPropertyRequest);
                 m_ip_server.OnWritePropertyRequest += new BacnetClient.WritePropertyRequestHandler(OnWritePropertyRequest);
                 m_ip_server.OnReadPropertyMultipleRequest += new BacnetClient.ReadPropertyMultipleRequestHandler(OnReadPropertyMultipleRequest);
@@ -78,6 +79,7 @@ namespace DemoServer
                 mstp_transport.StateLogging = false;        //if you enable this, it will display a lot of information about the StateMachine
                 m_mstp_server = new BacnetClient(mstp_transport);
                 m_mstp_server.OnWhoIs += new BacnetClient.WhoIsHandler(OnWhoIs);
+                m_mstp_server.OnWhoHas += new BacnetClient.WhoHasHandler(OnWhoHas);
                 m_mstp_server.OnReadPropertyRequest += new BacnetClient.ReadPropertyRequestHandler(OnReadPropertyRequest);
                 m_mstp_server.OnWritePropertyRequest += new BacnetClient.WritePropertyRequestHandler(OnWritePropertyRequest);
                 m_mstp_server.OnReadPropertyMultipleRequest += new BacnetClient.ReadPropertyMultipleRequestHandler(OnReadPropertyMultipleRequest);
@@ -99,6 +101,7 @@ namespace DemoServer
                 ptp_transport.StateLogging = false;        //if you enable this, it will display a lot of information
                 m_ptp_server = new BacnetClient(ptp_transport);
                 m_ptp_server.OnWhoIs += new BacnetClient.WhoIsHandler(OnWhoIs);
+                m_ptp_server.OnWhoHas += new BacnetClient.WhoHasHandler(OnWhoHas);
                 m_ptp_server.OnReadPropertyRequest += new BacnetClient.ReadPropertyRequestHandler(OnReadPropertyRequest);
                 m_ptp_server.OnWritePropertyRequest += new BacnetClient.WritePropertyRequestHandler(OnWritePropertyRequest);
                 m_ptp_server.OnReadPropertyMultipleRequest += new BacnetClient.ReadPropertyMultipleRequestHandler(OnReadPropertyMultipleRequest);
@@ -206,6 +209,52 @@ namespace DemoServer
             //ignore Iams from other devices. (Also loopbacks)
         }
 
+        /*****************************************************************************************************/
+        // OnWhoHas by thamersalek
+        static void OnWhoHas(BacnetClient sender, BacnetAddress adr, int low_limit, int high_limit, BacnetObjectId ObjId, string ObjName)
+        {
+            if ((low_limit == -1 && high_limit == -1) || (m_storage.DeviceId >= low_limit && m_storage.DeviceId <= high_limit))
+            {
+                BacnetObjectId deviceid1 = new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, m_storage.DeviceId);
+                BacnetObjectId objid1 = new BacnetObjectId((BacnetObjectTypes)ObjId.Type, ObjId.Instance);
+                lock (m_storage)
+                {
+                    if (objid1.Instance == 0x3FFFFF && ObjName != "")
+                    {
+
+                        foreach (System.IO.BACnet.Storage.Object OBJ in m_storage.Objects)
+                        {
+
+                            foreach (Property p in OBJ.Properties)
+                            {
+
+                                if (!(p.Tag == BacnetApplicationTags.BACNET_APPLICATION_TAG_NULL))
+                                {
+                                    if (p.Value[0] == ObjName)
+                                    {
+                                        BacnetObjectId objid2 = new BacnetObjectId((BacnetObjectTypes)OBJ.Type, OBJ.Instance);
+                                        sender.IHave(deviceid1, objid2, ObjName);
+                                    }
+
+                                }
+                            }
+                        }
+
+                    }
+
+                    else if (ObjName == "")
+                    {
+                        System.IO.BACnet.Storage.Object obj = m_storage.FindObject(ObjId);
+                        if (!(obj == null))
+                        {
+                            sender.IHave(deviceid1, objid1, ObjName);
+                        }
+
+                    }
+
+                }
+            }
+        }
         /// <summary>
         /// This function is for overriding some of the default responses. Meaning that it's for ugly hacks!
         /// You'll need this kind of 'dynamic' function when working with storages that're static by nature.
@@ -278,6 +327,7 @@ namespace DemoServer
                 b.SetBit((byte)BacnetServicesSupported.MAX_BACNET_SERVICES_SUPPORTED, false); //set all false
                 b.SetBit((byte)BacnetServicesSupported.SERVICE_SUPPORTED_I_AM, true);
                 b.SetBit((byte)BacnetServicesSupported.SERVICE_SUPPORTED_WHO_IS, true);
+                b.SetBit((byte)BacnetServicesSupported.SERVICE_SUPPORTED_WHO_HAS, true);
                 b.SetBit((byte)BacnetServicesSupported.SERVICE_SUPPORTED_READ_PROP_MULTIPLE, true);
                 b.SetBit((byte)BacnetServicesSupported.SERVICE_SUPPORTED_READ_PROPERTY, true);
                 b.SetBit((byte)BacnetServicesSupported.SERVICE_SUPPORTED_WRITE_PROPERTY, true);
