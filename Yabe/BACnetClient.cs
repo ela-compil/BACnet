@@ -382,6 +382,8 @@ namespace System.IO.BACnet
 
         public delegate void UnconfirmedServiceRequestHandler(BacnetClient sender, BacnetAddress adr, BacnetPduTypes type, BacnetUnconfirmedServices service, byte[] buffer, int offset, int length);
         public event UnconfirmedServiceRequestHandler OnUnconfirmedServiceRequest;
+        public delegate void WhoHasHandler(BacnetClient sender, BacnetAddress adr, int low_limit, int high_limit, BacnetObjectId ObjId, string ObjName);
+        public event WhoHasHandler OnWhoHas;
         public delegate void IamHandler(BacnetClient sender, BacnetAddress adr, UInt32 device_id, UInt32 max_apdu, BacnetSegmentations segmentation, UInt16 vendor_id);
         public event IamHandler OnIam;
         public delegate void WhoIsHandler(BacnetClient sender, BacnetAddress adr, int low_limit, int high_limit);
@@ -418,6 +420,19 @@ namespace System.IO.BACnet
                         OnWhoIs(this, adr, low_limit, high_limit);
                     else
                         Trace.TraceWarning("Couldn't decode WhoIsBroadcast");
+                }
+                // added by thamersalek
+                else if (service == BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_WHO_HAS && OnWhoHas != null)
+                {
+                    int low_limit;
+                    int high_limit;
+                    BacnetObjectId ObjId;
+                    string ObjName;
+
+                    if (Services.DecodeWhoHasBroadcast(buffer, offset, length, out low_limit, out high_limit, out ObjId, out ObjName) >= 0)
+                        OnWhoHas(this, adr, low_limit, high_limit, ObjId, ObjName);
+                    else
+                        Trace.TraceWarning("Couldn't decode WhoHasBroadcast");
                 }
                 else if (service == BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_COV_NOTIFICATION && OnCOVNotification != null)
                 {
@@ -887,6 +902,20 @@ namespace System.IO.BACnet
             Services.EncodeIamBroadcast(b, device_id, (uint)GetMaxApdu(), segmentation, m_vendor_id);
 
             m_client.Send(b.buffer, m_client.HeaderLength, b.offset - m_client.HeaderLength, broadcast, false, 0);
+        }
+
+        public void IHave(BacnetObjectId device_id, BacnetObjectId ObjId, string ObjName)
+        {
+            Trace.WriteLine("Sending IHave ... ", null);
+
+            EncodeBuffer b = GetEncodeBuffer(m_client.HeaderLength);
+            BacnetAddress broadcast = m_client.GetBroadcastAddress();
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, broadcast, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, 0);
+            APDU.EncodeUnconfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_I_HAVE);
+            Services.EncodeIhaveBroadcast(b, device_id, ObjId, ObjName);
+
+            m_client.Send(b.buffer, m_client.HeaderLength, b.offset - m_client.HeaderLength, broadcast, false, 0);
+
         }
 
         public void SendUnconfirmedEventNotification(BacnetAddress adr, BacnetEventNotificationData eventData)

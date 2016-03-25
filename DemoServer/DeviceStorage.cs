@@ -91,7 +91,7 @@ namespace System.IO.BACnet.Storage
             return null;
         }
 
-        private Object FindObject(BacnetObjectId object_id)
+        public Object FindObject(BacnetObjectId object_id)
         {
             //liniear search
             foreach (Object obj in Objects)
