@@ -127,7 +127,7 @@ namespace DemoServer
                 //send greeting
                 m_ip_server.Iam(m_storage.DeviceId, m_supported_segmentation);
                 m_mstp_server.Iam(m_storage.DeviceId, m_supported_segmentation);
-
+                
                 //endless loop of nothing
                 Console.WriteLine("Press the ANY key to exit!");
                 while (!Console.KeyAvailable)
@@ -216,38 +216,42 @@ namespace DemoServer
             if ((low_limit == -1 && high_limit == -1) || (m_storage.DeviceId >= low_limit && m_storage.DeviceId <= high_limit))
             {
                 BacnetObjectId deviceid1 = new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, m_storage.DeviceId);
-                BacnetObjectId objid1 = new BacnetObjectId((BacnetObjectTypes)ObjId.Type, ObjId.Instance);
+
                 lock (m_storage)
                 {
-                    if (objid1.Instance == 0x3FFFFF && ObjName != "")
+                    if (ObjName != null)
                     {
-
-                        foreach (System.IO.BACnet.Storage.Object OBJ in m_storage.Objects)
+                         foreach (System.IO.BACnet.Storage.Object Obj in m_storage.Objects)
                         {
-
-                            foreach (Property p in OBJ.Properties)
+                            foreach (Property p in Obj.Properties)
                             {
-
-                                if (!(p.Tag == BacnetApplicationTags.BACNET_APPLICATION_TAG_NULL))
-                                {
-                                    if (p.Value[0] == ObjName)
+                                if (p.Id==BacnetPropertyIds.PROP_OBJECT_NAME) // only Object Name property
+                                    if (p.Tag == BacnetApplicationTags.BACNET_APPLICATION_TAG_CHARACTER_STRING) // it should be
                                     {
-                                        BacnetObjectId objid2 = new BacnetObjectId((BacnetObjectTypes)OBJ.Type, OBJ.Instance);
-                                        sender.IHave(deviceid1, objid2, ObjName);
+                                        if (p.Value[0] == ObjName)
+                                        {
+                                            BacnetObjectId objid2 = new BacnetObjectId((BacnetObjectTypes)Obj.Type, Obj.Instance);
+                                            sender.IHave(deviceid1, objid2, ObjName);
+                                            return; // done
+                                        }
                                     }
-
-                                }
                             }
                         }
 
                     }
-
-                    else if (ObjName == "")
+                    else
                     {
                         System.IO.BACnet.Storage.Object obj = m_storage.FindObject(ObjId);
-                        if (!(obj == null))
+                        if (obj != null)
                         {
-                            sender.IHave(deviceid1, objid1, ObjName);
+                            foreach (Property p in obj.Properties) // object name is mandatory
+                            {
+                                if ((p.Id == BacnetPropertyIds.PROP_OBJECT_NAME)&&(p.Tag == BacnetApplicationTags.BACNET_APPLICATION_TAG_CHARACTER_STRING))
+                                {
+                                    sender.IHave(deviceid1, ObjId, p.Value[0]);
+                                    return; // done
+                                }
+                            }
                         }
 
                     }

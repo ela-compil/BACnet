@@ -6253,9 +6253,9 @@ namespace System.IO.BACnet.Serialize
             int len = 0;
             byte tag_number;
             uint len_value;
-           uint decoded_value;
+            uint decoded_value;
 
-            ObjName = "";
+            ObjName = null;
             ObjId = new BacnetObjectId(BacnetObjectTypes.OBJECT_BINARY_OUTPUT, 0x3FFFFF);
             low_limit = -1;
             high_limit = -1;
@@ -6263,36 +6263,34 @@ namespace System.IO.BACnet.Serialize
             uint ObjInst;
 
             len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value);
-            
-            
-                if (tag_number == 0)
-                {
-                    len += ASN1.decode_unsigned(buffer, offset + len, len_value, out decoded_value);
-                    if (decoded_value <= ASN1.BACNET_MAX_INSTANCE)
-                        low_limit = (int)decoded_value;
-                    len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value);
-                }
+                      
+            if (tag_number == 0)
+            {
+                len += ASN1.decode_unsigned(buffer, offset + len, len_value, out decoded_value);
+                if (decoded_value <= ASN1.BACNET_MAX_INSTANCE)
+                    low_limit = (int)decoded_value;
+                len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value);
+            }
 
-                if (tag_number == 1)
-                {
-                    len += ASN1.decode_unsigned(buffer, offset + len, len_value, out decoded_value);
-                    if (decoded_value <= ASN1.BACNET_MAX_INSTANCE)
-                        high_limit = (int)decoded_value;
-                    len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value);
-                }
+            if (tag_number == 1)
+            {
+                len += ASN1.decode_unsigned(buffer, offset + len, len_value, out decoded_value);
+                if (decoded_value <= ASN1.BACNET_MAX_INSTANCE)
+                    high_limit = (int)decoded_value;
+                len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value);
+            }
 
-                if (tag_number == 2)
-                {
-                    len += ASN1.decode_object_id(buffer, offset + len, out ObjType, out ObjInst);
-                    ObjId = new BacnetObjectId((BacnetObjectTypes)ObjType, ObjInst);
-                }
+            if (tag_number == 2)
+            {
+                len += ASN1.decode_object_id(buffer, offset + len, out ObjType, out ObjInst);
+                ObjId = new BacnetObjectId((BacnetObjectTypes)ObjType, ObjInst);
+            }
 
-                if (tag_number == 3)
-                {
-                    len += ASN1.decode_character_string(buffer, offset + len, apdu_len - (offset + len), len_value, out ObjName);
+            if (tag_number == 3)
+            {
+                len += ASN1.decode_character_string(buffer, offset + len, apdu_len - (offset + len), len_value, out ObjName);
 
-                }
-                                   
+            }                                
             
             return len;
         }
