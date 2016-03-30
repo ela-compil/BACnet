@@ -2216,6 +2216,8 @@ namespace System.IO.BACnet
                             adr[4] = (byte)((Port & 0xff00) >> 8);
                             adr[5] = (byte)(Port & 0xff);
                         }
+                        else
+                            throw new Exception();
                     }
                     catch { throw new Exception(); }
                    break;

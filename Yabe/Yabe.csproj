@@ -23,6 +23,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>true</UseVSHostingProcess>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -94,6 +95,7 @@
     <Compile Include="ForeignRegistry.designer.cs">
       <DependentUpon>ForeignRegistry.cs</DependentUpon>
     </Compile>
+    <Compile Include="GenericInputBox.cs" />
     <Compile Include="MainDialog.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -234,6 +236,7 @@
     <None Include="Resources\database_edit.png" />
     <None Include="Resources\database_delete.png" />
     <None Include="Resources\text_smallcaps.png" />
+    <None Include="Resources\find.png" />
     <Content Include="Search.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

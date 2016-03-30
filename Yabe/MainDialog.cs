@@ -2017,6 +2017,45 @@ namespace Yabe
             }
         }
 
+        private void AddRemoteIpToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            //fetch end point
+            BacnetClient comm = null;
+            try
+            {
+                if (m_DeviceTree.SelectedNode == null) return;
+                else if (m_DeviceTree.SelectedNode.Tag == null) return;
+                else if (!(m_DeviceTree.SelectedNode.Tag is BacnetClient)) return;
+                comm = (BacnetClient)m_DeviceTree.SelectedNode.Tag;
+
+                if (comm.Transport is BacnetIpUdpProtocolTransport) // only IPv4 today, v6 maybe a day
+                {
+
+                    var Input =
+                        new GenericInputBox<TextBox>("Ipv4/Udp Bacnet Node", "DeviceId - xx.xx.xx.xx:47808",
+                          (o) =>
+                          {
+                              // adjustment to the generic control
+                          });
+                    DialogResult res = Input.ShowDialog();
+
+                    if (res == DialogResult.OK)
+                    {
+                        string[] entry=Input.genericInput.Text.Split('-');
+                        OnIam(comm, new BacnetAddress(BacnetAddressTypes.IP, entry[1].Trim()), Convert.ToUInt32(entry[0]), 0, BacnetSegmentations.SEGMENTATION_NONE, 0);
+                    }
+                }
+                else
+                {
+                    MessageBox.Show(this, "Please select an \"IPv4 transport\" node first", "Wrong node", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+            catch 
+            {
+                MessageBox.Show(this, "Invalid parameter", "Wrong node or IP @", MessageBoxButtons.OK, MessageBoxIcon.Information);          
+            }
+        }
+
         private void helpToolStripMenuItem1_Click(object sender, EventArgs e)
         {
             string readme_path = System.IO.Path.Combine( System.IO.Path.GetDirectoryName( typeof(MainDialog).Assembly.Location), "README.txt");
