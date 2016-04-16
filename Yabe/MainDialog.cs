@@ -1308,7 +1308,9 @@ namespace Yabe
                         BacnetValue[] b_values = null;
                         if (p_value.value != null)
                         {
-                            b_values = new BacnetValue[p_value.value.Count];
+
+                             b_values = new BacnetValue[p_value.value.Count];
+
                             p_value.value.CopyTo(b_values, 0);
                             if (b_values.Length > 1)
                             {

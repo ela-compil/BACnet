@@ -1133,6 +1133,63 @@ namespace Utilities
         }
     }
 
+    // Modif FC
+    // this class is used to display the priority name instead of the index base 0
+    // for the Priority Array
+    // Thank to Gerd Klevesaat article in http://www.codeproject.com/Articles/4448/Customized-display-of-collection-data-in-a-Propert
+    public class BacnetPriorityArrayConverter : ArrayConverter
+    {
+        class BacnetPriorityPropertyDescriptor : PropertyDescriptor
+        {
+            private PropertyDescriptor _pd = null;
+            private int _idx;
+
+            public BacnetPriorityPropertyDescriptor(PropertyDescriptor pd, int Idx)
+                : base(pd)
+            {
+                this._pd = pd;
+                this._idx = Idx;
+            }
+
+            public override string DisplayName
+            {
+                get
+                {
+                    string s= ((BacnetWritePriority)(_idx + 1)).ToString();
+                    return System.Threading.Thread.CurrentThread.CurrentCulture.TextInfo.ToTitleCase(s.ToLower());
+                }
+            }
+            public override bool CanResetValue(object component) {return false;}
+            public override Type ComponentType { get { return _pd.ComponentType; }}
+            public override object GetValue(object component) { return _pd.GetValue(component); }
+            public override bool IsReadOnly { get { return true; } }
+            public override Type PropertyType { get { return _pd.PropertyType; }}
+            public override void ResetValue(object component) { }
+            public override void SetValue(object component, object value) { }
+            public override bool ShouldSerializeValue(object component) { return false; }
+        }
+
+        public override PropertyDescriptorCollection GetProperties(ITypeDescriptorContext context, object value, Attribute[] attributes)
+        {
+            try
+            {
+                PropertyDescriptorCollection s = base.GetProperties(context, value, attributes);
+                PropertyDescriptorCollection pds = new PropertyDescriptorCollection(null);
+
+                for (int i = 0; i < 16; i++)
+                {
+                    BacnetPriorityPropertyDescriptor pd = new BacnetPriorityPropertyDescriptor(s[i], i);
+                    pds.Add(pd);
+                }
+                return pds;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+ 
+    }
     /// <summary>
 	/// Custom PropertyDescriptor
 	/// </summary>
@@ -1265,6 +1322,8 @@ namespace Utilities
                         return new BacnetEnumValueConverter(new BacnetRestartReason());
                     case BacnetPropertyIds.PROP_PRIORITY_FOR_WRITING:
                         return new BacnetEnumValueConverter(new BacnetWritePriority()); 
+                    case BacnetPropertyIds.PROP_PRIORITY_ARRAY:
+                        return new BacnetPriorityArrayConverter();
                     default:
                         return base.Converter;
                 }
