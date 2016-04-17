@@ -1133,42 +1133,62 @@ namespace Utilities
         }
     }
 
-    // Modif FC
-    // this class is used to display the priority name instead of the index base 0
-    // for the Priority Array
-    // Thank to Gerd Klevesaat article in http://www.codeproject.com/Articles/4448/Customized-display-of-collection-data-in-a-Propert
-    public class BacnetPriorityArrayConverter : ArrayConverter
-    {
-        class BacnetPriorityPropertyDescriptor : PropertyDescriptor
-        {
-            private PropertyDescriptor _pd = null;
-            private int _idx;
+    // by FC
+    // this class is used to display 
+    //      the priority name instead of the index base 0 for the Priority Array
+    //      the priority level name for notification class priority array 
+    //      the priority level name for the event time stamp
+    //      the 1 base array index for multistate objects text property
+    // Thank to Gerd Klevesaat's article in http://www.codeproject.com/Articles/4448/Customized-display-of-collection-data-in-a-Propert
 
-            public BacnetPriorityPropertyDescriptor(PropertyDescriptor pd, int Idx)
-                : base(pd)
+    public class BacnetArrayIndexConverter : ArrayConverter
+    {
+
+        public class BacnetArrayPropertyDescriptor : PropertyDescriptor
+        {
+            private PropertyDescriptor m_Property = null;
+            private int m_idx;
+            private Enum m_enum;
+
+            public BacnetArrayPropertyDescriptor(PropertyDescriptor Property, int Idx, Enum e)
+                : base(Property)
             {
-                this._pd = pd;
-                this._idx = Idx;
+                m_Property = Property;
+                m_idx = Idx;
+                m_enum = e;
             }
 
+            // This is what we want, and only this
             public override string DisplayName
             {
                 get
                 {
-                    string s= ((BacnetWritePriority)(_idx + 1)).ToString();
-                    return System.Threading.Thread.CurrentThread.CurrentCulture.TextInfo.ToTitleCase(s.ToLower());
+                    if (m_enum!=null)
+                    {
+                        string s = Enum.GetValues(m_enum.GetType()).GetValue(m_idx).ToString();
+                        s = s.Replace('_', ' ');
+                        return System.Threading.Thread.CurrentThread.CurrentCulture.TextInfo.ToTitleCase(s.ToLower());
+                    }
+                    else
+                        return "[" + m_idx.ToString() + "]"; // special behaviour for State Text in mutlistate objects, only array bounds shift, no more !
                 }
             }
-            public override bool CanResetValue(object component) {return false;}
-            public override Type ComponentType { get { return _pd.ComponentType; }}
-            public override object GetValue(object component) { return _pd.GetValue(component); }
-            public override bool IsReadOnly { get { return true; } }
-            public override Type PropertyType { get { return _pd.PropertyType; }}
-            public override void ResetValue(object component) { }
-            public override void SetValue(object component, object value) { }
-            public override bool ShouldSerializeValue(object component) { return false; }
+            public override bool CanResetValue(object component) { return m_Property.CanResetValue(component); }
+            public override Type ComponentType { get { return m_Property.ComponentType; }}
+            public override object GetValue(object component) { return m_Property.GetValue(component); }
+            public override bool IsReadOnly { get { return m_Property.IsReadOnly; } }
+            public override Type PropertyType { get { return m_Property.PropertyType; }}
+            public override void ResetValue(object component) { m_Property.ResetValue(component); }
+            public override void SetValue(object component, object value) { m_Property.SetValue(component, value); }
+            public override bool ShouldSerializeValue(object component) { return m_Property.ShouldSerializeValue(component); }
         }
 
+        Enum _e;
+        public BacnetArrayIndexConverter(Enum e)
+        {
+            _e=e;
+        }
+ 
         public override PropertyDescriptorCollection GetProperties(ITypeDescriptorContext context, object value, Attribute[] attributes)
         {
             try
@@ -1176,16 +1196,22 @@ namespace Utilities
                 PropertyDescriptorCollection s = base.GetProperties(context, value, attributes);
                 PropertyDescriptorCollection pds = new PropertyDescriptorCollection(null);
 
-                for (int i = 0; i < 16; i++)
+                // PriorityArray is a C# 0 base array for a Bacnet 1 base array
+                // use also for StateText property array in multistate objects : http://www.chipkin.com/bacnet-multi-state-variables-state-zero/
+                int shift=0;
+                if ((_e==null) || (_e.GetType() == typeof(BacnetWritePriority)))
+                        shift = 1;
+
+                for (int i = 0; i < s.Count; i++)
                 {
-                    BacnetPriorityPropertyDescriptor pd = new BacnetPriorityPropertyDescriptor(s[i], i);
+                    BacnetArrayPropertyDescriptor pd = new BacnetArrayPropertyDescriptor(s[i], i + shift, _e);
                     pds.Add(pd);
                 }
                 return pds;
             }
             catch
             {
-                return null;
+                return base.GetProperties(context, value, attributes);
             }
         }
  
@@ -1323,7 +1349,13 @@ namespace Utilities
                     case BacnetPropertyIds.PROP_PRIORITY_FOR_WRITING:
                         return new BacnetEnumValueConverter(new BacnetWritePriority()); 
                     case BacnetPropertyIds.PROP_PRIORITY_ARRAY:
-                        return new BacnetPriorityArrayConverter();
+                        return new BacnetArrayIndexConverter(new BacnetWritePriority());
+                    case BacnetPropertyIds.PROP_PRIORITY :
+                        return new BacnetArrayIndexConverter(new BacnetEventNotificationData.BacnetEventStates());
+                    case BacnetPropertyIds.PROP_EVENT_TIME_STAMPS :
+                        return new BacnetArrayIndexConverter(new BacnetEventNotificationData.BacnetEventStates());
+                    case BacnetPropertyIds.PROP_STATE_TEXT :
+                        return new BacnetArrayIndexConverter(null); 
                     default:
                         return base.Converter;
                 }
@@ -1355,8 +1387,8 @@ namespace Utilities
                 case BacnetPropertyIds.PROP_ACKED_TRANSITIONS:
                     return new BacnetBitStringToEnumListDisplay(new BacnetEventNotificationData.BacnetEventEnable(), false, true);
 
-                //case BacnetPropertyIds.PROP_OBJECT_TYPE:
-                    //return new BacnetEnumValueDisplay(new BacnetObjectTypes());
+                case BacnetPropertyIds.PROP_OBJECT_TYPE:
+                    return new BacnetEnumValueDisplay(new BacnetObjectTypes());
                 case BacnetPropertyIds.PROP_NOTIFY_TYPE:
                     return new BacnetEnumValueDisplay(new BacnetEventNotificationData.BacnetNotifyTypes());
                 case BacnetPropertyIds.PROP_EVENT_TYPE:
