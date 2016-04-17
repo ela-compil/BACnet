@@ -875,11 +875,13 @@
             this.Controls.Add(this.toolStrip1);
             this.Controls.Add(this.menuStrip1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.KeyPreview = true;
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "MainDialog";
             this.Text = "Yet Another Bacnet Explorer - Yabe";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.MainDialog_FormClosing);
             this.Load += new System.EventHandler(this.MainDialog_Load);
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.MainDialog_KeyDown);
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
             this.menuStrip1.ResumeLayout(false);

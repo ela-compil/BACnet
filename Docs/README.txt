@@ -208,6 +208,9 @@
 
 		2.5.11 DefaultWritePriority
 			Priorty level used for write operation. Can be changed without reboot.
+			<Ctrl><Alt> + 0 to 9 keys are shortcuts to change this value directly 
+			from the main form (0: no priority to priority level 9, for others ... 
+			no shortcut): a sound is played.
 
 		2.5.12 YabeDeviceId
 			If this value is positive Yabe send response to Who-Is with this Bacnet

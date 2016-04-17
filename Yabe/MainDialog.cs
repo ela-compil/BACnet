@@ -38,6 +38,7 @@ using System.IO.BACnet.Storage;
 using System.Xml.Serialization;
 using System.Threading;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Media;
 
 namespace Yabe
 {
@@ -2650,6 +2651,23 @@ namespace Yabe
             DialogResult res = MessageBox.Show(this, "Clean all "+DevicesObjectsName.Count.ToString()+" entries, really ?", "Name database suppression", MessageBoxButtons.OKCancel, MessageBoxIcon.Information);
             if (res==DialogResult.OK)
                 DevicesObjectsName = new Dictionary<Tuple<String, BacnetObjectId>, String>();
+        }
+
+        // Change the WritePriority Value
+        private void MainDialog_KeyDown(object sender, KeyEventArgs e)
+        {
+            if ((e.Modifiers == (Keys.Control | Keys.Alt)))
+            {
+
+                if ((e.KeyCode >= Keys.D0 && e.KeyCode <= Keys.D9) || (e.KeyCode >= Keys.NumPad0 && e.KeyCode <= Keys.NumPad9))
+                {
+                    string s = e.KeyCode.ToString();
+                    int i = Convert.ToInt32(s[s.Length-1]) - 48;
+
+                    Properties.Settings.Default.DefaultWritePriority = (BacnetWritePriority)i;
+                    SystemSounds.Beep.Play();
+                }
+            }
         }
 
     }
