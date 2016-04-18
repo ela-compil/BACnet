@@ -1144,6 +1144,8 @@ namespace Utilities
     public class BacnetArrayIndexConverter : ArrayConverter
     {
 
+        public enum BacnetEventStates { TO_OFF_NORMAL, TO_FAULT, TO_NORMAL };
+
         public class BacnetArrayPropertyDescriptor : PropertyDescriptor
         {
             private PropertyDescriptor m_Property = null;
@@ -1351,9 +1353,9 @@ namespace Utilities
                     case BacnetPropertyIds.PROP_PRIORITY_ARRAY:
                         return new BacnetArrayIndexConverter(new BacnetWritePriority());
                     case BacnetPropertyIds.PROP_PRIORITY :
-                        return new BacnetArrayIndexConverter(new BacnetEventNotificationData.BacnetEventStates());
+                        return new BacnetArrayIndexConverter(new BacnetArrayIndexConverter.BacnetEventStates());
                     case BacnetPropertyIds.PROP_EVENT_TIME_STAMPS :
-                        return new BacnetArrayIndexConverter(new BacnetEventNotificationData.BacnetEventStates());
+                        return new BacnetArrayIndexConverter(new BacnetArrayIndexConverter.BacnetEventStates());
                     case BacnetPropertyIds.PROP_STATE_TEXT :
                         return new BacnetArrayIndexConverter(null); 
                     default:

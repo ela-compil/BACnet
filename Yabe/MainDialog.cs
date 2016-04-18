@@ -2666,6 +2666,7 @@ namespace Yabe
 
                     Properties.Settings.Default.DefaultWritePriority = (BacnetWritePriority)i;
                     SystemSounds.Beep.Play();
+                    Trace.WriteLine("WritePriority change to level " + i.ToString() + " : " + ((BacnetWritePriority)i).ToString());
                 }
             }
         }

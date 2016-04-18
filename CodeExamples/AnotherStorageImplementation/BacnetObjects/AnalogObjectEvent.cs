@@ -242,9 +242,9 @@ namespace BaCSharp
 
                 // Update EVENT_TIME_STAMPS, 1 is for FAULT (not used) 
                 if (toState == 0)
-                    m_PROP_EVENT_TIME_STAMPS[0] = new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_TIMESTAMP, stamp); // Normal
+                    m_PROP_EVENT_TIME_STAMPS[2] = new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_TIMESTAMP, stamp); // Normal
                 else
-                    m_PROP_EVENT_TIME_STAMPS[2] = new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_TIMESTAMP, stamp); // Limit
+                    m_PROP_EVENT_TIME_STAMPS[1] = new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_TIMESTAMP, stamp); // Limit
             }
             Last_PRESENT_VALUE = m_PROP_PRESENT_VALUE;
 
