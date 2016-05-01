@@ -1,6 +1,11 @@
 -------------------------------------------------------------------------------
                    YABE - YET ANOTHER BACNET EXPLORER
 -------------------------------------------------------------------------------
+1.0.8 - 20160501
+ - Remote Bacnet/IP node access without BBMD 
+ - Some array index display modifications in the propertyGrid (priority array, ...)
+ - Write Priority levels keyboard shortcuts
+
 1.0.7 - 20160122
  - Fix missing DataExpectingReply bit for some querys
 
@@ -10,7 +15,7 @@
 1.0.4 - 20151207
  - Bacnet/Ethernet support
  - Persistant object names database
- - Alamr summary
+ - Alarm summary
 
 1.0.3 - 20150930
  - Fix version inconsistencies (installer/inprogram/db)
