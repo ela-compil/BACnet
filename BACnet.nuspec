@@ -6,6 +6,7 @@
     <title>BACnet</title>
     <authors>Morten Kvistgaard, Ela-compil</authors>
     <projectUrl>https://github.com/ela-compil/BACnet</projectUrl>
+    <iconUrl>https://raw.githubusercontent.com/ela-compil/BACnet/master/logo.png</iconUrl>
     <description>BACnet protocol library for .NET</description>
     <copyright>Copyright © Morten Kvistgaard 2016, MIT License</copyright>
   </metadata>
