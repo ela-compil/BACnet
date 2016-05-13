@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+  <metadata>
+    <id>BACnet</id>
+    <version>$version$</version>
+    <title>BACnet</title>
+    <authors>Morten Kvistgaard, Ela-compil</authors>
+    <projectUrl>https://github.com/ela-compil/BACnet</projectUrl>
+    <description>BACnet protocol library used by YABE</description>
+    <copyright>Copyright © Morten Kvistgaard 2016, MIT License</copyright>
+    <dependencies>
+      <dependency id="PacketDotNet" version="0.13.0" />
+      <dependency id="SharpPcap" version="4.2.0" />
+    </dependencies>
+  </metadata>
+</package>
