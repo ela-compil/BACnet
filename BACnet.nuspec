@@ -6,7 +6,7 @@
     <title>BACnet</title>
     <authors>Morten Kvistgaard, Ela-compil</authors>
     <projectUrl>https://github.com/ela-compil/BACnet</projectUrl>
-    <description>BACnet protocol library used by YABE</description>
+    <description>BACnet protocol library for .NET</description>
     <copyright>Copyright © Morten Kvistgaard 2016, MIT License</copyright>
   </metadata>
 </package>
