@@ -408,7 +408,7 @@ namespace System.IO.BACnet.Storage
             Assembly _assembly;
             StreamReader _textStreamReader;
 
-            _assembly = Assembly.GetExecutingAssembly();
+            _assembly = Assembly.GetCallingAssembly();
             try
             {
                 // check if the xml file is an embedded resource
