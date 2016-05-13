@@ -8,8 +8,8 @@
     <ProjectGuid>{66832876-01FC-4B7C-8D92-54195773FABF}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>LibBacnet</RootNamespace>
-    <AssemblyName>LibBacnet</AssemblyName>
+    <RootNamespace>System.IO.BACnet</RootNamespace>
+    <AssemblyName>System.IO.BACnet</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -57,6 +57,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="BACnet.nuspec" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

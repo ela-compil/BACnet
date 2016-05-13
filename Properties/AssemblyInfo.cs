@@ -2,11 +2,11 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle("BACnet")]
+[assembly: AssemblyTitle("System.IO.BACnet")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Yabe")]
-[assembly: AssemblyProduct("BACnet")]
+[assembly: AssemblyProduct("System.IO.BACnet")]
 [assembly: AssemblyCopyright("Copyright © Morten Kvistgaard 2015, MIT License")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
