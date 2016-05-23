@@ -2,7 +2,7 @@ using System.IO.BACnet.Serialize;
 
 namespace System.IO.BACnet
 {
-    public struct BacnetDateRange : ASN1.IEncode
+    public struct BacnetDateRange : ASN1.IEncode, ASN1.IDecode
     {
         public BacnetDate startDate;
         public BacnetDate endDate;
@@ -21,12 +21,12 @@ namespace System.IO.BACnet
             endDate.Encode(buffer);
         }
 
-        public int ASN1decode(byte[] buffer, int offset, uint len_value)
+        public int Decode(byte[] buffer, int offset, uint count)
         {
             var len = 1; // opening tag
-            len += startDate.ASN1decode(buffer, offset + len, len_value);
+            len += startDate.Decode(buffer, offset + len, count);
             len++;
-            len += endDate.ASN1decode(buffer, offset + len, len_value);
+            len += endDate.Decode(buffer, offset + len, count);
             return len;
         }
 

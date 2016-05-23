@@ -3,7 +3,7 @@ using System.IO.BACnet.Serialize;
 
 namespace System.IO.BACnet
 {
-    public struct BacnetDate : ASN1.IEncode
+    public struct BacnetDate : ASN1.IEncode, ASN1.IDecode
     {
         public byte year;     /* 255 any */
         public byte month;      /* 1=Jan; 255 any, 13 Odd, 14 Even */
@@ -26,13 +26,12 @@ namespace System.IO.BACnet
             buffer.Add(wday);
         }
 
-        public int ASN1decode(byte[] buffer, int offset, uint len_value)
+        public int Decode(byte[] buffer, int offset, uint count)
         {
             year = buffer[offset];
             month = buffer[offset + 1];
             day = buffer[offset + 2];
             wday = buffer[offset + 3];
-
             return 4;
         }
 

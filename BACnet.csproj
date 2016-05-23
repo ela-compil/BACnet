@@ -91,7 +91,7 @@
     <Compile Include="Base\BacnetReliability.cs" />
     <Compile Include="Base\BacnetServicesSupported.cs" />
     <Compile Include="Base\BacnetStatusFlags.cs" />
-    <Compile Include="BacnetUnconfirmedServices.cs" />
+    <Compile Include="Base\BacnetUnconfirmedServices.cs" />
     <Compile Include="Base\BacnetTimestampTags.cs" />
     <Compile Include="Base\BacnetTrendLogValueType.cs" />
     <Compile Include="Base\BacnetUnitsId.cs" />

@@ -3,7 +3,7 @@ using System.IO.BACnet.Serialize;
 
 namespace System.IO.BACnet
 {
-    public struct BacnetweekNDay : ASN1.IEncode
+    public struct BacnetweekNDay : ASN1.IEncode, ASN1.IDecode
     {
         public byte month;  /* 1 January, 13 Odd, 14 Even, 255 Any */
         public byte week;   /* Don't realy understand ??? 1 for day 1 to 7, 2 for ... what's the objective ?  boycott it*/
@@ -23,12 +23,11 @@ namespace System.IO.BACnet
             buffer.Add(wday);
         }
 
-        public int ASN1decode(byte[] buffer, int offset, uint len_value)
+        public int Decode(byte[] buffer, int offset, uint count)
         {
             month = buffer[offset++];
             week = buffer[offset++];
             wday = buffer[offset];
-
             return 3;
         }
 

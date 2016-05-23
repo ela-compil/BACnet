@@ -3,7 +3,7 @@ using System.IO.BACnet.Serialize;
 
 namespace System.IO.BACnet
 {
-    public struct BACnetCalendarEntry : ASN1.IEncode
+    public struct BACnetCalendarEntry : ASN1.IEncode, ASN1.IDecode
     {
         public List<object> Entries; // BacnetDate or BacnetDateRange or BacnetweekNDay
 
@@ -35,7 +35,7 @@ namespace System.IO.BACnet
             }
         }
 
-        public int ASN1decode(byte[] buffer, int offset, uint lenValue)
+        public int Decode(byte[] buffer, int offset, uint count)
         {
             var len = 0;
 
@@ -50,18 +50,18 @@ namespace System.IO.BACnet
                 {
                     case 0:
                         var bdt = new BacnetDate();
-                        len += bdt.ASN1decode(buffer, offset + len, lenValue);
+                        len += bdt.Decode(buffer, offset + len, count);
                         Entries.Add(bdt);
                         break;
                     case 1:
                         var bdr = new BacnetDateRange();
-                        len += bdr.ASN1decode(buffer, offset + len, lenValue);
+                        len += bdr.Decode(buffer, offset + len, count);
                         Entries.Add(bdr);
                         len++; // closing tag
                         break;
                     case 2:
                         var bwd = new BacnetweekNDay();
-                        len += bwd.ASN1decode(buffer, offset + len, lenValue);
+                        len += bwd.Decode(buffer, offset + len, count);
                         Entries.Add(bwd);
                         break;
                     default:

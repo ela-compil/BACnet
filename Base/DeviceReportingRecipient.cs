@@ -50,6 +50,7 @@ namespace System.IO.BACnet
             Ack_Required = ackRequired;
             this.evenType = evenType;
         }
+
         public DeviceReportingRecipient(BacnetBitString weekofDay, DateTime fromTime, DateTime toTime, BacnetAddress adr, uint processIdentifier, bool ackRequired, BacnetBitString evenType)
         {
             Id = new BacnetObjectId();

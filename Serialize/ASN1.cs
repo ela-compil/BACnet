@@ -19,6 +19,11 @@ namespace System.IO.BACnet.Serialize
             void Encode(EncodeBuffer buffer);
         }
 
+        public interface IDecode
+        {
+            int Decode(byte[] buffer, int offset, uint count);
+        }
+
         public static void encode_bacnet_object_id(EncodeBuffer buffer, BacnetObjectTypes objectType, uint instance)
         {
             var type = (uint)objectType;
@@ -1679,8 +1684,6 @@ namespace System.IO.BACnet.Serialize
                         case 2:
                             tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_REAL;
                             break;
-                        default:
-                            break;
                     }
                     break;
                 case BacnetPropertyIds.PROP_ACTION:
@@ -1703,7 +1706,6 @@ namespace System.IO.BACnet.Serialize
                             tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_BOOLEAN;
                             break;
                         case 4: /* propertyValue: abstract syntax */
-                        default:
                             break;
                     }
                     break;
@@ -1713,8 +1715,6 @@ namespace System.IO.BACnet.Serialize
                     {
                         case 0:
                             tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID;
-                            break;
-                        default:
                             break;
                     }
                     break;
@@ -1729,7 +1729,6 @@ namespace System.IO.BACnet.Serialize
                             break;
                         case 0: /* calendarEntry: abstract syntax + context */
                         case 2: /* list of BACnetTimeValue: abstract syntax */
-                        default:
                             break;
                     }
                     break;
@@ -1746,8 +1745,6 @@ namespace System.IO.BACnet.Serialize
                         case 2: /* Array index */
                             tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT;
                             break;
-                        default:
-                            break;
                     }
                     break;
                 case BacnetPropertyIds.PROP_SUBORDINATE_LIST:
@@ -1758,8 +1755,6 @@ namespace System.IO.BACnet.Serialize
                         case 1: /* Object ID */
                             tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID;
                             break;
-                        default:
-                            break;
                     }
                     break;
 
@@ -1769,8 +1764,6 @@ namespace System.IO.BACnet.Serialize
                     {
                         case 0: /* Device Object ID */
                             tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID;
-                            break;
-                        default:
                             break;
                     }
                     break;
@@ -1790,11 +1783,7 @@ namespace System.IO.BACnet.Serialize
                         case 4: /* covIncrement */
                             tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_REAL;
                             break;
-                        default:
-                            break;
                     }
-                    break;
-                default:
                     break;
             }
 
@@ -1921,7 +1910,7 @@ namespace System.IO.BACnet.Serialize
                 if (propertyId == BacnetPropertyIds.PROP_DATE_LIST)
                 {
                     var v = new BACnetCalendarEntry();
-                    tagLen = v.ASN1decode(buffer, offset, (uint)maxOffset);
+                    tagLen = v.Decode(buffer, offset, (uint)maxOffset);
                     if (tagLen < 0) return -1;
                     value.Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC_DECODED;
                     value.Value = v;
