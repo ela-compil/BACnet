@@ -49,11 +49,76 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BacnetAsyncResult.cs" />
-    <Compile Include="BACnetBase.cs" />
+    <Compile Include="Base\BacnetAddress.cs" />
+    <Compile Include="Base\BacnetAddressTypes.cs" />
+    <Compile Include="Base\BacnetApplicationTags.cs" />
+    <Compile Include="Base\BacnetReinitializedStates.cs" />
     <Compile Include="BACnetClient.cs" />
+    <Compile Include="Base\BacnetBitString.cs" />
+    <Compile Include="Base\BacnetBvlcFunctions.cs" />
+    <Compile Include="Base\BacnetBvlcResults.cs" />
+    <Compile Include="Base\BACnetCalendarEntry.cs" />
+    <Compile Include="Base\BacnetCharacterStringEncodings.cs" />
+    <Compile Include="Base\BacnetCOVSubscription.cs" />
+    <Compile Include="Base\BacnetDate.cs" />
+    <Compile Include="Base\BacnetDateRange.cs" />
+    <Compile Include="Base\BacnetDeviceObjectPropertyReference.cs" />
+    <Compile Include="Base\BacnetError.cs" />
+    <Compile Include="Base\BacnetEventNotificationData.cs" />
+    <Compile Include="Base\BacnetGenericTime.cs" />
+    <Compile Include="Base\BacnetGetEventInformationData.cs" />
+    <Compile Include="Base\BacnetLogRecord.cs" />
+    <Compile Include="Base\BacnetMaxAdpu.cs" />
+    <Compile Include="Base\BacnetMaxSegments.cs" />
+    <Compile Include="Base\BacnetConfirmedServices.cs" />
+    <Compile Include="Base\BacnetErrorCodes.cs" />
+    <Compile Include="Base\BacnetMstpFrameTypes.cs" />
+    <Compile Include="Base\BacnetNetworkMessageTypes.cs" />
+    <Compile Include="Base\BacnetNodeTypes.cs" />
+    <Compile Include="Base\BacnetNpduControls.cs" />
+    <Compile Include="Base\BacnetObjectDescription.cs" />
+    <Compile Include="Base\BacnetObjectId.cs" />
+    <Compile Include="Base\BacnetObjectTypes.cs" />
+    <Compile Include="Base\BacnetPolarity.cs" />
+    <Compile Include="Base\BacnetPropertyIds.cs" />
+    <Compile Include="Base\BacnetPropertyReference.cs" />
+    <Compile Include="Base\BacnetPropertyValue.cs" />
+    <Compile Include="Base\BacnetPropetyState.cs" />
+    <Compile Include="Base\BacnetPtpDisconnectReasons.cs" />
+    <Compile Include="Base\BacnetPtpFrameTypes.cs" />
+    <Compile Include="Base\BacnetReadAccessResult.cs" />
+    <Compile Include="Base\BacnetReadAccessSpecification.cs" />
+    <Compile Include="Base\BacnetReliability.cs" />
+    <Compile Include="Base\BacnetServicesSupported.cs" />
+    <Compile Include="Base\BacnetStatusFlags.cs" />
+    <Compile Include="BacnetUnconfirmedServices.cs" />
+    <Compile Include="Base\BacnetTimestampTags.cs" />
+    <Compile Include="Base\BacnetTrendLogValueType.cs" />
+    <Compile Include="Base\BacnetUnitsId.cs" />
+    <Compile Include="Base\BacnetDeviceStatus.cs" />
+    <Compile Include="Base\BacnetErrorClasses.cs" />
+    <Compile Include="Base\BacnetPduTypes.cs" />
+    <Compile Include="Base\BacnetRejectReasons.cs" />
+    <Compile Include="Base\BacnetRestartReason.cs" />
+    <Compile Include="Base\BacnetResultFlags.cs" />
+    <Compile Include="Base\BacnetSegmentations.cs" />
     <Compile Include="BACnetTransport.cs" />
     <Compile Include="BacnetTransportEthernet.cs" />
     <Compile Include="BACnetTransportIPv6.cs" />
+    <Compile Include="Base\BacnetValue.cs" />
+    <Compile Include="Base\BacnetweekNDay.cs" />
+    <Compile Include="Base\BacnetWritePriority.cs" />
+    <Compile Include="Base\DeviceReportingRecipient.cs" />
+    <Compile Include="Serialize\APDU.cs" />
+    <Compile Include="Serialize\ASN1.cs" />
+    <Compile Include="Base\BacnetReadRangeRequestTypes.cs" />
+    <Compile Include="Serialize\BVLC.cs" />
+    <Compile Include="Serialize\EncodeBuffer.cs" />
+    <Compile Include="Serialize\EncodeResult.cs" />
+    <Compile Include="Serialize\MSTP.cs" />
+    <Compile Include="Serialize\NPDU.cs" />
+    <Compile Include="Serialize\PTP.cs" />
+    <Compile Include="Serialize\Services.cs" />
     <Compile Include="Storage\DeviceStorage.cs" />
     <Compile Include="Storage\Object.cs" />
     <Compile Include="Storage\Property.cs" />
@@ -63,6 +128,7 @@
     <None Include="BACnet.nuspec" />
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
