@@ -54,7 +54,9 @@
     <Compile Include="BACnetTransport.cs" />
     <Compile Include="BacnetTransportEthernet.cs" />
     <Compile Include="BACnetTransportIPv6.cs" />
-    <Compile Include="DeviceStorage.cs" />
+    <Compile Include="Storage\DeviceStorage.cs" />
+    <Compile Include="Storage\Object.cs" />
+    <Compile Include="Storage\Property.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
