@@ -33,6 +33,8 @@ using System.Net.Sockets;
 
 namespace System.IO.BACnet
 {
+    public delegate void MessageRecievedHandler(IBacnetTransport sender, byte[] buffer, int offset, int msgLength, BacnetAddress remoteAddress);
+
     /// <summary>
     /// This can be both client and server
     /// </summary>
