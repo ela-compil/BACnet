@@ -1,7 +1,7 @@
 ﻿using System.IO.BACnet.Serialize;
 using System.Linq;
 using System.Net;
-using System.Text;
+using System.Net.NetworkInformation;
 
 namespace System.IO.BACnet
 {
@@ -13,57 +13,42 @@ namespace System.IO.BACnet
         public BacnetAddressTypes type;
 
         // Modif FC
-        public BacnetAddress RoutedSource=null;
+        public BacnetAddress RoutedSource = null;
 
-        public BacnetAddress(BacnetAddressTypes type, ushort net, byte[] adr)
+        public BacnetAddress(BacnetAddressTypes type, ushort network, byte[] address)
         {
             this.type = type;
-            this.net = net;
-            this.adr = adr ?? new byte[0];
+            net = network;
+            adr = address ?? new byte[0];
         }
 
-        public BacnetAddress(BacnetAddressTypes type, string s)
+        public BacnetAddress(BacnetAddressTypes type, string address)
+            : this(type, 0, null)
         {
-            this.type = type;
             switch (type)
             {
                 case BacnetAddressTypes.IP:
-                    try
-                    {
-                        var ipStrCut = s.Split(':');
-                        IPAddress ip;
-                        var isIp = IPAddress.TryParse(ipStrCut[0], out ip);
-                        uint port = Convert.ToUInt16(ipStrCut[1]);
-                        if (isIp)
-                        {
-                            var cut = ipStrCut[0].Split('.');
-                            adr=new byte[6];
-                            for (var i=0;i<4;i++)
-                                adr[i]=Convert.ToByte(cut[i]); 
-                            adr[4] = (byte)((port & 0xff00) >> 8);
-                            adr[5] = (byte)(port & 0xff);
-                        }
-                        else
-                            throw new Exception();
-                    }
-                    catch { throw new Exception(); }
+                    var addressParts = address.Split(':');
+                    var addressBytes = IPAddress.Parse(addressParts[0]).GetAddressBytes();
+                    Array.Copy(addressBytes, adr, addressBytes.Length);
+
+                    var portBytes = BitConverter.GetBytes(ushort.Parse(addressParts[1]));
+
+                    if (BitConverter.IsLittleEndian)
+                        portBytes = portBytes.Reverse().ToArray();
+
+                    Array.Copy(portBytes, 0, adr, addressBytes.Length, portBytes.Length);
                     break;
+
                 case BacnetAddressTypes.Ethernet:
-                    try
-                    {
-                        var ethStrCut = s.Split('-');
-                        adr=new byte[6];
-                        for (var i = 0; i < 6; i++)
-                            adr[i] = Convert.ToByte(ethStrCut[i], 16);
-                    }
-                    catch { throw new Exception(); }
+                    adr = PhysicalAddress.Parse(address).GetAddressBytes();
                     break;
             }
         }
 
         public BacnetAddress()
+            : this(BacnetAddressTypes.None, 0, null)
         {
-            type = BacnetAddressTypes.None;
         }
 
         public override int GetHashCode()
@@ -76,48 +61,54 @@ namespace System.IO.BACnet
             return ToString(type);
         }
 
-        public string ToString(BacnetAddressTypes type)
+        public string ToString(BacnetAddressTypes addressType)
         {
-            switch (type)
+            while (true)
             {
-                case BacnetAddressTypes.IP:
-                    if(adr == null || adr.Length < 6) return "0.0.0.0";
-                    return adr[0] + "." + adr[1] + "." + adr[2] + "." + adr[3] + ":" + ((adr[4] << 8) | (adr[5] << 0));
-                case BacnetAddressTypes.MSTP:
-                    if(adr == null || adr.Length < 1) return "-1";
-                    return adr[0].ToString();
-                case BacnetAddressTypes.PTP:
-                    return "x";
-                case BacnetAddressTypes.Ethernet:
-                    var sb1 = new StringBuilder();
-                    for (var i = 0; i < 6; i++)
-                    {
-                        sb1.Append(adr[i].ToString("X2"));
-                        if (i != 5) sb1.Append('-');
-                    }
+                switch (addressType)
+                {
+                    case BacnetAddressTypes.IP:
+                        return adr != null && adr.Length >= 6
+                            ? $"{adr[0]}.{adr[1]}.{adr[2]}.{adr[3]}:{(adr[4] << 8) | adr[5]}"
+                            : "0.0.0.0";
 
-                    return sb1.ToString();
-                case BacnetAddressTypes.IPV6:
-                    if (adr == null || adr.Length != 18) return "[::]";
-                    var port = (ushort)((adr[16] << 8) | (adr[17] << 0));
-                    var ipv6 = new byte[16];
-                    Array.Copy(adr, ipv6, 16);
-                    var ep = new IPEndPoint(new IPAddress(ipv6), (int)port);
-                    return ep.ToString();
+                    case BacnetAddressTypes.MSTP:
+                        return adr != null && adr.Length >= 1
+                            ? $"{adr[0]}"
+                            : "-1";
 
-                default: // Routed @ are always like this, NPDU do not contains the MAC type, only the lenght
-                    if (adr == null) return "?";
+                    case BacnetAddressTypes.PTP:
+                        return "x";
 
-                    if (adr.Length == 6) // certainly IP, but not sure (Newron System send it for internal usage with 4*0 bytes)
-                        return ToString(BacnetAddressTypes.IP);                   
+                    case BacnetAddressTypes.Ethernet:
+                        return $"{new PhysicalAddress(adr)}";
 
-                    if (adr.Length == 18)   // Not sure it could appears, since NPDU may contains Vmac ?
-                        return ToString(BacnetAddressTypes.IPV6); 
+                    case BacnetAddressTypes.IPV6:
+                        return adr != null && adr.Length == 18
+                            ? $"{new IPAddress(adr.Take(16).ToArray())}:{(adr[16] << 8) | adr[17]}"
+                            : "[::]";
 
-                    if (adr.Length==3)
-                        return "IPv6 VMac : "+((int)(adr[0] << 16) | (adr[1] << 8) | adr[2]);
+                    default: // Routed @ are always like this, NPDU do not contains the MAC type, only the lenght
+                        if (adr == null)
+                            return "?";
 
-                    return string.Join(" ", adr);
+                        switch (adr.Length)
+                        {
+                            case 6: // certainly IP, but not sure (Newron System send it for internal usage with 4*0 bytes)
+                                addressType = BacnetAddressTypes.IP;
+                                continue;
+
+                            case 18: // Not sure it could appears, since NPDU may contains Vmac ?
+                                addressType = BacnetAddressTypes.IPV6;
+                                continue;
+
+                            case 3:
+                                return $"IPv6 VMac : {adr[0] << 16 | (adr[1] << 8) | adr[2]}";
+
+                            default:
+                                return string.Join(" ", adr);
+                        }
+                }
             }
         }
 
@@ -135,7 +126,7 @@ namespace System.IO.BACnet
         {
             if (!(obj is BacnetAddress)) return false;
             var d = (BacnetAddress)obj;
-            if (adr == null && d.adr == null) return true;
+            if (adr == null && d.adr == null)return true;
             if (adr == null || d.adr == null) return false;
             if (adr.Length != d.adr.Length) return false;
             if (adr.Where((t, i) => t != d.adr[i]).Any())
@@ -143,8 +134,11 @@ namespace System.IO.BACnet
 
             // Modif FC
             if ((RoutedSource == null) && (d.RoutedSource != null))
-                return false;                  
-            if ((d.RoutedSource==null)&&(RoutedSource == null)) return true;
+                return false;
+
+            if ((d.RoutedSource==null)&&(RoutedSource == null))
+                return true;
+
             return RoutedSource?.Equals(d.RoutedSource) ?? false;
         }
 
@@ -153,6 +147,7 @@ namespace System.IO.BACnet
         {
             if ((device.RoutedSource == null)||(RoutedSource!=null))
                 return false;
+
             if (adr.Length != device.adr.Length)
                 return false;
 
