@@ -1100,13 +1100,12 @@ namespace System.IO.BACnet.Serialize
 
                         if (tagNumber != (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_NULL)
                         {
-                            DateTime dt1;
-                            len += ASN1.decode_application_date(buffer, offset + len, out dt1);
-                            DateTime dt2;
-                            len += ASN1.decode_application_time(buffer, offset + len, out dt2);
-                            // oh ... a strange way to do that !
-                            var dt = Convert.ToDateTime(dt1.ToString().Split(' ')[0] + " " + dt2.ToString().Split(' ')[1]);
-                            value.eventTimeStamps[i] = new BacnetGenericTime(dt, BacnetTimestampTags.TIME_STAMP_DATETIME);
+                            DateTime date;
+                            len += ASN1.decode_application_date(buffer, offset + len, out date);
+                            DateTime time;
+                            len += ASN1.decode_application_time(buffer, offset + len, out time);
+                            var timestamp = date.Date + time.TimeOfDay;
+                            value.eventTimeStamps[i] = new BacnetGenericTime(timestamp, BacnetTimestampTags.TIME_STAMP_DATETIME);
                             len++; // closing tag
                         }
                         else
