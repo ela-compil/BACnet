@@ -55,6 +55,16 @@ namespace System.IO.BACnet
                 : ((int)Type).CompareTo((int)other.Type);
         }
 
+        public static bool operator ==(BacnetObjectId a, BacnetObjectId b)
+        {
+            return a.Equals(b);
+        }
+
+        public static bool operator !=(BacnetObjectId a, BacnetObjectId b)
+        {
+            return !(a == b);
+        }
+
         public static BacnetObjectId Parse(string value)
         {
             var pattern = new Regex($"(?<{nameof(Type)}>.+):(?<{nameof(Instance)}>.+)");
