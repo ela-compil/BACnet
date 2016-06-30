@@ -1314,6 +1314,27 @@ namespace System.IO.BACnet
             return false;
         }
 
+        public Task<IList<BacnetValue>> ReadPropertyAsync(BacnetAddress address, BacnetObjectTypes objType, uint objInstance,
+            BacnetPropertyIds propertyId, byte invokeId = 0, uint arrayIndex = ASN1.BACNET_ARRAY_ALL)
+        {
+            var objectId = new BacnetObjectId(objType, objInstance);
+            return ReadPropertyAsync(address, objectId, propertyId, invokeId, arrayIndex);
+        }
+
+        public Task<IList<BacnetValue>> ReadPropertyAsync(BacnetAddress address, BacnetObjectId objectId,
+            BacnetPropertyIds propertyId, byte invokeId = 0, uint arrayIndex = ASN1.BACNET_ARRAY_ALL)
+        {
+            IList<BacnetValue> result;
+
+            return Task<IList<BacnetValue>>.Factory.StartNew(() =>
+            {
+                if (!ReadPropertyRequest(address, objectId, propertyId, out result, invokeId, arrayIndex))
+                    throw new Exception($"Failed to read property {propertyId} of {objectId} from {address}");
+
+                return result;
+            });
+        }
+
         public IAsyncResult BeginReadPropertyRequest(BacnetAddress adr, BacnetObjectId objectId, BacnetPropertyIds propertyId, bool waitForTransmit, byte invokeId = 0, uint arrayIndex = ASN1.BACNET_ARRAY_ALL)
         {
             Trace.WriteLine("Sending ReadPropertyRequest ... ", null);
@@ -1506,6 +1527,30 @@ namespace System.IO.BACnet
             }
             values = null;
             return false;
+        }
+
+        public Task<IList<BacnetPropertyValue>> ReadPropertyMultipleAsync(BacnetAddress address,
+            BacnetObjectTypes objType, uint objInstance, params BacnetPropertyIds[] propertyIds)
+        {
+            var objectId = new BacnetObjectId(objType, objInstance);
+            return ReadPropertyMultipleAsync(address, objectId, propertyIds);
+        }
+
+        public Task<IList<BacnetPropertyValue>> ReadPropertyMultipleAsync(BacnetAddress address,
+            BacnetObjectId objectId, params BacnetPropertyIds[] propertyIds)
+        {
+            IList<BacnetReadAccessResult> result;
+
+            var propertyReferences = propertyIds.Select(p =>
+                new BacnetPropertyReference((uint)p, ASN1.BACNET_ARRAY_ALL));
+
+            return Task<IList<BacnetPropertyValue>>.Factory.StartNew(() =>
+            {
+                if (!ReadPropertyMultipleRequest(address, objectId, propertyReferences.ToList(), out result))
+                    throw new Exception($"Failed to read multiple properties of {objectId} from {address}");
+
+                return result.Single().values;
+            });
         }
 
         public IAsyncResult BeginReadPropertyMultipleRequest(BacnetAddress adr, BacnetObjectId objectId, IList<BacnetPropertyReference> propertyIdAndArrayIndex, bool waitForTransmit, byte invokeId = 0)
