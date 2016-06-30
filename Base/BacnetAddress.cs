@@ -122,6 +122,14 @@ namespace System.IO.BACnet
                 : $"{RoutedSource} via {ToString()}";
         }
 
+        public bool HasAddress(IPAddress ipAddress)
+        {
+            if (type != BacnetAddressTypes.IP || adr == null || ipAddress == null)
+                return false;
+
+            return adr.Take(4).SequenceEqual(ipAddress.GetAddressBytes());
+        }
+
         public override bool Equals(object obj)
         {
             if (!(obj is BacnetAddress)) return false;
