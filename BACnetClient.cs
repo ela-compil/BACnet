@@ -2010,6 +2010,19 @@ namespace System.IO.BACnet
             return false;
         }
 
+        public Task<IList<BacnetGetEventInformationData>> GetEventsAsync(BacnetAddress address, byte invokeId = 0)
+        {
+            IList<BacnetGetEventInformationData> result = new List<BacnetGetEventInformationData>();
+
+            return Task<IList<BacnetGetEventInformationData>>.Factory.StartNew(() =>
+            {
+                if (!GetAlarmSummaryOrEventRequest(address, true, ref result, invokeId))
+                    throw new Exception($"Failed to get events from {address}");
+
+                return result;
+            });
+        }
+
         public IAsyncResult BeginGetAlarmSummaryOrEventRequest(BacnetAddress adr, bool getEvent, IList<BacnetGetEventInformationData> alarms, bool waitForTransmit, byte invokeId = 0)
         {
             Trace.WriteLine("Sending Alarm summary request... ", null);
