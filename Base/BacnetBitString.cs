@@ -7,6 +7,9 @@ namespace System.IO.BACnet
         public byte bits_used;
         public byte[] value;
 
+        public byte Length => bits_used;
+        public bool this[byte bitNumber] => GetBit(bitNumber);
+
         public override string ToString()
         {
             var ret = "";
@@ -36,6 +39,20 @@ namespace System.IO.BACnet
                 else
                     value[byteNumber] &= (byte)(~(bitMask));
             }
+        }
+
+        public bool GetBit(byte bitNumber)
+        {
+            var byteNumber = (byte)(bitNumber / 8);
+
+            if (byteNumber >= ASN1.MAX_BITSTRING_BYTES || bitNumber >= bits_used)
+                throw new ArgumentOutOfRangeException(nameof(bitNumber));
+
+            if (value == null)
+                return false;
+
+            var bitMask = (byte)(1 << (bitNumber - byteNumber * 8));
+            return (value[byteNumber] & bitMask) > 0;
         }
 
         public static BacnetBitString Parse(string str)
