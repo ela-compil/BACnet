@@ -403,7 +403,7 @@ namespace System.IO.BACnet.Serialize
                     encode_application_bitstring(buffer, (BacnetBitString)value.Value);
                     break;
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED:
-                    encode_application_enumerated(buffer, (uint)value.Value);
+                    encode_application_enumerated(buffer, (uint)(dynamic)value.Value);
                     break;
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_DATE:
                     encode_application_date(buffer, (DateTime)value.Value);

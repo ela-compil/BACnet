@@ -61,13 +61,13 @@ namespace System.IO.BACnet
         // Some more complex solutions could avoid this, that's why this property is virtual
         public virtual IPEndPoint LocalEndPoint => (IPEndPoint)_exclusiveConn.Client.LocalEndPoint;
 
-        public BacnetIpUdpProtocolTransport(int port, bool useExclusivePort = false, bool dontFragment = false, int maxPayload = 1472, string localEndpointIP = "")
+        public BacnetIpUdpProtocolTransport(int port, bool useExclusivePort = false, bool dontFragment = false, int maxPayload = 1472, string localEndpointIp = "")
         {
             SharedPort = port;
             MaxBufferLength = maxPayload;
             _exclusivePort = useExclusivePort;
             _dontFragment = dontFragment;
-            _localEndpoint = localEndpointIP;
+            _localEndpoint = localEndpointIp;
         }
 
         public override bool Equals(object obj)

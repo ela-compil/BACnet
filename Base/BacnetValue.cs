@@ -41,8 +41,22 @@ namespace System.IO.BACnet
                 return BacnetApplicationTags.BACNET_APPLICATION_TAG_BIT_STRING;
             if (t == typeof(BacnetObjectId))
                 return BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID;
+            if (t == typeof(BacnetError))
+                return BacnetApplicationTags.BACNET_APPLICATION_TAG_ERROR;
+            if (t.IsEnum)
+                return BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED;
 
             return BacnetApplicationTags.BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC_ENCODED;
+        }
+
+        public T As<T>()
+        {
+            if (typeof(T) != typeof(object) && TagFromType(typeof(T)) != Tag)
+                throw new ArgumentException($"Value with tag {Tag} can't be converted to {typeof(T).Name}");
+
+            // ReSharper disable once RedundantCast
+            // This is needed for casting to enums
+            return (T)(dynamic)Value;
         }
 
         public override string ToString()

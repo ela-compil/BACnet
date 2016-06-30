@@ -11,9 +11,14 @@
             propertyArrayIndex = arrayIndex;
         }
 
+        public BacnetPropertyIds GetPropertyId()
+        {
+            return (BacnetPropertyIds)propertyIdentifier;
+        }
+
         public override string ToString()
         {
-            return ((BacnetPropertyIds)propertyIdentifier).ToString();
+            return $"{GetPropertyId()}";
         }
     }
 }
