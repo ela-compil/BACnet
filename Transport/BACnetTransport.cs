@@ -154,9 +154,9 @@ namespace System.IO.BACnet
                     localBuffer = conn.EndReceive(asyncResult, ref ep);
                     rx = localBuffer.Length;
                 }
-                catch (Exception ex) // ICMP port unreachable
+                catch (Exception) // ICMP port unreachable
                 {
-                    if (!(ex is ObjectDisposedException && _disposing)) // do not restart data receive when disposing
+                    if (!_disposing) // do not restart data receive when disposing
                     {
                         //restart data receive
                         conn.BeginReceive(OnReceiveData, conn);
