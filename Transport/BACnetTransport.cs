@@ -45,6 +45,7 @@ namespace System.IO.BACnet
         private readonly bool _dontFragment;
         private readonly string _localEndpoint;
         private BacnetAddress _broadcastAddress;
+        private bool _disposing;
 
         public BVLC Bvlc { get; private set; }
         public BacnetAddressTypes Type => BacnetAddressTypes.IP;
@@ -131,6 +132,8 @@ namespace System.IO.BACnet
 
         public void Start()
         {
+            _disposing = false;
+
             Open();
 
             _sharedConn?.BeginReceive(OnReceiveData, _sharedConn);
@@ -153,8 +156,11 @@ namespace System.IO.BACnet
                 }
                 catch (Exception) // ICMP port unreachable
                 {
-                    //restart data receive
-                    conn.BeginReceive(OnReceiveData, conn);
+                    if (!_disposing) // do not restart data receive when disposing
+                    {
+                        //restart data receive
+                        conn.BeginReceive(OnReceiveData, conn);
+                    }
                     return;
                 }
 
@@ -365,6 +371,7 @@ namespace System.IO.BACnet
 
         public void Dispose()
         {
+            _disposing = true;
             _exclusiveConn?.Close();
             _exclusiveConn = null;
             _sharedConn?.Close();
