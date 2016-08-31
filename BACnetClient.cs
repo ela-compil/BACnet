@@ -2222,6 +2222,53 @@ namespace System.IO.BACnet
             return false;
         }
 
+        public bool LifeSafetyOperationRequest(BacnetAddress address, BacnetObjectId objectId, string requestingSrc, BacnetEventNotificationData.BacnetLifeSafetyOperations operation, byte invokeId = 0)
+        {
+            using (var result = (BacnetAsyncResult)BeginLifeSafetyOperationRequest(address, objectId, 0, requestingSrc, operation, true, invokeId))
+            {
+                for (var r = 0; r < _retries; r++)
+                {
+                    if (result.WaitForDone(Timeout))
+                    {
+                        Exception ex;
+                        EndLifeSafetyOperationRequest(result, out ex);
+                        return ex == null;
+                    }
+                    if (r < Retries - 1)
+                        result.Resend();
+                }
+            }
+            return false;
+        }
+
+        public IAsyncResult BeginLifeSafetyOperationRequest(BacnetAddress address, BacnetObjectId objectId, uint processId, string requestingSrc, BacnetEventNotificationData.BacnetLifeSafetyOperations operation, bool waitForTransmit, byte invokeId = 0)
+        {
+            Trace.WriteLine("Sending BeginLifeSafetyOperationRequest ... ", null);
+            if (invokeId == 0)
+                invokeId = unchecked(_invokeId++);
+
+            var b = GetEncodeBuffer(Transport.HeaderLength);
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, address.RoutedSource, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, VendorId);
+            APDU.EncodeConfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST, BacnetConfirmedServices.SERVICE_CONFIRMED_LIFE_SAFETY_OPERATION, MaxSegments, Transport.MaxAdpuLength, invokeId, 0, 0);
+            Services.EncodeLifeSafetyOperation(b, processId, requestingSrc, (uint)operation, objectId);
+
+            //send
+            var ret = new BacnetAsyncResult(this, address, invokeId, b.buffer, b.offset - Transport.HeaderLength, waitForTransmit, TransmitTimeout);
+            ret.Resend();
+
+            return ret;
+        }
+
+        public void EndLifeSafetyOperationRequest(IAsyncResult result, out Exception ex)
+        {
+            var res = (BacnetAsyncResult)result;
+            ex = res.Error;
+            if (ex == null && !res.WaitForDone(Timeout))
+                ex = new Exception("Wait Timeout");
+
+            res.Dispose();
+        }
+
         public class Segmentation
         {
             // ReSharper disable InconsistentNaming
