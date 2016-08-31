@@ -51,6 +51,21 @@ namespace System.IO.BACnet
 
         public T As<T>()
         {
+            if (typeof(T) == typeof(DateTime))
+            {
+                switch (Tag)
+                {
+                    case BacnetApplicationTags.BACNET_APPLICATION_TAG_DATE:
+                    case BacnetApplicationTags.BACNET_APPLICATION_TAG_DATETIME:
+                    case BacnetApplicationTags.BACNET_APPLICATION_TAG_TIME:
+                    case BacnetApplicationTags.BACNET_APPLICATION_TAG_TIMESTAMP:
+                        return (T)Value;
+                }
+            }
+
+            if (typeof(T) == typeof(TimeSpan) && Tag == BacnetApplicationTags.BACNET_APPLICATION_TAG_TIME)
+                return (T)(dynamic)((DateTime)Value).TimeOfDay;
+
             if (typeof(T) != typeof(object) && TagFromType(typeof(T)) != Tag)
                 throw new ArgumentException($"Value with tag {Tag} can't be converted to {typeof(T).Name}");
 
