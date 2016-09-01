@@ -899,7 +899,18 @@ namespace System.IO.BACnet.Serialize
                         len += tagLen;
                         local_value_list.Add(v);
                     }
-                    new_entry.value = local_value_list;
+                    // FC : two values one Date & one Time => change to one datetime
+                    if ((local_value_list.Count == 2) && (local_value_list[0].Tag == BacnetApplicationTags.BACNET_APPLICATION_TAG_DATE) && (local_value_list[1].Tag == BacnetApplicationTags.BACNET_APPLICATION_TAG_TIME))
+                    {
+                        var date = (DateTime)local_value_list[0].Value;
+                        var time = (DateTime)local_value_list[1].Value;
+                        var bdatetime = new DateTime(date.Year, date.Month, date.Day, time.Hour, time.Minute, time.Second, time.Millisecond);
+                        local_value_list.Clear();
+                        local_value_list.Add(new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_DATETIME, bdatetime));
+                        new_entry.value = local_value_list;
+                    }
+                    else
+                        new_entry.value = local_value_list;
                     len++;
                 }
                 else if (tagNumber == 5)
@@ -1472,6 +1483,17 @@ namespace System.IO.BACnet.Serialize
             return (int)lenValue;
         }
 
+        public static int decode_bacnet_datetime(byte[] buffer, int offset, out DateTime bdatetime)
+        {
+            var len = 0;
+            DateTime date;
+            len += decode_application_date(buffer, offset + len, out date); // Date
+            DateTime time;
+            len += decode_application_time(buffer, offset + len, out time); // Time
+            bdatetime = new DateTime(date.Year, date.Month, date.Day, time.Hour, time.Minute, time.Second, time.Millisecond);
+            return len;
+        }
+
         public static int decode_object_id(byte[] buffer, int offset, out ushort objectType, out uint instance)
         {
             uint value;
@@ -1868,8 +1890,11 @@ namespace System.IO.BACnet.Serialize
 
             if (IS_CONTEXT_SPECIFIC(buffer[offset]))
             {
-                //this seems to be a strange way to determine object encodings
                 int tagLen;
+                uint lenValueType;
+                byte tagNumber;
+
+                //this seems to be a strange way to determine object encodings
                 if (propertyId == BacnetPropertyIds.PROP_LIST_OF_GROUP_MEMBERS)
                 {
                     BacnetReadAccessSpecification v;
@@ -1916,12 +1941,42 @@ namespace System.IO.BACnet.Serialize
                     value.Value = v;
                     return tagLen;
                 }
+                if (propertyId == BacnetPropertyIds.PROP_EVENT_TIME_STAMPS)
+                {
+                    decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValueType);
+                    len++; // skip Tag
+
+                    if (tagNumber == 0) // Time without date
+                    {
+                        DateTime dt;
+                        len += decode_bacnet_time(buffer, offset + len, out dt);
+                        value.Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_TIMESTAMP;
+                        value.Value = dt;
+                    }
+                    else if (tagNumber == 1) // sequence number
+                    {
+                        uint val;
+                        len += decode_unsigned(buffer, offset + len, lenValueType, out val);
+                        value.Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT;
+                        value.Value = val;
+                    }
+                    else if (tagNumber == 2) // date + time
+                    {
+                        DateTime dt;
+                        len += decode_bacnet_datetime(buffer, offset + len, out dt);
+                        value.Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_TIMESTAMP;
+                        len++;  // closing Tag
+                        value.Value = dt;
+                    }
+                    else
+                        return -1;
+
+                    return len;
+                }
 
                 value.Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC_DECODED;
                 var list = new List<BacnetValue>();
 
-                uint lenValueType;
-                byte tagNumber;
                 decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValueType);
                 // If an opening tag is not present, no loop to get the values
                 var multiplValue = IS_OPENING_TAG(buffer[offset + len]);
