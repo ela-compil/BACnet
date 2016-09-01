@@ -43,16 +43,17 @@ namespace System.IO.BACnet
 
         public int CompareTo(BacnetObjectId other)
         {
+            if (Type == other.Type)
+               return Instance.CompareTo(other.Instance);
+
             if (Type == BacnetObjectTypes.OBJECT_DEVICE)
                 return -1;
 
             if (other.Type == BacnetObjectTypes.OBJECT_DEVICE)
                 return 1;
 
-            return Type == other.Type
-                ? Instance.CompareTo(other.Instance)
-                // cast to int for comparison otherwise unpredictable behaviour with outbound enum (proprietary type)
-                : ((int)Type).CompareTo((int)other.Type);
+            // cast to int for comparison otherwise unpredictable behaviour with outbound enum (proprietary type)
+            return ((int)Type).CompareTo((int)other.Type);
         }
 
         public static bool operator ==(BacnetObjectId a, BacnetObjectId b)
