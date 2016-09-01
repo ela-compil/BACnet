@@ -29,22 +29,38 @@
 
         public static int Decode(byte[] buffer, int offset, int maxLength, out BacnetPtpFrameTypes frameType, out int msgLength)
         {
+            if (maxLength < PTP_HEADER_LENGTH) // not enough data
+            {
+                frameType = BacnetPtpFrameTypes.FRAME_TYPE_CONNECT_REQUEST; // don't care
+                msgLength = 0;
+                return -1;     //not enough data
+            }
+
             frameType = (BacnetPtpFrameTypes)buffer[offset + 2];
             msgLength = (buffer[offset + 3] << 8) | (buffer[offset + 4] << 0);
             var crcHeader = buffer[offset + 5];
             ushort crcData = 0;
-            if (maxLength < PTP_HEADER_LENGTH)
-                return -1;     //not enough data
+
             if (msgLength > 0)
+            {
+                if (offset + 6 + msgLength + 1 >= buffer.Length)
+                    return -1;
+
                 crcData = (ushort)((buffer[offset + 6 + msgLength + 1] << 8) | (buffer[offset + 6 + msgLength + 0] << 0));
+            }
+
             if (buffer[offset + 0] != PTP_PREAMBLE1)
                 return -1;
+
             if (buffer[offset + 1] != PTP_PREAMBLE2)
                 return -1;
+
             if (MSTP.CRC_Calc_Header(buffer, offset + 2, 3) != crcHeader)
                 return -1;
+
             if (msgLength > 0 && maxLength >= PTP_HEADER_LENGTH + msgLength + 2 && MSTP.CRC_Calc_Data(buffer, offset + 6, msgLength) != crcData)
                 return -1;
+
             return 8 + msgLength + (msgLength > 0 ? 2 : 0);
         }
 

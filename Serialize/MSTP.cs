@@ -67,18 +67,41 @@
 
         public static int Decode(byte[] buffer, int offset, int maxLength, out BacnetMstpFrameTypes frameType, out byte destinationAddress, out byte sourceAddress, out int msgLength)
         {
+            if (maxLength < MSTP_HEADER_LENGTH)  //not enough data
+            {
+                frameType = BacnetMstpFrameTypes.FRAME_TYPE_BACNET_DATA_EXPECTING_REPLY; // don't care
+                destinationAddress = sourceAddress = 0;   // don't care
+                msgLength = 0;
+                return -1;
+            }
+
             frameType = (BacnetMstpFrameTypes)buffer[offset + 2];
             destinationAddress = buffer[offset + 3];
             sourceAddress = buffer[offset + 4];
             msgLength = (buffer[offset + 5] << 8) | (buffer[offset + 6] << 0);
             var crcHeader = buffer[offset + 7];
             ushort crcData = 0;
-            if (maxLength < MSTP_HEADER_LENGTH) return -1;     //not enough data
-            if (msgLength > 0) crcData = (ushort)((buffer[offset + 8 + msgLength + 1] << 8) | (buffer[offset + 8 + msgLength + 0] << 0));
-            if (buffer[offset + 0] != MSTP_PREAMBLE1) return -1;
-            if (buffer[offset + 1] != MSTP_PREAMBLE2) return -1;
-            if (CRC_Calc_Header(buffer, offset + 2, 5) != crcHeader) return -1;
-            if (msgLength > 0 && maxLength >= (MSTP_HEADER_LENGTH + msgLength + 2) && CRC_Calc_Data(buffer, offset + 8, msgLength) != crcData) return -1;
+
+            if (msgLength > 0)
+            {
+                if (offset + 8 + msgLength + 1 >= buffer.Length)
+                    return -1;
+
+                crcData = (ushort)((buffer[offset + 8 + msgLength + 1] << 8) | (buffer[offset + 8 + msgLength + 0] << 0));
+            }
+
+            if (buffer[offset + 0] != MSTP_PREAMBLE1)
+                return -1;
+
+            if (buffer[offset + 1] != MSTP_PREAMBLE2)
+                return -1;
+
+            if (CRC_Calc_Header(buffer, offset + 2, 5) != crcHeader)
+                return -1;
+
+            if (msgLength > 0 && maxLength >= (MSTP_HEADER_LENGTH + msgLength + 2) && CRC_Calc_Data(buffer, offset + 8, msgLength) != crcData)
+                return -1;
+
             return 8 + (msgLength) + (msgLength > 0 ? 2 : 0);
         }
     }
