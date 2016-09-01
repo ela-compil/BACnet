@@ -314,6 +314,13 @@ namespace System.IO.BACnet.Storage
 
                 IList<BacnetValue> valueArray = null;
 
+                // Thank's to Steve Karg
+                // The 135-2016 text:
+                // 19.2.2 Application Priority Assignments
+                // All commandable objects within a device shall be configurable to accept writes to all priorities except priority 6
+                if (priority == 6)
+                    return ErrorCodes.WriteAccessDenied;
+
                 // http://www.chipkin.com/changing-the-bacnet-present-value-or-why-the-present-value-doesn%E2%80%99t-change/
                 // Write Property PROP_PRESENT_VALUE : A value is placed in the PROP_PRIORITY_ARRAY
                 if (property_id == BacnetPropertyIds.PROP_PRESENT_VALUE)
