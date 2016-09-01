@@ -386,6 +386,21 @@ namespace System.IO.BACnet
         PROP_POWER = 384,
         PROP_TRANSITION = 385,
         PROP_EGRESS_ACTIVE = 386,
+        PROP_INTERFACE_VALUE = 387,
+        PROP_FAULT_HIGH_LIMIT = 388,
+        PROP_FAULT_LOW_LIMIT = 389,
+        PROP_LOW_DIFF_LIMIT = 390,
+        /* enumerations 391-392 are defined in Addendum 135-2012az */
+        PROP_STRIKE_COUNT = 391,
+        PROP_TIME_OF_STRIKE_COUNT_RESET = 392,
+        /* enumerations 393-398 are defined in Addendum 135-2012ay */
+        PROP_DEFAULT_TIMEOUT = 393,
+        PROP_INITIAL_TIMEOUT = 394,
+        PROP_LAST_STATE_CHANGE = 395,
+        PROP_STATE_CHANGE_VALUES = 396,
+        PROP_TIMER_RUNNING = 397,
+        PROP_TIMER_STATE = 398,
+
         /* The special property identifiers all, optional, and required  */
         /* are reserved for use in the ReadPropertyConditional and */
         /* ReadPropertyMultiple services or services not defined in this standard. */

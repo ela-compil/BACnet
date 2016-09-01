@@ -33,7 +33,7 @@ namespace System.IO.BACnet
         OBJECT_LOAD_CONTROL = 28,
         OBJECT_STRUCTURED_VIEW = 29,
         OBJECT_ACCESS_DOOR = 30,
-        OBJECT_31 = 31,/* 31 was lighting output, but BACnet editor changed it... */        
+        OBJECT_TIMER = 31,                  /* Addendum 135-2012ay */
         OBJECT_ACCESS_CREDENTIAL = 32,      /* Addendum 2008-j */
         OBJECT_ACCESS_POINT = 33,
         OBJECT_ACCESS_RIGHTS = 34,
@@ -44,25 +44,28 @@ namespace System.IO.BACnet
         OBJECT_BITSTRING_VALUE = 39,        /* Addendum 2008-w */
         OBJECT_CHARACTERSTRING_VALUE = 40,  /* Addendum 2008-w */
         OBJECT_DATE_PATTERN_VALUE = 41,     /* Addendum 2008-w */
-        OBJECT_DATE_VALUE = 42,     /* Addendum 2008-w */
+        OBJECT_DATE_VALUE = 42,             /* Addendum 2008-w */
         OBJECT_DATETIME_PATTERN_VALUE = 43, /* Addendum 2008-w */
-        OBJECT_DATETIME_VALUE = 44, /* Addendum 2008-w */
-        OBJECT_INTEGER_VALUE = 45,  /* Addendum 2008-w */
+        OBJECT_DATETIME_VALUE = 44,         /* Addendum 2008-w */
+        OBJECT_INTEGER_VALUE = 45,          /* Addendum 2008-w */
         OBJECT_LARGE_ANALOG_VALUE = 46,     /* Addendum 2008-w */
         OBJECT_OCTETSTRING_VALUE = 47,      /* Addendum 2008-w */
         OBJECT_POSITIVE_INTEGER_VALUE = 48, /* Addendum 2008-w */
         OBJECT_TIME_PATTERN_VALUE = 49,     /* Addendum 2008-w */
-        OBJECT_TIME_VALUE = 50,     /* Addendum 2008-w */
+        OBJECT_TIME_VALUE = 50,             /* Addendum 2008-w */
         OBJECT_NOTIFICATION_FORWARDER = 51, /* Addendum 2010-af */
         OBJECT_ALERT_ENROLLMENT = 52,       /* Addendum 2010-af */
-        OBJECT_CHANNEL = 53,        /* Addendum 2010-aa */
+        OBJECT_CHANNEL = 53,                /* Addendum 2010-aa */
         OBJECT_LIGHTING_OUTPUT = 54,        /* Addendum 2010-i */
+        OBJECT_BINARY_LIGHTING_OUTPUT = 55, /* Addendum 135-2012az */
+
         /* Enumerated values 0-127 are reserved for definition by ASHRAE. */
         /* Enumerated values 128-1023 may be used by others subject to  */
         /* the procedures and constraints described in Clause 23. */
         /* do the max range inside of enum so that
            compilers will allocate adequate sized datatype for enum
            which is used to store decoding */
+
         OBJECT_PROPRIETARY_MIN = 128,
         OBJECT_PROPRIETARY_MAX = 1023,
         MAX_BACNET_OBJECT_TYPE = 1024,
