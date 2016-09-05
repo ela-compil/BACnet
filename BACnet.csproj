@@ -102,6 +102,15 @@
     <Compile Include="Base\BacnetRestartReason.cs" />
     <Compile Include="Base\BacnetResultFlags.cs" />
     <Compile Include="Base\BacnetSegmentations.cs" />
+    <Compile Include="Base\Enums\BacnetEventEnable.cs" />
+    <Compile Include="Base\Enums\BacnetEventStates.cs" />
+    <Compile Include="Base\Enums\BacnetEventTypes.cs" />
+    <Compile Include="Base\Enums\BacnetLifeSafetyModes.cs" />
+    <Compile Include="Base\Enums\BacnetLifeSafetyOperations.cs" />
+    <Compile Include="Base\Enums\BacnetLifeSafetyStates.cs" />
+    <Compile Include="Base\Enums\BacnetLimitEnable.cs" />
+    <Compile Include="Base\Enums\BacnetNotifyTypes.cs" />
+    <Compile Include="Base\Enums\BacnetCOVTypes.cs" />
     <Compile Include="Helpers\BacnetValuesExtensions.cs" />
     <Compile Include="Transport\IBacnetSerialTransport.cs" />
     <Compile Include="Transport\IBacnetTransport.cs" />

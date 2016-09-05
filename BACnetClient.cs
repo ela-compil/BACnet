@@ -2071,7 +2071,7 @@ namespace System.IO.BACnet
         }
 
         // FChaxel
-        public bool AlarmAcknowledgement(BacnetAddress adr, BacnetObjectId objId, BacnetEventNotificationData.BacnetEventStates eventState, string ackText, BacnetGenericTime evTimeStamp, BacnetGenericTime ackTimeStamp, byte invokeId = 0)
+        public bool AlarmAcknowledgement(BacnetAddress adr, BacnetObjectId objId, BacnetEventStates eventState, string ackText, BacnetGenericTime evTimeStamp, BacnetGenericTime ackTimeStamp, byte invokeId = 0)
         {
             using (var result = (BacnetAsyncResult)BeginAlarmAcknowledgement(adr, objId, eventState, ackText, evTimeStamp, ackTimeStamp, true, invokeId))
             {
@@ -2090,7 +2090,7 @@ namespace System.IO.BACnet
             return false;
         }
 
-        public IAsyncResult BeginAlarmAcknowledgement(BacnetAddress adr, BacnetObjectId objId, BacnetEventNotificationData.BacnetEventStates eventState, string ackText, BacnetGenericTime evTimeStamp, BacnetGenericTime ackTimeStamp, bool waitForTransmit, byte invokeId = 0)
+        public IAsyncResult BeginAlarmAcknowledgement(BacnetAddress adr, BacnetObjectId objId, BacnetEventStates eventState, string ackText, BacnetGenericTime evTimeStamp, BacnetGenericTime ackTimeStamp, bool waitForTransmit, byte invokeId = 0)
         {
             Trace.WriteLine("Sending AlarmAcknowledgement ... ", null);
             if (invokeId == 0)
@@ -2222,7 +2222,7 @@ namespace System.IO.BACnet
             return false;
         }
 
-        public bool LifeSafetyOperationRequest(BacnetAddress address, BacnetObjectId objectId, string requestingSrc, BacnetEventNotificationData.BacnetLifeSafetyOperations operation, byte invokeId = 0)
+        public bool LifeSafetyOperationRequest(BacnetAddress address, BacnetObjectId objectId, string requestingSrc, BacnetLifeSafetyOperations operation, byte invokeId = 0)
         {
             using (var result = (BacnetAsyncResult)BeginLifeSafetyOperationRequest(address, objectId, 0, requestingSrc, operation, true, invokeId))
             {
@@ -2241,7 +2241,7 @@ namespace System.IO.BACnet
             return false;
         }
 
-        public IAsyncResult BeginLifeSafetyOperationRequest(BacnetAddress address, BacnetObjectId objectId, uint processId, string requestingSrc, BacnetEventNotificationData.BacnetLifeSafetyOperations operation, bool waitForTransmit, byte invokeId = 0)
+        public IAsyncResult BeginLifeSafetyOperationRequest(BacnetAddress address, BacnetObjectId objectId, uint processId, string requestingSrc, BacnetLifeSafetyOperations operation, bool waitForTransmit, byte invokeId = 0)
         {
             Trace.WriteLine("Sending BeginLifeSafetyOperationRequest ... ", null);
             if (invokeId == 0)
