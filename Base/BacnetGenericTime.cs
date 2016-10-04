@@ -12,5 +12,10 @@ namespace System.IO.BACnet
             Tag = tag;
             Sequence = sequence;
         }
+
+        public override string ToString()
+        {
+            return $"{Time}";
+        }
     }
 }

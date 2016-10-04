@@ -22,5 +22,10 @@ namespace System.IO.BACnet
 
         public BacnetPropertyStateTypes tag;
         public uint state;
+
+        public override string ToString()
+        {
+            return $"{tag}:{state}";
+        }
     }
 }
