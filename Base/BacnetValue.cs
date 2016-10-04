@@ -43,6 +43,8 @@ namespace System.IO.BACnet
                 return BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID;
             if (t == typeof(BacnetError))
                 return BacnetApplicationTags.BACNET_APPLICATION_TAG_ERROR;
+            if (t == typeof(BacnetDeviceObjectPropertyReference))
+                return BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_PROPERTY_REFERENCE;
             if (t.IsEnum)
                 return BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED;
 

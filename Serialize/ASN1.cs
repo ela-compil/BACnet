@@ -1922,8 +1922,9 @@ namespace System.IO.BACnet.Serialize
                     value.Value = v;
                     return tagLen;
                 }
-                if ((propertyId == BacnetPropertyIds.PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES) ||
-                    (propertyId == BacnetPropertyIds.PROP_LOG_DEVICE_OBJECT_PROPERTY))
+                if (propertyId == BacnetPropertyIds.PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES ||
+                    propertyId == BacnetPropertyIds.PROP_LOG_DEVICE_OBJECT_PROPERTY ||
+                    propertyId == BacnetPropertyIds.PROP_OBJECT_PROPERTY_REFERENCE)
                 {
                     BacnetDeviceObjectPropertyReference v;
                     tagLen = decode_device_obj_property_ref(buffer, offset, maxOffset, out v);

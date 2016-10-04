@@ -1,4 +1,5 @@
 using System.IO.BACnet.Serialize;
+using System.Linq;
 
 namespace System.IO.BACnet
 {
@@ -61,6 +62,56 @@ namespace System.IO.BACnet
         {
             get { return propertyIdentifier; }
             set { propertyIdentifier = value; }
+        }
+
+        public static object Parse(string value)
+        {
+            var parts = value.Split(new [] {'.'}, StringSplitOptions.RemoveEmptyEntries);
+
+            BacnetObjectId? deviceId = null;
+            BacnetObjectId objectId;
+
+            switch (parts.Length)
+            {
+                case 2:
+                    objectId = BacnetObjectId.Parse(parts[0]);
+                    break;
+
+                case 3:
+                    deviceId = BacnetObjectId.Parse(parts[0]);
+                    objectId = BacnetObjectId.Parse(parts[1]);
+                    break;
+
+                default:
+                    throw new ArgumentException("Invalid format", nameof(value));
+            }
+
+            BacnetPropertyIds propertyId;
+
+            if (!Enum.TryParse(parts.Last(), out propertyId))
+            {
+                uint vendorSpecificPropertyId;
+
+                if (!uint.TryParse(parts.Last(), out vendorSpecificPropertyId))
+                    throw new ArgumentException("Invalid format of property id", nameof(value));
+
+                propertyId = (BacnetPropertyIds)vendorSpecificPropertyId;
+            }
+
+            return new BacnetDeviceObjectPropertyReference
+            {
+                DeviceId = deviceId,
+                ObjectId = objectId,
+                PropertyId = propertyId,
+                ArrayIndex = -1
+            };
+        }
+
+        public override string ToString()
+        {
+            return DeviceId != null
+                ? $"{DeviceId}.{ObjectId}.{PropertyId}"
+                : $"{ObjectId}.{PropertyId}";
         }
     }
 }

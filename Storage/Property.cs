@@ -80,6 +80,8 @@ namespace System.IO.BACnet.Storage
                     return new BacnetValue(type, BacnetObjectId.Parse(value));
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_READ_ACCESS_SPECIFICATION:
                     return new BacnetValue(type, BacnetReadAccessSpecification.Parse(value));
+                case BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_PROPERTY_REFERENCE:
+                    return new BacnetValue(type, BacnetDeviceObjectPropertyReference.Parse(value));
                 default:
                     return new BacnetValue(type, null);
             }
