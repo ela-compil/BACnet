@@ -1652,17 +1652,25 @@ namespace System.IO.BACnet.Serialize
             objectId = new BacnetObjectId();
             property = new BacnetPropertyReference();
 
-            /* Tag 0: Object ID          */
-            if (!ASN1.decode_is_context_tag(buffer, offset + len, 0))
+            // must have at least 2 tags , otherwise return reject code: Missing required parameter
+            if (apduLen < 7)
                 return -1;
+
+            /* Tag 0: Object ID */
+            if (!ASN1.decode_is_context_tag(buffer, offset + len, 0))
+                return -2;
+
             len++;
             len += ASN1.decode_object_id(buffer, offset + len, out type, out objectId.instance);
             objectId.type = (BacnetObjectTypes)type;
+
             /* Tag 1: Property ID */
             len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValueType);
             if (tagNumber != 1)
-                return -1;
+                return -2;
+
             len += ASN1.decode_enumerated(buffer, offset + len, lenValueType, out property.propertyIdentifier);
+
             /* Tag 2: Optional Array Index */
             if (len < apduLen)
             {
@@ -1672,10 +1680,14 @@ namespace System.IO.BACnet.Serialize
                     len += ASN1.decode_unsigned(buffer, offset + len, lenValueType, out property.propertyArrayIndex);
                 }
                 else
-                    return -1;
+                    return -2;
             }
             else
                 property.propertyArrayIndex = ASN1.BACNET_ARRAY_ALL;
+
+            if (len < apduLen)
+                /* If something left over now, we have an invalid request */
+                return -3;
 
             return len;
         }

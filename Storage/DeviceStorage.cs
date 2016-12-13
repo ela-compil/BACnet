@@ -55,7 +55,7 @@ namespace System.IO.BACnet.Storage
             Objects = new Object[0];
         }
 
-        private Property FindProperty(BacnetObjectId objectId, BacnetPropertyIds propertyId)
+        public Property FindProperty(BacnetObjectId objectId, BacnetPropertyIds propertyId)
         {
             //liniear search
             var obj = FindObject(objectId);
@@ -86,7 +86,9 @@ namespace System.IO.BACnet.Storage
             GenericError = -1,
             NotExist = -2,
             NotForMe = -3,
-            WriteAccessDenied = -4
+            WriteAccessDenied = -4,
+            UnknownObject = -5,
+            UnknownProperty = -6
         }
 
         public int ReadPropertyValue(BacnetObjectId objectId, BacnetPropertyIds propertyId)
@@ -121,6 +123,11 @@ namespace System.IO.BACnet.Storage
             }
 
             //find in storage
+            var obj = FindObject(objectId);
+            if (obj == null)
+                return ErrorCodes.UnknownObject;
+
+            //object found now find property
             var p = FindProperty(objectId, propertyId);
             if (p == null)
                 return ErrorCodes.NotExist;
@@ -142,17 +149,30 @@ namespace System.IO.BACnet.Storage
             return ErrorCodes.Good;
         }
 
-        public void ReadPropertyMultiple(BacnetObjectId object_id, ICollection<BacnetPropertyReference> properties, out IList<BacnetPropertyValue> values)
+        public void ReadPropertyMultiple(BacnetObjectId objectId, ICollection<BacnetPropertyReference> properties, out IList<BacnetPropertyValue> values)
         {
             var valuesRet = new List<BacnetPropertyValue>();
-            
+
             foreach (var entry in properties)
             {
-                var newEntry = new BacnetPropertyValue {property = entry};
-                if (ReadProperty(object_id, (BacnetPropertyIds)entry.propertyIdentifier, entry.propertyArrayIndex, out newEntry.value) != ErrorCodes.Good)
+                var newEntry = new BacnetPropertyValue { property = entry };
+
+                switch (ReadProperty(objectId, (BacnetPropertyIds)entry.propertyIdentifier, entry.propertyArrayIndex, out newEntry.value))
                 {
-                    var bacnetError = new BacnetError(BacnetErrorClasses.ERROR_CLASS_OBJECT, BacnetErrorCodes.ERROR_CODE_UNKNOWN_PROPERTY);
-                    newEntry.value = new[] { new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_ERROR, bacnetError) };
+                    case ErrorCodes.UnknownObject:
+                        newEntry.value = new[]
+                        {
+                            new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_ERROR,
+                            new BacnetError(BacnetErrorClasses.ERROR_CLASS_OBJECT, BacnetErrorCodes.ERROR_CODE_UNKNOWN_OBJECT))
+                        };
+                        break;
+                    case ErrorCodes.NotExist:
+                        newEntry.value = new[]
+                        {
+                            new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_ERROR,
+                            new BacnetError(BacnetErrorClasses.ERROR_CLASS_PROPERTY, BacnetErrorCodes.ERROR_CODE_UNKNOWN_PROPERTY))
+                        };
+                        break;
                 }
 
                 valuesRet.Add(newEntry);
@@ -279,25 +299,25 @@ namespace System.IO.BACnet.Storage
         }
 
         // Write PROP_PRESENT_VALUE or PROP_RELINQUISH_DEFAULT in an object with a 16 level PROP_PRIORITY_ARRAY (BACNET_APPLICATION_TAG_NULL)
-        public ErrorCodes WriteCommandableProperty(BacnetObjectId object_id, BacnetPropertyIds property_id, BacnetValue value, uint priority)
+        public ErrorCodes WriteCommandableProperty(BacnetObjectId objectId, BacnetPropertyIds propertyId, BacnetValue value, uint priority)
         {
 
-            if (property_id != BacnetPropertyIds.PROP_PRESENT_VALUE)
+            if (propertyId != BacnetPropertyIds.PROP_PRESENT_VALUE)
                 return ErrorCodes.NotForMe;
 
-            var presentvalue = FindProperty(object_id, BacnetPropertyIds.PROP_PRESENT_VALUE);
+            var presentvalue = FindProperty(objectId, BacnetPropertyIds.PROP_PRESENT_VALUE);
             if (presentvalue == null)
                 return ErrorCodes.NotForMe;
 
-            var relinquish = FindProperty(object_id, BacnetPropertyIds.PROP_RELINQUISH_DEFAULT);
+            var relinquish = FindProperty(objectId, BacnetPropertyIds.PROP_RELINQUISH_DEFAULT);
             if (relinquish == null)
                 return ErrorCodes.NotForMe;
 
-            var outOfService = FindProperty(object_id, BacnetPropertyIds.PROP_OUT_OF_SERVICE);
+            var outOfService = FindProperty(objectId, BacnetPropertyIds.PROP_OUT_OF_SERVICE);
             if (outOfService == null)
                 return ErrorCodes.NotForMe;
 
-            var array = FindProperty(object_id, BacnetPropertyIds.PROP_PRIORITY_ARRAY);
+            var array = FindProperty(objectId, BacnetPropertyIds.PROP_PRIORITY_ARRAY);
             if (array == null)
                 return ErrorCodes.NotForMe;
 
@@ -306,7 +326,7 @@ namespace System.IO.BACnet.Storage
             try
             {
                 // If PROP_OUT_OF_SERVICE=True, value is accepted as is : http://www.bacnetwiki.com/wiki/index.php?title=Priority_Array                 
-                if ((bool)outOfService.BacnetValue[0].Value && (property_id == BacnetPropertyIds.PROP_PRESENT_VALUE))
+                if ((bool)outOfService.BacnetValue[0].Value && (propertyId == BacnetPropertyIds.PROP_PRESENT_VALUE))
                 {
                     presentvalue.BacnetValue = new BacnetValue[1] { value };
                     return ErrorCodes.Good;
@@ -323,7 +343,7 @@ namespace System.IO.BACnet.Storage
 
                 // http://www.chipkin.com/changing-the-bacnet-present-value-or-why-the-present-value-doesn%E2%80%99t-change/
                 // Write Property PROP_PRESENT_VALUE : A value is placed in the PROP_PRIORITY_ARRAY
-                if (property_id == BacnetPropertyIds.PROP_PRESENT_VALUE)
+                if (propertyId == BacnetPropertyIds.PROP_PRESENT_VALUE)
                 {
                     errorcode = ErrorCodes.Good;
 
@@ -364,8 +384,6 @@ namespace System.IO.BACnet.Storage
 
             return errorcode;
         }
-
-
 
         public ErrorCodes[] WritePropertyMultiple(BacnetObjectId objectId, ICollection<BacnetPropertyValue> values)
         {

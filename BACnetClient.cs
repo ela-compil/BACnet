@@ -223,10 +223,28 @@ namespace System.IO.BACnet
                 {
                     BacnetObjectId objectId;
                     BacnetPropertyReference property;
-                    if (Services.DecodeReadProperty(buffer, offset, length, out objectId, out property) >= 0)
+                    int thsRejectReason;
+
+                    if ((thsRejectReason = Services.DecodeReadProperty(buffer, offset, length, out objectId, out property)) >= 0)
+                    {
                         OnReadPropertyRequest(this, adr, invokeId, objectId, property, maxSegments);
+                    }
                     else
+                    {
+                        switch (thsRejectReason)
+                        {
+                            case -1:
+                                SendConfirmedServiceReject(adr, invokeId, BacnetRejectReasons.REJECT_REASON_MISSING_REQUIRED_PARAMETER);
+                                break;
+                            case -2:
+                                SendConfirmedServiceReject(adr, invokeId, BacnetRejectReasons.REJECT_REASON_INVALID_TAG);
+                                break;
+                            case -3:
+                                SendConfirmedServiceReject(adr, invokeId, BacnetRejectReasons.REJECT_REASON_TOO_MANY_ARGUMENTS);
+                                break;
+                        }
                         Trace.TraceWarning("Couldn't decode DecodeReadProperty");
+                    }
                 }
                 else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_WRITE_PROPERTY && OnWritePropertyRequest != null)
                 {
@@ -235,7 +253,11 @@ namespace System.IO.BACnet
                     if (Services.DecodeWriteProperty(buffer, offset, length, out objectId, out value) >= 0)
                         OnWritePropertyRequest(this, adr, invokeId, objectId, value, maxSegments);
                     else
+                    {
+                        ErrorResponse(adr, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
+                        //SendConfirmedServiceReject(adr, invokeId, BacnetRejectReasons.REJECT_REASON_OTHER); 
                         Trace.TraceWarning("Couldn't decode DecodeWriteProperty");
+                    }
                 }
                 else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROP_MULTIPLE && OnReadPropertyMultipleRequest != null)
                 {
@@ -243,7 +265,10 @@ namespace System.IO.BACnet
                     if (Services.DecodeReadPropertyMultiple(buffer, offset, length, out properties) >= 0)
                         OnReadPropertyMultipleRequest(this, adr, invokeId, properties, maxSegments);
                     else
+                    {
+                        ErrorResponse(adr, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
                         Trace.TraceWarning("Couldn't decode DecodeReadPropertyMultiple");
+                    }
                 }
                 else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_WRITE_PROP_MULTIPLE && OnWritePropertyMultipleRequest != null)
                 {
@@ -252,7 +277,10 @@ namespace System.IO.BACnet
                     if (Services.DecodeWritePropertyMultiple(buffer, offset, length, out objectId, out values) >= 0)
                         OnWritePropertyMultipleRequest(this, adr, invokeId, objectId, values, maxSegments);
                     else
+                    {
+                        ErrorResponse(adr, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
                         Trace.TraceWarning("Couldn't decode DecodeWritePropertyMultiple");
+                    }
                 }
                 else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_COV_NOTIFICATION && OnCOVNotification != null)
                 {
@@ -264,7 +292,10 @@ namespace System.IO.BACnet
                     if (Services.DecodeCOVNotifyUnconfirmed(buffer, offset, length, out subscriberProcessIdentifier, out initiatingDeviceIdentifier, out monitoredObjectIdentifier, out timeRemaining, out values) >= 0)
                         OnCOVNotification(this, adr, invokeId, subscriberProcessIdentifier, initiatingDeviceIdentifier, monitoredObjectIdentifier, timeRemaining, true, values, maxSegments);
                     else
+                    {
+                        ErrorResponse(adr, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
                         Trace.TraceWarning("Couldn't decode COVNotify");
+                    }
                 }
                 else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_ATOMIC_WRITE_FILE && OnAtomicWriteFileRequest != null)
                 {
@@ -277,7 +308,10 @@ namespace System.IO.BACnet
                     if (Services.DecodeAtomicWriteFile(buffer, offset, length, out isStream, out objectId, out position, out blockCount, out blocks, out counts) >= 0)
                         OnAtomicWriteFileRequest(this, adr, invokeId, isStream, objectId, position, blockCount, blocks, counts, maxSegments);
                     else
+                    {
+                        ErrorResponse(adr, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
                         Trace.TraceWarning("Couldn't decode AtomicWriteFile");
+                    }
                 }
                 else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_ATOMIC_READ_FILE && OnAtomicReadFileRequest != null)
                 {
@@ -288,7 +322,10 @@ namespace System.IO.BACnet
                     if (Services.DecodeAtomicReadFile(buffer, offset, length, out isStream, out objectId, out position, out count) >= 0)
                         OnAtomicReadFileRequest(this, adr, invokeId, isStream, objectId, position, count, maxSegments);
                     else
+                    {
+                        ErrorResponse(adr, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
                         Trace.TraceWarning("Couldn't decode AtomicReadFile");
+                    }
                 }
                 else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_SUBSCRIBE_COV && OnSubscribeCOV != null)
                 {
@@ -300,7 +337,10 @@ namespace System.IO.BACnet
                     if (Services.DecodeSubscribeCOV(buffer, offset, length, out subscriberProcessIdentifier, out monitoredObjectIdentifier, out cancellationRequest, out issueConfirmedNotifications, out lifetime) >= 0)
                         OnSubscribeCOV(this, adr, invokeId, subscriberProcessIdentifier, monitoredObjectIdentifier, cancellationRequest, issueConfirmedNotifications, lifetime, maxSegments);
                     else
+                    {
+                        ErrorResponse(adr, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
                         Trace.TraceWarning("Couldn't decode SubscribeCOV");
+                    }
                 }
                 else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_SUBSCRIBE_COV_PROPERTY && OnSubscribeCOVProperty != null)
                 {
@@ -314,7 +354,10 @@ namespace System.IO.BACnet
                     if (Services.DecodeSubscribeProperty(buffer, offset, length, out subscriberProcessIdentifier, out monitoredObjectIdentifier, out monitoredProperty, out cancellationRequest, out issueConfirmedNotifications, out lifetime, out covIncrement) >= 0)
                         OnSubscribeCOVProperty(this, adr, invokeId, subscriberProcessIdentifier, monitoredObjectIdentifier, monitoredProperty, cancellationRequest, issueConfirmedNotifications, lifetime, covIncrement, maxSegments);
                     else
+                    {
+                        ErrorResponse(adr, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
                         Trace.TraceWarning("Couldn't decode SubscribeCOVProperty");
+                    }
                 }
                 else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_DEVICE_COMMUNICATION_CONTROL && OnDeviceCommunicationControl != null)
                 {
@@ -324,7 +367,10 @@ namespace System.IO.BACnet
                     if (Services.DecodeDeviceCommunicationControl(buffer, offset, length, out timeDuration, out enableDisable, out password) >= 0)
                         OnDeviceCommunicationControl(this, adr, invokeId, timeDuration, enableDisable, password, maxSegments);
                     else
+                    {
+                        ErrorResponse(adr, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
                         Trace.TraceWarning("Couldn't decode DeviceCommunicationControl");
+                    }
                 }
                 else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_REINITIALIZE_DEVICE && OnReinitializedDevice != null)
                 {
@@ -333,7 +379,10 @@ namespace System.IO.BACnet
                     if (Services.DecodeReinitializeDevice(buffer, offset, length, out state, out password) >= 0)
                         OnReinitializedDevice(this, adr, invokeId, state, password, maxSegments);
                     else
+                    {
+                        ErrorResponse(adr, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
                         Trace.TraceWarning("Couldn't decode ReinitializeDevice");
+                    }
                 }
                 else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_EVENT_NOTIFICATION && OnEventNotify != null) // F. Chaxel
                 {
@@ -341,7 +390,10 @@ namespace System.IO.BACnet
                     if (Services.DecodeEventNotifyData(buffer, offset, length, out eventData) >= 0)
                         OnEventNotify(this, adr, eventData);
                     else
+                    {
+                        ErrorResponse(adr, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
                         Trace.TraceWarning("Couldn't decode Event/Alarm Notification");
+                    }
                 }
                 else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_READ_RANGE && OnReadRange != null)
                 {
@@ -354,7 +406,10 @@ namespace System.IO.BACnet
                     if (Services.DecodeReadRange(buffer, offset, length, out objectId, out property, out requestType, out position, out time, out count) >= 0)
                         OnReadRange(this, adr, invokeId, objectId, property, requestType, position, time, count, maxSegments);
                     else
+                    {
+                        ErrorResponse(adr, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
                         Trace.TraceWarning("Couldn't decode ReadRange");
+                    }
                 }
                 else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_CREATE_OBJECT && OnCreateObjectRequest != null)
                 {
@@ -363,25 +418,31 @@ namespace System.IO.BACnet
                     if (Services.DecodeCreateObject(buffer, offset, length, out objectId, out values) >= 0)
                         OnCreateObjectRequest(this, adr, invokeId, objectId, values, maxSegments);
                     else
+                    {
+                        ErrorResponse(adr, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
                         Trace.TraceWarning("Couldn't decode CreateObject");
+                    }
                 }
                 else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_DELETE_OBJECT && OnDeleteObjectRequest != null)
                 {
-
                     BacnetObjectId objectId;
                     if (Services.DecodeDeleteObject(buffer, offset, length, out objectId) >= 0)
                         OnDeleteObjectRequest(this, adr, invokeId, objectId, maxSegments);
                     else
+                    {
+                        ErrorResponse(adr, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
                         Trace.TraceWarning("Couldn't decode DecodeDeleteObject");
+                    }
                 }
                 else
                 {
+                    ErrorResponse(adr, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_REJECT_UNRECOGNIZED_SERVICE);
                     Trace.TraceWarning($"Confirmed service not handled: {service}");
-                    SendConfirmedServiceReject(adr, invokeId, BacnetRejectReasons.REJECT_REASON_UNRECOGNIZED_SERVICE);
                 }
             }
             catch (Exception ex)
             {
+                ErrorResponse(adr, service, invokeId, BacnetErrorClasses.ERROR_CLASS_DEVICE, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
                 Trace.TraceError($"Error in ProcessConfirmedServiceRequest: {ex.Message}");
             }
         }
@@ -2383,6 +2444,72 @@ namespace System.IO.BACnet
             return segmentation != null && segmentation.sequence_number > 0;
         }
 
+        /// <summary>
+        /// Handle the segmentation of several too hugh response (if it's accepted by the client) 
+        /// used by ReadRange, ReadProperty, ReadPropertyMultiple & ReadFile responses
+        /// </summary>
+        private void HandleSegmentationResponse(BacnetAddress adr, byte invokeId, Segmentation segmentation, Action<Segmentation> transmit)
+        {
+            // send first
+            transmit(segmentation);
+
+            if (segmentation == null || segmentation.buffer.result == EncodeResult.Good)
+                return;
+
+            // start new thread to handle the segment sequence (if required)
+            ThreadPool.QueueUserWorkItem(o =>
+            {
+                var oldMaxInfoFrames = Transport.MaxInfoFrames;
+                Transport.MaxInfoFrames = segmentation.window_size; // increase max_info_frames, to increase throughput. This might be against 'standard'
+
+                while (true)
+                {
+                    var moreFollows = (segmentation.buffer.result & EncodeResult.NotEnoughBuffer) > 0;
+
+                    // wait for segmentACK
+                    if ((segmentation.sequence_number - 1) % segmentation.window_size == 0 || !moreFollows)
+                    {
+                        if (!WaitForAllTransmits(TransmitTimeout))
+                        {
+                            Trace.TraceWarning("Transmit timeout");
+                            break;
+                        }
+
+                        var currentNumber = segmentation.sequence_number;
+
+                        if (!WaitForSegmentAck(adr, invokeId, segmentation, Timeout))
+                        {
+                            Trace.TraceWarning("Didn't get segmentACK");
+                            break;
+                        }
+
+                        if (segmentation.sequence_number != currentNumber)
+                        {
+                            Trace.WriteLine("Oh, a retransmit", null);
+                            moreFollows = true;
+                        }
+                    }
+                    else
+                    {
+                        // a negative segmentACK perhaps
+                        var currentNumber = segmentation.sequence_number;
+                        WaitForSegmentAck(adr, invokeId, segmentation, 0); // don't wait
+
+                        if (segmentation.sequence_number != currentNumber)
+                            Trace.WriteLine("Oh, a retransmit", null);
+                    }
+
+                    if (moreFollows)
+                        // lock (m_lockObject) transmit(segmentation);
+                        transmit(segmentation);
+                    else
+                        break;
+                }
+
+                Transport.MaxInfoFrames = oldMaxInfoFrames;
+            });
+        }
+
         private void SendComplexAck(BacnetAddress adr, byte invokeId, Segmentation segmentation, BacnetConfirmedServices service, Action<EncodeBuffer> apduContentEncode)
         {
             Trace.WriteLine($"Sending {Thread.CurrentThread.CurrentCulture.TextInfo.ToTitleCase(service.ToString().ToLower())} ... ", null);
@@ -2423,9 +2550,12 @@ namespace System.IO.BACnet
 
         public void ReadPropertyResponse(BacnetAddress adr, byte invokeId, Segmentation segmentation, BacnetObjectId objectId, BacnetPropertyReference property, IEnumerable<BacnetValue> value)
         {
-            SendComplexAck(adr, invokeId, segmentation, BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROPERTY, b =>
+            HandleSegmentationResponse(adr, invokeId, segmentation, o =>
             {
-                Services.EncodeReadPropertyAcknowledge(b, objectId, property.propertyIdentifier, property.propertyArrayIndex, value);
+                SendComplexAck(adr, invokeId, segmentation, BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROPERTY, b =>
+                {
+                    Services.EncodeReadPropertyAcknowledge(b, objectId, property.propertyIdentifier, property.propertyArrayIndex, value);
+                });
             });
         }
 
@@ -2435,30 +2565,38 @@ namespace System.IO.BACnet
             {
                 Services.EncodeCreateObjectAcknowledge(b, objectId);
             });
-
         }
 
         public void ReadPropertyMultipleResponse(BacnetAddress adr, byte invokeId, Segmentation segmentation, IList<BacnetReadAccessResult> values)
         {
-            SendComplexAck(adr, invokeId, segmentation, BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROP_MULTIPLE, b => 
-            { 
-                Services.EncodeReadPropertyMultipleAcknowledge(b, values); 
+            HandleSegmentationResponse(adr, invokeId, segmentation, o =>
+            {
+                SendComplexAck(adr, invokeId, segmentation, BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROP_MULTIPLE, b =>
+                {
+                    Services.EncodeReadPropertyMultipleAcknowledge(b, values);
+                });
             });
         }
 
         public void ReadRangeResponse(BacnetAddress adr, byte invokeId, Segmentation segmentation, BacnetObjectId objectId, BacnetPropertyReference property, BacnetResultFlags status, uint itemCount, byte[] applicationData, BacnetReadRangeRequestTypes requestType, uint firstSequenceNo)
         {
-            SendComplexAck(adr, invokeId, segmentation, BacnetConfirmedServices.SERVICE_CONFIRMED_READ_RANGE, (b) =>
+            HandleSegmentationResponse(adr, invokeId, segmentation, o =>
             {
-                Services.EncodeReadRangeAcknowledge(b, objectId, property.propertyIdentifier, property.propertyArrayIndex, BacnetBitString.ConvertFromInt((uint)status), itemCount, applicationData, requestType, firstSequenceNo);
+                SendComplexAck(adr, invokeId, segmentation, BacnetConfirmedServices.SERVICE_CONFIRMED_READ_RANGE, b =>
+                {
+                    Services.EncodeReadRangeAcknowledge(b, objectId, property.propertyIdentifier, property.propertyArrayIndex, BacnetBitString.ConvertFromInt((uint)status), itemCount, applicationData, requestType, firstSequenceNo);
+                });
             });
         }
 
         public void ReadFileResponse(BacnetAddress adr, byte invokeId, Segmentation segmentation, int position, uint count, bool endOfFile, byte[] fileBuffer)
         {
-            SendComplexAck(adr, invokeId, segmentation, BacnetConfirmedServices.SERVICE_CONFIRMED_ATOMIC_READ_FILE, b =>
+            HandleSegmentationResponse(adr, invokeId, segmentation, o =>
             {
-                Services.EncodeAtomicReadFileAcknowledge(b, true, endOfFile, position, 1, new[] { fileBuffer }, new[] { (int)count });
+                SendComplexAck(adr, invokeId, segmentation, BacnetConfirmedServices.SERVICE_CONFIRMED_ATOMIC_READ_FILE, b =>
+                {
+                    Services.EncodeAtomicReadFileAcknowledge(b, true, endOfFile, position, 1, new[] { fileBuffer }, new[] { (int)count });
+                });
             });
         }
 
