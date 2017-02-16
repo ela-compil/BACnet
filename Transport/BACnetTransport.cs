@@ -230,13 +230,24 @@ namespace System.IO.BACnet
                     conn.BeginReceive(OnReceiveData, conn);
                 }
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                //restart data receive
-                if (conn.Client != null)
+                if (conn.Client == null)
+                    return;
+
+                Trace.TraceError($"Exception in Ip OnRecieveData: {e.Message}");
+
+                while (conn.Client != null)
                 {
-                    Trace.TraceError($"Exception in Ip OnRecieveData: {ex.Message}");
-                    conn.BeginReceive(OnReceiveData, conn);
+                    try
+                    {
+                        //restart data receive
+                        conn.BeginReceive(OnReceiveData, conn);
+                    }
+                    catch (Exception ex)
+                    {
+                        Trace.TraceError($"Exception in Ip OnRecieveData: {ex.Message}");
+                    }
                 }
             }
         }
