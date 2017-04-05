@@ -15,24 +15,30 @@ namespace System.IO.BACnet
         // Modif FC
         public BacnetAddress RoutedSource = null;
 
-        public BacnetAddress(BacnetAddressTypes type, ushort network, byte[] address)
+        public BacnetAddress(BacnetAddressTypes addressType, ushort network = 0, byte[] address = null)
         {
-            this.type = type;
+            type = addressType;
             net = network;
-            adr = address ?? new byte[0];
+            adr = address;
         }
 
-        public BacnetAddress(BacnetAddressTypes type, string address)
-            : this(type, 0, null)
+        public BacnetAddress(BacnetAddressTypes addressType, string address = null, ushort network = 0)
+            : this(addressType, network)
         {
+            if (address == null)
+                return;
+
             switch (type)
             {
                 case BacnetAddressTypes.IP:
+                    adr = new byte[6];
                     var addressParts = address.Split(':');
                     var addressBytes = IPAddress.Parse(addressParts[0]).GetAddressBytes();
                     Array.Copy(addressBytes, adr, addressBytes.Length);
 
-                    var portBytes = BitConverter.GetBytes(ushort.Parse(addressParts[1]));
+                    var portBytes = BitConverter.GetBytes(addressParts.Length > 1
+                        ? ushort.Parse(addressParts[1])
+                        : (ushort)0xBAC0);
 
                     if (BitConverter.IsLittleEndian)
                         portBytes = portBytes.Reverse().ToArray();
@@ -43,12 +49,10 @@ namespace System.IO.BACnet
                 case BacnetAddressTypes.Ethernet:
                     adr = PhysicalAddress.Parse(address).GetAddressBytes();
                     break;
-            }
-        }
 
-        public BacnetAddress()
-            : this(BacnetAddressTypes.None, 0, null)
-        {
+                default:
+                    throw new NotSupportedException("String format is not supported for address type " + type);
+            }
         }
 
         public override int GetHashCode()
@@ -89,7 +93,7 @@ namespace System.IO.BACnet
                             : "[::]";
 
                     default: // Routed @ are always like this, NPDU do not contains the MAC type, only the lenght
-                        if (adr == null)
+                        if (adr == null || adr.Length == 0)
                             return "?";
 
                         switch (adr.Length)
