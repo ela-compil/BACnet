@@ -4,7 +4,9 @@ This library was originaly developed by Morten Kvistgaard with a lot of contribu
 
 ## How to use
 
-You can get BACnet library by [grabbing the latest NuGet package](https://www.nuget.org/packages/BACnet).
+You can get BACnet library by grabbing the latest [NuGet package](https://www.nuget.org/packages/BACnet).
+
+[![NuGet version](https://badge.fury.io/nu/bacnet.svg)](https://www.nuget.org/packages/BACnet)
 
 ## Getting Started
 
