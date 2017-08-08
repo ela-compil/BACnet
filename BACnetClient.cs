@@ -940,15 +940,19 @@ namespace System.IO.BACnet
 
         public void WhoIs(int lowLimit = -1, int highLimit = -1, BacnetAddress receiver = null)
         {
-            Trace.WriteLine("Sending WhoIs ... ", null);
+            if (receiver == null)
+            {
+                // _receiver could be an unicast @ : for direct acces 
+                // usefull on BIP for a known IP:Port, unknown device Id
+                receiver = Transport.GetBroadcastAddress();
+                Trace.WriteLine("Broadcasting WhoIs ... ", null);
+            }
+            else
+            {
+                Trace.WriteLine(string.Format("Sending WhoIs to {0} ... ", receiver), null);
+            }
 
             var b = GetEncodeBuffer(Transport.HeaderLength);
-
-            // _receiver could be an unicast @ : for direct acces 
-            // usefull on BIP for a known IP:Port, unknown device Id
-            if (receiver == null)
-                receiver = Transport.GetBroadcastAddress();
-
             NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, receiver, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, VendorId);
             APDU.EncodeUnconfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_WHO_IS);
             Services.EncodeWhoIsBroadcast(b, lowLimit, highLimit);
@@ -956,17 +960,24 @@ namespace System.IO.BACnet
             Transport.Send(b.buffer, Transport.HeaderLength, b.offset - Transport.HeaderLength, receiver, false, 0);
         }
 
-        public void Iam(uint deviceId, BacnetSegmentations segmentation)
+        public void Iam(uint deviceId, BacnetSegmentations segmentation, BacnetAddress receiver = null)
         {
-            Trace.WriteLine("Sending Iam ... ", null);
+            if (receiver == null)
+            {
+                receiver = Transport.GetBroadcastAddress();
+                Trace.WriteLine(string.Format("Broadcasting Iam {0} ... ", deviceId), null);
+            }
+            else
+            {
+                Trace.WriteLine(string.Format("Sending Iam {0} to {1} ... ", deviceId, receiver), null);
+            }
 
             var b = GetEncodeBuffer(Transport.HeaderLength);
-            var broadcast=Transport.GetBroadcastAddress();
-            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, broadcast, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, VendorId);
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, receiver, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, VendorId);
             APDU.EncodeUnconfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_I_AM);
             Services.EncodeIamBroadcast(b, deviceId, (uint)GetMaxApdu(), segmentation, VendorId);
 
-            Transport.Send(b.buffer, Transport.HeaderLength, b.offset - Transport.HeaderLength, broadcast, false, 0);
+            Transport.Send(b.buffer, Transport.HeaderLength, b.offset - Transport.HeaderLength, receiver, false, 0);
         }
 
         // ReSharper disable once InconsistentNaming
