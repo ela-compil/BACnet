@@ -2277,7 +2277,7 @@ namespace System.IO.BACnet.Serialize
             len += decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValueType);
             if (tagNumber != 2)
                 return -1;
-            value.IssueConfirmedNotifications = buffer[offset + len] > 0 ? true : false;
+            value.IssueConfirmedNotifications = buffer[offset + len] > 0;
             len++;
 
             len += decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValueType);
@@ -2285,11 +2285,12 @@ namespace System.IO.BACnet.Serialize
                 return -1;
             len += decode_unsigned(buffer, offset + len, lenValueType, out value.TimeRemaining);
 
-            if (len < apduLen && !IS_CLOSING_TAG(buffer[offset + len]))
+            if (len < apduLen && IS_OPENING_TAG(buffer[offset + len]))
             {
-                len += decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValueType);
+                decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValueType);
                 if (tagNumber != 4)
-                    return -1;
+                    return len;
+                len++;
                 len += decode_real(buffer, offset + len, out value.COVIncrement);
             }
 

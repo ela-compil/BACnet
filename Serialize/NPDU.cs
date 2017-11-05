@@ -52,7 +52,7 @@
 
             networkMsgType = BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK;
             vendorId = 0;
-            if ((function & BacnetNpduControls.NetworkLayerMessage) == BacnetNpduControls.NetworkLayerMessage)
+            if (function.HasFlag(BacnetNpduControls.NetworkLayerMessage))
             {
                 networkMsgType = (BacnetNetworkMessageTypes)buffer[offset++];
                 if (((byte)networkMsgType) >= 0x80)
@@ -69,8 +69,24 @@
             return offset - orgOffset;
         }
 
-        public static void Encode(EncodeBuffer buffer, BacnetNpduControls function, BacnetAddress destination, BacnetAddress source,
-            byte hopCount, BacnetNetworkMessageTypes networkMsgType, ushort vendorId)
+        public static void Encode(EncodeBuffer buffer, BacnetNpduControls function, BacnetAddress destination,
+            BacnetAddress source, byte hopCount, BacnetNetworkMessageTypes networkMsgType, ushort vendorId)
+        {
+            Encode(buffer, function, destination, source, hopCount);
+
+            if (function.HasFlag(BacnetNpduControls.NetworkLayerMessage)) // sure it is, otherwise the other Encode is used
+            {
+                buffer.buffer[buffer.offset++] = (byte)networkMsgType;
+                if (((byte)networkMsgType) >= 0x80) // who used this ??? sure nobody !
+                {
+                    buffer.buffer[buffer.offset++] = (byte)((vendorId & 0xFF00) >> 8);
+                    buffer.buffer[buffer.offset++] = (byte)((vendorId & 0x00FF) >> 0);
+                }
+            }
+        }
+
+        public static void Encode(EncodeBuffer buffer, BacnetNpduControls function, BacnetAddress destination,
+            BacnetAddress source = null, byte hopCount = 0xFF)
         {
             // Modif FC
             var hasDestination = destination != null && destination.net > 0; // && destination.net != 0xFFFF;
@@ -118,24 +134,6 @@
             if (hasDestination)
             {
                 buffer.buffer[buffer.offset++] = hopCount;
-            }
-
-            /*
-            //display warning
-            if (has_destination || has_source)
-            {
-                System.Diagnostics.Trace.TraceWarning("NPDU size is more than 4. This will give an error in the current max_apdu calculation");
-            }
-            */
-
-            if ((function & BacnetNpduControls.NetworkLayerMessage) > 0)
-            {
-                buffer.buffer[buffer.offset++] = (byte)networkMsgType;
-                if ((byte)networkMsgType >= 0x80)
-                {
-                    buffer.buffer[buffer.offset++] = (byte)((vendorId & 0xFF00) >> 8);
-                    buffer.buffer[buffer.offset++] = (byte)((vendorId & 0x00FF) >> 0);
-                }
             }
         }
     }

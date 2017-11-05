@@ -100,9 +100,11 @@
     <Compile Include="Base\BacnetRestartReason.cs" />
     <Compile Include="Base\BacnetResultFlags.cs" />
     <Compile Include="Base\BacnetSegmentations.cs" />
+    <Compile Include="Base\Enums\BacnetBackupState.cs" />
     <Compile Include="Base\Enums\BacnetEventEnable.cs" />
     <Compile Include="Base\Enums\BacnetEventStates.cs" />
     <Compile Include="Base\Enums\BacnetEventTypes.cs" />
+    <Compile Include="Base\Enums\BacnetFileAccessMethod.cs" />
     <Compile Include="Base\Enums\BacnetLifeSafetyModes.cs" />
     <Compile Include="Base\Enums\BacnetLifeSafetyOperations.cs" />
     <Compile Include="Base\Enums\BacnetLifeSafetyStates.cs" />

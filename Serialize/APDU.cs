@@ -31,7 +31,7 @@
         }
 
         public static void EncodeConfirmedServiceRequest(EncodeBuffer buffer, BacnetPduTypes type, BacnetConfirmedServices service, BacnetMaxSegments maxSegments,
-            BacnetMaxAdpu maxAdpu, byte invokeId, byte sequenceNumber, byte proposedWindowSize)
+            BacnetMaxAdpu maxAdpu, byte invokeId, byte sequenceNumber = 0, byte proposedWindowSize = 0)
         {
             buffer.buffer[buffer.offset++] = (byte)type;
             buffer.buffer[buffer.offset++] = (byte)((byte)maxSegments | (byte)maxAdpu);
@@ -101,7 +101,7 @@
             return offset - orgOffset;
         }
 
-        public static int EncodeComplexAck(EncodeBuffer buffer, BacnetPduTypes type, BacnetConfirmedServices service, byte invokeId, byte sequenceNumber, byte proposedWindowNumber)
+        public static int EncodeComplexAck(EncodeBuffer buffer, BacnetPduTypes type, BacnetConfirmedServices service, byte invokeId, byte sequenceNumber = 0, byte proposedWindowNumber = 0)
         {
             var len = 3;
             buffer.buffer[buffer.offset++] = (byte)type;

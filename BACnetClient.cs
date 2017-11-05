@@ -53,7 +53,6 @@ namespace System.IO.BACnet
         private readonly LastSegmentAck _lastSegmentAck = new LastSegmentAck();
         private uint _writepriority;
 
-        public const byte DEFAULT_HOP_COUNT = 0xFF;
         public const int DEFAULT_UDP_PORT = 0xBAC0;
         public const int DEFAULT_TIMEOUT = 1000;
         public const int DEFAULT_RETRIES = 3;
@@ -131,13 +130,6 @@ namespace System.IO.BACnet
         {
         }
 
-#if XAMARIN
-#else
-        public BacnetClient(string portName, int baudRate, int timeout = DEFAULT_TIMEOUT, int retries = DEFAULT_RETRIES)
-            : this(new BacnetMstpProtocolTransport(portName, baudRate), timeout, retries)
-        {
-        }
-#endif
         public BacnetClient(IBacnetTransport transport, int timeout = DEFAULT_TIMEOUT, int retries = DEFAULT_RETRIES)
         {
             Transport = transport;
@@ -188,7 +180,7 @@ namespace System.IO.BACnet
         public event AtomicReadFileRequestHandler OnAtomicReadFileRequest;
         public delegate void SubscribeCOVRequestHandler(BacnetClient sender, BacnetAddress adr, byte invokeId, uint subscriberProcessIdentifier, BacnetObjectId monitoredObjectIdentifier, bool cancellationRequest, bool issueConfirmedNotifications, uint lifetime, BacnetMaxSegments maxSegments);
         public event SubscribeCOVRequestHandler OnSubscribeCOV;
-        public delegate void EventNotificationCallbackHandler(BacnetClient sender, BacnetAddress adr, BacnetEventNotificationData eventData);
+        public delegate void EventNotificationCallbackHandler(BacnetClient sender, BacnetAddress adr, byte invokeId, BacnetEventNotificationData eventData, bool needConfirm);
         public event EventNotificationCallbackHandler OnEventNotify;
         public delegate void SubscribeCOVPropertyRequestHandler(BacnetClient sender, BacnetAddress adr, byte invokeId, uint subscriberProcessIdentifier, BacnetObjectId monitoredObjectIdentifier, BacnetPropertyReference monitoredProperty, bool cancellationRequest, bool issueConfirmedNotifications, uint lifetime, float covIncrement, BacnetMaxSegments maxSegments);
         public event SubscribeCOVPropertyRequestHandler OnSubscribeCOVProperty;
@@ -221,11 +213,9 @@ namespace System.IO.BACnet
 
                 if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROPERTY && OnReadPropertyRequest != null)
                 {
-                    BacnetObjectId objectId;
-                    BacnetPropertyReference property;
                     int thsRejectReason;
 
-                    if ((thsRejectReason = Services.DecodeReadProperty(buffer, offset, length, out objectId, out property)) >= 0)
+                    if ((thsRejectReason = Services.DecodeReadProperty(buffer, offset, length, out var objectId, out var property)) >= 0)
                     {
                         OnReadPropertyRequest(this, adr, invokeId, objectId, property, maxSegments);
                     }
@@ -248,9 +238,7 @@ namespace System.IO.BACnet
                 }
                 else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_WRITE_PROPERTY && OnWritePropertyRequest != null)
                 {
-                    BacnetObjectId objectId;
-                    BacnetPropertyValue value;
-                    if (Services.DecodeWriteProperty(buffer, offset, length, out objectId, out value) >= 0)
+                    if (Services.DecodeWriteProperty(buffer, offset, length, out var objectId, out var value) >= 0)
                         OnWritePropertyRequest(this, adr, invokeId, objectId, value, maxSegments);
                     else
                     {
@@ -261,8 +249,7 @@ namespace System.IO.BACnet
                 }
                 else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROP_MULTIPLE && OnReadPropertyMultipleRequest != null)
                 {
-                    IList<BacnetReadAccessSpecification> properties;
-                    if (Services.DecodeReadPropertyMultiple(buffer, offset, length, out properties) >= 0)
+                    if (Services.DecodeReadPropertyMultiple(buffer, offset, length, out var properties) >= 0)
                         OnReadPropertyMultipleRequest(this, adr, invokeId, properties, maxSegments);
                     else
                     {
@@ -272,9 +259,7 @@ namespace System.IO.BACnet
                 }
                 else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_WRITE_PROP_MULTIPLE && OnWritePropertyMultipleRequest != null)
                 {
-                    BacnetObjectId objectId;
-                    ICollection<BacnetPropertyValue> values;
-                    if (Services.DecodeWritePropertyMultiple(buffer, offset, length, out objectId, out values) >= 0)
+                    if (Services.DecodeWritePropertyMultiple(buffer, offset, length, out var objectId, out var values) >= 0)
                         OnWritePropertyMultipleRequest(this, adr, invokeId, objectId, values, maxSegments);
                     else
                     {
@@ -284,12 +269,7 @@ namespace System.IO.BACnet
                 }
                 else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_COV_NOTIFICATION && OnCOVNotification != null)
                 {
-                    uint subscriberProcessIdentifier;
-                    BacnetObjectId initiatingDeviceIdentifier;
-                    BacnetObjectId monitoredObjectIdentifier;
-                    uint timeRemaining;
-                    ICollection<BacnetPropertyValue> values;
-                    if (Services.DecodeCOVNotifyUnconfirmed(buffer, offset, length, out subscriberProcessIdentifier, out initiatingDeviceIdentifier, out monitoredObjectIdentifier, out timeRemaining, out values) >= 0)
+                    if (Services.DecodeCOVNotifyUnconfirmed(buffer, offset, length, out var subscriberProcessIdentifier, out var initiatingDeviceIdentifier, out var monitoredObjectIdentifier, out var timeRemaining, out var values) >= 0)
                         OnCOVNotification(this, adr, invokeId, subscriberProcessIdentifier, initiatingDeviceIdentifier, monitoredObjectIdentifier, timeRemaining, true, values, maxSegments);
                     else
                     {
@@ -299,13 +279,7 @@ namespace System.IO.BACnet
                 }
                 else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_ATOMIC_WRITE_FILE && OnAtomicWriteFileRequest != null)
                 {
-                    bool isStream;
-                    BacnetObjectId objectId;
-                    int position;
-                    uint blockCount;
-                    byte[][] blocks;
-                    int[] counts;
-                    if (Services.DecodeAtomicWriteFile(buffer, offset, length, out isStream, out objectId, out position, out blockCount, out blocks, out counts) >= 0)
+                    if (Services.DecodeAtomicWriteFile(buffer, offset, length, out var isStream, out var objectId, out var position, out var blockCount, out var blocks, out var counts) >= 0)
                         OnAtomicWriteFileRequest(this, adr, invokeId, isStream, objectId, position, blockCount, blocks, counts, maxSegments);
                     else
                     {
@@ -315,11 +289,7 @@ namespace System.IO.BACnet
                 }
                 else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_ATOMIC_READ_FILE && OnAtomicReadFileRequest != null)
                 {
-                    bool isStream;
-                    BacnetObjectId objectId;
-                    int position;
-                    uint count;
-                    if (Services.DecodeAtomicReadFile(buffer, offset, length, out isStream, out objectId, out position, out count) >= 0)
+                    if (Services.DecodeAtomicReadFile(buffer, offset, length, out var isStream, out var objectId, out var position, out var count) >= 0)
                         OnAtomicReadFileRequest(this, adr, invokeId, isStream, objectId, position, count, maxSegments);
                     else
                     {
@@ -329,12 +299,7 @@ namespace System.IO.BACnet
                 }
                 else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_SUBSCRIBE_COV && OnSubscribeCOV != null)
                 {
-                    uint subscriberProcessIdentifier;
-                    BacnetObjectId monitoredObjectIdentifier;
-                    bool cancellationRequest;
-                    bool issueConfirmedNotifications;
-                    uint lifetime;
-                    if (Services.DecodeSubscribeCOV(buffer, offset, length, out subscriberProcessIdentifier, out monitoredObjectIdentifier, out cancellationRequest, out issueConfirmedNotifications, out lifetime) >= 0)
+                    if (Services.DecodeSubscribeCOV(buffer, offset, length, out var subscriberProcessIdentifier, out var monitoredObjectIdentifier, out var cancellationRequest, out var issueConfirmedNotifications, out var lifetime) >= 0)
                         OnSubscribeCOV(this, adr, invokeId, subscriberProcessIdentifier, monitoredObjectIdentifier, cancellationRequest, issueConfirmedNotifications, lifetime, maxSegments);
                     else
                     {
@@ -344,14 +309,7 @@ namespace System.IO.BACnet
                 }
                 else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_SUBSCRIBE_COV_PROPERTY && OnSubscribeCOVProperty != null)
                 {
-                    uint subscriberProcessIdentifier;
-                    BacnetObjectId monitoredObjectIdentifier;
-                    BacnetPropertyReference monitoredProperty;
-                    bool cancellationRequest;
-                    bool issueConfirmedNotifications;
-                    uint lifetime;
-                    float covIncrement;
-                    if (Services.DecodeSubscribeProperty(buffer, offset, length, out subscriberProcessIdentifier, out monitoredObjectIdentifier, out monitoredProperty, out cancellationRequest, out issueConfirmedNotifications, out lifetime, out covIncrement) >= 0)
+                    if (Services.DecodeSubscribeProperty(buffer, offset, length, out var subscriberProcessIdentifier, out var monitoredObjectIdentifier, out var monitoredProperty, out var cancellationRequest, out var issueConfirmedNotifications, out var lifetime, out var covIncrement) >= 0)
                         OnSubscribeCOVProperty(this, adr, invokeId, subscriberProcessIdentifier, monitoredObjectIdentifier, monitoredProperty, cancellationRequest, issueConfirmedNotifications, lifetime, covIncrement, maxSegments);
                     else
                     {
@@ -361,10 +319,7 @@ namespace System.IO.BACnet
                 }
                 else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_DEVICE_COMMUNICATION_CONTROL && OnDeviceCommunicationControl != null)
                 {
-                    uint timeDuration;
-                    uint enableDisable;
-                    string password;
-                    if (Services.DecodeDeviceCommunicationControl(buffer, offset, length, out timeDuration, out enableDisable, out password) >= 0)
+                    if (Services.DecodeDeviceCommunicationControl(buffer, offset, length, out var timeDuration, out var enableDisable, out var password) >= 0)
                         OnDeviceCommunicationControl(this, adr, invokeId, timeDuration, enableDisable, password, maxSegments);
                     else
                     {
@@ -374,9 +329,7 @@ namespace System.IO.BACnet
                 }
                 else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_REINITIALIZE_DEVICE && OnReinitializedDevice != null)
                 {
-                    BacnetReinitializedStates state;
-                    string password;
-                    if (Services.DecodeReinitializeDevice(buffer, offset, length, out state, out password) >= 0)
+                    if (Services.DecodeReinitializeDevice(buffer, offset, length, out var state, out var password) >= 0)
                         OnReinitializedDevice(this, adr, invokeId, state, password, maxSegments);
                     else
                     {
@@ -386,9 +339,10 @@ namespace System.IO.BACnet
                 }
                 else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_EVENT_NOTIFICATION && OnEventNotify != null) // F. Chaxel
                 {
-                    BacnetEventNotificationData eventData;
-                    if (Services.DecodeEventNotifyData(buffer, offset, length, out eventData) >= 0)
-                        OnEventNotify(this, adr, eventData);
+                    if (Services.DecodeEventNotifyData(buffer, offset, length, out var eventData) >= 0)
+                    {
+                        OnEventNotify(this, adr, invokeId, eventData, true);
+                    }
                     else
                     {
                         ErrorResponse(adr, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
@@ -397,13 +351,7 @@ namespace System.IO.BACnet
                 }
                 else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_READ_RANGE && OnReadRange != null)
                 {
-                    BacnetObjectId objectId;
-                    BacnetPropertyReference property;
-                    BacnetReadRangeRequestTypes requestType;
-                    uint position;
-                    DateTime time;
-                    int count;
-                    if (Services.DecodeReadRange(buffer, offset, length, out objectId, out property, out requestType, out position, out time, out count) >= 0)
+                    if (Services.DecodeReadRange(buffer, offset, length, out var objectId, out var property, out var requestType, out var position, out var time, out var count) >= 0)
                         OnReadRange(this, adr, invokeId, objectId, property, requestType, position, time, count, maxSegments);
                     else
                     {
@@ -413,9 +361,7 @@ namespace System.IO.BACnet
                 }
                 else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_CREATE_OBJECT && OnCreateObjectRequest != null)
                 {
-                    BacnetObjectId objectId;
-                    ICollection<BacnetPropertyValue> values;
-                    if (Services.DecodeCreateObject(buffer, offset, length, out objectId, out values) >= 0)
+                    if (Services.DecodeCreateObject(buffer, offset, length, out var objectId, out var values) >= 0)
                         OnCreateObjectRequest(this, adr, invokeId, objectId, values, maxSegments);
                     else
                     {
@@ -425,8 +371,7 @@ namespace System.IO.BACnet
                 }
                 else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_DELETE_OBJECT && OnDeleteObjectRequest != null)
                 {
-                    BacnetObjectId objectId;
-                    if (Services.DecodeDeleteObject(buffer, offset, length, out objectId) >= 0)
+                    if (Services.DecodeDeleteObject(buffer, offset, length, out var objectId) >= 0)
                         OnDeleteObjectRequest(this, adr, invokeId, objectId, maxSegments);
                     else
                     {
@@ -470,20 +415,14 @@ namespace System.IO.BACnet
                 OnUnconfirmedServiceRequest?.Invoke(this, adr, type, service, buffer, offset, length);
                 if (service == BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_I_AM && OnIam != null)
                 {
-                    uint deviceId;
-                    uint maxAdpu;
-                    BacnetSegmentations segmentation;
-                    ushort vendorId;
-                    if (Services.DecodeIamBroadcast(buffer, offset, out deviceId, out maxAdpu, out segmentation, out vendorId) >= 0)
+                    if (Services.DecodeIamBroadcast(buffer, offset, out var deviceId, out var maxAdpu, out var segmentation, out var vendorId) >= 0)
                         OnIam(this, adr, deviceId, maxAdpu, segmentation, vendorId);
                     else
                         Trace.TraceWarning("Couldn't decode IamBroadcast");
                 }
                 else if (service == BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_WHO_IS && OnWhoIs != null)
                 {
-                    int lowLimit;
-                    int highLimit;
-                    if (Services.DecodeWhoIsBroadcast(buffer, offset, length, out lowLimit, out highLimit) >= 0)
+                    if (Services.DecodeWhoIsBroadcast(buffer, offset, length, out var lowLimit, out var highLimit) >= 0)
                         OnWhoIs(this, adr, lowLimit, highLimit);
                     else
                         Trace.TraceWarning("Couldn't decode WhoIsBroadcast");
@@ -491,49 +430,36 @@ namespace System.IO.BACnet
                 // added by thamersalek
                 else if (service == BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_WHO_HAS && OnWhoHas != null)
                 {
-                    int lowLimit;
-                    int highLimit;
-                    BacnetObjectId objId;
-                    string objName;
-
-                    if (Services.DecodeWhoHasBroadcast(buffer, offset, length, out lowLimit, out highLimit, out objId, out objName) >= 0)
+                    if (Services.DecodeWhoHasBroadcast(buffer, offset, length, out var lowLimit, out var highLimit, out var objId, out var objName) >= 0)
                         OnWhoHas(this, adr, lowLimit, highLimit, objId, objName);
                     else
                         Trace.TraceWarning("Couldn't decode WhoHasBroadcast");
                 }
                 else if (service == BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_COV_NOTIFICATION && OnCOVNotification != null)
                 {
-                    uint subscriberProcessIdentifier;
-                    BacnetObjectId initiatingDeviceIdentifier;
-                    BacnetObjectId monitoredObjectIdentifier;
-                    uint timeRemaining;
-                    ICollection<BacnetPropertyValue> values;
-                    if (Services.DecodeCOVNotifyUnconfirmed(buffer, offset, length, out subscriberProcessIdentifier, out initiatingDeviceIdentifier, out monitoredObjectIdentifier, out timeRemaining, out values) >= 0)
+                    if (Services.DecodeCOVNotifyUnconfirmed(buffer, offset, length, out var subscriberProcessIdentifier, out var initiatingDeviceIdentifier, out var monitoredObjectIdentifier, out var timeRemaining, out var values) >= 0)
                         OnCOVNotification(this, adr, 0, subscriberProcessIdentifier, initiatingDeviceIdentifier, monitoredObjectIdentifier, timeRemaining, false, values, BacnetMaxSegments.MAX_SEG0);
                     else
                         Trace.TraceWarning("Couldn't decode COVNotifyUnconfirmed");
                 }
                 else if (service == BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_TIME_SYNCHRONIZATION && OnTimeSynchronize != null)
                 {
-                    DateTime dateTime;
-                    if (Services.DecodeTimeSync(buffer, offset, length, out dateTime) >= 0)
+                    if (Services.DecodeTimeSync(buffer, offset, length, out var dateTime) >= 0)
                         OnTimeSynchronize(this, adr, dateTime, false);
                     else
                         Trace.TraceWarning("Couldn't decode TimeSynchronize");
                 }
                 else if (service == BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_UTC_TIME_SYNCHRONIZATION && OnTimeSynchronize != null)
                 {
-                    DateTime dateTime;
-                    if (Services.DecodeTimeSync(buffer, offset, length, out dateTime) >= 0)
+                    if (Services.DecodeTimeSync(buffer, offset, length, out var dateTime) >= 0)
                         OnTimeSynchronize(this, adr, dateTime, true);
                     else
                         Trace.TraceWarning("Couldn't decode TimeSynchronize");
                 }
                 else if (service == BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_EVENT_NOTIFICATION && OnEventNotify!=null) // F. Chaxel
                 {
-                    BacnetEventNotificationData eventData;
-                    if (Services.DecodeEventNotifyData(buffer, offset, length, out eventData) >= 0)
-                        OnEventNotify(this, adr, eventData);
+                    if (Services.DecodeEventNotifyData(buffer, offset, length, out var eventData) >= 0)
+                        OnEventNotify(this, adr, 0, eventData, false);
                     else
                         Trace.TraceWarning("Couldn't decode Event/Alarm Notification");
                 }
@@ -708,9 +634,9 @@ namespace System.IO.BACnet
                 var encodedBuffer = new EncodeBuffer(copy, 0);
 
                 if (confirmedServiceRequest)
-                    APDU.EncodeConfirmedServiceRequest(encodedBuffer, type, service, maxSegments, maxAdpu, invokeId, 0, 0);
+                    APDU.EncodeConfirmedServiceRequest(encodedBuffer, type, service, maxSegments, maxAdpu, invokeId);
                 else
-                    APDU.EncodeComplexAck(encodedBuffer, type, service, invokeId, 0, 0);
+                    APDU.EncodeComplexAck(encodedBuffer, type, service, invokeId);
 
                 _segments.AddLast(copy); // doesn't include BVLC or NPDU
             }
@@ -863,7 +789,7 @@ namespace System.IO.BACnet
                 // Modif FC
                 remoteAddress.RoutedSource = source;
 
-                if ((npduFunction & BacnetNpduControls.NetworkLayerMessage) == BacnetNpduControls.NetworkLayerMessage)
+                if (npduFunction.HasFlag(BacnetNpduControls.NetworkLayerMessage))
                 {
                     Trace.TraceInformation("Network Layer message received");
                     return; // Network Layer message discarded
@@ -893,13 +819,21 @@ namespace System.IO.BACnet
             try
             {
                 var ep = new IPEndPoint(IPAddress.Parse(bbmdIP), port);
+                var sent = false;
 
-                // dynamic avoid reference to BacnetIpUdpProtocolTransport or BacnetIpV6UdpProtocolTransport classes
-                dynamic clientDyn = Transport;
-                bool sent = clientDyn.SendRegisterAsForeignDevice(ep, ttl);
+                switch (Transport)
+                {
+                    case BacnetIpUdpProtocolTransport t:
+                        sent = t.SendRegisterAsForeignDevice(ep, ttl);
+                        break;
+
+                    case BacnetIpV6UdpProtocolTransport t:
+                        sent = t.SendRegisterAsForeignDevice(ep, ttl);
+                        break;
+                }
 
                 if (sent)
-                    Trace.WriteLine("Sending Register as a Foreign Device ... ", null);
+                    Trace.WriteLine("Sending Register as a Foreign Device ... ");
                 else
                     Trace.TraceWarning("The given address do not match with the IP version");
             }
@@ -918,18 +852,27 @@ namespace System.IO.BACnet
 
                 var b = GetEncodeBuffer(Transport.HeaderLength);
                 var broadcast = Transport.GetBroadcastAddress();
-                NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, broadcast, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, VendorId);
+                NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, broadcast);
                 APDU.EncodeUnconfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_WHO_IS);
                 Services.EncodeWhoIsBroadcast(b, lowLimit, highLimit);
 
-                // dynamic avoid reference to BacnetIpUdpProtocolTransport or BacnetIpV6UdpProtocolTransport classes
-                dynamic clientDyn = Transport;
-                bool sent = clientDyn.SendRemoteWhois(b.buffer, ep, b.offset);
+                var sent = false;
 
-                if (sent == false)
-                    Trace.TraceWarning("The given address do not match with the IP version");
+                switch (Transport)
+                {
+                    case BacnetIpUdpProtocolTransport t:
+                        sent = t.SendRemoteWhois(b.buffer, ep, b.offset);
+                        break;
+
+                    case BacnetIpV6UdpProtocolTransport t:
+                        sent = t.SendRemoteWhois(b.buffer, ep, b.offset);
+                        break;
+                }
+
+                if (sent)
+                    Trace.WriteLine("Sending Remote Whois ... ");
                 else
-                    Trace.WriteLine("Sending Remote Whois ... ", null);
+                    Trace.TraceWarning("The given address do not match with the IP version");
             }
             catch (Exception ex)
             {
@@ -953,14 +896,14 @@ namespace System.IO.BACnet
             }
 
             var b = GetEncodeBuffer(Transport.HeaderLength);
-            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, receiver, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, VendorId);
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, receiver);
             APDU.EncodeUnconfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_WHO_IS);
             Services.EncodeWhoIsBroadcast(b, lowLimit, highLimit);
 
             Transport.Send(b.buffer, Transport.HeaderLength, b.offset - Transport.HeaderLength, receiver, false, 0);
         }
 
-        public void Iam(uint deviceId, BacnetSegmentations segmentation, BacnetAddress receiver = null)
+        public void Iam(uint deviceId, BacnetSegmentations segmentation = BacnetSegmentations.SEGMENTATION_BOTH, BacnetAddress receiver = null)
         {
             if (receiver == null)
             {
@@ -973,7 +916,7 @@ namespace System.IO.BACnet
             }
 
             var b = GetEncodeBuffer(Transport.HeaderLength);
-            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, receiver, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, VendorId);
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, receiver);
             APDU.EncodeUnconfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_I_AM);
             Services.EncodeIamBroadcast(b, deviceId, (uint)GetMaxApdu(), segmentation, VendorId);
 
@@ -987,7 +930,7 @@ namespace System.IO.BACnet
 
             var b = GetEncodeBuffer(Transport.HeaderLength);
             var broadcast = Transport.GetBroadcastAddress();
-            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, broadcast, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, VendorId);
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, broadcast);
             APDU.EncodeUnconfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_I_HAVE);
             Services.EncodeIhaveBroadcast(b, deviceId, objId, objName);
 
@@ -1000,7 +943,7 @@ namespace System.IO.BACnet
             Trace.WriteLine("Sending Event Notification ... ", null);
 
             var b = GetEncodeBuffer(Transport.HeaderLength);
-            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, adr, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, VendorId);
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, adr);
             APDU.EncodeUnconfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_EVENT_NOTIFICATION);
             Services.EncodeEventNotifyUnconfirmed(b, eventData);
             Transport.Send(b.buffer, Transport.HeaderLength, b.offset - Transport.HeaderLength, adr, false, 0);
@@ -1012,7 +955,7 @@ namespace System.IO.BACnet
 
             var b = GetEncodeBuffer(Transport.HeaderLength);
 
-            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, adr, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, VendorId);
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, adr);
             APDU.EncodeError(b, BacnetPduTypes.PDU_TYPE_REJECT, (BacnetConfirmedServices)reason, invokeId);
             Transport.Send(b.buffer, Transport.HeaderLength, b.offset - Transport.HeaderLength, adr, false, 0);
         }
@@ -1022,7 +965,7 @@ namespace System.IO.BACnet
             Trace.WriteLine("Sending Time Synchronize ... ", null);
 
             var b = GetEncodeBuffer(Transport.HeaderLength);
-            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, adr, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, VendorId);
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, adr);
             APDU.EncodeUnconfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST, utc
                     ? BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_UTC_TIME_SYNCHRONIZATION
                     : BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_TIME_SYNCHRONIZATION);
@@ -1098,8 +1041,8 @@ namespace System.IO.BACnet
                 invokeId = unchecked(_invokeId++);
 
             var b = GetEncodeBuffer(Transport.HeaderLength);
-            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, VendorId);
-            APDU.EncodeConfirmedServiceRequest(b, PduConfirmedServiceRequest(), BacnetConfirmedServices.SERVICE_CONFIRMED_ATOMIC_WRITE_FILE, MaxSegments, Transport.MaxAdpuLength, invokeId, 0, 0);
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource);
+            APDU.EncodeConfirmedServiceRequest(b, PduConfirmedServiceRequest(), BacnetConfirmedServices.SERVICE_CONFIRMED_ATOMIC_WRITE_FILE, MaxSegments, Transport.MaxAdpuLength, invokeId);
             Services.EncodeAtomicWriteFile(b, true, objectId, position, 1, new[] { fileBuffer }, new[] { count });
 
             //send
@@ -1139,8 +1082,8 @@ namespace System.IO.BACnet
 
             //encode
             var b = GetEncodeBuffer(Transport.HeaderLength);
-            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, VendorId);
-            APDU.EncodeConfirmedServiceRequest(b, PduConfirmedServiceRequest(), BacnetConfirmedServices.SERVICE_CONFIRMED_ATOMIC_READ_FILE, MaxSegments, Transport.MaxAdpuLength, invokeId, 0, 0);
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource);
+            APDU.EncodeConfirmedServiceRequest(b, PduConfirmedServiceRequest(), BacnetConfirmedServices.SERVICE_CONFIRMED_ATOMIC_READ_FILE, MaxSegments, Transport.MaxAdpuLength, invokeId);
             Services.EncodeAtomicReadFile(b, true, objectId, position, count);
 
             //send
@@ -1211,8 +1154,8 @@ namespace System.IO.BACnet
 
             //encode
             var b = GetEncodeBuffer(Transport.HeaderLength);
-            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, VendorId);
-            APDU.EncodeConfirmedServiceRequest(b, PduConfirmedServiceRequest(), BacnetConfirmedServices.SERVICE_CONFIRMED_READ_RANGE, MaxSegments, Transport.MaxAdpuLength, invokeId, 0, 0);
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource);
+            APDU.EncodeConfirmedServiceRequest(b, PduConfirmedServiceRequest(), BacnetConfirmedServices.SERVICE_CONFIRMED_READ_RANGE, MaxSegments, Transport.MaxAdpuLength, invokeId);
             Services.EncodeReadRange(b, objectId, (uint)BacnetPropertyIds.PROP_LOG_BUFFER, ASN1.BACNET_ARRAY_ALL, BacnetReadRangeRequestTypes.RR_BY_POSITION, idxBegin, DateTime.Now, (int)quantity);
             //send
             var ret = new BacnetAsyncResult(this, adr, invokeId, b.buffer, b.offset - Transport.HeaderLength, waitForTransmit, TransmitTimeout);
@@ -1294,8 +1237,8 @@ namespace System.IO.BACnet
                 invokeId = unchecked(_invokeId++);
 
             var b = GetEncodeBuffer(Transport.HeaderLength);
-            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, VendorId);
-            APDU.EncodeConfirmedServiceRequest(b, PduConfirmedServiceRequest(), BacnetConfirmedServices.SERVICE_CONFIRMED_SUBSCRIBE_COV, MaxSegments, Transport.MaxAdpuLength, invokeId, 0, 0);
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource);
+            APDU.EncodeConfirmedServiceRequest(b, PduConfirmedServiceRequest(), BacnetConfirmedServices.SERVICE_CONFIRMED_SUBSCRIBE_COV, MaxSegments, Transport.MaxAdpuLength, invokeId);
             Services.EncodeSubscribeCOV(b, subscribeId, objectId, cancel, issueConfirmedNotifications, lifetime);
 
             //send
@@ -1343,8 +1286,8 @@ namespace System.IO.BACnet
                 invokeId = unchecked(_invokeId++);
 
             var b = GetEncodeBuffer(Transport.HeaderLength);
-            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, VendorId);
-            APDU.EncodeConfirmedServiceRequest(b, PduConfirmedServiceRequest(), BacnetConfirmedServices.SERVICE_CONFIRMED_SUBSCRIBE_COV_PROPERTY, MaxSegments, Transport.MaxAdpuLength, invokeId, 0, 0);
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource);
+            APDU.EncodeConfirmedServiceRequest(b, PduConfirmedServiceRequest(), BacnetConfirmedServices.SERVICE_CONFIRMED_SUBSCRIBE_COV_PROPERTY, MaxSegments, Transport.MaxAdpuLength, invokeId);
             Services.EncodeSubscribeProperty(b, subscribeId, objectId, cancel, issueConfirmedNotifications, 0, monitoredProperty, false, 0f);
 
             //send
@@ -1414,8 +1357,8 @@ namespace System.IO.BACnet
                 invokeId = unchecked (_invokeId++);
 
             var b = GetEncodeBuffer(Transport.HeaderLength);
-            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, VendorId);
-            APDU.EncodeConfirmedServiceRequest(b, PduConfirmedServiceRequest(), BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROPERTY, MaxSegments, Transport.MaxAdpuLength, invokeId, 0, 0);
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource);
+            APDU.EncodeConfirmedServiceRequest(b, PduConfirmedServiceRequest(), BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROPERTY, MaxSegments, Transport.MaxAdpuLength, invokeId);
             Services.EncodeReadProperty(b, objectId, (uint)propertyId, arrayIndex);
 
             //send
@@ -1497,8 +1440,8 @@ namespace System.IO.BACnet
                 invokeId = unchecked(_invokeId++);
 
             var b = GetEncodeBuffer(Transport.HeaderLength);
-            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, VendorId);
-            APDU.EncodeConfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST , BacnetConfirmedServices.SERVICE_CONFIRMED_WRITE_PROPERTY, MaxSegments, Transport.MaxAdpuLength, invokeId, 0, 0);
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource);
+            APDU.EncodeConfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST , BacnetConfirmedServices.SERVICE_CONFIRMED_WRITE_PROPERTY, MaxSegments, Transport.MaxAdpuLength, invokeId);
             Services.EncodeWriteProperty(b, objectId, (uint)propertyId, ASN1.BACNET_ARRAY_ALL, _writepriority, valueList);
 
             //send
@@ -1515,9 +1458,9 @@ namespace System.IO.BACnet
 
             var b = GetEncodeBuffer(Transport.HeaderLength);
             //BacnetNpduControls.PriorityNormalMessage 
-            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, VendorId);
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource);
 
-            APDU.EncodeConfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST, BacnetConfirmedServices.SERVICE_CONFIRMED_WRITE_PROP_MULTIPLE, MaxSegments, Transport.MaxAdpuLength, invokeId, 0, 0);
+            APDU.EncodeConfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST, BacnetConfirmedServices.SERVICE_CONFIRMED_WRITE_PROP_MULTIPLE, MaxSegments, Transport.MaxAdpuLength, invokeId);
             Services.EncodeWritePropertyMultiple(b, objectId, valueList);
 
             //send
@@ -1567,9 +1510,9 @@ namespace System.IO.BACnet
 
             var b = GetEncodeBuffer(Transport.HeaderLength);
             //BacnetNpduControls.PriorityNormalMessage 
-            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, VendorId);
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource);
 
-            APDU.EncodeConfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST, BacnetConfirmedServices.SERVICE_CONFIRMED_WRITE_PROP_MULTIPLE, MaxSegments, Transport.MaxAdpuLength, invokeId, 0, 0);
+            APDU.EncodeConfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST, BacnetConfirmedServices.SERVICE_CONFIRMED_WRITE_PROP_MULTIPLE, MaxSegments, Transport.MaxAdpuLength, invokeId);
             Services.EncodeWriteObjectMultiple(b, valueList);
 
             //send
@@ -1632,8 +1575,8 @@ namespace System.IO.BACnet
                 invokeId = unchecked(_invokeId++);
 
             var b = GetEncodeBuffer(Transport.HeaderLength);
-            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, VendorId);
-            APDU.EncodeConfirmedServiceRequest(b, PduConfirmedServiceRequest(), BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROP_MULTIPLE, MaxSegments, Transport.MaxAdpuLength, invokeId, 0, 0);
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource);
+            APDU.EncodeConfirmedServiceRequest(b, PduConfirmedServiceRequest(), BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROP_MULTIPLE, MaxSegments, Transport.MaxAdpuLength, invokeId);
             Services.EncodeReadPropertyMultiple(b, objectId, propertyIdAndArrayIndex);
 
             //send
@@ -1673,8 +1616,8 @@ namespace System.IO.BACnet
                 invokeId = unchecked(_invokeId++);
 
             var b = GetEncodeBuffer(Transport.HeaderLength);
-            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, VendorId);
-            APDU.EncodeConfirmedServiceRequest(b, PduConfirmedServiceRequest(), BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROP_MULTIPLE, MaxSegments, Transport.MaxAdpuLength, invokeId, 0, 0);
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource);
+            APDU.EncodeConfirmedServiceRequest(b, PduConfirmedServiceRequest(), BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROP_MULTIPLE, MaxSegments, Transport.MaxAdpuLength, invokeId);
             Services.EncodeReadPropertyMultiple(b, properties);
 
             //send
@@ -1714,7 +1657,7 @@ namespace System.IO.BACnet
 
         //*********************************************************************************
         // By Christopher Günter
-        public bool CreateObjectRequest(BacnetAddress adr, BacnetObjectId objectId, ICollection<BacnetPropertyValue> valueList, byte invokeId = 0)
+        public bool CreateObjectRequest(BacnetAddress adr, BacnetObjectId objectId, ICollection<BacnetPropertyValue> valueList = null, byte invokeId = 0)
         {
             using (var result = (BacnetAsyncResult)BeginCreateObjectRequest(adr, objectId, valueList, true, invokeId))
             {
@@ -1743,10 +1686,10 @@ namespace System.IO.BACnet
 
             var b = GetEncodeBuffer(Transport.HeaderLength);
 
-            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, VendorId);
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource);
 
 
-            APDU.EncodeConfirmedServiceRequest(b, PduConfirmedServiceRequest(), BacnetConfirmedServices.SERVICE_CONFIRMED_CREATE_OBJECT, MaxSegments, Transport.MaxAdpuLength, invokeId, 0, 0);
+            APDU.EncodeConfirmedServiceRequest(b, PduConfirmedServiceRequest(), BacnetConfirmedServices.SERVICE_CONFIRMED_CREATE_OBJECT, MaxSegments, Transport.MaxAdpuLength, invokeId);
             Services.EncodeCreateProperty(b, objectId, valueList);
 
             //send
@@ -1797,10 +1740,10 @@ namespace System.IO.BACnet
 
             var b = GetEncodeBuffer(Transport.HeaderLength);
 
-            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, VendorId);
-            //NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply , adr.RoutedSource, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, 0);
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource);
+            //NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply , adr.RoutedSource);
 
-            APDU.EncodeConfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST, BacnetConfirmedServices.SERVICE_CONFIRMED_DELETE_OBJECT, MaxSegments, Transport.MaxAdpuLength, invokeId, 0, 0);
+            APDU.EncodeConfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST, BacnetConfirmedServices.SERVICE_CONFIRMED_DELETE_OBJECT, MaxSegments, Transport.MaxAdpuLength, invokeId);
 
             ASN1.encode_application_object_id(b, objectId.type, objectId.instance);
 
@@ -1876,8 +1819,8 @@ namespace System.IO.BACnet
                 invokeId = unchecked(_invokeId++);
 
             var b = GetEncodeBuffer(Transport.HeaderLength);
-            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, VendorId);
-            APDU.EncodeConfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST, BacnetConfirmedServices.SERVICE_CONFIRMED_REMOVE_LIST_ELEMENT, MaxSegments, Transport.MaxAdpuLength, invokeId, 0, 0);
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource);
+            APDU.EncodeConfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST, BacnetConfirmedServices.SERVICE_CONFIRMED_REMOVE_LIST_ELEMENT, MaxSegments, Transport.MaxAdpuLength, invokeId);
             Services.EncodeAddListElement(b, objectId, reference.propertyIdentifier, reference.propertyArrayIndex,valueList);
 
             //send
@@ -1895,8 +1838,8 @@ namespace System.IO.BACnet
                 invokeId = unchecked(_invokeId++);
 
             var b = GetEncodeBuffer(Transport.HeaderLength);
-            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, VendorId);
-            APDU.EncodeConfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST, BacnetConfirmedServices.SERVICE_CONFIRMED_ADD_LIST_ELEMENT, MaxSegments, Transport.MaxAdpuLength, invokeId, 0, 0);
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource);
+            APDU.EncodeConfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST, BacnetConfirmedServices.SERVICE_CONFIRMED_ADD_LIST_ELEMENT, MaxSegments, Transport.MaxAdpuLength, invokeId);
             Services.EncodeAddListElement(b, objectId, reference.propertyIdentifier, reference.propertyArrayIndex, valueList);
 
             //send
@@ -1949,8 +1892,8 @@ namespace System.IO.BACnet
                 invokeId = unchecked(_invokeId++);
 
             var b = GetEncodeBuffer(Transport.HeaderLength);
-            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, VendorId);
-            APDU.EncodeConfirmedServiceRequest(b, PduConfirmedServiceRequest(), serviceId , MaxSegments, Transport.MaxAdpuLength, invokeId, 0, 0);
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource);
+            APDU.EncodeConfirmedServiceRequest(b, PduConfirmedServiceRequest(), serviceId , MaxSegments, Transport.MaxAdpuLength, invokeId);
 
             ASN1.encode_context_object_id(b, 0, objectId.type, objectId.instance);
             ASN1.encode_context_enumerated(b, 1, (byte)propertyId);
@@ -2036,8 +1979,8 @@ namespace System.IO.BACnet
                 invokeId = unchecked(_invokeId++);
 
             var b = GetEncodeBuffer(Transport.HeaderLength);
-            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, VendorId);
-            APDU.EncodeConfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST, BacnetConfirmedServices.SERVICE_CONFIRMED_DEVICE_COMMUNICATION_CONTROL, MaxSegments, Transport.MaxAdpuLength, invokeId, 0, 0);
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource);
+            APDU.EncodeConfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST, BacnetConfirmedServices.SERVICE_CONFIRMED_DEVICE_COMMUNICATION_CONTROL, MaxSegments, Transport.MaxAdpuLength, invokeId);
             Services.EncodeDeviceCommunicationControl(b, timeDuration, enableDisable, password);
 
             //send
@@ -2102,13 +2045,13 @@ namespace System.IO.BACnet
                 invokeId = unchecked(_invokeId++);
 
             var b = GetEncodeBuffer(Transport.HeaderLength);
-            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, VendorId);
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource);
 
             var service = getEvent
                 ? BacnetConfirmedServices.SERVICE_CONFIRMED_GET_EVENT_INFORMATION
                 : BacnetConfirmedServices.SERVICE_CONFIRMED_GET_ALARM_SUMMARY;
 
-            APDU.EncodeConfirmedServiceRequest(b, PduConfirmedServiceRequest(), service, MaxSegments, Transport.MaxAdpuLength, invokeId, 0, 0);
+            APDU.EncodeConfirmedServiceRequest(b, PduConfirmedServiceRequest(), service, MaxSegments, Transport.MaxAdpuLength, invokeId);
 
             // Get Next, never true if GetAlarmSummary is usee
             if (alarms.Count != 0)
@@ -2169,8 +2112,8 @@ namespace System.IO.BACnet
                 invokeId = unchecked(_invokeId++);
 
             var b = GetEncodeBuffer(Transport.HeaderLength);
-            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, adr.RoutedSource, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, VendorId);
-            APDU.EncodeConfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST, BacnetConfirmedServices.SERVICE_CONFIRMED_ACKNOWLEDGE_ALARM, MaxSegments, Transport.MaxAdpuLength, invokeId, 0, 0);
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, adr.RoutedSource);
+            APDU.EncodeConfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST, BacnetConfirmedServices.SERVICE_CONFIRMED_ACKNOWLEDGE_ALARM, MaxSegments, Transport.MaxAdpuLength, invokeId);
             Services.EncodeAlarmAcknowledge(b, 57, objId, (uint)eventState, ackText, evTimeStamp, ackTimeStamp);
             //send
             var ret = new BacnetAsyncResult(this, adr, invokeId, b.buffer, b.offset - Transport.HeaderLength, waitForTransmit, TransmitTimeout);
@@ -2213,8 +2156,8 @@ namespace System.IO.BACnet
                 invokeId = unchecked(_invokeId++);
 
             var b = GetEncodeBuffer(Transport.HeaderLength);
-            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, VendorId);
-            APDU.EncodeConfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST, BacnetConfirmedServices.SERVICE_CONFIRMED_REINITIALIZE_DEVICE, MaxSegments, Transport.MaxAdpuLength, invokeId, 0, 0);
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource);
+            APDU.EncodeConfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST, BacnetConfirmedServices.SERVICE_CONFIRMED_REINITIALIZE_DEVICE, MaxSegments, Transport.MaxAdpuLength, invokeId);
             Services.EncodeReinitializeDevice(b, state, password);
 
             //send
@@ -2240,8 +2183,8 @@ namespace System.IO.BACnet
             if (invokeId == 0) invokeId = unchecked(_invokeId++);
 
             var b = GetEncodeBuffer(Transport.HeaderLength);
-            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, VendorId);
-            APDU.EncodeConfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST, BacnetConfirmedServices.SERVICE_CONFIRMED_COV_NOTIFICATION, MaxSegments, Transport.MaxAdpuLength, invokeId, 0, 0);
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource);
+            APDU.EncodeConfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST, BacnetConfirmedServices.SERVICE_CONFIRMED_COV_NOTIFICATION, MaxSegments, Transport.MaxAdpuLength, invokeId);
             Services.EncodeCOVNotifyConfirmed(b, subscriberProcessIdentifier, initiatingDeviceIdentifier, monitoredObjectIdentifier, timeRemaining, values);
 
             //send
@@ -2265,7 +2208,7 @@ namespace System.IO.BACnet
             {
                 Trace.WriteLine("Sending Notify (unconfirmed) ... ", null);
                 var b = GetEncodeBuffer(Transport.HeaderLength);
-                NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, adr.RoutedSource, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, VendorId);
+                NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, adr.RoutedSource);
                 APDU.EncodeUnconfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_COV_NOTIFICATION);
                 Services.EncodeCOVNotifyUnconfirmed(b, subscriberProcessIdentifier, initiatingDeviceIdentifier, monitoredObjectIdentifier, timeRemaining, values);
                // Modif F. Chaxel
@@ -2320,8 +2263,8 @@ namespace System.IO.BACnet
                 invokeId = unchecked(_invokeId++);
 
             var b = GetEncodeBuffer(Transport.HeaderLength);
-            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, address.RoutedSource, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, VendorId);
-            APDU.EncodeConfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST, BacnetConfirmedServices.SERVICE_CONFIRMED_LIFE_SAFETY_OPERATION, MaxSegments, Transport.MaxAdpuLength, invokeId, 0, 0);
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, address.RoutedSource);
+            APDU.EncodeConfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST, BacnetConfirmedServices.SERVICE_CONFIRMED_LIFE_SAFETY_OPERATION, MaxSegments, Transport.MaxAdpuLength, invokeId);
             Services.EncodeLifeSafetyOperation(b, processId, requestingSrc, (uint)operation, objectId);
 
             //send
@@ -2424,7 +2367,7 @@ namespace System.IO.BACnet
             buffer.Reset(Transport.HeaderLength);
 
             //encode
-            NPDU.Encode(buffer, BacnetNpduControls.PriorityNormalMessage, adr.RoutedSource, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, VendorId);
+            NPDU.Encode(buffer, BacnetNpduControls.PriorityNormalMessage, adr.RoutedSource);
 
             //set segments limits
             buffer.max_offset = buffer.offset + GetMaxApdu();
@@ -2623,7 +2566,7 @@ namespace System.IO.BACnet
         {
             Trace.WriteLine("Sending ErrorResponse ... ", null);
             var b = GetEncodeBuffer(Transport.HeaderLength);
-            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, adr.RoutedSource, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, VendorId);
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, adr.RoutedSource);
             APDU.EncodeError(b, BacnetPduTypes.PDU_TYPE_ERROR, service, invokeId);
             Services.EncodeError(b, errorClass, errorCode);
             Transport.Send(b.buffer, Transport.HeaderLength, b.offset - Transport.HeaderLength, adr, false, 0);
@@ -2633,7 +2576,7 @@ namespace System.IO.BACnet
         {
             Trace.WriteLine("Sending SimpleAckResponse ... ", null);
             var b = GetEncodeBuffer(Transport.HeaderLength);
-            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, adr.RoutedSource, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, VendorId);
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, adr.RoutedSource);
             APDU.EncodeSimpleAck(b, BacnetPduTypes.PDU_TYPE_SIMPLE_ACK, service, invokeId);
             Transport.Send(b.buffer, Transport.HeaderLength, b.offset - Transport.HeaderLength, adr, false, 0);
         }
@@ -2642,7 +2585,7 @@ namespace System.IO.BACnet
         {
             Trace.WriteLine("Sending SimpleAckResponse ... ", null);
             var b = GetEncodeBuffer(Transport.HeaderLength);
-            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, adr.RoutedSource, null, DEFAULT_HOP_COUNT, BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK, VendorId);
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, adr.RoutedSource);
             APDU.EncodeSegmentAck(b, BacnetPduTypes.PDU_TYPE_SEGMENT_ACK | (negative ? BacnetPduTypes.NEGATIVE_ACK : 0) | (server ? BacnetPduTypes.SERVER : 0), originalInvokeId, sequenceNumber, actualWindowSize);
             Transport.Send(b.buffer, Transport.HeaderLength, b.offset - Transport.HeaderLength, adr, false, 0);
         }

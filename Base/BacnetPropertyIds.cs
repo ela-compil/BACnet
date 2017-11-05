@@ -401,6 +401,13 @@ namespace System.IO.BACnet
         PROP_TIMER_RUNNING = 397,
         PROP_TIMER_STATE = 398,
 
+        // Addendum-135-2012as
+        PROP_COMMAND_TIME_ARRAY = 430,
+        PROP_CURRENT_COMMAND_PRIORITY = 431,
+        PROP_LAST_COMMAND_TIME = 432,
+        PROP_VALUE_SOURCE = 433,
+        PROP_VALUE_SOURCE_ARRAY = 434,
+
         /* The special property identifiers all, optional, and required  */
         /* are reserved for use in the ReadPropertyConditional and */
         /* ReadPropertyMultiple services or services not defined in this standard. */
@@ -410,6 +417,6 @@ namespace System.IO.BACnet
         /* do the max range inside of enum so that
            compilers will allocate adequate sized datatype for enum
            which is used to store decoding */
-        MAX_BACNET_PROPERTY_ID = 4194303,
+        MAX_BACNET_PROPERTY_ID = 4194303
     }
 }

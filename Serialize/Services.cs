@@ -420,6 +420,9 @@ namespace System.IO.BACnet.Serialize
             ASN1.encode_context_object_id(buffer, 1, objectId.type, objectId.instance);
             ASN1.encode_closing_tag(buffer, 0);
 
+            if (valueList == null)
+                return;
+
             ASN1.encode_opening_tag(buffer, 1);
 
             foreach (var pValue in valueList)
@@ -2107,6 +2110,10 @@ namespace System.IO.BACnet.Serialize
             if (ASN1.decode_is_closing_tag(buffer, offset + len))
                 len++;
             //end objectid
+
+            // No initial values ?
+            if (buffer.Length == offset + len)
+                return len;
 
             /* Tag 1: sequence of WriteAccessSpecification */
             if (!ASN1.decode_is_opening_tag_number(buffer, offset + len, 1))

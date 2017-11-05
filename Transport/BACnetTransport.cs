@@ -24,12 +24,13 @@
 *
 *********************************************************************/
 
-using System.Text;
-using System.IO.BACnet.Serialize;
 using System.Diagnostics;
+using System.IO.BACnet.Serialize;
+using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Text;
 using System.Threading;
 
 namespace System.IO.BACnet
@@ -109,7 +110,20 @@ namespace System.IO.BACnet
                 {
                     var ep = new IPEndPoint(IPAddress.Any, 0);
                     if (!string.IsNullOrEmpty(_localEndpoint)) ep = new IPEndPoint(IPAddress.Parse(_localEndpoint), 0);
-                    _exclusiveConn = new UdpClient(ep) { DontFragment = _dontFragment };
+                    _exclusiveConn = new UdpClient(ep);
+
+                    // Gets the Endpoint : the assigned Udp port number in fact
+                    ep = (IPEndPoint) _exclusiveConn.Client.LocalEndPoint;
+                    // closes the socket
+                    _exclusiveConn.Close();
+                    // Re-opens it with the freeed port number, to be sure it's a real active/server socket
+                    // which cannot be disarmed for listen by .NET for incoming call after a few inactivity
+                    // minutes ... yes it's like this at least on several systems
+                    _exclusiveConn = new UdpClient(ep)
+                    {
+                        DontFragment = _dontFragment,
+                        EnableBroadcast = true
+                    };
                 }
             }
             else
@@ -280,20 +294,22 @@ namespace System.IO.BACnet
             return BitConverter.ToString(buffer).Replace("-", "");
         }
 
-        // Modif FC : used for BBMD communication
         public int Send(byte[] buffer, int dataLength, IPEndPoint ep)
         {
-            try
+            // return _exclusiveConn.Send(buffer, data_length, ep);
+            ThreadPool.QueueUserWorkItem(o =>
             {
-                // return m_exclusive_conn.Send(buffer, data_length, ep);
-                ThreadPool.QueueUserWorkItem(o =>
-                    _exclusiveConn.Send(buffer, dataLength, ep), null);
-                return dataLength;
-            }
-            catch
-            {
-                return 0;
-            }
+                try
+                {
+                    _exclusiveConn.Send(buffer, dataLength, ep);
+                }
+                catch
+                {
+                    // not much you can do about at this point
+                }
+            }, null);
+
+            return dataLength;
         }
 
         public int Send(byte[] buffer, int offset, int dataLength, BacnetAddress address, bool waitForTransmission, int timeout)
@@ -307,8 +323,7 @@ namespace System.IO.BACnet
                 : BacnetBvlcFunctions.BVLC_ORIGINAL_UNICAST_NPDU, fullLength);
 
             //create end point
-            IPEndPoint ep;
-            Convert(address, out ep);
+            Convert(address, out var ep);
 
             try
             {
@@ -338,39 +353,71 @@ namespace System.IO.BACnet
             ep = new IPEndPoint(ipAddress, port);
         }
 
+        // Get the IPAddress only if one is present
+        // this could be usefull to find the broadcast address even if the socket is open on the default interface
+        // removes somes virtual interfaces (certainly not all)
+        private static UnicastIPAddressInformation GetAddressDefaultInterface()
+        {
+            var unicastAddresses = NetworkInterface.GetAllNetworkInterfaces()
+                .Where(i => i.OperationalStatus == OperationalStatus.Up)
+                .Where(i => i.NetworkInterfaceType != NetworkInterfaceType.Loopback)
+                .Where(i => !(i.Name.Contains("VirtualBox") || i.Name.Contains("VMware")))
+                .SelectMany(i => i.GetIPProperties().UnicastAddresses)
+                .Where(a => a.Address.AddressFamily == AddressFamily.InterNetwork)
+                .ToArray();
+
+            return unicastAddresses.Length == 1
+                ? unicastAddresses.Single()
+                : null;
+        }
+
         // A lot of problems on Mono (Raspberry) to get the correct broadcast @
         // so this method is overridable (this allows the implementation of operating system specific code)
         // Marc solution http://stackoverflow.com/questions/8119414/how-to-query-the-subnet-masks-using-mono-on-linux for instance
         protected virtual BacnetAddress _GetBroadcastAddress()
         {
-            // general broadcast
+            // general broadcast by default if nothing better is found
             var ep = new IPEndPoint(IPAddress.Parse("255.255.255.255"), SharedPort);
-            // restricted local broadcast (directed ... routable)
-            foreach (var adapter in NetworkInterface.GetAllNetworkInterfaces())
-                foreach (var ip in adapter.GetIPProperties().UnicastAddresses)
-                   if (LocalEndPoint.Address.Equals(ip.Address))
-                   {
-                       try
-                       {
-                           var strCurrentIP = ip.Address.ToString().Split('.');
-                           var strIPNetMask = ip.IPv4Mask.ToString().Split('.');
-                           var broadcastStr = new StringBuilder();
-                           for (var i = 0; i < 4; i++)
-                           {
-                               broadcastStr.Append(
-                                   ((byte)(int.Parse(strCurrentIP[i]) | ~int.Parse(strIPNetMask[i]))).ToString());
-                               if (i != 3) broadcastStr.Append('.');
-                           }
-                           ep = new IPEndPoint(IPAddress.Parse(broadcastStr.ToString()), SharedPort);
-                       }
-                       catch
-                       {
-                            // on mono IPv4Mask feature not implemented   
-                       }
-                    }
 
-            BacnetAddress broadcast;
-            Convert(ep, out broadcast);
+            UnicastIPAddressInformation ipAddr = null;
+
+            if (LocalEndPoint.Address.ToString() == "0.0.0.0")
+            {
+                ipAddr = GetAddressDefaultInterface();
+            }
+            else
+            {
+                // restricted local broadcast (directed ... routable)
+                foreach (var adapter in NetworkInterface.GetAllNetworkInterfaces())
+                foreach (var ip in adapter.GetIPProperties().UnicastAddresses)
+                    if (LocalEndPoint.Address.Equals(ip.Address))
+                    {
+                        ipAddr = ip;
+                        break;
+                    }
+            }
+
+            if (ipAddr != null)
+            {
+                try
+                {
+                    var strCurrentIP = ipAddr.Address.ToString().Split('.');
+                    var strIPNetMask = ipAddr.IPv4Mask.ToString().Split('.');
+                    var broadcastStr = new StringBuilder();
+                    for (var i = 0; i < 4; i++)
+                    {
+                        broadcastStr.Append(((byte) (int.Parse(strCurrentIP[i]) | ~int.Parse(strIPNetMask[i]))).ToString());
+                        if (i != 3) broadcastStr.Append('.');
+                    }
+                    ep = new IPEndPoint(IPAddress.Parse(broadcastStr.ToString()), SharedPort);
+                }
+                catch
+                {
+                    // on mono IPv4Mask feature not implemented
+                }
+            }
+
+            Convert(ep, out var broadcast);
             broadcast.net = 0xFFFF;
             return broadcast;
         }
