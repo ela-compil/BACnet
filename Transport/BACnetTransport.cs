@@ -24,13 +24,13 @@
 *
 *********************************************************************/
 
-using System.Diagnostics;
+using System.Text;
 using System.IO.BACnet.Serialize;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
 
 namespace System.IO.BACnet
@@ -101,8 +101,10 @@ namespace System.IO.BACnet
                     _sharedConn.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                     var ep = new IPEndPoint(IPAddress.Any, SharedPort);
                     if (!string.IsNullOrEmpty(_localEndpoint)) ep = new IPEndPoint(IPAddress.Parse(_localEndpoint), SharedPort);
+                    DisableConnReset(_sharedConn);
                     _sharedConn.Client.Bind(ep);
                     _sharedConn.DontFragment = _dontFragment;
+                    Trace.TraceInformation($"Binded shared {ep} using UDP");
                 }
                 /* This is our own exclusive port. We'll recieve everything sent to this. */
                 /* So this is how we'll present our selves to the world */
@@ -124,6 +126,8 @@ namespace System.IO.BACnet
                         DontFragment = _dontFragment,
                         EnableBroadcast = true
                     };
+
+                    DisableConnReset(_exclusiveConn);
                 }
             }
             else
@@ -131,12 +135,30 @@ namespace System.IO.BACnet
                 var ep = new IPEndPoint(IPAddress.Any, SharedPort);
                 if (!string.IsNullOrEmpty(_localEndpoint)) ep = new IPEndPoint(IPAddress.Parse(_localEndpoint), SharedPort);
                 _exclusiveConn = new UdpClient { ExclusiveAddressUse = true };
+                DisableConnReset(_exclusiveConn);
                 _exclusiveConn.Client.Bind(ep);
                 _exclusiveConn.DontFragment = _dontFragment;
                 _exclusiveConn.EnableBroadcast = true;
+                Trace.TraceInformation($"Binded exclusively to {ep} using UDP");
             }
 
             Bvlc = new BVLC(this);
+        }
+
+        /// <summary>
+        ///   Done to prevent exceptions in Socket.BeginReceive()
+        /// </summary>
+        /// <remarks>
+        ///   http://microsoft.public.win32.programmer.networks.narkive.com/RlxW2V6m/udp-comms-and-connection-reset-problem
+        /// </remarks>
+        private static void DisableConnReset(UdpClient client)
+        {
+            const uint IOC_IN = 0x80000000;
+            const uint IOC_VENDOR = 0x18000000;
+            const uint SIO_UDP_CONNRESET = IOC_IN | IOC_VENDOR | 12;
+
+            client?.Client.IOControl(unchecked((int)SIO_UDP_CONNRESET),
+                new[] { System.Convert.ToByte(false) }, null);
         }
 
         protected void Close()
@@ -156,111 +178,94 @@ namespace System.IO.BACnet
 
         private void OnReceiveData(IAsyncResult asyncResult)
         {
-            var conn = (UdpClient)asyncResult.AsyncState;
+            var connection = (UdpClient)asyncResult.AsyncState;
+
             try
             {
                 var ep = new IPEndPoint(IPAddress.Any, 0);
-                byte[] localBuffer;
-                int rx;
+                var receiveBuffer = connection.EndReceive(asyncResult, ref ep);
+                var receiveBufferHex = ConvertToHex(receiveBuffer);
+                var receivedLength = receiveBuffer.Length;
 
-                try
+                if (receivedLength == 0) // Empty frame : port scanner maybe
+                    return;
+
+                //verify message
+                Convert(ep, out var remoteAddress);
+
+                if (receivedLength < BVLC.BVLC_HEADER_LENGTH)
                 {
-                    localBuffer = conn.EndReceive(asyncResult, ref ep);
-                    rx = localBuffer.Length;
-                }
-                catch (Exception) // ICMP port unreachable
-                {
-                    if (!_disposing) // do not restart data receive when disposing
-                    {
-                        //restart data receive
-                        conn.BeginReceive(OnReceiveData, conn);
-                    }
+                    Trace.TraceWarning($"Some garbage data got in: {receiveBufferHex}");
                     return;
                 }
 
-                if (rx == 0)    // Empty frame : port scanner maybe
+                // Basic Header lenght
+                var headerLength = Bvlc.Decode(receiveBuffer, 0, out var function, out var _, ep);
+
+                if (headerLength == -1)
                 {
-                    //restart data receive
-                    conn.BeginReceive(OnReceiveData, conn);
+                    Trace.TraceWarning($"Unknow BVLC Header in: {receiveBufferHex}");
                     return;
                 }
 
-                try
+                switch (function)
                 {
-                    //verify message
-                    BacnetAddress remoteAddress;
-                    Convert(ep, out remoteAddress);
-                    if (rx < BVLC.BVLC_HEADER_LENGTH)
-                    {
-                        Trace.TraceWarning("Some garbage data got in");
-                    }
-                    else
-                    {
-                        // Basic Header lenght
-                        BacnetBvlcFunctions function;
-                        int msgLength;
-                        var headerLength = Bvlc.Decode(localBuffer, 0, out function, out msgLength, ep);
+                    case BacnetBvlcFunctions.BVLC_RESULT:
+                        // response to BVLC_REGISTER_FOREIGN_DEVICE, could be BVLC_DISTRIBUTE_BROADCAST_TO_NETWORK
+                        // but we are not a BBMD, we don't care
+                        Trace.WriteLine("Receive Register as Foreign Device Response");
+                        break;
 
-                        if (headerLength == -1)
-                        {
-                            Trace.WriteLine("Unknow BVLC Header");
-                            return;
-                        }
+                    case BacnetBvlcFunctions.BVLC_FORWARDED_NPDU:
+                        // BVLC_FORWARDED_NPDU frame by a BBMD, change the remote_address to the original one
+                        // stored in the BVLC header, we don't care about the BBMD address
+                        var ip = ((long) receiveBuffer[7] << 24) + ((long) receiveBuffer[6] << 16) +
+                                 ((long) receiveBuffer[5] << 8) + receiveBuffer[4];
 
-                        // response to BVLC_REGISTER_FOREIGN_DEVICE (could be BVLC_DISTRIBUTE_BROADCAST_TO_NETWORK ... but we are not a BBMD, don't care)
-                        if (function == BacnetBvlcFunctions.BVLC_RESULT)
-                        {
-                            Trace.WriteLine("Receive Register as Foreign Device Response");
-                        }
-
-                        // a BVLC_FORWARDED_NPDU frame by a BBMD, change the remote_address to the original one (stored in the BVLC header) 
-                        // we don't care about the BBMD address
-                        if (function == BacnetBvlcFunctions.BVLC_FORWARDED_NPDU)
-                        {
-                            var ip = ((long)localBuffer[7] << 24) + ((long)localBuffer[6] << 16) + ((long)localBuffer[5] << 8) + localBuffer[4];
-                            var port = (localBuffer[8] << 8) + localBuffer[9];    // 0xbac0 maybe
-                            ep = new IPEndPoint(ip, port);
-
-                            Convert(ep, out remoteAddress);
-
-                        }
-
-                        if (function != BacnetBvlcFunctions.BVLC_ORIGINAL_UNICAST_NPDU &&
-                            function != BacnetBvlcFunctions.BVLC_ORIGINAL_BROADCAST_NPDU &&
-                            function != BacnetBvlcFunctions.BVLC_FORWARDED_NPDU)
-                            return;
-
-                        if (MessageRecieved != null && rx>headerLength)
-                            MessageRecieved(this, localBuffer, headerLength, rx - headerLength, remoteAddress);
-                    }
+                        var port = (receiveBuffer[8] << 8) + receiveBuffer[9]; // 0xbac0 maybe
+                        Convert(new IPEndPoint(ip, port), out remoteAddress);
+                        break;
                 }
-                catch (Exception ex)
+
+                if (function != BacnetBvlcFunctions.BVLC_ORIGINAL_UNICAST_NPDU &&
+                    function != BacnetBvlcFunctions.BVLC_ORIGINAL_BROADCAST_NPDU &&
+                    function != BacnetBvlcFunctions.BVLC_FORWARDED_NPDU)
                 {
-                    Trace.TraceError($"Exception in udp recieve: {ex.Message}");
+                    Trace.WriteLine($"{function} - ignoring");
+                    return;
                 }
-                finally
+
+                if (receivedLength <= headerLength)
                 {
-                    //restart data receive
-                    conn.BeginReceive(OnReceiveData, conn);
+                    Trace.TraceWarning($"Missing data, only header received: {receiveBufferHex}");
+                    return;
                 }
+
+                MessageRecieved?.Invoke(this, receiveBuffer, headerLength,
+                    receivedLength - headerLength, remoteAddress);
+            }
+            catch (ObjectDisposedException)
+            {
+                Trace.WriteLine("Connection has been disposed");
             }
             catch (Exception e)
             {
-                if (conn.Client == null)
+                if (connection.Client == null || _disposing)
                     return;
 
-                Trace.TraceError($"Exception in Ip OnRecieveData: {e.Message}");
-
-                while (conn.Client != null)
+                Trace.TraceError($"Exception in OnRecieveData. {e}");
+            }
+            finally
+            {
+                if (connection.Client != null && !_disposing)
                 {
                     try
                     {
-                        //restart data receive
-                        conn.BeginReceive(OnReceiveData, conn);
+                        connection.BeginReceive(OnReceiveData, connection);
                     }
                     catch (Exception ex)
                     {
-                        Trace.TraceError($"Exception in Ip OnRecieveData: {ex.Message}");
+                        Trace.TraceError($"Failed to restart data receive. {ex}");
                     }
                 }
             }
@@ -289,7 +294,7 @@ namespace System.IO.BACnet
             return true;
         }
 
-        public static string ConvertToHex(byte[] buffer, int length)
+        public static string ConvertToHex(byte[] buffer)
         {
             return BitConverter.ToString(buffer).Replace("-", "");
         }
@@ -323,7 +328,8 @@ namespace System.IO.BACnet
                 : BacnetBvlcFunctions.BVLC_ORIGINAL_UNICAST_NPDU, fullLength);
 
             //create end point
-            Convert(address, out var ep);
+            IPEndPoint ep;
+            Convert(address, out ep);
 
             try
             {
