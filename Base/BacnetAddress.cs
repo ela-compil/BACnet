@@ -145,10 +145,10 @@ namespace System.IO.BACnet
                 return false;
 
             // Modif FC
-            if ((RoutedSource == null) && (d.RoutedSource != null))
+            if (RoutedSource == null && d.RoutedSource != null)
                 return false;
 
-            if ((d.RoutedSource==null)&&(RoutedSource == null))
+            if (d.RoutedSource==null&&RoutedSource == null)
                 return true;
 
             return RoutedSource?.Equals(d.RoutedSource) ?? false;
@@ -157,7 +157,7 @@ namespace System.IO.BACnet
         // checked if device is routed by curent equipement
         public bool IsMyRouter(BacnetAddress device)
         {
-            if ((device.RoutedSource == null)||(RoutedSource!=null))
+            if (device.RoutedSource == null||RoutedSource!=null)
                 return false;
 
             if (adr.Length != device.adr.Length)

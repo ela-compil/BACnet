@@ -55,7 +55,7 @@
             if (function.HasFlag(BacnetNpduControls.NetworkLayerMessage))
             {
                 networkMsgType = (BacnetNetworkMessageTypes)buffer[offset++];
-                if (((byte)networkMsgType) >= 0x80)
+                if ((byte)networkMsgType >= 0x80)
                 {
                     vendorId = (ushort)((buffer[offset++] << 8) | (buffer[offset++] << 0));
                 }
@@ -77,7 +77,7 @@
             if (function.HasFlag(BacnetNpduControls.NetworkLayerMessage)) // sure it is, otherwise the other Encode is used
             {
                 buffer.buffer[buffer.offset++] = (byte)networkMsgType;
-                if (((byte)networkMsgType) >= 0x80) // who used this ??? sure nobody !
+                if ((byte)networkMsgType >= 0x80) // who used this ??? sure nobody !
                 {
                     buffer.buffer[buffer.offset++] = (byte)((vendorId & 0xFF00) >> 8);
                     buffer.buffer[buffer.offset++] = (byte)((vendorId & 0x00FF) >> 0);

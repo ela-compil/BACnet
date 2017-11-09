@@ -317,12 +317,12 @@ namespace System.IO.BACnet
                             Array.Copy(localBuffer, 7, remoteAddress.adr, 0, 18);
                         }
 
-                        if ((function != BacnetBvlcV6Functions.BVLC_ORIGINAL_UNICAST_NPDU) &&
-                            (function != BacnetBvlcV6Functions.BVLC_ORIGINAL_BROADCAST_NPDU) &&
-                            (function != BacnetBvlcV6Functions.BVLC_FORWARDED_NPDU))
+                        if (function != BacnetBvlcV6Functions.BVLC_ORIGINAL_UNICAST_NPDU &&
+                            function != BacnetBvlcV6Functions.BVLC_ORIGINAL_BROADCAST_NPDU &&
+                            function != BacnetBvlcV6Functions.BVLC_FORWARDED_NPDU)
                             return;
 
-                        if ((MessageRecieved != null) && (rx > headerLength))
+                        if (MessageRecieved != null && rx > headerLength)
                             MessageRecieved(this, localBuffer, headerLength, rx - headerLength, remoteAddress);
                     }
                 }

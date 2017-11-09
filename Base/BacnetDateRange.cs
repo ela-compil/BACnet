@@ -33,7 +33,7 @@ namespace System.IO.BACnet
         public bool IsAFittingDate(DateTime date)
         {
             date = new DateTime(date.Year, date.Month, date.Day);
-            return (date >= startDate.toDateTime()) && (date <= endDate.toDateTime());
+            return date >= startDate.toDateTime() && date <= endDate.toDateTime();
         }
 
         public override string ToString()

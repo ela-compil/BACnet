@@ -7,6 +7,6 @@
         MAX_APDU206 = 2,
         MAX_APDU480 = 3,
         MAX_APDU1024 = 4,
-        MAX_APDU1476 = 5,
+        MAX_APDU1476 = 5
     }
 }

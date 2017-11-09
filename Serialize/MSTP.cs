@@ -21,7 +21,7 @@
         public static byte CRC_Calc_Header(byte[] buffer, int offset, int length)
         {
             byte crc = 0xff;
-            for (var i = offset; i < (offset + length); i++)
+            for (var i = offset; i < offset + length; i++)
                 crc = CRC_Calc_Header(buffer[i], crc);
             return (byte)~crc;
         }
@@ -39,7 +39,7 @@
         public static ushort CRC_Calc_Data(byte[] buffer, int offset, int length)
         {
             ushort crc = 0xffff;
-            for (var i = offset; i < (offset + length); i++)
+            for (var i = offset; i < offset + length; i++)
                 crc = CRC_Calc_Data(buffer[i], crc);
             return (ushort)~crc;
         }
@@ -62,7 +62,7 @@
                 buffer[offset + 8 + msgLength + 1] = (byte)(dataCrc >> 8);
             }
             //optional pad (0xFF)
-            return MSTP_HEADER_LENGTH + (msgLength) + (msgLength > 0 ? 2 : 0);
+            return MSTP_HEADER_LENGTH + msgLength + (msgLength > 0 ? 2 : 0);
         }
 
         public static int Decode(byte[] buffer, int offset, int maxLength, out BacnetMstpFrameTypes frameType, out byte destinationAddress, out byte sourceAddress, out int msgLength)
@@ -99,10 +99,10 @@
             if (CRC_Calc_Header(buffer, offset + 2, 5) != crcHeader)
                 return -1;
 
-            if (msgLength > 0 && maxLength >= (MSTP_HEADER_LENGTH + msgLength + 2) && CRC_Calc_Data(buffer, offset + 8, msgLength) != crcData)
+            if (msgLength > 0 && maxLength >= MSTP_HEADER_LENGTH + msgLength + 2 && CRC_Calc_Data(buffer, offset + 8, msgLength) != crcData)
                 return -1;
 
-            return 8 + (msgLength) + (msgLength > 0 ? 2 : 0);
+            return 8 + msgLength + (msgLength > 0 ? 2 : 0);
         }
     }
 }

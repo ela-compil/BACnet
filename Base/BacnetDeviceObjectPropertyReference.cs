@@ -25,25 +25,20 @@ namespace System.IO.BACnet
 
         public BacnetObjectId ObjectId
         {
-            get { return objectIdentifier; }
-            set { objectIdentifier = value; }
+            get => objectIdentifier;
+            set => objectIdentifier = value;
         }
 
         public int ArrayIndex // shows -1 when it's ASN1.BACNET_ARRAY_ALL
         {
-            get
-            {
-                return arrayIndex != ASN1.BACNET_ARRAY_ALL 
-                    ? (int)arrayIndex 
-                    : -1;
-            }
-            set
-            {
-                arrayIndex = value < 0
-                    ? ASN1.BACNET_ARRAY_ALL
-                    : (uint)value;
-            }
+            get => arrayIndex != ASN1.BACNET_ARRAY_ALL 
+                ? (int)arrayIndex 
+                : -1;
+            set => arrayIndex = value < 0
+                ? ASN1.BACNET_ARRAY_ALL
+                : (uint)value;
         }
+
         public BacnetObjectId? DeviceId  // shows null when it's not OBJECT_DEVICE
         {
             get
@@ -60,8 +55,8 @@ namespace System.IO.BACnet
 
         public BacnetPropertyIds PropertyId
         {
-            get { return propertyIdentifier; }
-            set { propertyIdentifier = value; }
+            get => propertyIdentifier;
+            set => propertyIdentifier = value;
         }
 
         public static object Parse(string value)
@@ -86,13 +81,9 @@ namespace System.IO.BACnet
                     throw new ArgumentException("Invalid format", nameof(value));
             }
 
-            BacnetPropertyIds propertyId;
-
-            if (!Enum.TryParse(parts.Last(), out propertyId))
+            if (!Enum.TryParse(parts.Last(), out BacnetPropertyIds propertyId))
             {
-                uint vendorSpecificPropertyId;
-
-                if (!uint.TryParse(parts.Last(), out vendorSpecificPropertyId))
+                if (!uint.TryParse(parts.Last(), out var vendorSpecificPropertyId))
                     throw new ArgumentException("Invalid format of property id", nameof(value));
 
                 propertyId = (BacnetPropertyIds)vendorSpecificPropertyId;

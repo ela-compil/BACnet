@@ -9,6 +9,6 @@ namespace System.IO.BACnet
         CHARACTER_JISX_0208 = 2, 
         CHARACTER_UCS4 = 3,
         CHARACTER_UCS2 = 4,
-        CHARACTER_ISO8859 = 5,
+        CHARACTER_ISO8859 = 5
     }
 }

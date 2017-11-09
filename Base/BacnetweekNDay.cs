@@ -53,18 +53,18 @@ namespace System.IO.BACnet
 
         public bool IsAFittingDate(DateTime date)
         {
-            if ((date.Month != month) && (month != 255) && (month != 13) && (month != 14))
+            if (date.Month != month && month != 255 && month != 13 && month != 14)
                 return false;
-            if ((month == 13) && ((date.Month & 1) != 1))
+            if (month == 13 && (date.Month & 1) != 1)
                 return false;
-            if ((month == 14) && ((date.Month & 1) == 1))
+            if (month == 14 && (date.Month & 1) == 1)
                 return false;
 
             // What about week, too much stupid : boycott it !
 
             if (wday == 255)
                 return true;
-            if ((wday == 7) && (date.DayOfWeek == 0))  // Sunday 7 for Bacnet, 0 for .NET
+            if (wday == 7 && date.DayOfWeek == 0)  // Sunday 7 for Bacnet, 0 for .NET
                 return true;
             if (wday == (int)date.DayOfWeek)
                 return true;

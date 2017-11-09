@@ -10,6 +10,6 @@
         ExpectingReply = 4,
         SourceSpecified = 8,
         DestinationSpecified = 32,
-        NetworkLayerMessage = 128,
+        NetworkLayerMessage = 128
     }
 }

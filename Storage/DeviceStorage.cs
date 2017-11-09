@@ -326,7 +326,7 @@ namespace System.IO.BACnet.Storage
             try
             {
                 // If PROP_OUT_OF_SERVICE=True, value is accepted as is : http://www.bacnetwiki.com/wiki/index.php?title=Priority_Array                 
-                if ((bool)outOfService.BacnetValue[0].Value && (propertyId == BacnetPropertyIds.PROP_PRESENT_VALUE))
+                if ((bool)outOfService.BacnetValue[0].Value && propertyId == BacnetPropertyIds.PROP_PRESENT_VALUE)
                 {
                     presentvalue.BacnetValue = new BacnetValue[1] { value };
                     return ErrorCodes.Good;

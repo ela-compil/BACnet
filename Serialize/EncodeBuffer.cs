@@ -52,7 +52,7 @@
             {
                 if (expandable)
                 {
-                    Array.Resize<byte>(ref buffer, buffer.Length * 2);
+                    Array.Resize(ref buffer, buffer.Length * 2);
                     max_offset = buffer.Length - 1;
                     if (serialize_counter >= min_limit)
                         buffer[offset] = b;
@@ -98,9 +98,9 @@
             return ret;
         }
 
-        public void Reset(int offset)
+        public void Reset(int newOffset)
         {
-            this.offset = offset;
+            offset = newOffset;
             serialize_counter = 0;
             result = EncodeResult.Good;
         }

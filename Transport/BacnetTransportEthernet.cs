@@ -222,7 +222,7 @@ namespace System.IO.BACnet
 
             // Got frames send by me, not for me, not broadcast
             var dest = Mac(buffer, offset);
-            if (!_isOutboundPacket(dest, 0) && (dest[0] != 255))
+            if (!_isOutboundPacket(dest, 0) && dest[0] != 255)
                 return;
 
             offset += 6;

@@ -113,7 +113,7 @@ namespace System.IO.BACnet
                         any_value = (float)value;
                         break;
                     case BacnetTrendLogValueType.TL_TYPE_SIGN:
-                        if(value == null) value = (int)0;
+                        if(value == null) value = 0;
                         if (value.GetType() != typeof(int))
                             value = (int)Convert.ChangeType(value, typeof(int));
                         any_value = (int)value;

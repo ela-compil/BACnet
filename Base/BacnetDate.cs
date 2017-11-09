@@ -35,28 +35,28 @@ namespace System.IO.BACnet
             return 4;
         }
 
-        public bool IsPeriodic => (year == 255) || (month > 12) || (day == 255);
+        public bool IsPeriodic => year == 255 || month > 12 || day == 255;
 
         public bool IsAFittingDate(DateTime date)
         {
-            if ((date.Year != (year + 1900)) && (year != 255))
+            if (date.Year != year + 1900 && year != 255)
                 return false;
 
-            if ((date.Month != month) && (month != 255) && (month != 13) && (month != 14))
+            if (date.Month != month && month != 255 && month != 13 && month != 14)
                 return false;
-            if ((month == 13) && ((date.Month & 1) != 1))
+            if (month == 13 && (date.Month & 1) != 1)
                 return false;
-            if ((month == 14) && ((date.Month & 1) == 1))
+            if (month == 14 && (date.Month & 1) == 1)
                 return false;
 
-            if ((date.Day != day) && (day != 255))
+            if (date.Day != day && day != 255)
                 return false;
             // day 32 todo
 
             if (wday == 255)
                 return true;
 
-            if ((wday == 7) && (date.DayOfWeek == 0))  // Sunday 7 for Bacnet, 0 for .NET
+            if (wday == 7 && date.DayOfWeek == 0)  // Sunday 7 for Bacnet, 0 for .NET
                 return true;
 
             if (wday == (int)date.DayOfWeek)

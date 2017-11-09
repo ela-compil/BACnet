@@ -9,6 +9,6 @@ namespace System.IO.BACnet
         MAX_SEG16 = 0x40,
         MAX_SEG32 = 0x50,
         MAX_SEG64 = 0x60,
-        MAX_SEG65 = 0x70,
+        MAX_SEG65 = 0x70
     }
 }

@@ -93,7 +93,7 @@ namespace System.IO.BACnet.Serialize
         }
 
         // Send a Frame to each registered foreign devices, except the original sender
-        private void SendToFDs(byte[] buffer, int msgLength, Net.IPEndPoint ePsender = null)
+        private void SendToFDs(byte[] buffer, int msgLength, IPEndPoint ePsender = null)
         {
             lock (_foreignDevices)
             {
@@ -108,9 +108,9 @@ namespace System.IO.BACnet.Serialize
             }
         }
 
-        private static IPEndPoint BBMDSentAdd(IPEndPoint bbmd, IPAddress Mask)
+        private static IPEndPoint BBMDSentAdd(IPEndPoint bbmd, IPAddress mask)
         {
-            var bm = Mask.GetAddressBytes();
+            var bm = mask.GetAddressBytes();
             var bip = bbmd.Address.GetAddressBytes();
 
             /* annotation in Steve Karg bacnet stack :
@@ -133,7 +133,7 @@ namespace System.IO.BACnet.Serialize
              */
 
             for (var i = 0; i < bm.Length; i++)
-                bip[i] = (byte)(bip[i] | (~bm[i]));
+                bip[i] = (byte)(bip[i] | ~bm[i]);
 
             return new IPEndPoint(new IPAddress(bip), bbmd.Port);
         }
@@ -155,8 +155,8 @@ namespace System.IO.BACnet.Serialize
         {
             b[0] = BVLL_TYPE_BACNET_IP;
             b[1] = (byte)function;
-            b[2] = (byte)(((msgLength) & 0xFF00) >> 8);
-            b[3] = (byte)(((msgLength) & 0x00FF) >> 0);
+            b[2] = (byte)((msgLength & 0xFF00) >> 8);
+            b[3] = (byte)((msgLength & 0x00FF) >> 0);
         }
 
         private void Forward_NPDU(byte[] buffer, int msgLength, bool toGlobalBroadcast, IPEndPoint ePsender)
@@ -171,8 +171,7 @@ namespace System.IO.BACnet.Serialize
 
             // 10 bytes for the BVLC Header, with the embedded 6 bytes IP:Port of the original sender
             First4BytesHeaderEncode(b, BacnetBvlcFunctions.BVLC_FORWARDED_NPDU, msgLength + 6);
-            BacnetAddress bacSender;
-            BacnetIpUdpProtocolTransport.Convert(ePsender, out bacSender); // to embbed in the forward BVLC header
+            BacnetIpUdpProtocolTransport.Convert(ePsender, out var bacSender); // to embbed in the forward BVLC header
             for (var i = 0; i < bacSender.adr.Length; i++)
                 b[4 + i] = bacSender.adr[i];
 
@@ -261,13 +260,13 @@ namespace System.IO.BACnet.Serialize
             First4BytesHeaderEncode(buffer, function, msgLength);
 
             // optional BBMD service
-            if (_bbmdFdServiceActivated && (function == BacnetBvlcFunctions.BVLC_ORIGINAL_BROADCAST_NPDU))
+            if (_bbmdFdServiceActivated && function == BacnetBvlcFunctions.BVLC_ORIGINAL_BROADCAST_NPDU)
             {
                 var me = _myBbmdTransport.LocalEndPoint;
                 // just sometime working, enable to get the local ep, always 0.0.0.0 if the socket is open with
                 // System.Net.IPAddress.Any
                 // So in this case don't send a bad message
-                if ((me.Address.ToString() != "0.0.0.0"))
+                if (me.Address.ToString() != "0.0.0.0")
                     Forward_NPDU(buffer, msgLength, false, me);   // send to all BBMDs and FDs
             }
             return 4; // ready to send
@@ -281,7 +280,7 @@ namespace System.IO.BACnet.Serialize
 
             function = (BacnetBvlcFunctions)buffer[1];
             msgLength = (buffer[2] << 8) | (buffer[3] << 0);
-            if ((buffer[0] != BVLL_TYPE_BACNET_IP) || (buffer.Length != msgLength)) return -1;
+            if (buffer[0] != BVLL_TYPE_BACNET_IP || buffer.Length != msgLength) return -1;
 
             switch (function)
             {

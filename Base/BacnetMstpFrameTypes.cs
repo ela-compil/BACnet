@@ -19,6 +19,6 @@
         /* vendor-proprietary frame to be conveyed. The length of the data portion */
         /* of a Proprietary frame shall be in the range of 2 to 501 octets. */
         FRAME_TYPE_PROPRIETARY_MIN = 128,
-        FRAME_TYPE_PROPRIETARY_MAX = 255,
+        FRAME_TYPE_PROPRIETARY_MAX = 255
     }
 }

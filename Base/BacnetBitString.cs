@@ -31,13 +31,13 @@ namespace System.IO.BACnet
             if (byteNumber < ASN1.MAX_BITSTRING_BYTES)
             {
                 /* set max bits used */
-                if (bits_used < (bitNumber + 1))
+                if (bits_used < bitNumber + 1)
                     bits_used = (byte)(bitNumber + 1);
-                bitMask = (byte)(bitMask << (bitNumber - (byteNumber * 8)));
+                bitMask = (byte)(bitMask << (bitNumber - byteNumber * 8));
                 if (v)
                     value[byteNumber] |= bitMask;
                 else
-                    value[byteNumber] &= (byte)(~(bitMask));
+                    value[byteNumber] &= (byte)~bitMask;
             }
         }
 

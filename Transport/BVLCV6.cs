@@ -220,7 +220,7 @@ namespace System.IO.BACnet
             First7BytesHeaderEncode(buffer, function, msgLength);
 
             // BBMD service
-            if ((function == BacnetIpV6UdpProtocolTransport.BacnetBvlcV6Functions.BVLC_ORIGINAL_BROADCAST_NPDU) && _bbmdFdServiceActivated)
+            if (function == BacnetIpV6UdpProtocolTransport.BacnetBvlcV6Functions.BVLC_ORIGINAL_BROADCAST_NPDU && _bbmdFdServiceActivated)
             {
                 var me = _myTransport.LocalEndPoint;
                 BacnetAddress bacme;
@@ -250,7 +250,7 @@ namespace System.IO.BACnet
 
             function = (BacnetIpV6UdpProtocolTransport.BacnetBvlcV6Functions)buffer[1];
             msgLength = (buffer[2] << 8) | (buffer[3] << 0);
-            if ((buffer[0] != BVLL_TYPE_BACNET_IPV6) || (buffer.Length != msgLength)) return -1;
+            if (buffer[0] != BVLL_TYPE_BACNET_IPV6 || buffer.Length != msgLength) return -1;
 
             Array.Copy(buffer, 4, remoteAddress.VMac, 0, 3);
 
@@ -270,7 +270,7 @@ namespace System.IO.BACnet
 
                 case BacnetIpV6UdpProtocolTransport.BacnetBvlcV6Functions.BVLC_ADDRESS_RESOLUTION:
                     // need to verify that the VMAC is mine
-                    if ((VMAC[0] == buffer[7]) && (VMAC[1] == buffer[8]) && (VMAC[2] == buffer[9]))
+                    if (VMAC[0] == buffer[7] && VMAC[1] == buffer[8] && VMAC[2] == buffer[9])
                         // coming from myself ? avoid loopback
                         if (!_myTransport.LocalEndPoint.Equals(sender))
                             SendAddressResolutionAck(sender, remoteAddress.VMac,
@@ -284,7 +284,7 @@ namespace System.IO.BACnet
                     return 0; // not for the upper layers
 
                 case BacnetIpV6UdpProtocolTransport.BacnetBvlcV6Functions.BVLC_ADDRESS_RESOLUTION_ACK: // adresse conflict
-                    if ((VMAC[0] == buffer[4]) && (VMAC[1] == buffer[5]) && (VMAC[2] == buffer[6]) && RandomVmac)
+                    if (VMAC[0] == buffer[4] && VMAC[1] == buffer[5] && VMAC[2] == buffer[6] && RandomVmac)
                     {
                         new Random().NextBytes(VMAC);
                         VMAC[0] = (byte)((VMAC[0] & 0x7F) | 0x40);
@@ -304,7 +304,7 @@ namespace System.IO.BACnet
                     if (_myTransport.LocalEndPoint.Equals(sender)) return 0;
 
                     // certainly TODO the same code I've put in the IPV4 implementation
-                    if (_bbmdFdServiceActivated && (msgLength >= 25))
+                    if (_bbmdFdServiceActivated && msgLength >= 25)
                     {
                         bool ret;
                         lock (_bbmds)
@@ -326,7 +326,7 @@ namespace System.IO.BACnet
                     return 25; // for the upper layers
 
                 case BacnetIpV6UdpProtocolTransport.BacnetBvlcV6Functions.BVLC_REGISTER_FOREIGN_DEVICE:
-                    if (_bbmdFdServiceActivated && (msgLength == 9))
+                    if (_bbmdFdServiceActivated && msgLength == 9)
                     {
                         var TTL = (buffer[7] << 8) + buffer[8]; // unit is second
                         RegisterForeignDevice(sender, TTL);
