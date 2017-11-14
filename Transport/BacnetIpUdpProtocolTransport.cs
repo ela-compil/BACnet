@@ -182,8 +182,33 @@ namespace System.IO.BACnet
 
             try
             {
-                var ep = new IPEndPoint(IPAddress.Any, 0);
-                var receiveBuffer = connection.EndReceive(asyncResult, ref ep);
+                IPEndPoint ep = null;
+                byte[] receiveBuffer;
+
+                try
+                {
+                    receiveBuffer = connection.EndReceive(asyncResult, ref ep);
+                }
+                catch
+                {
+                    return;
+                }
+                finally
+                {
+                    if (connection.Client != null && !_disposing)
+                    {
+                        try
+                        {
+                            // BeginReceive ASAP to enable parallel processing (e.g. query additional data while processing a notification)
+                            connection.BeginReceive(OnReceiveData, connection);
+                        }
+                        catch (Exception ex)
+                        {
+                            Trace.TraceError($"Failed to restart data receive. {ex}");
+                        }
+                    }
+                }
+
                 var receiveBufferHex = ConvertToHex(receiveBuffer);
                 var receivedLength = receiveBuffer.Length;
 
@@ -254,20 +279,6 @@ namespace System.IO.BACnet
                     return;
 
                 Trace.TraceError($"Exception in OnRecieveData. {e}");
-            }
-            finally
-            {
-                if (connection.Client != null && !_disposing)
-                {
-                    try
-                    {
-                        connection.BeginReceive(OnReceiveData, connection);
-                    }
-                    catch (Exception ex)
-                    {
-                        Trace.TraceError($"Failed to restart data receive. {ex}");
-                    }
-                }
             }
         }
 
