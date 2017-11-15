@@ -10,14 +10,14 @@ namespace System.IO.BACnet
 
         public BacnetObjectTypes Type
         {
-            get { return type; }
-            set { type = value; }
+            get => type;
+            set => type = value;
         }
 
         public uint Instance
         {
-            get { return instance; }
-            set { instance = value; }
+            get => instance;
+            set => instance = value;
         }
 
         public BacnetObjectId(BacnetObjectTypes type, uint instance)

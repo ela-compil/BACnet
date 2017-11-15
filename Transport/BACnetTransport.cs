@@ -26,7 +26,6 @@
 
 using System.Text;
 using System.IO.BACnet.Serialize;
-using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -38,7 +37,7 @@ namespace System.IO.BACnet
     /// <summary>
     /// This is the standard BACNet udp transport
     /// </summary>
-    public class BacnetIpUdpProtocolTransport : IBacnetTransport
+    public class BacnetIpUdpProtocolTransport : BacnetTransportBase
     {
         private UdpClient _sharedConn;
         private UdpClient _exclusiveConn;
@@ -49,24 +48,23 @@ namespace System.IO.BACnet
         private bool _disposing;
 
         public BVLC Bvlc { get; private set; }
-        public BacnetAddressTypes Type => BacnetAddressTypes.IP;
-        public event MessageRecievedHandler MessageRecieved;
         public int SharedPort { get; }
         public int ExclusivePort => ((IPEndPoint)_exclusiveConn.Client.LocalEndPoint).Port;
-        public int HeaderLength => BVLC.BVLC_HEADER_LENGTH;
-        public BacnetMaxAdpu MaxAdpuLength => BVLC.BVLC_MAX_APDU;
-        public byte MaxInfoFrames { get { return 0xff; } set { /* ignore */ } }     //the udp doesn't have max info frames
-        public int MaxBufferLength { get; }
 
         // Give 0.0.0.0:xxxx if the socket is open with System.Net.IPAddress.Any
         // Today only used by _GetBroadcastAddress method & the bvlc layer class in BBMD mode
         // Some more complex solutions could avoid this, that's why this property is virtual
         public virtual IPEndPoint LocalEndPoint => (IPEndPoint)_exclusiveConn.Client.LocalEndPoint;
 
-        public BacnetIpUdpProtocolTransport(int port, bool useExclusivePort = false, bool dontFragment = false, int maxPayload = 1472, string localEndpointIp = "")
+        public BacnetIpUdpProtocolTransport(int port, bool useExclusivePort = false, bool dontFragment = false,
+            int maxPayload = 1472, string localEndpointIp = "")
         {
             SharedPort = port;
             MaxBufferLength = maxPayload;
+            Type = BacnetAddressTypes.IP;
+            HeaderLength = BVLC.BVLC_HEADER_LENGTH;
+            MaxAdpuLength = BVLC.BVLC_MAX_APDU;
+
             _exclusivePort = useExclusivePort;
             _dontFragment = dontFragment;
             _localEndpoint = localEndpointIp;
@@ -104,7 +102,7 @@ namespace System.IO.BACnet
                     DisableConnReset(_sharedConn);
                     _sharedConn.Client.Bind(ep);
                     _sharedConn.DontFragment = _dontFragment;
-                    Trace.TraceInformation($"Binded shared {ep} using UDP");
+                    Log.Info($"Binded shared {ep} using UDP");
                 }
                 /* This is our own exclusive port. We'll recieve everything sent to this. */
                 /* So this is how we'll present our selves to the world */
@@ -139,7 +137,7 @@ namespace System.IO.BACnet
                 _exclusiveConn.Client.Bind(ep);
                 _exclusiveConn.DontFragment = _dontFragment;
                 _exclusiveConn.EnableBroadcast = true;
-                Trace.TraceInformation($"Binded exclusively to {ep} using UDP");
+                Log.Info($"Binded exclusively to {ep} using UDP");
             }
 
             Bvlc = new BVLC(this);
@@ -166,7 +164,7 @@ namespace System.IO.BACnet
             _exclusiveConn.Close();
         }
 
-        public void Start()
+        public override void Start()
         {
             _disposing = false;
 
@@ -195,7 +193,7 @@ namespace System.IO.BACnet
 
                 if (receivedLength < BVLC.BVLC_HEADER_LENGTH)
                 {
-                    Trace.TraceWarning($"Some garbage data got in: {receiveBufferHex}");
+                    Log.Warn($"Some garbage data got in: {receiveBufferHex}");
                     return;
                 }
 
@@ -204,7 +202,7 @@ namespace System.IO.BACnet
 
                 if (headerLength == -1)
                 {
-                    Trace.TraceWarning($"Unknow BVLC Header in: {receiveBufferHex}");
+                    Log.Warn($"Unknow BVLC Header in: {receiveBufferHex}");
                     return;
                 }
 
@@ -213,7 +211,7 @@ namespace System.IO.BACnet
                     case BacnetBvlcFunctions.BVLC_RESULT:
                         // response to BVLC_REGISTER_FOREIGN_DEVICE, could be BVLC_DISTRIBUTE_BROADCAST_TO_NETWORK
                         // but we are not a BBMD, we don't care
-                        Trace.WriteLine("Receive Register as Foreign Device Response");
+                        Log.Debug("Receive Register as Foreign Device Response");
                         break;
 
                     case BacnetBvlcFunctions.BVLC_FORWARDED_NPDU:
@@ -231,29 +229,28 @@ namespace System.IO.BACnet
                     function != BacnetBvlcFunctions.BVLC_ORIGINAL_BROADCAST_NPDU &&
                     function != BacnetBvlcFunctions.BVLC_FORWARDED_NPDU)
                 {
-                    Trace.WriteLine($"{function} - ignoring");
+                    Log.Debug($"{function} - ignoring");
                     return;
                 }
 
                 if (receivedLength <= headerLength)
                 {
-                    Trace.TraceWarning($"Missing data, only header received: {receiveBufferHex}");
+                    Log.Warn($"Missing data, only header received: {receiveBufferHex}");
                     return;
                 }
 
-                MessageRecieved?.Invoke(this, receiveBuffer, headerLength,
-                    receivedLength - headerLength, remoteAddress);
+                InvokeMessageRecieved(receiveBuffer, headerLength, receivedLength - headerLength, remoteAddress);
             }
             catch (ObjectDisposedException)
             {
-                Trace.WriteLine("Connection has been disposed");
+                Log.Debug("Connection has been disposed");
             }
             catch (Exception e)
             {
                 if (connection.Client == null || _disposing)
                     return;
 
-                Trace.TraceError($"Exception in OnRecieveData. {e}");
+                Log.Error("Exception in OnRecieveData", e);
             }
             finally
             {
@@ -265,7 +262,7 @@ namespace System.IO.BACnet
                     }
                     catch (Exception ex)
                     {
-                        Trace.TraceError($"Failed to restart data receive. {ex}");
+                        Log.Error("Failed to restart data receive", ex);
                     }
                 }
             }
@@ -285,12 +282,6 @@ namespace System.IO.BACnet
                 return false;
 
             Bvlc.SendRemoteWhois(buffer, bbmd, msgLength);
-            return true;
-        }
-
-        public bool WaitForAllTransmits(int timeout)
-        {
-            //we got no sending queue in udp, so just return true
             return true;
         }
 
@@ -317,7 +308,7 @@ namespace System.IO.BACnet
             return dataLength;
         }
 
-        public int Send(byte[] buffer, int offset, int dataLength, BacnetAddress address, bool waitForTransmission, int timeout)
+        public override int Send(byte[] buffer, int offset, int dataLength, BacnetAddress address, bool waitForTransmission, int timeout)
         {
             if (_exclusiveConn == null) return 0;
 
@@ -328,8 +319,7 @@ namespace System.IO.BACnet
                 : BacnetBvlcFunctions.BVLC_ORIGINAL_UNICAST_NPDU, fullLength);
 
             //create end point
-            IPEndPoint ep;
-            Convert(address, out ep);
+            Convert(address, out var ep);
 
             try
             {
@@ -428,12 +418,12 @@ namespace System.IO.BACnet
             return broadcast;
         }
 
-        public BacnetAddress GetBroadcastAddress()
+        public override BacnetAddress GetBroadcastAddress()
         {
             return _broadcastAddress ?? (_broadcastAddress = _GetBroadcastAddress());
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             _disposing = true;
             _exclusiveConn?.Close();

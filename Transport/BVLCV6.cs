@@ -1,8 +1,8 @@
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Text.RegularExpressions;
+using Common.Logging;
 
 namespace System.IO.BACnet
 {
@@ -29,6 +29,7 @@ namespace System.IO.BACnet
         public bool RandomVmac;
 
         public byte[] VMAC = new byte[3];
+        public ILog Log { get; set; } = LogManager.GetLogger<BVLCV6>();
 
         public BVLCV6(BacnetIpV6UdpProtocolTransport transport, int vMac)
         {
@@ -44,7 +45,7 @@ namespace System.IO.BACnet
                 // Open with default interface specified, cannot send it or 
                 // it will generate an uncheckable continuous local loopback
                 if (!_myTransport.LocalEndPoint.ToString().Contains("[::]"))
-                    SendAddressResolutionRequest(this.VMAC);
+                    SendAddressResolutionRequest(VMAC);
                 else
                     RandomVmac = false; // back to false avoiding loop back
             }
@@ -96,7 +97,7 @@ namespace System.IO.BACnet
                     return;
                 }
 
-                Trace.TraceInformation("Rejected FDR registration, IP : " + sender.Address);
+                Log.Info($"Rejected FDR registration, IP : {sender.Address}");
             }
         }
 
@@ -139,7 +140,7 @@ namespace System.IO.BACnet
             Array.Copy(buffer, 0, b, 18, msgLength);
 
             // 7 bytes for the BVLC Header, with the embedded 6 bytes IP:Port of the original sender
-            First7BytesHeaderEncode(b, BacnetIpV6UdpProtocolTransport.BacnetBvlcV6Functions.BVLC_FORWARDED_NPDU, msgLength + 18);
+            First7BytesHeaderEncode(b, BacnetBvlcV6Functions.BVLC_FORWARDED_NPDU, msgLength + 18);
             // replace my Vmac by the orignal source vMac
             Array.Copy(bacSender.VMac, 0, b, 4, 3);
             // Add IpV6 endpoint
@@ -157,7 +158,7 @@ namespace System.IO.BACnet
             }
         }
 
-        private void First7BytesHeaderEncode(byte[] b, BacnetIpV6UdpProtocolTransport.BacnetBvlcV6Functions function, int msgLength)
+        private void First7BytesHeaderEncode(byte[] b, BacnetBvlcV6Functions function, int msgLength)
         {
             b[0] = BVLL_TYPE_BACNET_IPV6;
             b[1] = (byte)function;
@@ -167,10 +168,10 @@ namespace System.IO.BACnet
         }
 
         // Send ack or nack
-        private void SendResult(IPEndPoint sender, BacnetIpV6UdpProtocolTransport.BacnetBvlcV6Results resultCode)
+        private void SendResult(IPEndPoint sender, BacnetBvlcV6Results resultCode)
         {
             var b = new byte[9];
-            First7BytesHeaderEncode(b, BacnetIpV6UdpProtocolTransport.BacnetBvlcV6Functions.BVLC_RESULT, 9);
+            First7BytesHeaderEncode(b, BacnetBvlcV6Functions.BVLC_RESULT, 9);
             b[7] = (byte)(((ushort)resultCode & 0xFF00) >> 8);
             b[8] = (byte)((ushort)resultCode & 0xFF);
             _myTransport.Send(b, 9, sender);
@@ -179,7 +180,7 @@ namespace System.IO.BACnet
         public void SendRegisterAsForeignDevice(IPEndPoint bbmd, short ttl)
         {
             var b = new byte[9];
-            First7BytesHeaderEncode(b, BacnetIpV6UdpProtocolTransport.BacnetBvlcV6Functions.BVLC_REGISTER_FOREIGN_DEVICE, 9);
+            First7BytesHeaderEncode(b, BacnetBvlcV6Functions.BVLC_REGISTER_FOREIGN_DEVICE, 9);
             b[7] = (byte)((ttl & 0xFF00) >> 8);
             b[8] = (byte)(ttl & 0xFF);
             _myTransport.Send(b, 9, bbmd);
@@ -188,12 +189,12 @@ namespace System.IO.BACnet
         public void SendRemoteWhois(byte[] buffer, IPEndPoint bbmd, int msgLength)
         {
             // 7 bytes for the BVLC Header
-            First7BytesHeaderEncode(buffer, BacnetIpV6UdpProtocolTransport.BacnetBvlcV6Functions.BVLC_DISTRIBUTE_BROADCAST_TO_NETWORK, msgLength);
+            First7BytesHeaderEncode(buffer, BacnetBvlcV6Functions.BVLC_DISTRIBUTE_BROADCAST_TO_NETWORK, msgLength);
             _myTransport.Send(buffer, msgLength, bbmd);
         }
 
         // Send ack
-        private void SendAddressResolutionAck(IPEndPoint sender, byte[] vMacDest, BacnetIpV6UdpProtocolTransport.BacnetBvlcV6Functions function)
+        private void SendAddressResolutionAck(IPEndPoint sender, byte[] vMacDest, BacnetBvlcV6Functions function)
         {
             var b = new byte[10];
             First7BytesHeaderEncode(b, function, 10);
@@ -208,23 +209,22 @@ namespace System.IO.BACnet
             BacnetIpV6UdpProtocolTransport.Convert(_broadcastAdd, out ep);
 
             var b = new byte[10];
-            First7BytesHeaderEncode(b, BacnetIpV6UdpProtocolTransport.BacnetBvlcV6Functions.BVLC_ADDRESS_RESOLUTION, 10);
+            First7BytesHeaderEncode(b, BacnetBvlcV6Functions.BVLC_ADDRESS_RESOLUTION, 10);
             Array.Copy(vMacDest, 0, b, 7, 3);
             _myTransport.Send(b, 10, ep);
         }
 
         // Encode is called by internal services if the BBMD is also an active device
-        public int Encode(byte[] buffer, int offset, BacnetIpV6UdpProtocolTransport.BacnetBvlcV6Functions function, int msgLength, BacnetAddress address)
+        public int Encode(byte[] buffer, int offset, BacnetBvlcV6Functions function, int msgLength, BacnetAddress address)
         {
             // offset always 0, we are the first after udp
             First7BytesHeaderEncode(buffer, function, msgLength);
 
             // BBMD service
-            if (function == BacnetIpV6UdpProtocolTransport.BacnetBvlcV6Functions.BVLC_ORIGINAL_BROADCAST_NPDU && _bbmdFdServiceActivated)
+            if (function == BacnetBvlcV6Functions.BVLC_ORIGINAL_BROADCAST_NPDU && _bbmdFdServiceActivated)
             {
                 var me = _myTransport.LocalEndPoint;
-                BacnetAddress bacme;
-                BacnetIpV6UdpProtocolTransport.Convert(me, out bacme);
+                BacnetIpV6UdpProtocolTransport.Convert(me, out var bacme);
                 Array.Copy(VMAC, bacme.VMac, 3);
 
                 Forward_NPDU(buffer, msgLength, false, me, bacme); // send to all BBMDs and FDs
@@ -232,7 +232,7 @@ namespace System.IO.BACnet
                 return 7; // ready to send
             }
 
-            if (function != BacnetIpV6UdpProtocolTransport.BacnetBvlcV6Functions.BVLC_ORIGINAL_UNICAST_NPDU)
+            if (function != BacnetBvlcV6Functions.BVLC_ORIGINAL_UNICAST_NPDU)
                 return 0; // ?
 
             buffer[7] = address.VMac[0];
@@ -242,13 +242,13 @@ namespace System.IO.BACnet
         }
 
         // Decode is called each time an Udp Frame is received
-        public int Decode(byte[] buffer, int offset, out BacnetIpV6UdpProtocolTransport.BacnetBvlcV6Functions function, out int msgLength,
+        public int Decode(byte[] buffer, int offset, out BacnetBvlcV6Functions function, out int msgLength,
             IPEndPoint sender, BacnetAddress remoteAddress)
         {
             // offset always 0, we are the first after udp
             // and a previous test by the caller guaranteed at least 4 bytes into the buffer
 
-            function = (BacnetIpV6UdpProtocolTransport.BacnetBvlcV6Functions)buffer[1];
+            function = (BacnetBvlcV6Functions)buffer[1];
             msgLength = (buffer[2] << 8) | (buffer[3] << 0);
             if (buffer[0] != BVLL_TYPE_BACNET_IPV6 || buffer.Length != msgLength) return -1;
 
@@ -256,34 +256,34 @@ namespace System.IO.BACnet
 
             switch (function)
             {
-                case BacnetIpV6UdpProtocolTransport.BacnetBvlcV6Functions.BVLC_RESULT:
+                case BacnetBvlcV6Functions.BVLC_RESULT:
                     return 9; // only for the upper layers
 
-                case BacnetIpV6UdpProtocolTransport.BacnetBvlcV6Functions.BVLC_ORIGINAL_UNICAST_NPDU:
+                case BacnetBvlcV6Functions.BVLC_ORIGINAL_UNICAST_NPDU:
                     return 10; // only for the upper layers
 
-                case BacnetIpV6UdpProtocolTransport.BacnetBvlcV6Functions.BVLC_ORIGINAL_BROADCAST_NPDU:
+                case BacnetBvlcV6Functions.BVLC_ORIGINAL_BROADCAST_NPDU:
                     // Send to FDs & BBMDs, not broadcast or it will be made twice !
                     if (_bbmdFdServiceActivated)
                         Forward_NPDU(buffer, msgLength, false, sender, remoteAddress);
                     return 7; // also for the upper layers
 
-                case BacnetIpV6UdpProtocolTransport.BacnetBvlcV6Functions.BVLC_ADDRESS_RESOLUTION:
+                case BacnetBvlcV6Functions.BVLC_ADDRESS_RESOLUTION:
                     // need to verify that the VMAC is mine
                     if (VMAC[0] == buffer[7] && VMAC[1] == buffer[8] && VMAC[2] == buffer[9])
                         // coming from myself ? avoid loopback
                         if (!_myTransport.LocalEndPoint.Equals(sender))
                             SendAddressResolutionAck(sender, remoteAddress.VMac,
-                                BacnetIpV6UdpProtocolTransport.BacnetBvlcV6Functions.BVLC_ADDRESS_RESOLUTION_ACK);
+                                BacnetBvlcV6Functions.BVLC_ADDRESS_RESOLUTION_ACK);
                     return 0; // not for the upper layers
 
-                case BacnetIpV6UdpProtocolTransport.BacnetBvlcV6Functions.BVLC_FORWARDED_ADDRESS_RESOLUTION:
+                case BacnetBvlcV6Functions.BVLC_FORWARDED_ADDRESS_RESOLUTION:
                     // no need to verify the target VMAC, should be OK
                     SendAddressResolutionAck(sender, remoteAddress.VMac,
-                        BacnetIpV6UdpProtocolTransport.BacnetBvlcV6Functions.BVLC_ADDRESS_RESOLUTION_ACK);
+                        BacnetBvlcV6Functions.BVLC_ADDRESS_RESOLUTION_ACK);
                     return 0; // not for the upper layers
 
-                case BacnetIpV6UdpProtocolTransport.BacnetBvlcV6Functions.BVLC_ADDRESS_RESOLUTION_ACK: // adresse conflict
+                case BacnetBvlcV6Functions.BVLC_ADDRESS_RESOLUTION_ACK: // adresse conflict
                     if (VMAC[0] == buffer[4] && VMAC[1] == buffer[5] && VMAC[2] == buffer[6] && RandomVmac)
                     {
                         new Random().NextBytes(VMAC);
@@ -292,15 +292,15 @@ namespace System.IO.BACnet
                     }
                     return 0; // not for the upper layers
 
-                case BacnetIpV6UdpProtocolTransport.BacnetBvlcV6Functions.BVLC_VIRTUAL_ADDRESS_RESOLUTION:
+                case BacnetBvlcV6Functions.BVLC_VIRTUAL_ADDRESS_RESOLUTION:
                     SendAddressResolutionAck(sender, remoteAddress.VMac,
-                        BacnetIpV6UdpProtocolTransport.BacnetBvlcV6Functions.BVLC_VIRTUAL_ADDRESS_RESOLUTION_ACK);
+                        BacnetBvlcV6Functions.BVLC_VIRTUAL_ADDRESS_RESOLUTION_ACK);
                     return 0; // not for the upper layers
 
-                case BacnetIpV6UdpProtocolTransport.BacnetBvlcV6Functions.BVLC_VIRTUAL_ADDRESS_RESOLUTION_ACK:
+                case BacnetBvlcV6Functions.BVLC_VIRTUAL_ADDRESS_RESOLUTION_ACK:
                     return 0; // not for the upper layers
 
-                case BacnetIpV6UdpProtocolTransport.BacnetBvlcV6Functions.BVLC_FORWARDED_NPDU:
+                case BacnetBvlcV6Functions.BVLC_FORWARDED_NPDU:
                     if (_myTransport.LocalEndPoint.Equals(sender)) return 0;
 
                     // certainly TODO the same code I've put in the IPV4 implementation
@@ -325,22 +325,22 @@ namespace System.IO.BACnet
                     }
                     return 25; // for the upper layers
 
-                case BacnetIpV6UdpProtocolTransport.BacnetBvlcV6Functions.BVLC_REGISTER_FOREIGN_DEVICE:
+                case BacnetBvlcV6Functions.BVLC_REGISTER_FOREIGN_DEVICE:
                     if (_bbmdFdServiceActivated && msgLength == 9)
                     {
                         var TTL = (buffer[7] << 8) + buffer[8]; // unit is second
                         RegisterForeignDevice(sender, TTL);
-                        SendResult(sender, BacnetIpV6UdpProtocolTransport.BacnetBvlcV6Results.SUCCESSFUL_COMPLETION); // ack
+                        SendResult(sender, BacnetBvlcV6Results.SUCCESSFUL_COMPLETION); // ack
                     }
                     return 0; // not for the upper layers
 
-                case BacnetIpV6UdpProtocolTransport.BacnetBvlcV6Functions.BVLC_DELETE_FOREIGN_DEVICE_TABLE_ENTRY:
+                case BacnetBvlcV6Functions.BVLC_DELETE_FOREIGN_DEVICE_TABLE_ENTRY:
                     return 0; // not for the upper layers    
 
-                case BacnetIpV6UdpProtocolTransport.BacnetBvlcV6Functions.BVLC_SECURE_BVLC:
+                case BacnetBvlcV6Functions.BVLC_SECURE_BVLC:
                     return 0; // not for the upper layers
 
-                case BacnetIpV6UdpProtocolTransport.BacnetBvlcV6Functions.BVLC_DISTRIBUTE_BROADCAST_TO_NETWORK: // Sent by a Foreign Device, not a BBMD
+                case BacnetBvlcV6Functions.BVLC_DISTRIBUTE_BROADCAST_TO_NETWORK: // Sent by a Foreign Device, not a BBMD
                     if (_bbmdFdServiceActivated)
                     {
                         // Send to FDs except the sender, BBMDs and broadcast
@@ -349,7 +349,7 @@ namespace System.IO.BACnet
                             if (_foreignDevices.Exists(item => item.Key.Equals(sender))) // verify previous registration
                                 Forward_NPDU(buffer, msgLength, true, sender, remoteAddress);
                             else
-                                SendResult(sender, BacnetIpV6UdpProtocolTransport.BacnetBvlcV6Results.DISTRIBUTE_BROADCAST_TO_NETWORK_NAK);
+                                SendResult(sender, BacnetBvlcV6Results.DISTRIBUTE_BROADCAST_TO_NETWORK_NAK);
                         }
                     }
                     return 0; // not for the upper layers
