@@ -205,7 +205,7 @@ namespace System.IO.BACnet
         {
             try
             {
-                Log.Debug("ConfirmedServiceRequest");
+                Log.Debug($"ConfirmedServiceRequest {service}");
 
                 raw_buffer = buffer;
                 raw_length = length;
@@ -488,7 +488,7 @@ namespace System.IO.BACnet
         {
             try
             {
-                Log.Debug("SimpleAck");
+                Log.Debug($"Received SimpleAck for {service}");
                 OnSimpleAck?.Invoke(this, adr, type, service, invokeId, buffer, offset, length);
             }
             catch (Exception ex)
@@ -504,12 +504,12 @@ namespace System.IO.BACnet
         {
             try
             {
-                Log.Debug("ComplexAck");
+                Log.Debug($"Received ComplexAck for {service}");
                 OnComplexAck?.Invoke(this, adr, type, service, invokeId, buffer, offset, length);
             }
             catch (Exception ex)
             {
-                Log.Error("Error in ProcessComplexAck", ex);
+                Log.Error($"Error in {nameof(ProcessComplexAck)}", ex);
             }
         }
 
@@ -520,16 +520,15 @@ namespace System.IO.BACnet
         {
             try
             {
-                Log.Debug("Error");
-
                 if (Services.DecodeError(buffer, offset, length, out var errorClass, out var errorCode) < 0)
-                    Log.Warn("Couldn't decode Error");
+                    Log.Warn("Couldn't decode received Error");
 
+                Log.Debug($"Received Error {errorClass} {errorCode}");
                 OnError?.Invoke(this, adr, type, service, invokeId, errorClass, errorCode, buffer, offset, length);
             }
             catch (Exception ex)
             {
-                Log.Error("Error in ProcessError", ex);
+                Log.Error($"Error in {nameof(ProcessError)}", ex);
             }
         }
 
@@ -540,7 +539,7 @@ namespace System.IO.BACnet
         {
             try
             {
-                Log.Debug("Abort");
+                Log.Debug("Received Abort");
                 OnAbort?.Invoke(this, adr, type, invokeId, reason, buffer, offset, length);
             }
             catch (Exception ex)
@@ -556,7 +555,7 @@ namespace System.IO.BACnet
         {
             try
             {
-                Log.Debug("SegmentAck");
+                Log.Debug("Received SegmentAck");
                 OnSegmentAck?.Invoke(this, adr, type, originalInvokeId, sequenceNumber, actualWindowSize, buffer, offset, length);
             }
             catch (Exception ex)
