@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO.BACnet.Serialize;
 using System.Text;
 using System.Threading;
@@ -9,7 +8,7 @@ namespace System.IO.BACnet
     /// <summary>
     ///     This is the standard BACNet PTP transport
     /// </summary>
-    public class BacnetPtpProtocolTransport : IBacnetTransport
+    public class BacnetPtpProtocolTransport : BacnetTransportBase
     {
         public const int T_HEARTBEAT = 15000;
         public const int T_FRAME_ABORT = 2000;
@@ -22,31 +21,14 @@ namespace System.IO.BACnet
 
         public string Password { get; set; }
 
-        public bool StateLogging { get; set; }
-
-        public event MessageRecievedHandler MessageRecieved;
-
-        public BacnetAddressTypes Type => BacnetAddressTypes.PTP;
-
-        public int HeaderLength => PTP.PTP_HEADER_LENGTH;
-
-        public int MaxBufferLength => 502;
-
-        public BacnetMaxAdpu MaxAdpuLength => PTP.PTP_MAX_APDU;
-
-        public byte MaxInfoFrames
-        {
-            get { return 0xff; }
-            set
-            {
-                /* ignore, the PTP doesn't have max info frames */
-            }
-        }
-
         public BacnetPtpProtocolTransport(IBacnetSerialTransport transport, bool isServer)
         {
             _port = transport;
             _isServer = isServer;
+            Type = BacnetAddressTypes.PTP;
+            HeaderLength = PTP.PTP_HEADER_LENGTH;
+            MaxBufferLength = 502;
+            MaxAdpuLength = PTP.PTP_MAX_APDU;
         }
 
         public BacnetPtpProtocolTransport(string portName, int baudRate, bool isServer)
@@ -54,7 +36,7 @@ namespace System.IO.BACnet
         {
         }
 
-        public int Send(byte[] buffer, int offset, int dataLength, BacnetAddress address, bool waitForTransmission,
+        public override int Send(byte[] buffer, int offset, int dataLength, BacnetAddress address, bool waitForTransmission,
             int timeout)
         {
             var frameType = BacnetPtpFrameTypes.FRAME_TYPE_DATA0;
@@ -68,26 +50,19 @@ namespace System.IO.BACnet
             if (!_maySend.WaitOne(timeout))
                 return -BacnetMstpProtocolTransport.ETIMEDOUT;
 
-            //debug
-            if (StateLogging)
-                Trace.WriteLine($"         {frameType}", null);
+            Log.Debug(frameType);
 
             //send
             SendWithXonXoff(buffer, offset - HeaderLength, fullLength);
             return dataLength;
         }
 
-        public bool WaitForAllTransmits(int timeout)
-        {
-            return true; //PTP got no send queue
-        }
-
-        public BacnetAddress GetBroadcastAddress()
+        public override BacnetAddress GetBroadcastAddress()
         {
             return new BacnetAddress(BacnetAddressTypes.PTP, 0xFFFF, new byte[0]);
         }
 
-        public void Start()
+        public override void Start()
         {
             if (_port == null) return;
 
@@ -99,7 +74,7 @@ namespace System.IO.BACnet
             _thread.Start();
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             _port?.Close();
             _port = null;
@@ -124,17 +99,14 @@ namespace System.IO.BACnet
 
         private void SendGreeting()
         {
-            if (StateLogging)
-                Trace.WriteLine("Sending Greeting", null);
-            byte[] greeting = {PTP.PTP_GREETING_PREAMBLE1, PTP.PTP_GREETING_PREAMBLE2, 0x43, 0x6E, 0x65, 0x74, 0x0D};
-                //BACnet\n
+            Log.Debug("Sending Greeting");
+            byte[] greeting = {PTP.PTP_GREETING_PREAMBLE1, PTP.PTP_GREETING_PREAMBLE2, 0x43, 0x6E, 0x65, 0x74, 0x0D}; // BACnet\n
             _port.Write(greeting, 0, greeting.Length);
         }
 
         private static bool IsGreeting(IList<byte> buffer, int offset, int maxOffset)
         {
-            byte[] greeting = {PTP.PTP_GREETING_PREAMBLE1, PTP.PTP_GREETING_PREAMBLE2, 0x43, 0x6E, 0x65, 0x74, 0x0D};
-                //BACnet\n
+            byte[] greeting = {PTP.PTP_GREETING_PREAMBLE1, PTP.PTP_GREETING_PREAMBLE2, 0x43, 0x6E, 0x65, 0x74, 0x0D}; // BACnet\n
             maxOffset = Math.Min(offset + greeting.Length, maxOffset);
             for (var i = offset; i < maxOffset; i++)
                 if (buffer[i] != greeting[i - offset])
@@ -218,11 +190,11 @@ namespace System.IO.BACnet
                 ////wait for greeting
                 //if (!WaitForGreeting(-1))
                 //{
-                //    Trace.WriteLine("Garbage Greeting", null);
+                //    Log.Debug("Garbage Greeting");
                 //    return false;
                 //}
                 //if (StateLogging)
-                //    Trace.WriteLine("Got Greeting", null);
+                //    Log.Debug("Got Greeting");
 
                 ////request connection
                 //SendFrame(BacnetPtpFrameTypes.FRAME_TYPE_CONNECT_REQUEST);
@@ -237,7 +209,7 @@ namespace System.IO.BACnet
             return true;
         }
 
-        private static void RemoveGarbage(byte[] buffer, ref int length)
+        private void RemoveGarbage(byte[] buffer, ref int length)
         {
             //scan for preambles
             for (var i = 0; i < length - 1; i++)
@@ -251,7 +223,7 @@ namespace System.IO.BACnet
                 //move back
                 Array.Copy(buffer, i, buffer, 0, length - i);
                 length -= i;
-                Trace.WriteLine("Garbage", null);
+                Log.Debug("Garbage");
                 return;
             }
 
@@ -261,7 +233,7 @@ namespace System.IO.BACnet
             {
                 buffer[0] = buffer[length - 1];
                 length = 1;
-                Trace.WriteLine("Garbage", null);
+                Log.Debug("Garbage");
                 return;
             }
 
@@ -270,7 +242,7 @@ namespace System.IO.BACnet
                 return;
 
             length = 0;
-            Trace.WriteLine("Garbage", null);
+            Log.Debug("Garbage");
         }
 
         private static void RemoveXonOff(byte[] buffer, int offset, ref int maxOffset, ref bool complimentNext)
@@ -327,9 +299,7 @@ namespace System.IO.BACnet
             if (buffer == null) buffer = new byte[fullLength];
             PTP.Encode(buffer, 0, frameType, msgLength);
 
-            //debug
-            if (StateLogging)
-                Trace.WriteLine($"         {frameType}", null);
+            Log.Debug(frameType);
 
             //send
             SendWithXonXoff(buffer, 0, fullLength);
@@ -342,7 +312,7 @@ namespace System.IO.BACnet
             SendFrame(BacnetPtpFrameTypes.FRAME_TYPE_DISCONNECT_REQUEST, buffer, 1);
         }
 
-        private static BacnetMstpProtocolTransport.GetMessageStatus ProcessRxStatus(byte[] buffer, ref int offset, int rx)
+        private BacnetMstpProtocolTransport.GetMessageStatus ProcessRxStatus(byte[] buffer, ref int offset, int rx)
         {
             if (rx == -BacnetMstpProtocolTransport.ETIMEDOUT)
             {
@@ -413,7 +383,7 @@ namespace System.IO.BACnet
                 if (IsGreeting(buffer, 0, offset))
                 {
                     frameType = BacnetPtpFrameTypes.FRAME_TYPE_GREETING;
-                    if (StateLogging) Trace.WriteLine(frameType, null);
+                    Log.Debug(frameType);
                     return BacnetMstpProtocolTransport.GetMessageStatus.Good;
                 }
                 //drop message
@@ -432,7 +402,7 @@ namespace System.IO.BACnet
             }
 
             //valid length?
-            var full_msg_length = msgLength + PTP.PTP_HEADER_LENGTH + (msgLength > 0 ? 2 : 0);
+            var fullMsgLength = msgLength + PTP.PTP_HEADER_LENGTH + (msgLength > 0 ? 2 : 0);
             if (msgLength > MaxBufferLength)
             {
                 //drop message
@@ -445,10 +415,10 @@ namespace System.IO.BACnet
             if (msgLength > 0)
             {
                 timeout = T_FRAME_ABORT; //set sub timeout
-                while (offset < full_msg_length)
+                while (offset < fullMsgLength)
                 {
                     //read 
-                    var rx = _port.Read(buffer, offset, full_msg_length - offset, timeout);
+                    var rx = _port.Read(buffer, offset, fullMsgLength - offset, timeout);
                     status = ProcessRxStatus(buffer, ref offset, rx);
                     if (status != BacnetMstpProtocolTransport.GetMessageStatus.Good) return status;
 
@@ -468,9 +438,7 @@ namespace System.IO.BACnet
                 }
             }
 
-            //debug
-            if (StateLogging)
-                Trace.WriteLine(frameType, null);
+            Log.Debug(frameType);
 
             //done
             return BacnetMstpProtocolTransport.GetMessageStatus.Good;
@@ -495,25 +463,23 @@ namespace System.IO.BACnet
 
                     //read message
                     var offset = 0;
-                    BacnetPtpFrameTypes frameType;
-                    int msgLength;
-                    var status = GetNextMessage(buffer, ref offset, T_HEARTBEAT, out frameType, out msgLength);
+                    var status = GetNextMessage(buffer, ref offset, T_HEARTBEAT, out var frameType, out var msgLength);
 
                     //action
                     switch (status)
                     {
                         case BacnetMstpProtocolTransport.GetMessageStatus.ConnectionClose:
                         case BacnetMstpProtocolTransport.GetMessageStatus.ConnectionError:
-                            Trace.TraceWarning("Connection disturbance");
+                            Log.Warn("Connection disturbance");
                             Reconnect();
                             break;
 
                         case BacnetMstpProtocolTransport.GetMessageStatus.DecodeError:
-                            Trace.TraceWarning("PTP decode error");
+                            Log.Warn("PTP decode error");
                             break;
 
                         case BacnetMstpProtocolTransport.GetMessageStatus.SubTimeout:
-                            Trace.TraceWarning("PTP frame abort");
+                            Log.Warn("PTP frame abort");
                             break;
 
                         case BacnetMstpProtocolTransport.GetMessageStatus.Timeout:
@@ -544,15 +510,14 @@ namespace System.IO.BACnet
                                     SendFrame(BacnetPtpFrameTypes.FRAME_TYPE_DATA_ACK0_XON);
 
                                     //notify the sky!
-                                    MessageRecieved?.Invoke(this, buffer, PTP.PTP_HEADER_LENGTH, msgLength,
-                                        GetBroadcastAddress());
+                                    InvokeMessageRecieved(buffer, PTP.PTP_HEADER_LENGTH, msgLength, GetBroadcastAddress());
                                     break;
 
                                 case BacnetPtpFrameTypes.FRAME_TYPE_DATA1:
                                     //send confirm
                                     SendFrame(BacnetPtpFrameTypes.FRAME_TYPE_DATA_ACK1_XON);
                                     //notify the sky!
-                                    MessageRecieved?.Invoke(this, buffer, PTP.PTP_HEADER_LENGTH, msgLength, GetBroadcastAddress());
+                                    InvokeMessageRecieved(buffer, PTP.PTP_HEADER_LENGTH, msgLength, GetBroadcastAddress());
                                     break;
 
                                 case BacnetPtpFrameTypes.FRAME_TYPE_DATA_ACK0_XOFF:
@@ -617,7 +582,7 @@ namespace System.IO.BACnet
                                     if (msgLength > 0)
                                         reason = (BacnetPtpDisconnectReasons)buffer[PTP.PTP_HEADER_LENGTH];
                                     SendFrame(BacnetPtpFrameTypes.FRAME_TYPE_DISCONNECT_RESPONSE);
-                                    Trace.WriteLine("Disconnect requested: " + reason, null);
+                                    Log.Debug($"Disconnect requested: {reason}");
                                     Reconnect();
                                     break;
 
@@ -637,11 +602,11 @@ namespace System.IO.BACnet
                             break;
                     }
                 }
-                Trace.WriteLine("PTP thread is closing down", null);
+                Log.Debug("PTP thread is closing down");
             }
             catch (Exception ex)
             {
-                Trace.TraceError($"Exception in PTP thread: {ex.Message}");
+                Log.Error($"Exception in PTP thread", ex);
             }
         }
     }

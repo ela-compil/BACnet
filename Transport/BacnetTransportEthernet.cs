@@ -42,7 +42,7 @@ namespace System.IO.BACnet
     // This class is not in the file BacnetTransport.cs to avoid integration 
     // of two dll when Bacnet/Ethernet is not used
 
-    internal class BacnetEthernetProtocolTransport : IBacnetTransport
+    internal class BacnetEthernetProtocolTransport : BacnetTransportBase
     {
         private LibPcapLiveDevice _device;
         private byte[] _deviceMac; // Mac of the device
@@ -54,38 +54,18 @@ namespace System.IO.BACnet
         public BacnetEthernetProtocolTransport(string friendlydeviceName)
         {
             _deviceName = friendlydeviceName;
+            Type = BacnetAddressTypes.Ethernet;
+            MaxAdpuLength = BacnetMaxAdpu.MAX_APDU1476;
+            HeaderLength = 6 + 6 + 2 + 3;
+            MaxBufferLength = 1500;
         }
 
-        public event MessageRecievedHandler MessageRecieved;
-
-        public BacnetAddressTypes Type => BacnetAddressTypes.Ethernet;
-
-        public BacnetAddress GetBroadcastAddress()
+        public override BacnetAddress GetBroadcastAddress()
         {
             return new BacnetAddress(BacnetAddressTypes.Ethernet, "FF-FF-FF-FF-FF-FF");
         }
 
-        public int HeaderLength => 6 + 6 + 2 + 3;
-
-        public BacnetMaxAdpu MaxAdpuLength => BacnetMaxAdpu.MAX_APDU1476;
-
-        public int MaxBufferLength => 1500;
-
-        public byte MaxInfoFrames
-        {
-            get { return 0xff; }
-            set
-            {
-                /* ignore, the ethernet doesn't have max info frames */
-            }
-        }
-
-        public bool WaitForAllTransmits(int timeout)
-        {
-            return true; // not used 
-        }
-
-        public void Start()
+        public override void Start()
         {
             _device = Open();
             if (_device == null) throw new Exception("Cannot open Ethernet interface");
@@ -99,8 +79,8 @@ namespace System.IO.BACnet
             th.Start();
         }
 
-        public int Send(byte[] buffer, int offset, int dataLength, BacnetAddress address, bool waitForTransmission,
-            int timeout)
+        public override int Send(byte[] buffer, int offset, int dataLength, BacnetAddress address,
+            bool waitForTransmission, int timeout)
         {
             var hdrOffset = 0;
 
@@ -130,7 +110,7 @@ namespace System.IO.BACnet
             return dataLength + HeaderLength;
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             lock (_device)
                 _device.Close();
@@ -246,7 +226,7 @@ namespace System.IO.BACnet
             if (dsap != 0x82 || ssap != 0x82 || control != 0x03)
                 return;
 
-            MessageRecieved?.Invoke(this, buffer, HeaderLength, length, bacSource);
+            InvokeMessageRecieved(buffer, HeaderLength, length, bacSource);
         }
     }
 }

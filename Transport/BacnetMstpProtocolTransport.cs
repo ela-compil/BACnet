@@ -1,14 +1,13 @@
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO.BACnet.Serialize;
 using System.Threading;
 
 namespace System.IO.BACnet
 {
     /// <summary>
-    ///     This is the standard BACNet MSTP transport
+    /// This is the standard BACNet MSTP transport
     /// </summary>
-    public class BacnetMstpProtocolTransport : IBacnetTransport
+    public class BacnetMstpProtocolTransport : BacnetTransportBase
     {
         public delegate void FrameRecievedHandler(BacnetMstpProtocolTransport sender, BacnetMstpFrameTypes frameType,
             byte destinationAddress, byte sourceAddress, int msgLength);
@@ -73,38 +72,34 @@ namespace System.IO.BACnet
         private MessageFrame _reply;
         private readonly ManualResetEvent _replyMutex = new ManualResetEvent(false);
         private byte _replySource;
-        private readonly byte _retryToken = 1;
+        private const byte RetryToken = 1;
         private readonly LinkedList<MessageFrame> _sendQueue = new LinkedList<MessageFrame>();
         private bool _soleMaster;
         private byte _tokenCount;
         private Thread _transmitThread;
+        private byte _maxInfoFrames;
 
         public short SourceAddress { get; set; }
-
         public byte MaxMaster { get; set; }
-
-        public bool StateLogging { get; set; }
-
         public bool IsRunning { get; private set; } = true;
 
-        public BacnetAddressTypes Type => BacnetAddressTypes.MSTP;
-
-        public byte MaxInfoFrames { get; set; }
-
-        public int HeaderLength => MSTP.MSTP_HEADER_LENGTH;
-
-        public int MaxBufferLength => 502;
-
-        public BacnetMaxAdpu MaxAdpuLength => MSTP.MSTP_MAX_APDU;
-
-        public event MessageRecievedHandler MessageRecieved;
+        public override byte MaxInfoFrames
+        {
+            get => _maxInfoFrames;
+            set => _maxInfoFrames = value;
+        }
 
         public BacnetMstpProtocolTransport(IBacnetSerialTransport transport, short sourceAddress = -1,
             byte maxMaster = 127, byte maxInfoFrames = 1)
         {
-            MaxInfoFrames = maxInfoFrames;
             SourceAddress = sourceAddress;
             MaxMaster = maxMaster;
+            Type = BacnetAddressTypes.MSTP;
+            HeaderLength = MSTP.MSTP_HEADER_LENGTH;
+            MaxBufferLength = 502;
+            MaxAdpuLength = MSTP.MSTP_MAX_APDU;
+
+            _maxInfoFrames = maxInfoFrames;
             _localBuffer = new byte[MaxBufferLength];
             _port = transport;
         }
@@ -115,12 +110,12 @@ namespace System.IO.BACnet
         {
         }
 
-        public void Start()
+        public override void Start()
         {
             if (_port == null) return;
             _port.Open();
 
-            _transmitThread = new Thread(mstp_thread)
+            _transmitThread = new Thread(MstpThread)
             {
                 IsBackground = true,
                 Name = "MSTP Thread",
@@ -129,8 +124,8 @@ namespace System.IO.BACnet
             _transmitThread.Start();
         }
 
-        public int Send(byte[] buffer, int offset, int dataLength, BacnetAddress address, bool waitForTransmission,
-            int timeout)
+        public override int Send(byte[] buffer, int offset, int dataLength, BacnetAddress address,
+            bool waitForTransmission, int timeout)
         {
             if (SourceAddress == -1) throw new Exception("Source address must be set up before sending messages");
 
@@ -160,7 +155,7 @@ namespace System.IO.BACnet
             return dataLength;
         }
 
-        public bool WaitForAllTransmits(int timeout)
+        public override bool WaitForAllTransmits(int timeout)
         {
             while (_sendQueue.Count > 0)
             {
@@ -174,12 +169,12 @@ namespace System.IO.BACnet
             return true;
         }
 
-        public BacnetAddress GetBroadcastAddress()
+        public override BacnetAddress GetBroadcastAddress()
         {
             return new BacnetAddress(BacnetAddressTypes.MSTP, 0xFFFF, new byte[] { 0xFF });
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             _port?.Close();
             _port = null;
@@ -233,10 +228,7 @@ namespace System.IO.BACnet
                 _port.Write(frame.Data, 0, tx);
             }
             frame.SendMutex.Set();
-
-            //debug
-            if (StateLogging)
-                Trace.WriteLine($"         {frame.FrameType} {frame.DestinationAddress.ToString("X2")} ");
+            Log.Debug($"{frame.FrameType} {frame.DestinationAddress:X2}");
         }
 
         private void RemoveCurrentMessage(int msgLength)
@@ -255,13 +247,8 @@ namespace System.IO.BACnet
                 SendFrame(BacnetMstpFrameTypes.FRAME_TYPE_POLL_FOR_MASTER, _ps);
 
                 //wait
-                BacnetMstpFrameTypes frameType;
-                byte destinationAddress;
-                byte sourceAddress;
-                int msgLength;
-
-                var status = GetNextMessage(T_USAGE_TIMEOUT, out frameType, out destinationAddress, out sourceAddress,
-                    out msgLength);
+                var status = GetNextMessage(T_USAGE_TIMEOUT, out var frameType, out var destinationAddress,
+                    out var sourceAddress, out var msgLength);
 
                 if (status == GetMessageStatus.Good)
                 {
@@ -357,14 +344,9 @@ namespace System.IO.BACnet
 
         private StateChanges WaitForReply()
         {
-            BacnetMstpFrameTypes frameType;
-            byte destinationAddress;
-            byte sourceAddress;
-            int msgLength;
-
             //fetch message
-            var status = GetNextMessage(T_REPLY_TIMEOUT, out frameType, out destinationAddress, out sourceAddress,
-                out msgLength);
+            var status = GetNextMessage(T_REPLY_TIMEOUT, out var frameType, out var destinationAddress,
+                out var sourceAddress, out var msgLength);
 
             if (status == GetMessageStatus.Good)
             {
@@ -375,17 +357,16 @@ namespace System.IO.BACnet
                          frameType == BacnetMstpFrameTypes.FRAME_TYPE_BACNET_DATA_NOT_EXPECTING_REPLY))
                     {
                         //signal upper layer
-                        if (MessageRecieved != null && frameType != BacnetMstpFrameTypes.FRAME_TYPE_TEST_RESPONSE)
+                        if (frameType != BacnetMstpFrameTypes.FRAME_TYPE_TEST_RESPONSE)
                         {
                             var remoteAddress = new BacnetAddress(BacnetAddressTypes.MSTP, 0, new[] {sourceAddress});
                             try
                             {
-                                MessageRecieved(this, _localBuffer, MSTP.MSTP_HEADER_LENGTH, msgLength,
-                                    remoteAddress);
+                                InvokeMessageRecieved(_localBuffer, MSTP.MSTP_HEADER_LENGTH, msgLength, remoteAddress);
                             }
                             catch (Exception ex)
                             {
-                                Trace.TraceError("Exception in MessageRecieved event: " + ex.Message);
+                                Log.Error("Exception in MessageRecieved event", ex);
                             }
                         }
 
@@ -443,18 +424,13 @@ namespace System.IO.BACnet
 
         private StateChanges PassToken()
         {
-            for (var i = 0; i <= _retryToken; i++)
+            for (var i = 0; i <= RetryToken; i++)
             {
                 //send 
                 SendFrame(BacnetMstpFrameTypes.FRAME_TYPE_TOKEN, _ns);
 
                 //wait for it to be used
-                BacnetMstpFrameTypes frameType;
-                byte destinationAddress;
-                byte sourceAddress;
-                int msgLength;
-                var status = GetNextMessage(T_USAGE_TIMEOUT, out frameType, out destinationAddress, out sourceAddress,
-                    out msgLength);
+                var status = GetNextMessage(T_USAGE_TIMEOUT, out _, out _, out _, out _);
                 if (status == GetMessageStatus.Good || status == GetMessageStatus.DecodeError)
                     return StateChanges.SawTokenUser; //don't remove current message
             }
@@ -473,12 +449,8 @@ namespace System.IO.BACnet
             while (_port != null)
             {
                 //get message
-                BacnetMstpFrameTypes frameType;
-                byte destinationAddress;
-                byte sourceAddress;
-                int msgLength;
-                var status = GetNextMessage(noTokenTimeout, out frameType, out destinationAddress,
-                    out sourceAddress, out msgLength);
+                var status = GetNextMessage(noTokenTimeout, out var frameType, out var destinationAddress,
+                    out var sourceAddress, out var msgLength);
 
                 if (status == GetMessageStatus.Good)
                 {
@@ -518,20 +490,15 @@ namespace System.IO.BACnet
                                     break;
                                 case BacnetMstpFrameTypes.FRAME_TYPE_BACNET_DATA_NOT_EXPECTING_REPLY:
                                 case BacnetMstpFrameTypes.FRAME_TYPE_BACNET_DATA_EXPECTING_REPLY:
-                                    //signal upper layer
-                                    if (MessageRecieved != null)
+                                    try
                                     {
-                                        var remote_address = new BacnetAddress(BacnetAddressTypes.MSTP, 0,
-                                            new[] {sourceAddress});
-                                        try
-                                        {
-                                            MessageRecieved(this, _localBuffer, MSTP.MSTP_HEADER_LENGTH, msgLength,
-                                                remote_address);
-                                        }
-                                        catch (Exception ex)
-                                        {
-                                            Trace.TraceError("Exception in MessageRecieved event: " + ex.Message);
-                                        }
+                                        //signal upper layer
+                                        var remoteAddress = new BacnetAddress(BacnetAddressTypes.MSTP, 0, new[] { sourceAddress });
+                                        InvokeMessageRecieved(_localBuffer, MSTP.MSTP_HEADER_LENGTH, msgLength, remoteAddress);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Log.Error("Exception in MessageRecieved event", ex);
                                     }
                                     if (frameType == BacnetMstpFrameTypes.FRAME_TYPE_BACNET_DATA_EXPECTING_REPLY)
                                     {
@@ -559,15 +526,15 @@ namespace System.IO.BACnet
                 }
                 else if (status == GetMessageStatus.ConnectionClose)
                 {
-                    Trace.WriteLine("No connection", null);
+                    Log.Debug("No connection");
                 }
                 else if (status == GetMessageStatus.ConnectionError)
                 {
-                    Trace.WriteLine("Connection Error", null);
+                    Log.Debug("Connection Error");
                 }
                 else
                 {
-                    Trace.WriteLine("Garbage", null);
+                    Log.Debug("Garbage");
                 }
             }
 
@@ -597,7 +564,7 @@ namespace System.IO.BACnet
             return StateChanges.DoneInitializing;
         }
 
-        private void mstp_thread()
+        private void MstpThread()
         {
             try
             {
@@ -605,8 +572,7 @@ namespace System.IO.BACnet
 
                 while (_port != null)
                 {
-                    if (StateLogging)
-                        Trace.WriteLine(stateChange.ToString(), null);
+                    Log.Debug(stateChange);
 
                     switch (stateChange)
                     {
@@ -655,11 +621,11 @@ namespace System.IO.BACnet
                             break;
                     }
                 }
-                Trace.WriteLine("MSTP thread is closing down", null);
+                Log.Debug("MSTP thread is closing down");
             }
             catch (Exception ex)
             {
-                Trace.TraceError("Exception in MSTP thread: " + ex.Message);
+                Log.Error("Exception in MSTP thread", ex);
             }
 
             IsRunning = false;
@@ -679,7 +645,7 @@ namespace System.IO.BACnet
                 //move back
                 Array.Copy(_localBuffer, i, _localBuffer, 0, _localOffset - i);
                 _localOffset -= i;
-                Trace.WriteLine("Garbage", null);
+                Log.Debug("Garbage");
                 return;
             }
 
@@ -690,7 +656,7 @@ namespace System.IO.BACnet
                 {
                     _localBuffer[0] = MSTP.MSTP_PREAMBLE1;
                     _localOffset = 1;
-                    Trace.WriteLine("Garbage", null);
+                    Log.Debug("Garbage");
                 }
                 return;
             }
@@ -699,7 +665,7 @@ namespace System.IO.BACnet
             if (_localOffset > 0)
             {
                 _localOffset = 0;
-                Trace.WriteLine("Garbage", null);
+                Log.Debug("Garbage");
             }
         }
 
@@ -829,8 +795,7 @@ namespace System.IO.BACnet
                     o => { FrameRecieved(this, frameTypeCopy, destinationAddressCopy, sourceAddressCopy, msgLengthCopy); }, null);
             }
 
-            if (StateLogging)
-                Trace.WriteLine("" + frameType + " " + destinationAddress.ToString("X2") + " ");
+            Log.Debug($"{frameType} {destinationAddress:X2}");
 
             //done
             return GetMessageStatus.Good;
@@ -907,29 +872,24 @@ namespace System.IO.BACnet
 
         public event RawMessageReceivedHandler RawMessageRecieved;
 
-        public void Start_SpyMode()
+        public void StartSpyMode()
         {
             if (_port == null) return;
             _port.Open();
 
-            var th = new Thread(mstp_thread_sniffer) { IsBackground = true };
+            var th = new Thread(MstpThreadSniffer) { IsBackground = true };
             th.Start();
         }
 
         // Just Sniffer mode, no Bacnet activity generated here
         // Modif FC
-        private void mstp_thread_sniffer()
+        private void MstpThreadSniffer()
         {
             while (true)
             {
                 try
                 {
-                    BacnetMstpFrameTypes frameType;
-                    byte destinationAddress;
-                    int msgLength;
-                    byte sourceAddress;
-                    var status = GetNextMessage(T_NO_TOKEN, out frameType, out destinationAddress, out sourceAddress,
-                        out msgLength);
+                    var status = GetNextMessage(T_NO_TOKEN, out _, out _, out _, out var msgLength);
 
                     switch (status)
                     {

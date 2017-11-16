@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO.Pipes;
 using System.Runtime.InteropServices;
+using Common.Logging;
 
 namespace System.IO.BACnet
 {
@@ -13,7 +13,6 @@ namespace System.IO.BACnet
         private readonly bool _isServer;
 
         public string Name { get; }
-
         public int BytesToRead => PeekPipe();
 
         public static string[] AvailablePorts
@@ -29,7 +28,8 @@ namespace System.IO.BACnet
                 }
                 catch (Exception ex)
                 {
-                    Trace.TraceWarning("Exception in AvailablePorts: " + ex.Message);
+                    var log = LogManager.GetLogger<BacnetPipeTransport>();
+                    log.Warn("Exception in AvailablePorts", ex);
                     return InteropAvailablePorts;
                 }
             }
@@ -103,11 +103,11 @@ namespace System.IO.BACnet
 
         private void Disconnect()
         {
-            if (_conn is NamedPipeServerStream)
+            if (_conn is NamedPipeServerStream stream)
             {
                 try
                 {
-                    ((NamedPipeServerStream)_conn).Disconnect();
+                    stream.Disconnect();
                 }
                 catch
                 {
@@ -243,13 +243,16 @@ namespace System.IO.BACnet
             get
             {
                 var ret = new List<string>();
-                WIN32_FIND_DATA data;
-                var handle = FindFirstFile(@"\\.\pipe\*", out data);
+                var handle = FindFirstFile(@"\\.\pipe\*", out var data);
                 if (handle == new IntPtr(-1))
                     return ret.ToArray();
+
                 do
+                {
                     ret.Add(data.cFileName);
+                }
                 while (FindNextFile(handle, out data) != 0);
+
                 FindClose(handle);
                 return ret.ToArray();
             }

@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
+using Common.Logging;
 
 namespace System.IO.BACnet.Serialize
 {
@@ -27,6 +27,8 @@ namespace System.IO.BACnet.Serialize
         // Contains the rules to accept FRD based on the IP adress
         // If empty it's equal to *.*.*.*, everyone allows
         private readonly List<Regex> _autorizedFdr = new List<Regex>();
+
+        public ILog Log { get; set; } = LogManager.GetLogger<BVLC>();
 
         public BVLC(BacnetIpUdpProtocolTransport transport)
         {
@@ -88,7 +90,7 @@ namespace System.IO.BACnet.Serialize
                         return;
                     }
                 }
-                Trace.TraceInformation("Rejected FDR registration, IP : " + sender.Address);
+                Log.Info($"Rejected FDR registration, IP : {sender.Address}");
             }
         }
 
