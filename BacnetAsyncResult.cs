@@ -23,7 +23,7 @@ namespace System.IO.BACnet
 
         public Exception Error
         {
-            get { return _error; }
+            get => _error;
             set
             {
                 _error = value;
@@ -44,6 +44,7 @@ namespace System.IO.BACnet
             _comm.OnComplexAck += OnComplexAck;
             _comm.OnError += OnError;
             _comm.OnAbort += OnAbort;
+            _comm.OnReject += OnReject;
             _comm.OnSimpleAck += OnSimpleAck;
             _comm.OnSegment += OnSegment;
             _waitHandle = new ManualResetEvent(false);
@@ -60,7 +61,7 @@ namespace System.IO.BACnet
             }
             catch (Exception ex)
             {
-                Error = new Exception("Write Exception: " + ex.Message);
+                Error = new Exception($"Write Exception: {ex.Message}");
             }
         }
 
@@ -81,12 +82,20 @@ namespace System.IO.BACnet
             _waitHandle.Set();
         }
 
-        private void OnAbort(BacnetClient sender, BacnetAddress adr, BacnetPduTypes type, byte invokeId, byte reason, byte[] buffer, int offset, int length)
+        private void OnAbort(BacnetClient sender, BacnetAddress adr, BacnetPduTypes type, byte invokeId, BacnetAbortReason reason, byte[] buffer, int offset, int length)
         {
             if (invokeId != _waitInvokeId)
                 return;
 
-            Error = new Exception("Abort from device: " + reason);
+            Error = new Exception($"Abort from device, reason: {reason}");
+        }
+
+        private void OnReject(BacnetClient sender, BacnetAddress adr, BacnetPduTypes type, byte invokeId, BacnetRejectReason reason, byte[] buffer, int offset, int length)
+        {
+            if (invokeId != _waitInvokeId)
+                return;
+
+            Error = new Exception($"Reject from device, reason: {reason}");
         }
 
         private void OnError(BacnetClient sender, BacnetAddress adr, BacnetPduTypes type, BacnetConfirmedServices service, byte invokeId, BacnetErrorClasses errorClass, BacnetErrorCodes errorCode, byte[] buffer, int offset, int length)
@@ -94,7 +103,7 @@ namespace System.IO.BACnet
             if (invokeId != _waitInvokeId)
                 return;
 
-            Error = new Exception("Error from device: " + errorClass + " - " + errorCode);
+            Error = new Exception($"Error from device: {errorClass} - {errorCode}");
         }
 
         private void OnComplexAck(BacnetClient sender, BacnetAddress adr, BacnetPduTypes type, BacnetConfirmedServices service, byte invokeId, byte[] buffer, int offset, int length)
@@ -135,6 +144,7 @@ namespace System.IO.BACnet
                 _comm.OnComplexAck -= OnComplexAck;
                 _comm.OnError -= OnError;
                 _comm.OnAbort -= OnAbort;
+                _comm.OnReject -= OnReject;
                 _comm.OnSimpleAck -= OnSimpleAck;
                 _comm.OnSegment -= OnSegment;
                 _comm = null;

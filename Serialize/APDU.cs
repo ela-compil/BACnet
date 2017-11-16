@@ -174,28 +174,43 @@
             return offset - orgOffset;
         }
 
-        /// <summary>
-        /// Also EncodeReject
-        /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="type"></param>
-        /// <param name="invokeId"></param>
-        /// <param name="reason"></param>
-        /// <returns></returns>
-        public static void EncodeAbort(EncodeBuffer buffer, BacnetPduTypes type, byte invokeId, byte reason)
+        public static void EncodeAbort(EncodeBuffer buffer, BacnetPduTypes type, byte invokeId, BacnetAbortReason reason)
+        {
+            EncodeAbortOrReject(buffer, type, invokeId, reason);
+        }
+
+        public static void EncodeReject(EncodeBuffer buffer, BacnetPduTypes type, byte invokeId, BacnetRejectReason reason)
+        {
+            EncodeAbortOrReject(buffer, type, invokeId, reason);
+        }
+
+        private static void EncodeAbortOrReject(EncodeBuffer buffer, BacnetPduTypes type, byte invokeId, dynamic reason)
         {
             buffer.buffer[buffer.offset++] = (byte)type;
             buffer.buffer[buffer.offset++] = invokeId;
-            buffer.buffer[buffer.offset++] = reason;
+            buffer.buffer[buffer.offset++] = (byte)reason;
         }
 
-        public static int DecodeAbort(byte[] buffer, int offset, out BacnetPduTypes type, out byte invokeId, out byte reason)
+        public static int DecodeAbort(byte[] buffer, int offset, out BacnetPduTypes type,
+            out byte invokeId, out BacnetAbortReason reason)
+        {
+            return DecodeAbortOrReject(buffer, offset, out type, out invokeId, out reason);
+        }
+
+        public static int DecodeReject(byte[] buffer, int offset, out BacnetPduTypes type,
+            out byte invokeId, out BacnetRejectReason reason)
+        {
+            return DecodeAbortOrReject(buffer, offset, out type, out invokeId, out reason);
+        }
+
+        private static int DecodeAbortOrReject<TReason>(byte[] buffer, int offset,
+            out BacnetPduTypes type, out byte invokeId, out TReason reason)
         {
             var orgOffset = offset;
 
             type = (BacnetPduTypes)buffer[offset++];
             invokeId = buffer[offset++];
-            reason = buffer[offset++];
+            reason = (TReason)(dynamic)buffer[offset++];
 
             return offset - orgOffset;
         }

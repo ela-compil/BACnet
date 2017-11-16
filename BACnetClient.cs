@@ -236,13 +236,13 @@ namespace System.IO.BACnet
                         switch (thsRejectReason)
                         {
                             case -1:
-                                SendConfirmedServiceReject(adr, invokeId, BacnetRejectReasons.REJECT_REASON_MISSING_REQUIRED_PARAMETER);
+                                SendConfirmedServiceReject(adr, invokeId, BacnetRejectReason.MISSING_REQUIRED_PARAMETER);
                                 break;
                             case -2:
-                                SendConfirmedServiceReject(adr, invokeId, BacnetRejectReasons.REJECT_REASON_INVALID_TAG);
+                                SendConfirmedServiceReject(adr, invokeId, BacnetRejectReason.INVALID_TAG);
                                 break;
                             case -3:
-                                SendConfirmedServiceReject(adr, invokeId, BacnetRejectReasons.REJECT_REASON_TOO_MANY_ARGUMENTS);
+                                SendConfirmedServiceReject(adr, invokeId, BacnetRejectReason.TOO_MANY_ARGUMENTS);
                                 break;
                         }
                         Log.Warn("Couldn't decode DecodeReadProperty");
@@ -255,7 +255,7 @@ namespace System.IO.BACnet
                     else
                     {
                         ErrorResponse(adr, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
-                        //SendConfirmedServiceReject(adr, invokeId, BacnetRejectReasons.REJECT_REASON_OTHER); 
+                        //SendConfirmedServiceReject(adr, invokeId, BacnetRejectReason.OTHER); 
                         Log.Warn("Couldn't decode DecodeWriteProperty");
                     }
                 }
@@ -538,19 +538,35 @@ namespace System.IO.BACnet
             }
         }
 
-        public delegate void AbortHandler(BacnetClient sender, BacnetAddress adr, BacnetPduTypes type, byte invokeId, byte reason, byte[] buffer, int offset, int length);
+        public delegate void AbortHandler(BacnetClient sender, BacnetAddress adr, BacnetPduTypes type, byte invokeId, BacnetAbortReason reason, byte[] buffer, int offset, int length);
         public event AbortHandler OnAbort;
 
-        protected void ProcessAbort(BacnetAddress adr, BacnetPduTypes type, byte invokeId, byte reason, byte[] buffer, int offset, int length)
+        protected void ProcessAbort(BacnetAddress adr, BacnetPduTypes type, byte invokeId, BacnetAbortReason reason, byte[] buffer, int offset, int length)
         {
             try
             {
-                Log.Debug("Received Abort");
+                Log.Debug($"Received Abort, reason: {reason}");
                 OnAbort?.Invoke(this, adr, type, invokeId, reason, buffer, offset, length);
             }
             catch (Exception ex)
             {
                 Log.Error("Error in ProcessAbort", ex);
+            }
+        }
+
+        public delegate void RejectHandler(BacnetClient sender, BacnetAddress adr, BacnetPduTypes type, byte invokeId, BacnetRejectReason reason, byte[] buffer, int offset, int length);
+        public event RejectHandler OnReject;
+
+        protected void ProcessReject(BacnetAddress adr, BacnetPduTypes type, byte invokeId, BacnetRejectReason reason, byte[] buffer, int offset, int length)
+        {
+            try
+            {
+                Log.Debug($"Received Reject, reason: {reason}");
+                OnReject?.Invoke(this, adr, type, invokeId, reason, buffer, offset, length);
+            }
+            catch (Exception ex)
+            {
+                Log.Error("Error in ProcessReject", ex);
             }
         }
 
@@ -728,13 +744,21 @@ namespace System.IO.BACnet
                     }
                     break;
 
-                case BacnetPduTypes.PDU_TYPE_REJECT:
                 case BacnetPduTypes.PDU_TYPE_ABORT:
                     {
                         var apduHeaderLen = APDU.DecodeAbort(buffer, offset, out type, out var invokeId, out var reason);
                         offset += apduHeaderLen;
                         length -= apduHeaderLen;
                         ProcessAbort(adr, type, invokeId, reason, buffer, offset, length);
+                    }
+                    break;
+
+                case BacnetPduTypes.PDU_TYPE_REJECT:
+                    {
+                        var apduHeaderLen = APDU.DecodeReject(buffer, offset, out type, out var invokeId, out var reason);
+                        offset += apduHeaderLen;
+                        length -= apduHeaderLen;
+                        ProcessReject(adr, type, invokeId, reason, buffer, offset, length);
                     }
                     break;
 
@@ -938,7 +962,7 @@ namespace System.IO.BACnet
             Transport.Send(b.buffer, Transport.HeaderLength, b.offset - Transport.HeaderLength, adr, false, 0);
         }
 
-        public void SendConfirmedServiceReject(BacnetAddress adr, byte invokeId, BacnetRejectReasons reason)
+        public void SendConfirmedServiceReject(BacnetAddress adr, byte invokeId, BacnetRejectReason reason)
         {
             Log.Debug($"Sending Service reject: {reason}");
 
