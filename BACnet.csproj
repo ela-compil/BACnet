@@ -53,6 +53,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BacnetAsyncResult.cs" />
+    <Compile Include="Base\BacnetAbortReason.cs" />
     <Compile Include="Base\BacnetAddress.cs" />
     <Compile Include="Base\BacnetAddressTypes.cs" />
     <Compile Include="Base\BacnetApplicationTags.cs" />
@@ -102,7 +103,7 @@
     <Compile Include="Base\BacnetDeviceStatus.cs" />
     <Compile Include="Base\BacnetErrorClasses.cs" />
     <Compile Include="Base\BacnetPduTypes.cs" />
-    <Compile Include="Base\BacnetRejectReasons.cs" />
+    <Compile Include="Base\BacnetRejectReason.cs" />
     <Compile Include="Base\BacnetRestartReason.cs" />
     <Compile Include="Base\BacnetResultFlags.cs" />
     <Compile Include="Base\BacnetSegmentations.cs" />
