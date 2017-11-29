@@ -54,13 +54,13 @@ namespace System.IO.BACnet
         private uint _writepriority;
 
         public const int DEFAULT_UDP_PORT = 0xBAC0;
-        public const int DEFAULT_TIMEOUT = 1000;
+        public static readonly TimeSpan DEFAULT_TIMEOUT = TimeSpan.FromSeconds(1);
         public const int DEFAULT_RETRIES = 3;
 
         public IBacnetTransport Transport { get; }
         public ushort VendorId { get; set; } = 260;
-        public int Timeout { get; set; }
-        public int TransmitTimeout { get; set; } = 30000;
+        public TimeSpan Timeout { get; set; }
+        public TimeSpan TransmitTimeout { get; set; } = TimeSpan.FromSeconds(30);
         public BacnetMaxSegments MaxSegments { get; set; } = BacnetMaxSegments.MAX_SEG0;
         public byte ProposedWindowSize { get; set; } = 10;
         public bool ForceWindowSize { get; set; }
@@ -121,10 +121,10 @@ namespace System.IO.BACnet
                 }
             }
 
-            public bool Wait(BacnetAddress adr, byte invokeId, int timeout)
+            public bool Wait(BacnetAddress adr, byte invokeId, TimeSpan timeout)
             {
                 Monitor.Enter(_lockObject);
-                while (!adr.Equals(this._address) || this._invokeId != invokeId)
+                while (!adr.Equals(_address) || _invokeId != invokeId)
                 {
                     _wait.Reset();
                     Monitor.Exit(_lockObject);
@@ -137,15 +137,15 @@ namespace System.IO.BACnet
             }
         }
 
-        public BacnetClient(int port = DEFAULT_UDP_PORT, int timeout = DEFAULT_TIMEOUT, int retries = DEFAULT_RETRIES)
+        public BacnetClient(int port = DEFAULT_UDP_PORT, TimeSpan? timeout = null, int retries = DEFAULT_RETRIES)
             : this(new BacnetIpUdpProtocolTransport(port), timeout, retries)
         {
         }
 
-        public BacnetClient(IBacnetTransport transport, int timeout = DEFAULT_TIMEOUT, int retries = DEFAULT_RETRIES)
+        public BacnetClient(IBacnetTransport transport, TimeSpan? timeout = null, int retries = DEFAULT_RETRIES)
         {
             Transport = transport;
-            Timeout = timeout;
+            Timeout = timeout ?? DEFAULT_TIMEOUT;
             Retries = retries;
         }
 
@@ -634,8 +634,13 @@ namespace System.IO.BACnet
 
         private byte[] AssembleSegments()
         {
-            return _segments.Aggregate(new byte[0], (current, next) => 
-                current.Concat(next).ToArray());
+            return _segments.Aggregate(new byte[0], (result, next) =>
+            {
+                var offset = result.Length;
+                Array.Resize(ref result, result.Length + next.Length);
+                Array.Copy(next, 0, result, offset, next.Length);
+                return result;
+            });
         }
 
         /// <summary>
@@ -1182,7 +1187,7 @@ namespace System.IO.BACnet
             trendbuffer = null;
 
             ex = res.Error;
-            if (ex == null && !res.WaitForDone(40*1000))
+            if (ex == null && !res.WaitForDone(TimeSpan.FromSeconds(40)))
                 ex = new Exception("Wait Timeout");
 
             if (ex == null)
@@ -1313,346 +1318,164 @@ namespace System.IO.BACnet
             res.Dispose();
         }
 
-        public bool ReadPropertyRequest(BacnetAddress adr, BacnetObjectId objectId, BacnetPropertyIds propertyId, out IList<BacnetValue> valueList, byte invokeId = 0, uint arrayIndex = ASN1.BACNET_ARRAY_ALL)
+        public BacnetValue ReadPropertyRequest(BacnetAddress address, BacnetObjectId objectId, BacnetPropertyIds propertyId, uint index)
         {
-            using (var result = (BacnetAsyncResult)BeginReadPropertyRequest(adr, objectId, propertyId, true, invokeId, arrayIndex))
+            if (index == ASN1.BACNET_ARRAY_ALL) throw new ArgumentOutOfRangeException(nameof(index));
+            using (var asyncResult = BeginReadPropertyRequest(address, objectId, propertyId, index))
+                return EndReadPropertyRequest(asyncResult).Single();
+        }
+
+        public IList<BacnetValue> ReadPropertyRequest(BacnetAddress address, BacnetObjectId objectId, BacnetPropertyIds propertyId)
+        {
+            using (var asyncResult = BeginReadPropertyRequest(address, objectId, propertyId))
+                return EndReadPropertyRequest(asyncResult);
+        }
+
+        public Task<BacnetValue> ReadPropertyAsync(BacnetAddress address, BacnetObjectTypes objType, uint objInstance, BacnetPropertyIds propertyId, uint index)
+            => ReadPropertyAsync(address, new BacnetObjectId(objType, objInstance), propertyId, index);
+
+        public Task<BacnetValue> ReadPropertyAsync(BacnetAddress address, BacnetObjectId objectId, BacnetPropertyIds propertyId, uint index)
+        {
+            if (index == ASN1.BACNET_ARRAY_ALL) throw new ArgumentOutOfRangeException(nameof(index));
+            var exceptionMessage = $"Failed to read property {propertyId}{(index == ASN1.BACNET_ARRAY_ALL? "" : $"[{index}]")} of {objectId} from {address}";
+            return CallAsync(() => ReadPropertyRequest(address, objectId, propertyId, index), exceptionMessage);
+        }
+
+        public Task<IList<BacnetValue>> ReadPropertyAsync(BacnetAddress address, BacnetObjectTypes objType, uint objInstance, BacnetPropertyIds propertyId)
+            => ReadPropertyAsync(address, new BacnetObjectId(objType, objInstance), propertyId);
+
+        public Task<IList<BacnetValue>> ReadPropertyAsync(BacnetAddress address, BacnetObjectId objectId, BacnetPropertyIds propertyId)
+        {
+            var exceptionMessage = $"Failed to read property {propertyId} of {objectId} from {address}";
+            return CallAsync(() => ReadPropertyRequest(address, objectId, propertyId), exceptionMessage);
+        }
+
+        public BacnetAsyncResult BeginReadPropertyRequest(BacnetAddress address, BacnetObjectId objectId,
+            BacnetPropertyIds propertyId, uint index = ASN1.BACNET_ARRAY_ALL, bool waitForTransmit = true)
+        {
+            var propertyIndex = index == ASN1.BACNET_ARRAY_ALL ? "" : $"[{index}]";
+            Log.Debug($"Sending ReadPropertyRequest {objectId} {propertyId}{propertyIndex}");
+            return BeginConfirmedServiceRequest(address, BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROPERTY,
+                buffer => Services.EncodeReadProperty(buffer, objectId, (uint)propertyId, index), waitForTransmit);
+        }
+
+        public IList<BacnetValue> EndReadPropertyRequest(BacnetAsyncResult request)
+        {
+            using (request)
             {
-                for (var r = 0; r < _retries; r++)
+                 return request.GetResult(Timeout, Retries, r =>
                 {
-                    if (result.WaitForDone(Timeout))
-                    {
-                        EndReadPropertyRequest(result, out valueList, out var ex);
-                        if (ex != null)
-                            throw ex;
-                        return true;
-                    }
-                    if (r < Retries - 1)
-                        result.Resend();
-                }
+                    var byteCount = Services.DecodeReadPropertyAcknowledge(r.Result, 0, r.Result.Length,
+                        out _, out _, out var valueList);
+
+                    if (byteCount < 0)
+                        throw new Exception("Failed to decode ReadPropertyAcknowledge");
+
+                    return valueList;
+                });   
             }
-            valueList = null;
-            return false;
         }
 
-        public Task<IList<BacnetValue>> ReadPropertyAsync(BacnetAddress address, BacnetObjectTypes objType, uint objInstance,
-            BacnetPropertyIds propertyId, byte invokeId = 0, uint arrayIndex = ASN1.BACNET_ARRAY_ALL)
+        public void WritePropertyRequest(BacnetAddress address, BacnetObjectId objectId, BacnetPropertyIds propertyId, BacnetValue value)
         {
-            var objectId = new BacnetObjectId(objType, objInstance);
-            return ReadPropertyAsync(address, objectId, propertyId, invokeId, arrayIndex);
+            WritePropertyRequest(address, objectId, propertyId, new[] { value });
         }
 
-        public Task<IList<BacnetValue>> ReadPropertyAsync(BacnetAddress address, BacnetObjectId objectId,
-            BacnetPropertyIds propertyId, byte invokeId = 0, uint arrayIndex = ASN1.BACNET_ARRAY_ALL)
+        public void WritePropertyRequest(BacnetAddress address, BacnetObjectId objectId, BacnetPropertyIds propertyId, IEnumerable<BacnetValue> valueList)
         {
-            IList<BacnetValue> result;
-
-            return Task<IList<BacnetValue>>.Factory.StartNew(() =>
-            {
-                if (!ReadPropertyRequest(address, objectId, propertyId, out result, invokeId, arrayIndex))
-                    throw new Exception($"Failed to read property {propertyId} of {objectId} from {address}");
-
-                return result;
-            });
+            using (var asyncResult = BeginWritePropertyRequest(address, objectId, propertyId, valueList))
+                asyncResult.GetResult(Timeout, Retries);
         }
 
-        public IAsyncResult BeginReadPropertyRequest(BacnetAddress adr, BacnetObjectId objectId, BacnetPropertyIds propertyId, bool waitForTransmit, byte invokeId = 0, uint arrayIndex = ASN1.BACNET_ARRAY_ALL)
+        public void WritePropertyMultipleRequest(BacnetAddress address, BacnetObjectId objectId, ICollection<BacnetPropertyValue> valueList)
         {
-            Log.Debug($"Sending ReadPropertyRequest {objectId} {propertyId}");
-            if(invokeId == 0)
-                invokeId = unchecked (_invokeId++);
-
-            var buffer = GetEncodeBuffer(Transport.HeaderLength);
-            NPDU.Encode(buffer, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource);
-            APDU.EncodeConfirmedServiceRequest(buffer, PduConfirmedServiceRequest(), BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROPERTY, MaxSegments, Transport.MaxAdpuLength, invokeId);
-            Services.EncodeReadProperty(buffer, objectId, (uint)propertyId, arrayIndex);
-
-            //send
-            var ret = new BacnetAsyncResult(this, adr, invokeId, buffer.buffer, buffer.offset - Transport.HeaderLength, waitForTransmit, TransmitTimeout);
-            ret.Resend();
-
-            return ret;
+            using (var asyncResult = BeginWritePropertyMultipleRequest(address, objectId, valueList))
+                asyncResult.GetResult(Timeout, Retries);
         }
 
-        public void EndReadPropertyRequest(IAsyncResult result, out IList<BacnetValue> valueList, out Exception ex)
-        {
-            var res = (BacnetAsyncResult)result;
-            ex = res.Error;
-            if (ex == null && !res.WaitForDone(Timeout))
-                ex = new Exception("Wait Timeout");
-
-            if (ex == null)
-            {
-                //decode
-                if (Services.DecodeReadPropertyAcknowledge(res.Result, 0, res.Result.Length, out _, out _, out valueList) < 0)
-                    ex = new Exception("Decode");
-            }
-            else
-            {
-                valueList = null;
-            }
-
-            res.Dispose();
-        }
-
-        public bool WritePropertyRequest(BacnetAddress adr, BacnetObjectId objectId, BacnetPropertyIds propertyId, IEnumerable<BacnetValue> valueList, byte invokeId = 0)
-        {
-            using (var result = (BacnetAsyncResult)BeginWritePropertyRequest(adr, objectId, propertyId, valueList, true, invokeId))
-            {
-                for (var r = 0; r < _retries; r++)
-                {
-                    if (result.WaitForDone(Timeout))
-                    {
-                        EndWritePropertyRequest(result, out var ex);
-                        if (ex != null)
-                            throw ex;
-                        return true;
-                    }
-                    if (r < Retries - 1)
-                        result.Resend();
-                }
-            }
-            return false;
-        }
-
-        public bool WritePropertyMultipleRequest(BacnetAddress adr, BacnetObjectId objectId, ICollection<BacnetPropertyValue> valueList, byte invokeId = 0)
-        {
-            using (var result = (BacnetAsyncResult)BeginWritePropertyMultipleRequest(adr, objectId, valueList, true, invokeId))
-            {
-                for (var r = 0; r < _retries; r++)
-                {
-                    if (result.WaitForDone(Timeout))
-                    {
-                        EndWritePropertyRequest(result, out var ex); // Share the same with single write
-                        if (ex != null)
-                            throw ex;
-                        return true;
-                    }
-                    if (r < Retries - 1)
-                        result.Resend();
-                }
-            }
-            return false;
-        }
-
-        public IAsyncResult BeginWritePropertyRequest(BacnetAddress adr, BacnetObjectId objectId, BacnetPropertyIds propertyId, IEnumerable<BacnetValue> valueList, bool waitForTransmit, byte invokeId = 0)
+        public BacnetAsyncResult BeginWritePropertyRequest(BacnetAddress address, BacnetObjectId objectId, BacnetPropertyIds propertyId, IEnumerable<BacnetValue> valueList, bool waitForTransmit = true)
         {
             Log.Debug($"Sending WritePropertyRequest {objectId} {propertyId}");
-            if (invokeId == 0)
-                invokeId = unchecked(_invokeId++);
-
-            var buffer = GetEncodeBuffer(Transport.HeaderLength);
-            NPDU.Encode(buffer, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource);
-            APDU.EncodeConfirmedServiceRequest(buffer, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST , BacnetConfirmedServices.SERVICE_CONFIRMED_WRITE_PROPERTY, MaxSegments, Transport.MaxAdpuLength, invokeId);
-            Services.EncodeWriteProperty(buffer, objectId, (uint)propertyId, ASN1.BACNET_ARRAY_ALL, _writepriority, valueList);
-
-            //send
-            var ret = new BacnetAsyncResult(this, adr, invokeId, buffer.buffer, buffer.offset - Transport.HeaderLength, waitForTransmit, TransmitTimeout);
-            ret.Resend();
-
-            return ret;
+            return BeginConfirmedServiceRequest(address, BacnetConfirmedServices.SERVICE_CONFIRMED_WRITE_PROPERTY,
+                buffer => Services.EncodeWriteProperty(buffer, objectId, (uint)propertyId, ASN1.BACNET_ARRAY_ALL, _writepriority, valueList), waitForTransmit);
         }
 
-        public IAsyncResult BeginWritePropertyMultipleRequest(BacnetAddress adr, BacnetObjectId objectId, ICollection<BacnetPropertyValue> valueList, bool waitForTransmit, byte invokeId = 0)
+        public BacnetAsyncResult BeginWritePropertyMultipleRequest(BacnetAddress address, BacnetObjectId objectId,
+            ICollection<BacnetPropertyValue> valueList, bool waitForTransmit = true)
         {
             Log.Debug($"Sending WritePropertyMultipleRequest {objectId}");
-            if (invokeId == 0) invokeId = unchecked(_invokeId++);
-
-            var buffer = GetEncodeBuffer(Transport.HeaderLength);
-            //BacnetNpduControls.PriorityNormalMessage 
-            NPDU.Encode(buffer, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource);
-
-            APDU.EncodeConfirmedServiceRequest(buffer, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST, BacnetConfirmedServices.SERVICE_CONFIRMED_WRITE_PROP_MULTIPLE, MaxSegments, Transport.MaxAdpuLength, invokeId);
-            Services.EncodeWritePropertyMultiple(buffer, objectId, valueList);
-
-            //send
-            var ret = new BacnetAsyncResult(this, adr, invokeId, buffer.buffer, buffer.offset - Transport.HeaderLength, waitForTransmit, TransmitTimeout);
-            ret.Resend();
-
-            return ret;
+            return BeginConfirmedServiceRequest(address, BacnetConfirmedServices.SERVICE_CONFIRMED_WRITE_PROP_MULTIPLE,
+                buffer => Services.EncodeWritePropertyMultiple(buffer, objectId, valueList), waitForTransmit);
         }
 
-        public void EndWritePropertyRequest(IAsyncResult result, out Exception ex)
+        public void WritePropertyMultipleRequest(BacnetAddress address, ICollection<BacnetReadAccessResult> valueList)
         {
-            var res = (BacnetAsyncResult)result;
-            ex = res.Error;
-            if (ex == null && !res.WaitForDone(Timeout))
-                ex = new Exception("Wait Timeout");
-
-            res.Dispose();
+            using (var asyncResult = BeginWritePropertyMultipleRequest(address, valueList))
+                asyncResult.GetResult(Timeout, Retries);
         }
 
-        // By Chritopher Günter : Write multiple properties on multiple objects
-        public bool WritePropertyMultipleRequest(BacnetAddress adr, ICollection<BacnetReadAccessResult> valueList, byte invokeId = 0)
-        {
-            using (var result = (BacnetAsyncResult)BeginWritePropertyMultipleRequest(adr, valueList, true, invokeId))
-            {
-                for (var r = 0; r < _retries; r++)
-                {
-                    if (result.WaitForDone(Timeout))
-                    {
-                        EndWritePropertyRequest(result, out var ex); // Share the same with single write
-                        if (ex != null)
-                            throw ex;
-                        return true;
-                    }
-                    if (r < Retries - 1)
-                        result.Resend();
-                }
-            }
-            return false;
-        }
-
-        public IAsyncResult BeginWritePropertyMultipleRequest(BacnetAddress adr, ICollection<BacnetReadAccessResult> valueList, bool waitForTransmit, byte invokeId = 0)
+        public BacnetAsyncResult BeginWritePropertyMultipleRequest(BacnetAddress adr, ICollection<BacnetReadAccessResult> valueList, bool waitForTransmit = true)
         {
             var objectIds = string.Join(", ", valueList.Select(v => v.objectIdentifier));
             Log.Debug($"Sending WritePropertyMultipleRequest {objectIds}");
-
-            if (invokeId == 0)
-                invokeId = unchecked(_invokeId++);
-
-            var buffer = GetEncodeBuffer(Transport.HeaderLength);
-            //BacnetNpduControls.PriorityNormalMessage 
-            NPDU.Encode(buffer, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource);
-
-            APDU.EncodeConfirmedServiceRequest(buffer, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST, BacnetConfirmedServices.SERVICE_CONFIRMED_WRITE_PROP_MULTIPLE, MaxSegments, Transport.MaxAdpuLength, invokeId);
-            Services.EncodeWriteObjectMultiple(buffer, valueList);
-
-            //send
-            var ret = new BacnetAsyncResult(this, adr, invokeId, buffer.buffer, buffer.offset - Transport.HeaderLength, waitForTransmit, TransmitTimeout);
-            ret.Resend();
-
-            return ret;
+            return BeginConfirmedServiceRequest(adr, BacnetConfirmedServices.SERVICE_CONFIRMED_WRITE_PROP_MULTIPLE,
+                buffer => Services.EncodeWriteObjectMultiple(buffer, valueList), waitForTransmit);
         }
 
-        public bool ReadPropertyMultipleRequest(BacnetAddress address, BacnetObjectId objectId, IList<BacnetPropertyReference> propertyIdAndArrayIndex, out IList<BacnetReadAccessResult> values, byte invokeId = 0)
+        public IList<BacnetReadAccessResult> ReadPropertyMultipleRequest(BacnetAddress address, BacnetObjectId objectId, IList<BacnetPropertyReference> propertyIdAndIndex)
         {
-            using (var result = (BacnetAsyncResult)BeginReadPropertyMultipleRequest(address, objectId, propertyIdAndArrayIndex, true, invokeId))
-            {
-                for (var r = 0; r < _retries; r++)
-                {
-                    if (result.WaitForDone(Timeout))
-                    {
-                        EndReadPropertyMultipleRequest(result, out values, out var ex);
-                        if (ex != null)
-                            throw ex;
-                        return true;
-                    }
-                    if (r < Retries - 1)
-                        result.Resend();
-                }
-            }
-            values = null;
-            return false;
+            using (var asyncResult = BeginReadPropertyMultipleRequest(address, objectId, propertyIdAndIndex))
+                return EndReadPropertyMultipleRequest(asyncResult);
         }
 
-        public Task<IList<BacnetPropertyValue>> ReadPropertyMultipleAsync(BacnetAddress address,
-            BacnetObjectTypes objType, uint objInstance, params BacnetPropertyIds[] propertyIds)
+        public Task<IList<BacnetPropertyValue>> ReadPropertyMultipleAsync(BacnetAddress address, BacnetObjectTypes objType, uint objInstance, params BacnetPropertyIds[] propertyIds)
         {
             var objectId = new BacnetObjectId(objType, objInstance);
             return ReadPropertyMultipleAsync(address, objectId, propertyIds);
         }
 
-        public Task<IList<BacnetPropertyValue>> ReadPropertyMultipleAsync(BacnetAddress address,
-            BacnetObjectId objectId, params BacnetPropertyIds[] propertyIds)
+        public Task<IList<BacnetPropertyValue>> ReadPropertyMultipleAsync(BacnetAddress address, BacnetObjectId objectId, params BacnetPropertyIds[] propertyIds)
         {
-            var propertyReferences = propertyIds.Select(p =>
-                new BacnetPropertyReference((uint)p, ASN1.BACNET_ARRAY_ALL));
-
-            return Task<IList<BacnetPropertyValue>>.Factory.StartNew(() =>
-            {
-                if (!ReadPropertyMultipleRequest(address, objectId, propertyReferences.ToList(), out var result))
-                    throw new Exception($"Failed to read multiple properties of {objectId} from {address}");
-
-                return result.Single().values;
-            });
+            var propertyReferences = propertyIds.Select(p => new BacnetPropertyReference((uint)p, ASN1.BACNET_ARRAY_ALL)).ToArray(); 
+            return CallAsync(() => ReadPropertyMultipleRequest(address, objectId, propertyReferences).Single().values,
+                $"Failed to read multiple properties of {objectId} from {address}");
         }
 
-        public IAsyncResult BeginReadPropertyMultipleRequest(BacnetAddress adr, BacnetObjectId objectId, IList<BacnetPropertyReference> propertyIdAndArrayIndex, bool waitForTransmit, byte invokeId = 0)
+        public IList<BacnetReadAccessResult> ReadPropertyMultipleRequest(BacnetAddress address, IList<BacnetReadAccessSpecification> properties)
         {
-            var propertyIds = string.Join(", ", propertyIdAndArrayIndex.Select(v => (BacnetPropertyIds)v.propertyIdentifier));
-            Log.Debug($"Sending ReadPropertyMultipleRequest {objectId} {propertyIds}");
-            if (invokeId == 0)
-                invokeId = unchecked(_invokeId++);
-
-            var buffer = GetEncodeBuffer(Transport.HeaderLength);
-            NPDU.Encode(buffer, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource);
-            APDU.EncodeConfirmedServiceRequest(buffer, PduConfirmedServiceRequest(), BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROP_MULTIPLE, MaxSegments, Transport.MaxAdpuLength, invokeId);
-            Services.EncodeReadPropertyMultiple(buffer, objectId, propertyIdAndArrayIndex);
-
-            //send
-            var ret = new BacnetAsyncResult(this, adr, invokeId, buffer.buffer, buffer.offset - Transport.HeaderLength, waitForTransmit, TransmitTimeout);
-            ret.Resend();
-
-            return ret;
+            using (var asyncResult = BeginReadPropertyMultipleRequest(address, properties))
+                return EndReadPropertyMultipleRequest(asyncResult);
         }
 
-        // Another way to read multiple properties on multiples objects, if supported by devices
-        public bool ReadPropertyMultipleRequest(BacnetAddress address, IList<BacnetReadAccessSpecification> properties, out IList<BacnetReadAccessResult> values, byte invokeId = 0)
+        public BacnetAsyncResult BeginReadPropertyMultipleRequest(BacnetAddress adr, BacnetObjectId objectId, IList<BacnetPropertyReference> propertyIdAndIndex, bool waitForTransmit = true)
         {
-            using (var result = (BacnetAsyncResult)BeginReadPropertyMultipleRequest(address, properties, true, invokeId))
-            {
-                for (var r = 0; r < _retries; r++)
-                {
-                    if (result.WaitForDone(Timeout))
-                    {
-                        EndReadPropertyMultipleRequest(result, out values, out var ex);
-                        if (ex != null)
-                            throw ex;
-                        return true;
-                    }
-                    if (r < Retries - 1)
-                        result.Resend();
-                }
-            }
-            values = null;
-            return false;
+            var properties = new[] { new BacnetReadAccessSpecification(objectId, propertyIdAndIndex) };
+            return BeginReadPropertyMultipleRequest(adr, properties);
         }
 
-        public IAsyncResult BeginReadPropertyMultipleRequest(BacnetAddress adr, IList<BacnetReadAccessSpecification> properties, bool waitForTransmit, byte invokeId = 0)
+        public BacnetAsyncResult BeginReadPropertyMultipleRequest(BacnetAddress address, IList<BacnetReadAccessSpecification> properties, bool waitForTransmit = true)
         {
             var objectIds = string.Join(", ", properties.Select(v => v.objectIdentifier));
             Log.Debug($"Sending ReadPropertyMultipleRequest {objectIds}");
-            if (invokeId == 0)
-                invokeId = unchecked(_invokeId++);
-
-            var buffer = GetEncodeBuffer(Transport.HeaderLength);
-            NPDU.Encode(buffer, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource);
-            APDU.EncodeConfirmedServiceRequest(buffer, PduConfirmedServiceRequest(), BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROP_MULTIPLE, MaxSegments, Transport.MaxAdpuLength, invokeId);
-            Services.EncodeReadPropertyMultiple(buffer, properties);
-
-            //send
-            var ret = new BacnetAsyncResult(this, adr, invokeId, buffer.buffer, buffer.offset - Transport.HeaderLength, waitForTransmit, TransmitTimeout);
-            ret.Resend();
-
-            return ret;
+            return BeginConfirmedServiceRequest(address, BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROP_MULTIPLE,
+                buffer => Services.EncodeReadPropertyMultiple(buffer, properties), waitForTransmit);
         }
 
-        public void EndReadPropertyMultipleRequest(IAsyncResult result, out IList<BacnetReadAccessResult> values, out Exception ex)
+        public IList<BacnetReadAccessResult> EndReadPropertyMultipleRequest(BacnetAsyncResult request)
         {
-            var res = (BacnetAsyncResult)result;
-            ex = res.Error;
-            if (ex == null && !res.WaitForDone(Timeout))
-                ex = new Exception("Wait Timeout");
-
-            if (ex == null)
+            using (request)
             {
-                //decode
-                if (Services.DecodeReadPropertyMultipleAcknowledge(res.Result, 0, res.Result.Length, out values) < 0)
-                    ex = new Exception("Decode");
-            }
-            else
-            {
-                values = null;
-            }
+                return request.GetResult(Timeout, Retries, r =>
+                {
+                    var byteCount = Services.DecodeReadPropertyMultipleAcknowledge(
+                        r.Result, 0, r.Result.Length, out var values);
 
-            res.Dispose();
-        }
+                    if (byteCount < 0)
+                        throw new Exception("Failed to decode ReadPropertyMultipleAcknowledge");
 
-        private BacnetPduTypes PduConfirmedServiceRequest()
-        {
-            return MaxSegments != BacnetMaxSegments.MAX_SEG0
-                ? BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST | BacnetPduTypes.SEGMENTED_RESPONSE_ACCEPTED
-                : BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST;
+                    return values;
+                });
+            }
         }
 
         // By Christopher Günter
@@ -2410,7 +2233,7 @@ namespace System.IO.BACnet
                     {
                         // a negative segmentACK perhaps
                         var currentNumber = segmentation.sequence_number;
-                        WaitForSegmentAck(adr, invokeId, segmentation, 0); // don't wait
+                        WaitForSegmentAck(adr, invokeId, segmentation, TimeSpan.Zero); // don't wait
 
                         if (segmentation.sequence_number != currentNumber)
                             Log.Debug("Oh, a retransmit");
@@ -2552,12 +2375,12 @@ namespace System.IO.BACnet
             Transport.Send(buffer.buffer, Transport.HeaderLength, buffer.offset - Transport.HeaderLength, adr, false, 0);
         }
 
-        public bool WaitForAllTransmits(int timeout)
+        public bool WaitForAllTransmits(TimeSpan timeout)
         {
-            return Transport.WaitForAllTransmits(timeout);
+            return Transport.WaitForAllTransmits((int)timeout.TotalMilliseconds);
         }
 
-        public bool WaitForSegmentAck(BacnetAddress adr, byte invokeId, Segmentation segmentation, int timeout)
+        public bool WaitForSegmentAck(BacnetAddress adr, byte invokeId, Segmentation segmentation, TimeSpan timeout)
         {
             if (!_lastSegmentAck.Wait(adr, invokeId, timeout))
                 return false;
@@ -2571,6 +2394,47 @@ namespace System.IO.BACnet
         {
             var cultureTextInfo = Thread.CurrentThread.CurrentCulture.TextInfo;
             return cultureTextInfo.ToTitleCase($"{obj}".ToLower());
+        }
+
+        public BacnetAsyncResult BeginConfirmedServiceRequest(BacnetAddress address, BacnetConfirmedServices service, Action<EncodeBuffer> encode, bool waitForTransmit = true)
+        {
+            var invokeId = unchecked(_invokeId++);
+            var buffer = GetEncodeBuffer(Transport.HeaderLength);
+            var function = BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply;
+            
+            NPDU.Encode(buffer, function, address.RoutedSource);
+            APDU.EncodeConfirmedServiceRequest(buffer, PduConfirmedServiceRequest(), service, MaxSegments, Transport.MaxAdpuLength, invokeId);
+            encode(buffer);
+
+            var transmitLength = buffer.offset - Transport.HeaderLength;
+            var asyncResult = new BacnetAsyncResult(this, address, invokeId, buffer.buffer, transmitLength, waitForTransmit, TransmitTimeout);
+            return asyncResult.Send();
+        }
+
+        private BacnetPduTypes PduConfirmedServiceRequest()
+        {
+            return MaxSegments != BacnetMaxSegments.MAX_SEG0
+                ? BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST | BacnetPduTypes.SEGMENTED_RESPONSE_ACCEPTED
+                : BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST;
+        }
+
+        private static Task<TResult> CallAsync<TResult>(Func<TResult> func, string exceptionMessage)
+        {
+            return Task<TResult>.Factory.StartNew(() =>
+            {
+                try
+                {
+                    return func();
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception e)
+                {
+                    throw new Exception(exceptionMessage, e);
+                }
+            });
         }
 
         public void Dispose()
