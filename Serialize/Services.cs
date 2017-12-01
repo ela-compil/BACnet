@@ -2310,7 +2310,7 @@ namespace System.IO.BACnet.Serialize
                         ASN1.encode_bacnet_unsigned(tmp1, record.GetValue<uint>());
                         break;
                 }
-                ASN1.encode_tag(buffer, (byte)record.type, false, (uint)tmp1.offset);
+                ASN1.encode_tag(buffer, (byte)record.type, true, (uint)tmp1.offset);
                 buffer.Add(tmp1.buffer, tmp1.offset);
                 ASN1.encode_closing_tag(buffer, 1);
             }
