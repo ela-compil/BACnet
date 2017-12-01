@@ -1159,163 +1159,61 @@ namespace System.IO.BACnet
             return false;
         }
 
-        // Fc
-        public IAsyncResult BeginReadRangeRequest(BacnetAddress adr, BacnetObjectId objectId,  uint idxBegin, uint quantity, bool waitForTransmit, byte invokeId = 0)
+        public BacnetAsyncResult BeginReadRangeRequest(BacnetAddress address, BacnetObjectId objectId,  uint idxBegin, uint quantity, bool waitForTransmit = false)
         {
             Log.Debug("Sending ReadRangeRequest");
-            if (invokeId == 0)
-                invokeId = unchecked(_invokeId++);
-
-            //encode
-            var buffer = GetEncodeBuffer(Transport.HeaderLength);
-            NPDU.Encode(buffer, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource);
-            APDU.EncodeConfirmedServiceRequest(buffer, PduConfirmedServiceRequest(), BacnetConfirmedServices.SERVICE_CONFIRMED_READ_RANGE, MaxSegments, Transport.MaxAdpuLength, invokeId);
-            Services.EncodeReadRange(buffer, objectId, (uint)BacnetPropertyIds.PROP_LOG_BUFFER, ASN1.BACNET_ARRAY_ALL, BacnetReadRangeRequestTypes.RR_BY_POSITION, idxBegin, DateTime.Now, (int)quantity);
-            //send
-            var ret = new BacnetAsyncResult(this, adr, invokeId, buffer.buffer, buffer.offset - Transport.HeaderLength, waitForTransmit, TransmitTimeout);
-            ret.Resend();
-
-            return ret;
-
+            return BeginConfirmedServiceRequest(address, BacnetConfirmedServices.SERVICE_CONFIRMED_READ_RANGE,
+                buffer => Services.EncodeReadRange(buffer, objectId, (uint)BacnetPropertyIds.PROP_LOG_BUFFER, ASN1.BACNET_ARRAY_ALL,
+                    BacnetReadRangeRequestTypes.RR_BY_POSITION, idxBegin, DateTime.Now, (int)quantity), waitForTransmit);
         }
 
-        // Fc
-        public void EndReadRangeRequest(IAsyncResult result, out byte[] trendbuffer, out uint itemCount, out Exception ex)
+        public void EndReadRangeRequest(BacnetAsyncResult request, out byte[] trendBuffer, out uint itemCount)
         {
-            var res = (BacnetAsyncResult)result;
-            itemCount = 0;
-            trendbuffer = null;
-
-            ex = res.Error;
-            if (ex == null && !res.WaitForDone(TimeSpan.FromSeconds(40)))
-                ex = new Exception("Wait Timeout");
-
-            if (ex == null)
+            using (request)
             {
-                itemCount = Services.DecodeReadRangeAcknowledge(res.Result, 0, res.Result.Length, out trendbuffer);
-                if (itemCount == 0)
-                    ex = new Exception("Decode");
-            }
-
-            res.Dispose();
-        }
-
-        // Fc
-        public bool ReadRangeRequest(BacnetAddress adr, BacnetObjectId objectId, uint idxBegin, ref uint quantity, out byte[] range, byte invokeId = 0)
-        {
-            range = null;
-            using (var result = (BacnetAsyncResult)BeginReadRangeRequest(adr, objectId, idxBegin, quantity, true, invokeId))
-            {
-                for (var r = 0; r < _retries; r++)
+                var result = request.GetResult(TimeSpan.FromSeconds(40), Retries, r =>
                 {
-                    if (result.WaitForDone(Timeout))
-                    {
-                        EndReadRangeRequest(result, out range, out quantity, out var ex); // quantity read could be less than demanded
-                        if (ex != null)
-                            throw ex;
-                        return true;
-                    }
-                    if (r < Retries - 1)
-                        result.Resend();
-                }
+                    var itemCountValue = Services.DecodeReadRangeAcknowledge(r.Result, 0, r.Result.Length, out var trendBufferValue);
+                    if (itemCountValue == 0)
+                        throw new Exception("Failed to decode ReadRangeAcknowledge");
+                    return Tuple.Create(itemCountValue, trendBufferValue);
+                });
+
+                itemCount = result.Item1;
+                trendBuffer = result.Item2;
             }
-            return false;
         }
 
-        public bool SubscribeCOVRequest(BacnetAddress adr, BacnetObjectId objectId, uint subscribeId, bool cancel, bool issueConfirmedNotifications, uint lifetime, byte invokeId = 0)
+        public void ReadRangeRequest(BacnetAddress adr, BacnetObjectId objectId, uint idxBegin, ref uint quantity, out byte[] range)
         {
-            using (var result = (BacnetAsyncResult)BeginSubscribeCOVRequest(adr, objectId, subscribeId, cancel, issueConfirmedNotifications, lifetime, true, invokeId))
-            {
-                for (var r = 0; r < _retries; r++)
-                {
-                    if (result.WaitForDone(Timeout))
-                    {
-                        EndSubscribeCOVRequest(result, out var ex);
-                        if (ex != null)
-                            throw ex;
-                        return true;
-                    }
-                    if (r < Retries - 1)
-                        result.Resend();
-                }
-            }
-            return false;
+            using (var asyncResult = BeginReadRangeRequest(adr, objectId, idxBegin, quantity, true))
+                EndReadRangeRequest(asyncResult, out range, out quantity); // quantity read could be less than demanded
         }
 
-        public IAsyncResult BeginSubscribeCOVRequest(BacnetAddress adr, BacnetObjectId objectId, uint subscribeId, bool cancel, bool issueConfirmedNotifications, uint lifetime, bool waitForTransmit, byte invokeId = 0)
+        public void SubscribeCOVRequest(BacnetAddress address, BacnetObjectId objectId, uint subscribeId, bool cancel, bool issueConfirmedNotifications, uint lifetime)
+        {
+            using (var asyncResult = BeginSubscribeCOVRequest(address, objectId, subscribeId, cancel, issueConfirmedNotifications, lifetime, true))
+                EndConfirmedServiceRequest(asyncResult);
+        }
+
+        public BacnetAsyncResult BeginSubscribeCOVRequest(BacnetAddress address, BacnetObjectId objectId, uint subscribeId, bool cancel, bool issueConfirmedNotifications, uint lifetime, bool waitForTransmit = false)
         {
             Log.Debug($"Sending SubscribeCOVRequest {objectId}");
-            if (invokeId == 0)
-                invokeId = unchecked(_invokeId++);
-
-            var buffer = GetEncodeBuffer(Transport.HeaderLength);
-            NPDU.Encode(buffer, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource);
-            APDU.EncodeConfirmedServiceRequest(buffer, PduConfirmedServiceRequest(), BacnetConfirmedServices.SERVICE_CONFIRMED_SUBSCRIBE_COV, MaxSegments, Transport.MaxAdpuLength, invokeId);
-            Services.EncodeSubscribeCOV(buffer, subscribeId, objectId, cancel, issueConfirmedNotifications, lifetime);
-
-            //send
-            var ret = new BacnetAsyncResult(this, adr, invokeId, buffer.buffer, buffer.offset - Transport.HeaderLength, waitForTransmit, TransmitTimeout);
-            ret.Resend();
-
-            return ret;
+            return BeginConfirmedServiceRequest(address, BacnetConfirmedServices.SERVICE_CONFIRMED_SUBSCRIBE_COV,
+                buffer => Services.EncodeSubscribeCOV(buffer, subscribeId, objectId, cancel, issueConfirmedNotifications, lifetime), waitForTransmit);
         }
 
-        public void EndSubscribeCOVRequest(IAsyncResult result, out Exception ex)
+        public void SubscribePropertyRequest(BacnetAddress address, BacnetObjectId objectId, BacnetPropertyReference monitoredProperty, uint subscribeId, bool cancel, bool issueConfirmedNotifications)
         {
-            var res = (BacnetAsyncResult)result;
-            ex = res.Error;
-            if (ex == null && !res.WaitForDone(Timeout))
-                ex = new Exception("Wait Timeout");
-
-            res.Dispose();
+            using (var asyncResult = BeginSubscribePropertyRequest(address, objectId, monitoredProperty, subscribeId, cancel, issueConfirmedNotifications, true))
+                EndConfirmedServiceRequest(asyncResult);
         }
 
-        public bool SubscribePropertyRequest(BacnetAddress adr, BacnetObjectId objectId, BacnetPropertyReference monitoredProperty, uint subscribeId, bool cancel, bool issueConfirmedNotifications, byte invokeId = 0)
-        {
-            using (var result = (BacnetAsyncResult)BeginSubscribePropertyRequest(adr, objectId, monitoredProperty, subscribeId, cancel, issueConfirmedNotifications, true, invokeId))
-            {
-                for (var r = 0; r < _retries; r++)
-                {
-                    if (result.WaitForDone(Timeout))
-                    {
-                        EndSubscribePropertyRequest(result, out var ex);
-                        if (ex != null)
-                            throw ex;
-                        return true;
-                    }
-                    if (r < Retries - 1)
-                        result.Resend();
-                }
-            }
-            return false;
-        }
-
-        public IAsyncResult BeginSubscribePropertyRequest(BacnetAddress adr, BacnetObjectId objectId, BacnetPropertyReference monitoredProperty, uint subscribeId, bool cancel, bool issueConfirmedNotifications, bool waitForTransmit, byte invokeId = 0)
+        public BacnetAsyncResult BeginSubscribePropertyRequest(BacnetAddress address, BacnetObjectId objectId, BacnetPropertyReference monitoredProperty, uint subscribeId, bool cancel, bool issueConfirmedNotifications, bool waitForTransmit)
         {
             Log.Debug($"Sending SubscribePropertyRequest {objectId}.{monitoredProperty}");
-            if (invokeId == 0)
-                invokeId = unchecked(_invokeId++);
-
-            var buffer = GetEncodeBuffer(Transport.HeaderLength);
-            NPDU.Encode(buffer, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource);
-            APDU.EncodeConfirmedServiceRequest(buffer, PduConfirmedServiceRequest(), BacnetConfirmedServices.SERVICE_CONFIRMED_SUBSCRIBE_COV_PROPERTY, MaxSegments, Transport.MaxAdpuLength, invokeId);
-            Services.EncodeSubscribeProperty(buffer, subscribeId, objectId, cancel, issueConfirmedNotifications, 0, monitoredProperty, false, 0f);
-
-            //send
-            var ret = new BacnetAsyncResult(this, adr, invokeId, buffer.buffer, buffer.offset - Transport.HeaderLength, waitForTransmit, TransmitTimeout);
-            ret.Resend();
-
-            return ret;
-        }
-
-        public void EndSubscribePropertyRequest(IAsyncResult result, out Exception ex)
-        {
-            var res = (BacnetAsyncResult)result;
-            ex = res.Error;
-            if (ex == null && !res.WaitForDone(Timeout))
-                ex = new Exception("Wait Timeout");
-
-            res.Dispose();
+            return BeginConfirmedServiceRequest(address, BacnetConfirmedServices.SERVICE_CONFIRMED_SUBSCRIBE_COV_PROPERTY,
+                buffer => Services.EncodeSubscribeProperty(buffer, subscribeId, objectId, cancel, issueConfirmedNotifications, 0, monitoredProperty, false, 0f), waitForTransmit);
         }
 
         public BacnetValue ReadPropertyRequest(BacnetAddress address, BacnetObjectId objectId, BacnetPropertyIds propertyId, uint index)
@@ -1384,13 +1282,13 @@ namespace System.IO.BACnet
         public void WritePropertyRequest(BacnetAddress address, BacnetObjectId objectId, BacnetPropertyIds propertyId, IEnumerable<BacnetValue> valueList)
         {
             using (var asyncResult = BeginWritePropertyRequest(address, objectId, propertyId, valueList))
-                asyncResult.GetResult(Timeout, Retries);
+                EndConfirmedServiceRequest(asyncResult);
         }
 
         public void WritePropertyMultipleRequest(BacnetAddress address, BacnetObjectId objectId, ICollection<BacnetPropertyValue> valueList)
         {
             using (var asyncResult = BeginWritePropertyMultipleRequest(address, objectId, valueList))
-                asyncResult.GetResult(Timeout, Retries);
+                EndConfirmedServiceRequest(asyncResult);
         }
 
         public BacnetAsyncResult BeginWritePropertyRequest(BacnetAddress address, BacnetObjectId objectId, BacnetPropertyIds propertyId, IEnumerable<BacnetValue> valueList, bool waitForTransmit = true)
@@ -1411,7 +1309,7 @@ namespace System.IO.BACnet
         public void WritePropertyMultipleRequest(BacnetAddress address, ICollection<BacnetReadAccessResult> valueList)
         {
             using (var asyncResult = BeginWritePropertyMultipleRequest(address, valueList))
-                asyncResult.GetResult(Timeout, Retries);
+                EndConfirmedServiceRequest(asyncResult);
         }
 
         public BacnetAsyncResult BeginWritePropertyMultipleRequest(BacnetAddress adr, ICollection<BacnetReadAccessResult> valueList, bool waitForTransmit = true)
@@ -2416,6 +2314,14 @@ namespace System.IO.BACnet
             return MaxSegments != BacnetMaxSegments.MAX_SEG0
                 ? BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST | BacnetPduTypes.SEGMENTED_RESPONSE_ACCEPTED
                 : BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST;
+        }
+
+        public void EndConfirmedServiceRequest(BacnetAsyncResult request)
+        {
+            using (request)
+            {
+                request.GetResult(Timeout, Retries);
+            }
         }
 
         private static Task<TResult> CallAsync<TResult>(Func<TResult> func, string exceptionMessage)
