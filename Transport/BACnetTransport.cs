@@ -357,7 +357,7 @@ namespace System.IO.BACnet
             var unicastAddresses = NetworkInterface.GetAllNetworkInterfaces()
                 .Where(i => i.OperationalStatus == OperationalStatus.Up)
                 .Where(i => i.NetworkInterfaceType != NetworkInterfaceType.Loopback)
-                .Where(i => !(i.Name.Contains("VirtualBox") || i.Name.Contains("VMware")))
+                .Where(i => !(i.Description.Contains("VirtualBox") || i.Description.Contains("VMware")))
                 .SelectMany(i => i.GetIPProperties().UnicastAddresses)
                 .Where(a => a.Address.AddressFamily == AddressFamily.InterNetwork)
                 .ToArray();
