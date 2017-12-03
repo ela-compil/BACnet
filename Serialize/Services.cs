@@ -1029,23 +1029,19 @@ namespace System.IO.BACnet.Serialize
             EncodeEventNotifyData(buffer, data);
         }
 
-        public static void EncodeAlarmSummary(EncodeBuffer buffer, BacnetObjectId objectIdentifier, uint alarmState, BacnetBitString acknowledgedTransitions)
+        public static void EncodeAlarmSummary(EncodeBuffer buffer, BacnetObjectId objectIdentifier, BacnetEventStates alarmState, BacnetBitString acknowledgedTransitions)
         {
             /* tag 0 - Object Identifier */
             ASN1.encode_application_object_id(buffer, objectIdentifier.type, objectIdentifier.instance);
             /* tag 1 - Alarm State */
-            ASN1.encode_application_enumerated(buffer, alarmState);
+            ASN1.encode_application_enumerated(buffer, (uint)alarmState);
             /* tag 2 - Acknowledged Transitions */
             ASN1.encode_application_bitstring(buffer, acknowledgedTransitions);
         }
 
-        // FChaxel
-        public static int DecodeAlarmSummaryOrEvent(byte[] buffer, int offset, int apduLen, bool getEvent, ref IList<BacnetGetEventInformationData> alarms, out bool moreEvent)
+        public static int DecodeEventInformation(byte[] buffer, int offset, int apduLen, ref IList<BacnetGetEventInformationData> events, out bool moreEvent)
         {
-            var len = 0; ;
-
-            if (getEvent)
-                len++;  // peut être tag 0
+            var len = 1; // tag 0
 
             while (apduLen - 3 - len > 0)
             {
@@ -1059,62 +1055,77 @@ namespace System.IO.BACnet.Serialize
                 len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValue);
                 len += ASN1.decode_bitstring(buffer, offset + len, lenValue, out value.acknowledgedTransitions);
 
-                if (getEvent)
+                len++;  // opening Tag 3
+                value.eventTimeStamps = new BacnetGenericTime[3];
+
+                for (var i = 0; i < 3; i++)
                 {
-                    len++;  // opening Tag 3
-                    value.eventTimeStamps = new BacnetGenericTime[3];
+                    len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValue); // opening tag
 
-                    for (var i = 0; i < 3; i++)
+                    if (tagNumber != (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_NULL)
                     {
-                        len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValue); // opening tag
-
-                        if (tagNumber != (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_NULL)
-                        {
-                            len += ASN1.decode_application_date(buffer, offset + len, out var date);
-                            len += ASN1.decode_application_time(buffer, offset + len, out var time);
-                            var timestamp = date.Date + time.TimeOfDay;
-                            value.eventTimeStamps[i] = new BacnetGenericTime(timestamp, BacnetTimestampTags.TIME_STAMP_DATETIME);
-                            len++; // closing tag
-                        }
-                        else
-                            len += (int)lenValue;
+                        len += ASN1.decode_application_date(buffer, offset + len, out var date);
+                        len += ASN1.decode_application_time(buffer, offset + len, out var time);
+                        var timestamp = date.Date + time.TimeOfDay;
+                        value.eventTimeStamps[i] = new BacnetGenericTime(timestamp, BacnetTimestampTags.TIME_STAMP_DATETIME);
+                        len++; // closing tag
                     }
-
-                    len++;  // closing Tag 3
-
-                    len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValue);
-                    len += ASN1.decode_enumerated(buffer, offset + len, lenValue, out tmp);
-                    value.notifyType = (BacnetNotifyTypes)tmp;
-
-                    len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValue);
-                    len += ASN1.decode_bitstring(buffer, offset + len, lenValue, out value.eventEnable);
-
-                    len++; // opening tag 6;
-                    value.eventPriorities = new uint[3];
-                    for (var i = 0; i < 3; i++)
-                    {
-                        len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValue);
-                        len += ASN1.decode_unsigned(buffer, offset + len, lenValue, out value.eventPriorities[i]);
-                    }
-                    len++;  // closing Tag 6
+                    else
+                        len += (int)lenValue;
                 }
+
+                len++;  // closing Tag 3
+
+                len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValue);
+                len += ASN1.decode_enumerated(buffer, offset + len, lenValue, out tmp);
+                value.notifyType = (BacnetNotifyTypes)tmp;
+
+                len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValue);
+                len += ASN1.decode_bitstring(buffer, offset + len, lenValue, out value.eventEnable);
+
+                len++; // opening tag 6;
+                value.eventPriorities = new uint[3];
+                for (var i = 0; i < 3; i++)
+                {
+                    len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValue);
+                    len += ASN1.decode_unsigned(buffer, offset + len, lenValue, out value.eventPriorities[i]);
+                }
+                len++;  // closing Tag 6
+
+                events.Add(value);
+            }
+
+            moreEvent = buffer[apduLen - 1] == 1;
+            return len;
+        }
+
+        public static int DecodeAlarmSummary(byte[] buffer, int offset, int apduLen, ref IList<BacnetAlarmSummaryData> alarms)
+        {
+            var len = 0;
+
+            while (apduLen - 3 - len > 0)
+            {
+                var value = new BacnetAlarmSummaryData();
+
+                len += ASN1.decode_tag_number_and_value(buffer, offset + len, out var tagNumber, out var lenValue);
+                len += ASN1.decode_object_id(buffer, offset + len, out value.objectIdentifier.type, out value.objectIdentifier.instance);
+                len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValue);
+                len += ASN1.decode_enumerated(buffer, offset + len, lenValue, out var tmp);
+                value.alarmState = (BacnetEventStates)tmp;
+                len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValue);
+                len += ASN1.decode_bitstring(buffer, offset + len, lenValue, out value.acknowledgedTransitions);
 
                 alarms.Add(value);
             }
 
-            if (getEvent)
-                moreEvent = buffer[apduLen - 1] == 1;
-            else
-                moreEvent = false;
-
             return len;
         }
 
-        public static void EncodeGetEventInformation(EncodeBuffer buffer, bool sendLast, BacnetObjectId lastReceivedObjectIdentifier)
+        public static void EncodeGetEventInformation(EncodeBuffer buffer, BacnetObjectId? lastReceivedObjectIdentifier)
         {
             /* encode optional parameter */
-            if (sendLast)
-                ASN1.encode_context_object_id(buffer, 0, lastReceivedObjectIdentifier.type, lastReceivedObjectIdentifier.instance);
+            if (lastReceivedObjectIdentifier != null)
+                ASN1.encode_context_object_id(buffer, 0, lastReceivedObjectIdentifier.Value.type, lastReceivedObjectIdentifier.Value.instance);
         }
 
         public static void EncodeGetEventInformationAcknowledge(EncodeBuffer buffer, BacnetGetEventInformationData[] events, bool moreEvents)

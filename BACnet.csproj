@@ -56,6 +56,7 @@
     <Compile Include="Base\BacnetAbortReason.cs" />
     <Compile Include="Base\BacnetAddress.cs" />
     <Compile Include="Base\BacnetAddressTypes.cs" />
+    <Compile Include="Base\BacnetAlarmSummaryData.cs" />
     <Compile Include="Base\BacnetApplicationTags.cs" />
     <Compile Include="Base\BacnetReinitializedStates.cs" />
     <Compile Include="BACnetClient.cs" />
