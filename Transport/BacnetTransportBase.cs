@@ -4,17 +4,12 @@ namespace System.IO.BACnet
 {
     public abstract class BacnetTransportBase : IBacnetTransport
     {
-        public ILog Log { get; set; }        
+        public ILog Log { get; set; }
         public int HeaderLength { get; protected set; }
         public int MaxBufferLength { get; protected set; }
         public BacnetAddressTypes Type { get; protected set; }
         public BacnetMaxAdpu MaxAdpuLength { get; protected set; }
-
-        public virtual byte MaxInfoFrames
-        {
-            get => 0xFF;
-            set => throw new NotSupportedException();
-        }
+        public byte MaxInfoFrames { get; set; } = 0xFF;
 
         protected BacnetTransportBase()
         {

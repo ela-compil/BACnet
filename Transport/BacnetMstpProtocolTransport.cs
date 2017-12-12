@@ -77,17 +77,10 @@ namespace System.IO.BACnet
         private bool _soleMaster;
         private byte _tokenCount;
         private Thread _transmitThread;
-        private byte _maxInfoFrames;
 
         public short SourceAddress { get; set; }
         public byte MaxMaster { get; set; }
         public bool IsRunning { get; private set; } = true;
-
-        public override byte MaxInfoFrames
-        {
-            get => _maxInfoFrames;
-            set => _maxInfoFrames = value;
-        }
 
         public BacnetMstpProtocolTransport(IBacnetSerialTransport transport, short sourceAddress = -1,
             byte maxMaster = 127, byte maxInfoFrames = 1)
@@ -98,8 +91,8 @@ namespace System.IO.BACnet
             HeaderLength = MSTP.MSTP_HEADER_LENGTH;
             MaxBufferLength = 502;
             MaxAdpuLength = MSTP.MSTP_MAX_APDU;
+            MaxInfoFrames = maxInfoFrames;
 
-            _maxInfoFrames = maxInfoFrames;
             _localBuffer = new byte[MaxBufferLength];
             _port = transport;
         }
