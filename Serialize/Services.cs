@@ -2316,7 +2316,7 @@ namespace System.IO.BACnet.Serialize
             }
 
             /* Tag 2: status */
-            var recordStatusFlags = BacnetBitString.ConvertFromInt((uint)record.statusFlags);
+            var recordStatusFlags = BacnetBitString.ConvertFromInt((uint)record.statusFlags, 4);
             if (recordStatusFlags.bits_used > 0)
             {
                 ASN1.encode_opening_tag(buffer, 2);
