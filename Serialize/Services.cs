@@ -2316,10 +2316,11 @@ namespace System.IO.BACnet.Serialize
             }
 
             /* Tag 2: status */
-            if (record.statusFlags.bits_used > 0)
+            var recordStatusFlags = BacnetBitString.ConvertFromInt((uint)record.statusFlags);
+            if (recordStatusFlags.bits_used > 0)
             {
                 ASN1.encode_opening_tag(buffer, 2);
-                ASN1.encode_application_bitstring(buffer, record.statusFlags);
+                ASN1.encode_application_bitstring(buffer, recordStatusFlags);
                 ASN1.encode_closing_tag(buffer, 2);
             }
         }
@@ -2363,7 +2364,7 @@ namespace System.IO.BACnet.Serialize
                         records[curveNumber].Value = sval;
                         break;
                     case BacnetTrendLogValueType.TL_TYPE_BOOL:
-                        records[curveNumber].Value = buffer[offset + len] > 0 ? true : false;
+                        records[curveNumber].Value = buffer[offset + len] > 0;
                         len++;
                         break;
                     case BacnetTrendLogValueType.TL_TYPE_REAL:
@@ -2423,9 +2424,10 @@ namespace System.IO.BACnet.Serialize
                 return len;
 
             len += l;
-            len += ASN1.decode_bitstring(buffer, offset + len, 2, out var statusFlags);
+            len += ASN1.decode_bitstring(buffer, offset + len, 2, out var statusFlagsBits);
 
             //set status to all returns
+            var statusFlags = (BacnetStatusFlags)statusFlagsBits.ConvertToInt();
             for (var curveNumber = 0; curveNumber < nCurves; curveNumber++)
                 records[curveNumber].statusFlags = statusFlags;
 
