@@ -1,3 +1,5 @@
+using System.IO.BACnet.Base;
+
 namespace System.IO.BACnet
 {
     public struct BacnetPropetyState
@@ -20,8 +22,26 @@ namespace System.IO.BACnet
             LIFE_SAFETY_STATE
         }
 
+        public struct State
+        {
+            public bool boolean_value;
+            public BacnetBinaryPv binaryValue;
+            public BacnetEventTypes eventType;
+            public BacnetPolarity polarity;
+            public BacnetProgramRequest programChange;
+            public BacnetProgramState programState;
+            public BacnetProgramError programError;
+            public BacnetReliability reliability;
+            public BacnetEventStates state;
+            public BacnetDeviceStatus systemStatus;
+            public BacnetUnitsId units;
+            public uint unsignedValue;
+            public BacnetLifeSafetyModes lifeSafetyMode;
+            public BacnetLifeSafetyStates lifeSafetyState;
+        }
+
         public BacnetPropertyStateTypes tag;
-        public uint state;
+        public State state;
 
         public override string ToString()
         {

@@ -57,6 +57,10 @@
     <Compile Include="Base\BacnetAddress.cs" />
     <Compile Include="Base\BacnetAddressTypes.cs" />
     <Compile Include="Base\BacnetApplicationTags.cs" />
+    <Compile Include="Base\BacnetBinaryPv.cs" />
+    <Compile Include="Base\BacnetProgramError.cs" />
+    <Compile Include="Base\BacnetProgramRequest.cs" />
+    <Compile Include="Base\BacnetProgramState.cs" />
     <Compile Include="Base\BacnetReinitializedStates.cs" />
     <Compile Include="BACnetClient.cs" />
     <Compile Include="Base\BacnetBitString.cs" />
