@@ -1,6 +1,6 @@
 ﻿namespace System.IO.BACnet.Base
 {
-    public enum BacnetBinaryPv
+    public enum BacnetBinaryPv : byte
     {
         MIN_BINARY_PV = 0,  /* for validating incoming values */
         BINARY_INACTIVE = 0,

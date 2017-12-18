@@ -1,6 +1,6 @@
 ﻿namespace System.IO.BACnet.Base
 {
-    public enum BacnetProgramError
+    public enum BacnetProgramError : ushort
     {
         PROGRAM_ERROR_NORMAL = 0,
         PROGRAM_ERROR_LOAD_FAILED = 1,
