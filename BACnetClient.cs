@@ -2504,7 +2504,18 @@ namespace System.IO.BACnet
                 });
             });
         }
-
+        
+        public void ReadRangeResponse(BacnetAddress adr, byte invokeId, Segmentation segmentation, BacnetObjectId objectId, BacnetPropertyReference property, BacnetBitString status, uint itemCount, byte[] applicationData, BacnetReadRangeRequestTypes requestType, uint firstSequenceNo)
+        {
+            HandleSegmentationResponse(adr, invokeId, segmentation, o =>
+            {
+                SendComplexAck(adr, invokeId, segmentation, BacnetConfirmedServices.SERVICE_CONFIRMED_READ_RANGE, b =>
+                {
+                    Services.EncodeReadRangeAcknowledge(b, objectId, property.propertyIdentifier, property.propertyArrayIndex, status , itemCount, applicationData, requestType, firstSequenceNo);
+                });
+            });
+        }
+        
         public void ReadFileResponse(BacnetAddress adr, byte invokeId, Segmentation segmentation, int position, uint count, bool endOfFile, byte[] fileBuffer)
         {
             HandleSegmentationResponse(adr, invokeId, segmentation, o =>
