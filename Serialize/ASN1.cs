@@ -1931,6 +1931,24 @@ namespace System.IO.BACnet.Serialize
 
                     return len;
                 }
+                if (propertyId == BacnetPropertyIds.PROP_PRESCALE)
+                {
+                    BacnetPrescale v = new BacnetPrescale(0, 0);
+                    tagLen = v.Decode(buffer, offset, (uint)maxOffset);
+                                        if (tagLen < 0) return -1;
+                    value.Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_PRESCALE;
+                    value.Value = v;
+                    return tagLen;
+                }
+                if (propertyId == BacnetPropertyIds.PROP_SCALE)
+                {
+                    BacnetScale v = new BacnetScale(0.0f);
+                    tagLen = v.Decode(buffer, offset, (uint)maxOffset);
+                                        if (tagLen < 0) return -1;
+                    value.Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_SCALE;
+                    value.Value = v;
+                    return tagLen;
+                }
 
                 value.Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC_DECODED;
                 var list = new List<BacnetValue>();
