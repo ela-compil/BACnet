@@ -58,6 +58,7 @@
     <Compile Include="Base\BacnetAddressTypes.cs" />
     <Compile Include="Base\BacnetAlarmSummaryData.cs" />
     <Compile Include="Base\BacnetApplicationTags.cs" />
+    <Compile Include="Base\BacnetPrescale.cs" />
     <Compile Include="Base\BacnetReinitializedStates.cs" />
     <Compile Include="BACnetClient.cs" />
     <Compile Include="Base\BacnetBitString.cs" />
@@ -95,6 +96,7 @@
     <Compile Include="Base\BacnetReadAccessResult.cs" />
     <Compile Include="Base\BacnetReadAccessSpecification.cs" />
     <Compile Include="Base\BacnetReliability.cs" />
+    <Compile Include="Base\BacnetScale.cs" />
     <Compile Include="Base\BacnetServicesSupported.cs" />
     <Compile Include="Base\BacnetStatusFlags.cs" />
     <Compile Include="Base\BacnetUnconfirmedServices.cs" />
