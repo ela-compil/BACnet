@@ -1935,7 +1935,7 @@ namespace System.IO.BACnet.Serialize
                 {
                     BacnetPrescale v = new BacnetPrescale(0, 0);
                     tagLen = v.Decode(buffer, offset, (uint)maxOffset);
-                                        if (tagLen < 0) return -1;
+                    if (tagLen < 0) return -1;
                     value.Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_PRESCALE;
                     value.Value = v;
                     return tagLen;
@@ -1944,7 +1944,7 @@ namespace System.IO.BACnet.Serialize
                 {
                     BacnetScale v = new BacnetScale(0.0f);
                     tagLen = v.Decode(buffer, offset, (uint)maxOffset);
-                                        if (tagLen < 0) return -1;
+                    if (tagLen < 0) return -1;
                     value.Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_SCALE;
                     value.Value = v;
                     return tagLen;

@@ -34,10 +34,8 @@ namespace System.IO.BACnet
         public int Decode(byte[] buffer, int offset, uint count)
         {
             var len = 0;
-            byte tagNumber;
-            uint lenValueType;
 
-            var tagLen = ASN1.decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValueType);
+            var tagLen = ASN1.decode_tag_number_and_value(buffer, offset + len, out var tagNumber, out var lenValueType);
             if (tagNumber != 0)
             {
                 return -1;
