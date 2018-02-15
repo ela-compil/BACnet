@@ -691,7 +691,9 @@ namespace System.IO.BACnet.Serialize
 
             buffer.Add((byte)value.Month);
             buffer.Add((byte)value.Day);
-            buffer.Add((byte)value.DayOfWeek);
+            buffer.Add(value.DayOfWeek != DayOfWeek.Sunday
+                ? (byte)value.DayOfWeek
+                : (byte)7);
         }
 
         public static void encode_application_date(EncodeBuffer buffer, DateTime value)
