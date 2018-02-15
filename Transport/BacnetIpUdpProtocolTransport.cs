@@ -15,7 +15,8 @@ namespace System.IO.BACnet
     {
         private UdpClient _sharedConn;
         private UdpClient _exclusiveConn;
-        private readonly bool _exclusivePort;
+        private readonly int exclusivePort;
+        private bool _useSharedPortAsExclusivePort => SharedPort == exclusivePort;
         private readonly bool _dontFragment;
         private readonly string _localEndpoint;
         private BacnetAddress _broadcastAddress;
@@ -30,16 +31,17 @@ namespace System.IO.BACnet
         // Some more complex solutions could avoid this, that's why this property is virtual
         public virtual IPEndPoint LocalEndPoint => (IPEndPoint)_exclusiveConn.Client.LocalEndPoint;
 
-        public BacnetIpUdpProtocolTransport(int port, bool useExclusivePort = false, bool dontFragment = false,
+        public BacnetIpUdpProtocolTransport(int sharedPort, int exclusivePort = 0, bool dontFragment = false,
             int maxPayload = 1472, string localEndpointIp = "")
         {
-            SharedPort = port;
+            SharedPort = sharedPort;
+            this.exclusivePort = exclusivePort;
+
             MaxBufferLength = maxPayload;
             Type = BacnetAddressTypes.IP;
             HeaderLength = BVLC.BVLC_HEADER_LENGTH;
             MaxAdpuLength = BVLC.BVLC_MAX_APDU;
 
-            _exclusivePort = useExclusivePort;
             _dontFragment = dontFragment;
             _localEndpoint = localEndpointIp;
         }
@@ -62,7 +64,7 @@ namespace System.IO.BACnet
 
         private void Open()
         {
-            if (!_exclusivePort)
+            if (!_useSharedPortAsExclusivePort)
             {
                 /* We need a shared broadcast "listen" port. This is the 0xBAC0 port */
                 /* This will enable us to have more than 1 client, on the same machine. Perhaps it's not that important though. */
@@ -82,8 +84,12 @@ namespace System.IO.BACnet
                 /* So this is how we'll present our selves to the world */
                 if (_exclusiveConn == null)
                 {
-                    var ep = new IPEndPoint(IPAddress.Any, 0);
-                    if (!string.IsNullOrEmpty(_localEndpoint)) ep = new IPEndPoint(IPAddress.Parse(_localEndpoint), 0);
+                    var ep = new IPEndPoint(
+                        string.IsNullOrEmpty(_localEndpoint)
+                            ? IPAddress.Any
+                            : IPAddress.Parse(_localEndpoint),
+                        exclusivePort);
+
                     _exclusiveConn = new UdpClient(ep);
 
                     // Gets the Endpoint : the assigned Udp port number in fact
@@ -154,8 +160,33 @@ namespace System.IO.BACnet
 
             try
             {
-                var ep = new IPEndPoint(IPAddress.Any, 0);
-                var receiveBuffer = connection.EndReceive(asyncResult, ref ep);
+                IPEndPoint ep = null;
+                byte[] receiveBuffer;
+
+                try
+                {
+                    receiveBuffer = connection.EndReceive(asyncResult, ref ep);
+                }
+                catch
+                {
+                    return;
+                }
+                finally
+                {
+                    if (connection.Client != null && !_disposing)
+                    {
+                        try
+                        {
+                            // BeginReceive ASAP to enable parallel processing (e.g. query additional data while processing a notification)
+                            connection.BeginReceive(OnReceiveData, connection);
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Error($"Failed to restart data receive. {ex}");
+                        }
+                    }
+                }
+
                 var receiveBufferHex = ConvertToHex(receiveBuffer);
                 var receivedLength = receiveBuffer.Length;
 
@@ -225,20 +256,6 @@ namespace System.IO.BACnet
                     return;
 
                 Log.Error("Exception in OnRecieveData", e);
-            }
-            finally
-            {
-                if (connection.Client != null && !_disposing)
-                {
-                    try
-                    {
-                        connection.BeginReceive(OnReceiveData, connection);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error("Failed to restart data receive", ex);
-                    }
-                }
             }
         }
 

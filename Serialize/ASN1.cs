@@ -14,6 +14,13 @@ namespace System.IO.BACnet.Serialize
         public const uint BACNET_MIN_PRIORITY = 1;
         public const uint BACNET_MAX_PRIORITY = 16;
 
+        /// <summary>
+        /// You can provide a function to resolve a given tag within a property to a different tag (e.g. for custom properties)
+        /// The address of the remote device is provided so that you can support devices from multiple vendors
+        /// (the same custom property# has different meaning for each vendor)
+        /// </summary>
+        public static Func<BacnetAddress, BacnetPropertyIds, byte, BacnetApplicationTags> CustomTagResolver;
+
         public interface IEncode
         {
             void Encode(EncodeBuffer buffer);
@@ -364,6 +371,19 @@ namespace System.IO.BACnet.Serialize
             encode_bitstring(buffer, bitString);
         }
 
+        public static void EncodeApplicationDestination(EncodeBuffer buffer, BacnetObjectTypes objectType, uint instance)
+        {
+            var tmp1 = new EncodeBuffer();
+            encode_bacnet_object_id(tmp1, objectType, instance);
+            buffer.Add(0x0C);
+            buffer.Add(tmp1.buffer, tmp1.offset);
+        }
+
+        public static void EncodeApplicationDestination(EncodeBuffer buffer, BacnetAddress address)
+        {
+            address.Encode(buffer);
+        }
+
         public static void bacapp_encode_application_data(EncodeBuffer buffer, BacnetValue value)
         {
             if (value.Value == null)
@@ -433,6 +453,19 @@ namespace System.IO.BACnet.Serialize
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_READ_ACCESS_SPECIFICATION:
                     encode_read_access_specification(buffer, (BacnetReadAccessSpecification)value.Value);
                         //is this the right way to do it, I wonder?
+                    break;
+                case BacnetApplicationTags.BACNET_APPLICATION_TAG_DESTINATION:
+                    switch (value.Value)
+                    {
+                        case BacnetObjectId oid:
+                            EncodeApplicationDestination(buffer, oid.type, oid.instance);
+                            break;
+                        case BacnetAddress adr:
+                            EncodeApplicationDestination(buffer, adr);
+                            break;
+                        default:
+                            throw new ArgumentException();
+                    }
                     break;
                 default:
                     //context specific
@@ -838,7 +871,7 @@ namespace System.IO.BACnet.Serialize
             encode_closing_tag(buffer, 1);
         }
 
-        public static int decode_read_access_result(byte[] buffer, int offset, int apdu_len, out BacnetReadAccessResult value)
+        public static int decode_read_access_result(BacnetAddress addr, byte[] buffer, int offset, int apdu_len, out BacnetReadAccessResult value)
         {
             var len = 0;
 
@@ -893,7 +926,7 @@ namespace System.IO.BACnet.Serialize
                     var localValueList = new List<BacnetValue>();
                     while (!decode_is_closing_tag_number(buffer, offset + len, 4))
                     {
-                        tagLen = bacapp_decode_application_data(buffer, offset + len, apdu_len + offset - 1,
+                        tagLen = bacapp_decode_application_data(addr, buffer, offset + len, apdu_len + offset - 1,
                             value.objectIdentifier.type, (BacnetPropertyIds)new_entry.property.propertyIdentifier, out var v);
                         if (tagLen < 0) return -1;
                         len += tagLen;
@@ -1655,7 +1688,7 @@ namespace System.IO.BACnet.Serialize
 
         /* returns the fixed tag type for certain context tagged properties */
 
-        private static BacnetApplicationTags bacapp_context_tag_type(BacnetPropertyIds property, byte tagNumber)
+        private static BacnetApplicationTags bacapp_context_tag_type(BacnetAddress addr, BacnetPropertyIds property, byte tagNumber)
         {
             var tag = BacnetApplicationTags.MAX_BACNET_APPLICATION_TAG;
 
@@ -1737,6 +1770,7 @@ namespace System.IO.BACnet.Serialize
                     }
                     break;
                 case BacnetPropertyIds.PROP_SUBORDINATE_LIST:
+                case BacnetPropertyIds.PROP_ZONE_MEMBERS:
                     /* BACnetARRAY[N] of BACnetDeviceObjectReference */
                     switch (tagNumber)
                     {
@@ -1773,6 +1807,9 @@ namespace System.IO.BACnet.Serialize
                             tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_REAL;
                             break;
                     }
+                    break;
+                default:
+                    tag = CustomTagResolver?.Invoke(addr, property, tagNumber) ?? tag;
                     break;
             }
 
@@ -1817,7 +1854,7 @@ namespace System.IO.BACnet.Serialize
             return apduLen;
         }
 
-        public static int bacapp_decode_application_data(byte[] buffer, int offset, int maxOffset, BacnetObjectTypes objectType, BacnetPropertyIds propertyId, out BacnetValue value)
+        public static int bacapp_decode_application_data(BacnetAddress addr, byte[] buffer, int offset, int maxOffset, BacnetObjectTypes objectType, BacnetPropertyIds propertyId, out BacnetValue value)
         {
             var len = 0;
 
@@ -1838,14 +1875,14 @@ namespace System.IO.BACnet.Serialize
             }
             else
             {
-                return bacapp_decode_context_application_data(buffer, offset, maxOffset, objectType, propertyId,
+                return bacapp_decode_context_application_data(addr, buffer, offset, maxOffset, objectType, propertyId,
                     out value);
             }
 
             return len;
         }
 
-        public static int bacapp_decode_context_application_data(byte[] buffer, int offset, int maxOffset, BacnetObjectTypes objectType, BacnetPropertyIds propertyId, out BacnetValue value)
+        public static int bacapp_decode_context_application_data(BacnetAddress addr, byte[] buffer, int offset, int maxOffset, BacnetObjectTypes objectType, BacnetPropertyIds propertyId, out BacnetValue value)
         {
             var len = 0;
 
@@ -1877,7 +1914,7 @@ namespace System.IO.BACnet.Serialize
                 if (objectType == BacnetObjectTypes.OBJECT_GROUP && propertyId == BacnetPropertyIds.PROP_PRESENT_VALUE)
                 {
                     BacnetReadAccessResult v;
-                    tagLen = decode_read_access_result(buffer, offset, maxOffset, out v);
+                    tagLen = decode_read_access_result(addr, buffer, offset, maxOffset, out v);
                     if (tagLen < 0) return -1;
                     value.Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_READ_ACCESS_RESULT;
                     value.Value = v;
@@ -1965,7 +2002,7 @@ namespace System.IO.BACnet.Serialize
                     if (lenValueType == 0)
                     {
                         len += tagLen;
-                        tagLen = bacapp_decode_application_data(buffer, offset + len, maxOffset,
+                        tagLen = bacapp_decode_application_data(addr, buffer, offset + len, maxOffset,
                             BacnetObjectTypes.MAX_BACNET_OBJECT_TYPE, BacnetPropertyIds.MAX_BACNET_PROPERTY_ID,
                             out var subValue);
                         if (tagLen < 0) return -1;
@@ -1975,7 +2012,7 @@ namespace System.IO.BACnet.Serialize
                     else
                     {
                         //override tagNumber
-                        var overrideTagNumber = bacapp_context_tag_type(propertyId, subTagNumber);
+                        var overrideTagNumber = bacapp_context_tag_type(addr, propertyId, subTagNumber);
                         if (overrideTagNumber != BacnetApplicationTags.MAX_BACNET_APPLICATION_TAG)
                             subTagNumber = (byte)overrideTagNumber;
 
