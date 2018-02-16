@@ -19,7 +19,7 @@ namespace System.IO.BACnet
         public bool CompletedSynchronously { get; private set; }
         public WaitHandle AsyncWaitHandle => _waitHandle;
         public bool IsCompleted => _waitHandle.WaitOne(0);
-        public BacnetAddress Addr { get; }
+        public BacnetAddress Address { get; }
 
         public Exception Error
         {
@@ -35,7 +35,7 @@ namespace System.IO.BACnet
         public BacnetAsyncResult(BacnetClient comm, BacnetAddress adr, byte invokeId, byte[] transmitBuffer, int transmitLength, bool waitForTransmit, int transmitTimeout)
         {
             _transmitTimeout = transmitTimeout;
-            Addr = adr;
+            Address = adr;
             _waitForTransmit = waitForTransmit;
             _transmitBuffer = transmitBuffer;
             _transmitLength = transmitLength;
@@ -54,7 +54,7 @@ namespace System.IO.BACnet
         {
             try
             {
-                if (_comm.Transport.Send(_transmitBuffer, _comm.Transport.HeaderLength, _transmitLength, Addr, _waitForTransmit, _transmitTimeout) < 0)
+                if (_comm.Transport.Send(_transmitBuffer, _comm.Transport.HeaderLength, _transmitLength, Address, _waitForTransmit, _transmitTimeout) < 0)
                 {
                     Error = new IOException("Write Timeout");
                 }

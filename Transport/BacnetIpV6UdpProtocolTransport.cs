@@ -346,21 +346,21 @@ namespace System.IO.BACnet
             return true;
         }
 
-        public static void Convert(IPEndPoint ep, out BacnetAddress addr)
+        public static void Convert(IPEndPoint ep, out BacnetAddress address)
         {
             var tmp1 = ep.Address.GetAddressBytes();
             var tmp2 = BitConverter.GetBytes((ushort)ep.Port);
             Array.Reverse(tmp2);
             Array.Resize(ref tmp1, tmp1.Length + tmp2.Length);
             Array.Copy(tmp2, 0, tmp1, tmp1.Length - tmp2.Length, tmp2.Length);
-            addr = new BacnetAddress(BacnetAddressTypes.IPV6, 0, tmp1);
+            address = new BacnetAddress(BacnetAddressTypes.IPV6, 0, tmp1);
         }
 
-        public static void Convert(BacnetAddress addr, out IPEndPoint ep)
+        public static void Convert(BacnetAddress address, out IPEndPoint ep)
         {
-            var port = (ushort)((addr.adr[16] << 8) | (addr.adr[17] << 0));
+            var port = (ushort)((address.adr[16] << 8) | (address.adr[17] << 0));
             var ipv6 = new byte[16];
-            Array.Copy(addr.adr, ipv6, 16);
+            Array.Copy(address.adr, ipv6, 16);
             ep = new IPEndPoint(new IPAddress(ipv6), port);
         }
     }
