@@ -21,6 +21,14 @@ namespace System.IO.BACnet
         private readonly LastSegmentAck _lastSegmentAck = new LastSegmentAck();
         private uint _writepriority;
 
+        /// <summary>
+        /// Dictionary of List of Tuples with sequence-number and byte[] per invoke-id
+        /// TODO: invoke-id should be PER (remote) DEVICE!
+        /// </summary>
+        private Dictionary<byte, List<Tuple<byte, byte[]>>> _segmentsPerInvokeId = new Dictionary<byte, List<Tuple<byte, byte[]>>>();
+        private Dictionary<byte, object> _locksPerInvokeId = new Dictionary<byte, object>();
+        private Dictionary<byte, byte> _expectedSegmentsPerInvokeId = new Dictionary<byte, byte>();
+
         public const int DEFAULT_UDP_PORT = 0xBAC0;
         public static readonly TimeSpan DEFAULT_TIMEOUT = TimeSpan.FromSeconds(1);
         public const int DEFAULT_RETRIES = 3;
@@ -557,20 +565,12 @@ namespace System.IO.BACnet
         public delegate void SegmentHandler(BacnetClient sender, BacnetAddress address, BacnetPduTypes type, BacnetConfirmedServices service, byte invokeId, BacnetMaxSegments maxSegments, BacnetMaxAdpu maxAdpu, byte sequenceNumber, byte[] buffer, int offset, int length);
         public event SegmentHandler OnSegment;
 
-        /// <summary>
-        /// Dictionary of List of Tuples with sequence-number and byte[] per invoke-id
-        /// TODO: invoke-id should be PER (remote) DEVICE!
-        /// </summary>
-        private Dictionary<byte, List<Tuple<byte, byte[]>>> segmentsPerInvokeId = new Dictionary<byte, List<Tuple<byte, byte[]>>>();
-        private Dictionary<byte, object> locksPerInvokeId = new Dictionary<byte, object>();
-        private Dictionary<byte, byte> expectedSegmentsPerInvokeId = new Dictionary<byte, byte>();
-
         private void ProcessSegment(BacnetAddress address, BacnetPduTypes type, BacnetConfirmedServices service, byte invokeId, BacnetMaxSegments maxSegments, BacnetMaxAdpu maxAdpu, bool server, byte sequenceNumber, byte proposedWindowNumber, byte[] buffer, int offset, int length)
         {
-            if (!locksPerInvokeId.TryGetValue(invokeId, out var lockObj))
+            if (!_locksPerInvokeId.TryGetValue(invokeId, out var lockObj))
             {
                 lockObj = new object();
-                locksPerInvokeId[invokeId] = lockObj;
+                _locksPerInvokeId[invokeId] = lockObj;
             }
 
             lock (lockObj)
@@ -586,16 +586,16 @@ namespace System.IO.BACnet
         {
             Log.Trace($@"Processing Segment #{sequenceNumber} of invoke-id #{invokeId}");
 
-            if (!segmentsPerInvokeId.ContainsKey(invokeId))
-                segmentsPerInvokeId[invokeId] = new List<Tuple<byte, byte[]>>();
+            if (!_segmentsPerInvokeId.ContainsKey(invokeId))
+                _segmentsPerInvokeId[invokeId] = new List<Tuple<byte, byte[]>>();
 
-            if (!expectedSegmentsPerInvokeId.ContainsKey(invokeId))
-                expectedSegmentsPerInvokeId[invokeId] = byte.MaxValue;
+            if (!_expectedSegmentsPerInvokeId.ContainsKey(invokeId))
+                _expectedSegmentsPerInvokeId[invokeId] = byte.MaxValue;
 
             var moreFollows = (type & BacnetPduTypes.MORE_FOLLOWS) == BacnetPduTypes.MORE_FOLLOWS;
 
             if (!moreFollows)
-                expectedSegmentsPerInvokeId[invokeId] = (byte)(sequenceNumber + 1);
+                _expectedSegmentsPerInvokeId[invokeId] = (byte)(sequenceNumber + 1);
 
             //send ACK
             if (sequenceNumber % proposedWindowNumber == 0 || !moreFollows)
@@ -619,7 +619,8 @@ namespace System.IO.BACnet
         /// </summary>
         private void PerformDefaultSegmentHandling(BacnetAddress address, BacnetPduTypes type, BacnetConfirmedServices service, byte invokeId, BacnetMaxSegments maxSegments, BacnetMaxAdpu maxAdpu, byte sequenceNumber, byte[] buffer, int offset, int length)
         {
-            var mySegments = segmentsPerInvokeId[invokeId];
+            var segments = _segmentsPerInvokeId[invokeId];
+            var moreFollows = segments.Count < _expectedSegmentsPerInvokeId[invokeId];
 
             if (sequenceNumber == 0)
             {
@@ -637,22 +638,22 @@ namespace System.IO.BACnet
                 else
                     APDU.EncodeComplexAck(encodedBuffer, type, service, invokeId);
 
-                mySegments.Add(new Tuple<byte, byte[]>(sequenceNumber, copy)); // doesn't include BVLC or NPDU
+                segments.Add(Tuple.Create(sequenceNumber, copy)); // doesn't include BVLC or NPDU
             }
             else
             {
                 //copy only content part
-                mySegments.Add(new Tuple<byte, byte[]>(sequenceNumber, buffer.Skip(offset).Take(length).ToArray()));
+                segments.Add(Tuple.Create(sequenceNumber, buffer.Skip(offset).Take(length).ToArray()));
             }
 
             //process when finished
-            if (mySegments.Count < expectedSegmentsPerInvokeId[invokeId])
+            if (moreFollows)
                 return;
 
             //assemble whole part
-            var apduBuffer = mySegments.OrderBy(s => s.Item1).SelectMany(s => s.Item2).ToArray();
-            mySegments.Clear();
-            expectedSegmentsPerInvokeId[invokeId] = byte.MaxValue;
+            var apduBuffer = segments.OrderBy(s => s.Item1).SelectMany(s => s.Item2).ToArray();
+            segments.Clear();
+            _expectedSegmentsPerInvokeId[invokeId] = byte.MaxValue;
 
             //process
             ProcessApdu(address, type, apduBuffer, 0, apduBuffer.Length);
@@ -1172,7 +1173,7 @@ namespace System.IO.BACnet
             {
                  return request.GetResult(Timeout, Retries, r =>
                 {
-                    var byteCount = Services.DecodeReadPropertyAcknowledge(r.Addr, r.Result, 0, r.Result.Length,
+                    var byteCount = Services.DecodeReadPropertyAcknowledge(r.Address, r.Result, 0, r.Result.Length,
                         out _, out _, out var valueList);
 
                     if (byteCount < 0)
@@ -1279,8 +1280,8 @@ namespace System.IO.BACnet
                 return request.GetResult(Timeout, Retries, r =>
                 {
                     var byteCount =
-                        Services.DecodeReadPropertyMultipleAcknowledge(r.Addr, r.Result, 0, r.Result.Length,
-                            out var values);
+                        Services.DecodeReadPropertyMultipleAcknowledge(
+                            r.Address, r.Result, 0, r.Result.Length, out var values);
 
                     if (byteCount < 0)
                         throw new Exception("Failed to decode ReadPropertyMultipleAcknowledge");
