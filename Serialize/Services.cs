@@ -956,7 +956,7 @@ namespace System.IO.BACnet.Serialize
                             len += ASN1.decode_context_bitstring(buffer, offset + len, 2, out eventData.changeOfLifeSafety_statusFlags);
 
                             len += ASN1.decode_context_enumerated(buffer, offset + len, 3, out var operationExpected);
-                            eventData.changeOfLifeSafety_operationExpected = (BacnetLifeSafetyOperations)newMode;
+                            eventData.changeOfLifeSafety_operationExpected = (BacnetLifeSafetyOperations)operationExpected;
 
                             break;
 
