@@ -128,7 +128,7 @@
     <Compile Include="Transport\BacnetPipeTransport.cs" />
     <Compile Include="Transport\BacnetPtpProtocolTransport.cs" />
     <Compile Include="Transport\BacnetSerialPortTransport.cs" />
-    <Compile Include="Transport\BACnetTransport.cs" />
+    <Compile Include="Transport\BacnetIpUdpProtocolTransport.cs" />
     <Compile Include="Transport\BacnetTransportEthernet.cs" />
     <Compile Include="Transport\BacnetIpV6UdpProtocolTransport.cs" />
     <Compile Include="Transport\BVLCV6.cs" />
