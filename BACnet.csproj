@@ -57,6 +57,10 @@
     <Compile Include="Base\BacnetAddress.cs" />
     <Compile Include="Base\BacnetAddressTypes.cs" />
     <Compile Include="Base\BacnetApplicationTags.cs" />
+    <Compile Include="Base\BacnetBinaryPv.cs" />
+    <Compile Include="Base\BacnetProgramError.cs" />
+    <Compile Include="Base\BacnetProgramRequest.cs" />
+    <Compile Include="Base\BacnetProgramState.cs" />
     <Compile Include="Base\BacnetReinitializedStates.cs" />
     <Compile Include="BACnetClient.cs" />
     <Compile Include="Base\BacnetBitString.cs" />
@@ -88,7 +92,7 @@
     <Compile Include="Base\BacnetPropertyIds.cs" />
     <Compile Include="Base\BacnetPropertyReference.cs" />
     <Compile Include="Base\BacnetPropertyValue.cs" />
-    <Compile Include="Base\BacnetPropetyState.cs" />
+    <Compile Include="Base\BacnetPropertyState.cs" />
     <Compile Include="Base\BacnetPtpDisconnectReasons.cs" />
     <Compile Include="Base\BacnetPtpFrameTypes.cs" />
     <Compile Include="Base\BacnetReadAccessResult.cs" />

@@ -28,14 +28,14 @@ namespace System.IO.BACnet
         /*
          ** EVENT_CHANGE_OF_STATE
          */
-        public BacnetPropetyState changeOfState_newState;
+        public BacnetPropertyState changeOfState_newState;
         public BacnetBitString changeOfState_statusFlags;
         /*
          ** EVENT_CHANGE_OF_VALUE
          */
         public BacnetBitString changeOfValue_changedBits;
         public float changeOfValue_changeValue;
-        public BacnetCOVTypes changeOfValue_tag;
+        public BacnetCOVTypes? changeOfValue_tag;
         public BacnetBitString changeOfValue_statusFlags;
         /*
          ** EVENT_COMMAND_FAILURE
@@ -59,10 +59,10 @@ namespace System.IO.BACnet
         /*
          ** EVENT_CHANGE_OF_LIFE_SAFETY
          */
-        public BacnetLifeSafetyStates changeOfLifeSafety_newState;
-        public BacnetLifeSafetyModes changeOfLifeSafety_newMode;
+        public BacnetLifeSafetyStates? changeOfLifeSafety_newState;
+        public BacnetLifeSafetyModes? changeOfLifeSafety_newMode;
         public BacnetBitString changeOfLifeSafety_statusFlags;
-        public BacnetLifeSafetyOperations changeOfLifeSafety_operationExpected;
+        public BacnetLifeSafetyOperations? changeOfLifeSafety_operationExpected;
         /*
          ** EVENT_EXTENDED
          **
