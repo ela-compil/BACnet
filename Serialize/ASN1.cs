@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.IO.BACnet.Base;
 using System.Text;
 
 namespace System.IO.BACnet.Serialize
@@ -936,9 +935,7 @@ namespace System.IO.BACnet.Serialize
                 }
 
                 /* Tag 2: propertyIdentifier */
-                byte tagNumber;
-                uint lenValueType;
-                len += decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValueType);
+                len += decode_tag_number_and_value(buffer, offset + len, out var tagNumber, out var lenValueType);
                 if (tagNumber != 2)
                     return -1;
                 len += decode_enumerated(buffer, offset + len, lenValueType, out new_entry.property.propertyIdentifier);
@@ -986,11 +983,9 @@ namespace System.IO.BACnet.Serialize
                     /* Tag 5: Error */
                     var err = new BacnetError();
                     len += decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValueType);
-                    len += decode_enumerated(buffer, offset + len, lenValueType, out lenValueType); //error_class
-                    err.error_class = (BacnetErrorClasses)lenValueType;
+                    len += decode_enumerated(buffer, offset + len, lenValueType, out err.error_class);
                     len += decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValueType);
-                    len += decode_enumerated(buffer, offset + len, lenValueType, out lenValueType); //error_code
-                    err.error_code = (BacnetErrorCodes)lenValueType;
+                    len += decode_enumerated(buffer, offset + len, lenValueType, out err.error_code);
                     if (!decode_is_closing_tag_number(buffer, offset + len, 5))
                         return -1;
                     len++;
@@ -1087,8 +1082,7 @@ namespace System.IO.BACnet.Serialize
             if (tagNumber != 1)
                 return -1;
 
-            len += decode_enumerated(buffer, offset + len, lenValueType, out var propertyIdentifier);
-            value.propertyIdentifier = (BacnetPropertyIds)propertyIdentifier;
+            len += decode_enumerated(buffer, offset + len, lenValueType, out value.propertyIdentifier);
 
             /* Tag 2: Optional Array Index */
             var tagLen = decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValueType);
@@ -1718,8 +1712,7 @@ namespace System.IO.BACnet.Serialize
                     break;
 
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED:
-                    len = decode_enumerated(buffer, offset, lenValueType, out uintValue);
-                    value.Value = uintValue;
+                    len = decode_enumerated(buffer, offset, lenValueType, out value.Value);
                     break;
 
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_DATE:
@@ -1936,12 +1929,11 @@ namespace System.IO.BACnet.Serialize
             /* FIXME: use max_apdu_len! */
             if (!IS_CONTEXT_SPECIFIC(buffer[offset]))
             {
-                var tagLen = decode_tag_number_and_value(buffer, offset, out var tagNumber, out var lenValueType);
+                var tagLen = decode_tag_number_and_value(buffer, offset, out BacnetApplicationTags tagNumber, out uint lenValueType);
                 if (tagLen > 0)
                 {
                     len += tagLen;
-                    var decodeLen = bacapp_decode_data(buffer, offset + len, maxOffset, (BacnetApplicationTags)tagNumber,
-                        lenValueType, out value);
+                    var decodeLen = bacapp_decode_data(buffer, offset + len, maxOffset, tagNumber, lenValueType, out value);
                     if (decodeLen < 0) return decodeLen;
                     len += decodeLen;
                 }
@@ -2131,6 +2123,13 @@ namespace System.IO.BACnet.Serialize
             return len;
         }
 
+        public static int decode_enumerated<TEnum>(byte[] buffer, int offset, uint lenValue, out TEnum value)
+        {
+            var len = decode_enumerated(buffer, offset, lenValue, out var rawValue);
+            value = (TEnum)(dynamic)rawValue;
+            return len;
+        }
+
         public static bool decode_is_context_tag(byte[] buffer, int offset, byte tagNumber)
         {
             decode_tag_number(buffer, offset, out var myTagNumber);
@@ -2200,6 +2199,14 @@ namespace System.IO.BACnet.Serialize
                 value = (uint)(buffer[offset] & 0x07);
             }
 
+            return len;
+        }
+
+        public static int decode_tag_number_and_value<TTag, TValue>(byte[] buffer, int offset, out TTag tag, out TValue value)
+        {
+            var len = decode_tag_number_and_value(buffer, offset, out var rawByte, out var rawValue);
+            tag = (TTag)(dynamic)rawByte;
+            value = (TValue)(dynamic)rawValue;
             return len;
         }
 
@@ -2346,195 +2353,118 @@ namespace System.IO.BACnet.Serialize
             return len;
         }
 
-        public static int bacapp_decode_context_property_state(byte[] buffer, int offset, byte tagNumber, out BacnetPropetyState value)
+        public static int decode_context_property_state(byte[] buffer, int offset, byte tagNumber, out BacnetPropetyState value)
         {
-            int len = 0;
-            int sectionLength;
-            value = new BacnetPropetyState();
-
-            if (decode_is_opening_tag_number(buffer, offset + len, tagNumber))
+            if (!decode_is_opening_tag_number(buffer, offset, tagNumber))
             {
-                len++;
-                sectionLength = bacapp_decode_property_state(buffer, offset + len, out value);
-
-                if (sectionLength == -1)
-                {
-                    len = -1;
-                }
-                else
-                {
-                    len += sectionLength;
-
-                    if (decode_is_closing_tag_number(buffer, offset + len, tagNumber))
-                    {
-                        len++;
-                    }
-                    else
-                    {
-                        len = -1;
-                    }
-                }
-            }
-            else
-            {
-                len = -1;
-            }
-
-            return len;
-        }
-
-        public static int bacapp_decode_property_state(byte[] buffer, int offset, out BacnetPropetyState value)
-        {
-            int len = 0;
-            uint len_value_type;
-            int section_length;
-            uint enumValue;
-            byte tagnum;
-
-            value = new BacnetPropetyState();
-
-            section_length = decode_tag_number_and_value(buffer, offset + len, out tagnum, out len_value_type);
-
-            if (section_length == -1)
-            {
+                value = default(BacnetPropetyState);
                 return -1;
             }
 
-            value.tag = (BacnetPropetyState.BacnetPropertyStateTypes)tagnum;
-            len += section_length;
+            var len = 1;
+            var sectionLength = decode_property_state(buffer, offset + len, out value);
+            if (sectionLength == -1)
+                return -1;
 
+            len += sectionLength;
+            if (!decode_is_closing_tag_number(buffer, offset + len, tagNumber))
+                return -1;
+
+            return len + 1;
+        }
+
+        public static int decode_property_state(byte[] buffer, int offset, out BacnetPropetyState value)
+        {
+            value = default(BacnetPropetyState);
+
+            var len = decode_tag_number_and_value(buffer, offset, out value.tag, out uint lenValueType);
+            if (len == -1)
+                return -1;
+
+            var sectionLength = 0;
             switch (value.tag)
             {
                 case BacnetPropetyState.BacnetPropertyStateTypes.BOOLEAN_VALUE:
-                    value.state.boolean_value = len_value_type == 1 ? true : false;
+                    value.state.boolean_value = lenValueType == 1;
                     break;
 
                 case BacnetPropetyState.BacnetPropertyStateTypes.BINARY_VALUE:
-                    section_length = decode_enumerated(buffer, offset + len, len_value_type, out enumValue);
-
-                    if (section_length == -1)
-                    {
+                    sectionLength = decode_enumerated(buffer, offset + len, lenValueType, out value.state.binaryValue);
+                    if (sectionLength == -1)
                         return -1;
-                    }
-
-                    value.state.binaryValue = (BacnetBinaryPv)enumValue;
                     break;
 
                 case BacnetPropetyState.BacnetPropertyStateTypes.EVENT_TYPE:
-
-                    section_length = decode_enumerated(buffer, offset + len, len_value_type, out enumValue);
-
-                    if (section_length == -1)
-                    {
+                    sectionLength = decode_enumerated(buffer, offset + len, lenValueType, out value.state.eventType);
+                    if (sectionLength == -1)
                         return -1;
-                    }
-                    value.state.eventType = (BacnetEventTypes)enumValue;
                     break;
 
                 case BacnetPropetyState.BacnetPropertyStateTypes.STATE:
-
-                    section_length = decode_enumerated(buffer, offset + len, len_value_type, out enumValue);
-
-                    if (section_length == -1)
-                    {
+                    sectionLength = decode_enumerated(buffer, offset + len, lenValueType, out value.state.state);
+                    if (sectionLength == -1)
                         return -1;
-                    }
-                    value.state.state = (BacnetEventStates)enumValue;
                     break;
 
                 case BacnetPropetyState.BacnetPropertyStateTypes.UNSIGNED_VALUE:
-
-                    section_length = decode_unsigned(buffer, offset + len, len_value_type, out value.state.unsignedValue);
-
-                    if (section_length == -1)
-                    {
+                    sectionLength = decode_unsigned(buffer, offset + len, lenValueType, out value.state.unsignedValue);
+                    if (sectionLength == -1)
                         return -1;
-                    }
                     break;
 
                 default:
                     return -1;
             }
 
-            len += section_length;
-
-            return len;
+            return len + sectionLength;
         }
 
-        public static int decode_context_bitstring(byte[] buffer, int offset, byte tag_value, out BacnetBitString bitString)
+        public static int decode_context_bitstring(byte[] buffer, int offset, byte tagNumber, out BacnetBitString value)
         {
-            uint len_value;
-            int len = 0;
-            bitString = new BacnetBitString();
-
-            if (decode_is_context_tag(buffer, offset + len, tag_value) && !decode_is_closing_tag(buffer, offset + len))
+            if (!decode_is_context_tag(buffer, offset, tagNumber) || decode_is_closing_tag(buffer, offset))
             {
-                len += decode_tag_number_and_value(buffer, offset + len, out tag_value, out len_value);
-                len += decode_bitstring(buffer, offset + len, len_value, out bitString);
-            }
-            else
-            {
-                len = -1; // BACNET_STATUS_ERROR
+                value = new BacnetBitString();
+                return -1; // BACNET_STATUS_ERROR
             }
 
-            return len;
+            var len = decode_tag_number_and_value(buffer, offset, out _, out var lenValue);
+            return len + decode_bitstring(buffer, offset + len, lenValue, out value);
         }
 
-        public static int decode_context_real(byte[] buffer, int offset, byte tag_value, out float real_value)
+        public static int decode_context_real(byte[] buffer, int offset, byte tagNumber, out float value)
         {
-            uint len_value;
-            int len = 0;
-            real_value = 0;
-
-            if (decode_is_context_tag(buffer, offset + len, tag_value))
+            if (!decode_is_context_tag(buffer, offset, tagNumber))
             {
-                len += decode_tag_number_and_value(buffer, offset + len, out tag_value, out len_value);
-                len += decode_real(buffer, offset + len, out real_value);
-            }
-            else
-            {
-                len = -1;
+                value = 0;
+                return -1;
             }
 
-            return len;
+            var len = decode_tag_number_and_value(buffer, offset, out _, out _);
+            return len + decode_real(buffer, offset + len, out value);
         }
 
-        public static int decode_context_enumerated(byte[] buffer, int offset, byte tag_value, out uint value)
+        public static int decode_context_enumerated<TEnum>(byte[] buffer, int offset, byte tagNumber, out TEnum value)
         {
-            int len = 0;
-            byte tag_number;
-            uint len_value;
-            value = 0;
-
-            if (decode_is_context_tag(buffer, offset + len, tag_value) && !decode_is_closing_tag(buffer, offset + len))
+            if (!decode_is_context_tag(buffer, offset, tagNumber) || decode_is_closing_tag(buffer, offset))
             {
-                len += decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value);
-                len += decode_enumerated(buffer, offset + len, len_value, out value);
-            }
-            else
-            {
-                len = -1;
+                value = default(TEnum);
+                return -1;
             }
 
-            return len;
+            var len = decode_tag_number_and_value(buffer, offset, out _, out var lenValue);
+            return len + decode_enumerated(buffer, offset + len, lenValue, out value);
         }
-
-        public static int decode_context_unsigned(byte[] buffer, int offset, byte tag_number, out uint value)
+        
+        public static int decode_context_unsigned(byte[] buffer, int offset, byte tagNumber, out uint value)
         {
-            uint len_value;
-            int len = 0;
-            value = 0;
+            if (!decode_is_context_tag(buffer, offset, tagNumber) || decode_is_closing_tag(buffer, offset))
+            {
+                value = 0;
+                return -1;
+            }
 
-            if (decode_is_context_tag(buffer, offset + len, tag_number) && !decode_is_closing_tag(buffer, offset + len))
-            {
-                len += decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value);
-                len += decode_unsigned(buffer, offset + len, len_value, out value);
-            }
-            else
-            {
-                len = -1;
-            }
-            return len;
+            var len = decode_tag_number_and_value(buffer, offset, out _, out var lenValue);
+            return len + decode_unsigned(buffer, offset + len, lenValue, out value);
         }
     }
 }
