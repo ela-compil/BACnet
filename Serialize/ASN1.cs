@@ -282,7 +282,7 @@ namespace System.IO.BACnet.Serialize
                 return len;
 
             var lastBit = (byte)(bitString.bits_used - 1);
-            var usedBytes = (byte)(lastBit/8);
+            var usedBytes = (byte)(lastBit / 8);
             /* add one for the first byte */
             usedBytes++;
             len = usedBytes;
@@ -353,7 +353,7 @@ namespace System.IO.BACnet.Serialize
             else
             {
                 var usedBytes = bitstring_bytesUsed(bitString);
-                var remainingUsedBits = (byte)(bitString.bits_used - (usedBytes - 1)*8);
+                var remainingUsedBits = (byte)(bitString.bits_used - (usedBytes - 1) * 8);
                 /* number of unused bits in the subsequent final octet */
                 buffer.Add((byte)(8 - remainingUsedBits));
                 for (byte i = 0; i < usedBytes; i++)
@@ -398,61 +398,77 @@ namespace System.IO.BACnet.Serialize
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_NULL:
                     /* don't encode anything */
                     break;
+
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_BOOLEAN:
                     encode_application_boolean(buffer, (bool)value.Value);
                     break;
+
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT:
                     encode_application_unsigned(buffer, (uint)value.Value);
                     break;
+
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_SIGNED_INT:
                     encode_application_signed(buffer, (int)value.Value);
                     break;
+
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_REAL:
                     encode_application_real(buffer, (float)value.Value);
                     break;
+
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_DOUBLE:
                     encode_application_double(buffer, (double)value.Value);
                     break;
+
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_OCTET_STRING:
                     encode_application_octet_string(buffer, (byte[])value.Value, 0, ((byte[])value.Value).Length);
                     break;
+
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_CHARACTER_STRING:
                     encode_application_character_string(buffer, (string)value.Value);
                     break;
+
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_BIT_STRING:
                     encode_application_bitstring(buffer, (BacnetBitString)value.Value);
                     break;
+
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED:
                     encode_application_enumerated(buffer, (uint)(dynamic)value.Value);
                     break;
+
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_DATE:
                     encode_application_date(buffer, (DateTime)value.Value);
                     break;
+
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_TIME:
                     encode_application_time(buffer, (DateTime)value.Value);
                     break;
-                // Added for EventTimeStamp 
+                // Added for EventTimeStamp
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_TIMESTAMP:
                     bacapp_encode_timestamp(buffer, (BacnetGenericTime)value.Value);
                     break;
+
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_DATETIME:
                     bacapp_encode_datetime(buffer, (DateTime)value.Value);
                     break;
+
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID:
                     encode_application_object_id(buffer, ((BacnetObjectId)value.Value).type,
                         ((BacnetObjectId)value.Value).instance);
                     break;
+
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_COV_SUBSCRIPTION:
                     encode_cov_subscription(buffer, (BacnetCOVSubscription)value.Value);
-                        //is this the right way to do it, I wonder?
+                    //is this the right way to do it, I wonder?
                     break;
+
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_READ_ACCESS_RESULT:
                     encode_read_access_result(buffer, (BacnetReadAccessResult)value.Value);
-                        //is this the right way to do it, I wonder?
+                    //is this the right way to do it, I wonder?
                     break;
+
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_READ_ACCESS_SPECIFICATION:
                     encode_read_access_specification(buffer, (BacnetReadAccessSpecification)value.Value);
-                        //is this the right way to do it, I wonder?
+                    //is this the right way to do it, I wonder?
                     break;
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_DESTINATION:
                     switch (value.Value)
@@ -522,52 +538,66 @@ namespace System.IO.BACnet.Serialize
             encode_closing_tag(buffer, tagNumber);
         }
 
-        public static void bacapp_encode_property_state(EncodeBuffer buffer, BacnetPropetyState value)
+        public static void bacapp_encode_property_state(EncodeBuffer buffer, BacnetPropertyState value)
         {
             switch (value.tag)
             {
-                case BacnetPropetyState.BacnetPropertyStateTypes.BOOLEAN_VALUE:
-                    encode_context_boolean(buffer, 0, value.state == 1);
+                case BacnetPropertyState.BacnetPropertyStateTypes.BOOLEAN_VALUE:
+                    encode_context_boolean(buffer, 0, value.state.boolean_value);
                     break;
-                case BacnetPropetyState.BacnetPropertyStateTypes.BINARY_VALUE:
-                    encode_context_enumerated(buffer, 1, value.state);
+
+                case BacnetPropertyState.BacnetPropertyStateTypes.BINARY_VALUE:
+                    encode_context_enumerated(buffer, 1, (uint)value.state.binaryValue);
                     break;
-                case BacnetPropetyState.BacnetPropertyStateTypes.EVENT_TYPE:
-                    encode_context_enumerated(buffer, 2, value.state);
+
+                case BacnetPropertyState.BacnetPropertyStateTypes.EVENT_TYPE:
+                    encode_context_enumerated(buffer, 2, (uint)value.state.eventType);
                     break;
-                case BacnetPropetyState.BacnetPropertyStateTypes.POLARITY:
-                    encode_context_enumerated(buffer, 3, value.state);
+
+                case BacnetPropertyState.BacnetPropertyStateTypes.POLARITY:
+                    encode_context_enumerated(buffer, 3, (uint)value.state.polarity);
                     break;
-                case BacnetPropetyState.BacnetPropertyStateTypes.PROGRAM_CHANGE:
-                    encode_context_enumerated(buffer, 4, value.state);
+
+                case BacnetPropertyState.BacnetPropertyStateTypes.PROGRAM_CHANGE:
+                    encode_context_enumerated(buffer, 4, (uint)value.state.programChange);
                     break;
-                case BacnetPropetyState.BacnetPropertyStateTypes.PROGRAM_STATE:
-                    encode_context_enumerated(buffer, 5, value.state);
+
+                case BacnetPropertyState.BacnetPropertyStateTypes.PROGRAM_STATE:
+                    encode_context_enumerated(buffer, 5, (uint)value.state.programState);
                     break;
-                case BacnetPropetyState.BacnetPropertyStateTypes.REASON_FOR_HALT:
-                    encode_context_enumerated(buffer, 6, value.state);
+
+                case BacnetPropertyState.BacnetPropertyStateTypes.REASON_FOR_HALT:
+                    encode_context_enumerated(buffer, 6, (uint)value.state.programError);
                     break;
-                case BacnetPropetyState.BacnetPropertyStateTypes.RELIABILITY:
-                    encode_context_enumerated(buffer, 7, value.state);
+
+                case BacnetPropertyState.BacnetPropertyStateTypes.RELIABILITY:
+                    encode_context_enumerated(buffer, 7, (uint)value.state.reliability);
                     break;
-                case BacnetPropetyState.BacnetPropertyStateTypes.STATE:
-                    encode_context_enumerated(buffer, 8, value.state);
+
+                case BacnetPropertyState.BacnetPropertyStateTypes.STATE:
+                    encode_context_enumerated(buffer, 8, (uint)value.state.state);
                     break;
-                case BacnetPropetyState.BacnetPropertyStateTypes.SYSTEM_STATUS:
-                    encode_context_enumerated(buffer, 9, value.state);
+
+                case BacnetPropertyState.BacnetPropertyStateTypes.SYSTEM_STATUS:
+                    encode_context_enumerated(buffer, 9, (uint)value.state.systemStatus);
                     break;
-                case BacnetPropetyState.BacnetPropertyStateTypes.UNITS:
-                    encode_context_enumerated(buffer, 10, value.state);
+
+                case BacnetPropertyState.BacnetPropertyStateTypes.UNITS:
+                    encode_context_enumerated(buffer, 10, (uint)value.state.units);
                     break;
-                case BacnetPropetyState.BacnetPropertyStateTypes.UNSIGNED_VALUE:
-                    encode_context_unsigned(buffer, 11, value.state);
+
+                case BacnetPropertyState.BacnetPropertyStateTypes.UNSIGNED_VALUE:
+                    encode_context_unsigned(buffer, 11, value.state.unsignedValue);
                     break;
-                case BacnetPropetyState.BacnetPropertyStateTypes.LIFE_SAFETY_MODE:
-                    encode_context_enumerated(buffer, 12, value.state);
+
+                case BacnetPropertyState.BacnetPropertyStateTypes.LIFE_SAFETY_MODE:
+                    encode_context_enumerated(buffer, 12, (uint)value.state.lifeSafetyMode);
                     break;
-                case BacnetPropetyState.BacnetPropertyStateTypes.LIFE_SAFETY_STATE:
-                    encode_context_enumerated(buffer, 13, value.state);
+
+                case BacnetPropertyState.BacnetPropertyStateTypes.LIFE_SAFETY_STATE:
+                    encode_context_enumerated(buffer, 13, (uint)value.state.lifeSafetyState);
                     break;
+
                 default:
                     /* FIXME: assert(0); - return a negative len? */
                     break;
@@ -661,7 +691,7 @@ namespace System.IO.BACnet.Serialize
             buffer.Add((byte)value.Hour);
             buffer.Add((byte)value.Minute);
             buffer.Add((byte)value.Second);
-            buffer.Add((byte)(value.Millisecond/10));
+            buffer.Add((byte)(value.Millisecond / 10));
         }
 
         public static void encode_context_time(EncodeBuffer buffer, byte tagNumber, DateTime value)
@@ -734,14 +764,18 @@ namespace System.IO.BACnet.Serialize
                 case BacnetTimestampTags.TIME_STAMP_TIME:
                     encode_context_time(buffer, 0, value.Time);
                     break;
+
                 case BacnetTimestampTags.TIME_STAMP_SEQUENCE:
                     encode_context_unsigned(buffer, 1, value.Sequence);
                     break;
+
                 case BacnetTimestampTags.TIME_STAMP_DATETIME:
                     bacapp_encode_context_datetime(buffer, 2, value.Time);
                     break;
+
                 case BacnetTimestampTags.TIME_STAMP_NONE:
                     break;
+
                 default:
                     throw new NotImplementedException();
             }
@@ -770,7 +804,7 @@ namespace System.IO.BACnet.Serialize
         public static void encode_bacnet_character_string(EncodeBuffer buffer, string value)
         {
             buffer.Add((byte)BacnetCharacterStringEncodings.CHARACTER_UTF8);
-            var bufUtf8 = Encoding.UTF8.GetBytes(value); // Encoding.ASCII depreciated : Addendum 135-2008k 
+            var bufUtf8 = Encoding.UTF8.GetBytes(value); // Encoding.ASCII depreciated : Addendum 135-2008k
             buffer.Add(bufUtf8, bufUtf8.Length);
         }
 
@@ -901,9 +935,7 @@ namespace System.IO.BACnet.Serialize
                 }
 
                 /* Tag 2: propertyIdentifier */
-                byte tagNumber;
-                uint lenValueType;
-                len += decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValueType);
+                len += decode_tag_number_and_value(buffer, offset + len, out var tagNumber, out var lenValueType);
                 if (tagNumber != 2)
                     return -1;
                 len += decode_enumerated(buffer, offset + len, lenValueType, out new_entry.property.propertyIdentifier);
@@ -951,16 +983,14 @@ namespace System.IO.BACnet.Serialize
                     /* Tag 5: Error */
                     var err = new BacnetError();
                     len += decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValueType);
-                    len += decode_enumerated(buffer, offset + len, lenValueType, out lenValueType); //error_class
-                    err.error_class = (BacnetErrorClasses)lenValueType;
+                    len += decode_enumerated(buffer, offset + len, lenValueType, out err.error_class);
                     len += decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValueType);
-                    len += decode_enumerated(buffer, offset + len, lenValueType, out lenValueType); //error_code
-                    err.error_code = (BacnetErrorCodes)lenValueType;
+                    len += decode_enumerated(buffer, offset + len, lenValueType, out err.error_code);
                     if (!decode_is_closing_tag_number(buffer, offset + len, 5))
                         return -1;
                     len++;
 
-                    new_entry.value = new[] {new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_ERROR, err)};
+                    new_entry.value = new[] { new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_ERROR, err) };
                 }
 
                 valueList.Add(new_entry);
@@ -1052,8 +1082,7 @@ namespace System.IO.BACnet.Serialize
             if (tagNumber != 1)
                 return -1;
 
-            len += decode_enumerated(buffer, offset + len, lenValueType, out var propertyIdentifier);
-            value.propertyIdentifier = (BacnetPropertyIds)propertyIdentifier;
+            len += decode_enumerated(buffer, offset + len, lenValueType, out value.propertyIdentifier);
 
             /* Tag 2: Optional Array Index */
             var tagLen = decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValueType);
@@ -1083,16 +1112,20 @@ namespace System.IO.BACnet.Serialize
                 case 1:
                     value = buffer[offset];
                     break;
+
                 case 2:
                     decode_unsigned16(buffer, offset, out var unsigned16Value);
                     value = unsigned16Value;
                     break;
+
                 case 3:
                     decode_unsigned24(buffer, offset, out value);
                     break;
+
                 case 4:
                     decode_unsigned32(buffer, offset, out value);
                     break;
+
                 default:
                     value = 0;
                     break;
@@ -1213,16 +1246,20 @@ namespace System.IO.BACnet.Serialize
                     decode_signed8(buffer, offset, out var sbyteValue);
                     value = sbyteValue;
                     break;
+
                 case 2:
                     decode_signed16(buffer, offset, out var shortValue);
                     value = shortValue;
                     break;
+
                 case 3:
                     decode_signed24(buffer, offset, out value);
                     break;
+
                 case 4:
                     decode_signed32(buffer, offset, out value);
                     break;
+
                 default:
                     value = 0;
                     break;
@@ -1233,7 +1270,7 @@ namespace System.IO.BACnet.Serialize
 
         public static int decode_real(byte[] buffer, int offset, out float value)
         {
-            byte[] tmp = {buffer[offset + 3], buffer[offset + 2], buffer[offset + 1], buffer[offset + 0]};
+            byte[] tmp = { buffer[offset + 3], buffer[offset + 2], buffer[offset + 1], buffer[offset + 0] };
             value = BitConverter.ToSingle(tmp, 0);
             return 4;
         }
@@ -1326,7 +1363,7 @@ namespace System.IO.BACnet.Serialize
                     // http://hackipedia.org/Character%20sets/Unicode,%20UTF%20and%20UCS%20encodings/UCS-2.htm
                     // https://en.wikipedia.org/wiki/Byte_order_mark
                     case BacnetCharacterStringEncodings.CHARACTER_UCS2:
-                        if (buffer[offset] == 0xFF && buffer[offset + 1] == 0xFE) // Byte Order Mark 
+                        if (buffer[offset] == 0xFF && buffer[offset + 1] == 0xFE) // Byte Order Mark
                             e = Encoding.Unicode; // little endian encoding
                         else
                             e = Encoding.BigEndianUnicode; // big endian encoding if BOM is not set, or 0xFE-0xFF
@@ -1339,7 +1376,7 @@ namespace System.IO.BACnet.Serialize
                             e = Encoding.UTF32; // UTF32 little endian encoding
                         else
                             e = Encoding.GetEncoding(12001);
-                                // UTF32 big endian encoding if BOM is not set, or 0-0-0xFE-0xFF
+                        // UTF32 big endian encoding if BOM is not set, or 0-0-0xFE-0xFF
                         break;
 
                     case BacnetCharacterStringEncodings.CHARACTER_ISO8859:
@@ -1358,7 +1395,7 @@ namespace System.IO.BACnet.Serialize
                         e = Encoding.GetEncoding("shift_jis"); // maybe "iso-2022-jp" ?
                         break;
 
-                    // unknown code (wrong code, experimental, ...) 
+                    // unknown code (wrong code, experimental, ...)
                     // decoded as ISO-8859-1 (removing controls) : displays certainly a strange content !
                     default:
                         var sb = new StringBuilder();
@@ -1403,7 +1440,7 @@ namespace System.IO.BACnet.Serialize
         private static void bitstring_set_bits_used(ref BacnetBitString bitString, byte bytesUsed, byte unusedBits)
         {
             /* FIXME: check that bytesUsed is at least one? */
-            bitString.bits_used = (byte)(bytesUsed*8);
+            bitString.bits_used = (byte)(bytesUsed * 8);
             bitString.bits_used -= unusedBits;
         }
 
@@ -1411,7 +1448,7 @@ namespace System.IO.BACnet.Serialize
         {
             var len = 0;
 
-            bitString = new BacnetBitString {value = new byte[MAX_BITSTRING_BYTES]};
+            bitString = new BacnetBitString { value = new byte[MAX_BITSTRING_BYTES] };
             if (lenValue > 0)
             {
                 /* the first octet contains the unused bits */
@@ -1488,7 +1525,7 @@ namespace System.IO.BACnet.Serialize
             else
             {
                 if (hundredths > 100) hundredths = 0; // sometimes set to 255
-                btime = new DateTime(1, 1, 1, hour, min, sec, hundredths*10);
+                btime = new DateTime(1, 1, 1, hour, min, sec, hundredths * 10);
             }
             return 4;
         }
@@ -1626,57 +1663,68 @@ namespace System.IO.BACnet.Serialize
             var len = 0;
             uint uintValue;
 
-            value = new BacnetValue {Tag = tagDataType};
+            value = new BacnetValue { Tag = tagDataType };
 
             switch (tagDataType)
             {
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_NULL:
                     /* nothing else to do */
                     break;
+
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_BOOLEAN:
                     value.Value = lenValueType > 0;
                     break;
+
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT:
                     len = decode_unsigned(buffer, offset, lenValueType, out uintValue);
                     value.Value = uintValue;
                     break;
+
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_SIGNED_INT:
                     len = decode_signed(buffer, offset, lenValueType, out var intValue);
                     value.Value = intValue;
                     break;
+
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_REAL:
                     len = decode_real_safe(buffer, offset, lenValueType, out var floatValue);
                     value.Value = floatValue;
                     break;
+
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_DOUBLE:
                     len = decode_double_safe(buffer, offset, lenValueType, out var doubleValue);
                     value.Value = doubleValue;
                     break;
+
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_OCTET_STRING:
                     var octetString = new byte[lenValueType];
                     len = decode_octet_string(buffer, offset, maxLength, octetString, 0, lenValueType);
                     value.Value = octetString;
                     break;
+
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_CHARACTER_STRING:
                     len = decode_character_string(buffer, offset, maxLength, lenValueType, out var stringValue);
                     value.Value = stringValue;
                     break;
+
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_BIT_STRING:
                     len = decode_bitstring(buffer, offset, lenValueType, out var bitValue);
                     value.Value = bitValue;
                     break;
+
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED:
-                    len = decode_enumerated(buffer, offset, lenValueType, out uintValue);
-                    value.Value = uintValue;
+                    len = decode_enumerated(buffer, offset, lenValueType, out value.Value);
                     break;
+
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_DATE:
                     len = decode_date_safe(buffer, offset, lenValueType, out var dateValue);
                     value.Value = dateValue;
                     break;
+
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_TIME:
                     len = decode_bacnet_time_safe(buffer, offset, lenValueType, out var timeValue);
                     value.Value = timeValue;
                     break;
+
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID:
                     len = decode_object_id_safe(buffer, offset, lenValueType, out var objectType, out var instance);
                     value.Value = new BacnetObjectId((BacnetObjectTypes)objectType, instance);
@@ -1703,11 +1751,13 @@ namespace System.IO.BACnet.Serialize
                         case 1:
                             tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT;
                             break;
+
                         case 2:
                             tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_REAL;
                             break;
                     }
                     break;
+
                 case BacnetPropertyIds.PROP_ACTION:
                     switch (tagNumber)
                     {
@@ -1715,22 +1765,27 @@ namespace System.IO.BACnet.Serialize
                         case 1:
                             tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID;
                             break;
+
                         case 2:
                             tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED;
                             break;
+
                         case 3:
                         case 5:
                         case 6:
                             tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT;
                             break;
+
                         case 7:
                         case 8:
                             tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_BOOLEAN;
                             break;
+
                         case 4: /* propertyValue: abstract syntax */
                             break;
                     }
                     break;
+
                 case BacnetPropertyIds.PROP_LIST_OF_GROUP_MEMBERS:
                     /* Sequence of ReadAccessSpecification */
                     switch (tagNumber)
@@ -1740,20 +1795,24 @@ namespace System.IO.BACnet.Serialize
                             break;
                     }
                     break;
+
                 case BacnetPropertyIds.PROP_EXCEPTION_SCHEDULE:
                     switch (tagNumber)
                     {
                         case 1:
                             tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID;
                             break;
+
                         case 3:
                             tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT;
                             break;
+
                         case 0: /* calendarEntry: abstract syntax + context */
                         case 2: /* list of BACnetTimeValue: abstract syntax */
                             break;
                     }
                     break;
+
                 case BacnetPropertyIds.PROP_LOG_DEVICE_OBJECT_PROPERTY:
                     switch (tagNumber)
                     {
@@ -1761,14 +1820,17 @@ namespace System.IO.BACnet.Serialize
                         case 3: /* Device ID */
                             tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID;
                             break;
+
                         case 1: /* Property ID */
                             tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED;
                             break;
+
                         case 2: /* Array index */
                             tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT;
                             break;
                     }
                     break;
+
                 case BacnetPropertyIds.PROP_SUBORDINATE_LIST:
                 case BacnetPropertyIds.PROP_ZONE_MEMBERS:
                     /* BACnetARRAY[N] of BACnetDeviceObjectReference */
@@ -1790,6 +1852,7 @@ namespace System.IO.BACnet.Serialize
                             break;
                     }
                     break;
+
                 case BacnetPropertyIds.PROP_ACTIVE_COV_SUBSCRIPTIONS:
                     /* BACnetCOVSubscription */
                     switch (tagNumber)
@@ -1797,12 +1860,15 @@ namespace System.IO.BACnet.Serialize
                         case 0: /* BACnetRecipientProcess */
                         case 1: /* BACnetObjectPropertyReference */
                             break;
+
                         case 2: /* issueConfirmedNotifications */
                             tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_BOOLEAN;
                             break;
+
                         case 3: /* timeRemaining */
                             tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT;
                             break;
+
                         case 4: /* covIncrement */
                             tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_REAL;
                             break;
@@ -1863,12 +1929,11 @@ namespace System.IO.BACnet.Serialize
             /* FIXME: use max_apdu_len! */
             if (!IS_CONTEXT_SPECIFIC(buffer[offset]))
             {
-                var tagLen = decode_tag_number_and_value(buffer, offset, out var tagNumber, out var lenValueType);
+                var tagLen = decode_tag_number_and_value(buffer, offset, out BacnetApplicationTags tagNumber, out uint lenValueType);
                 if (tagLen > 0)
                 {
                     len += tagLen;
-                    var decodeLen = bacapp_decode_data(buffer, offset + len, maxOffset, (BacnetApplicationTags)tagNumber,
-                        lenValueType, out value);
+                    var decodeLen = bacapp_decode_data(buffer, offset + len, maxOffset, tagNumber, lenValueType, out value);
                     if (decodeLen < 0) return decodeLen;
                     len += decodeLen;
                 }
@@ -2076,6 +2141,13 @@ namespace System.IO.BACnet.Serialize
             return len;
         }
 
+        public static int decode_enumerated<TEnum>(byte[] buffer, int offset, uint lenValue, out TEnum value)
+        {
+            var len = decode_enumerated(buffer, offset, lenValue, out var rawValue);
+            value = (TEnum)(dynamic)rawValue;
+            return len;
+        }
+
         public static bool decode_is_context_tag(byte[] buffer, int offset, byte tagNumber)
         {
             decode_tag_number(buffer, offset, out var myTagNumber);
@@ -2148,6 +2220,14 @@ namespace System.IO.BACnet.Serialize
             return len;
         }
 
+        public static int decode_tag_number_and_value<TTag, TValue>(byte[] buffer, int offset, out TTag tag, out TValue value)
+        {
+            var len = decode_tag_number_and_value(buffer, offset, out var rawByte, out var rawValue);
+            tag = (TTag)(dynamic)rawByte;
+            value = (TValue)(dynamic)rawValue;
+            return len;
+        }
+
         /// <summary>
         ///     This is used by the Active_COV_Subscriptions property in DEVICE
         /// </summary>
@@ -2206,7 +2286,7 @@ namespace System.IO.BACnet.Serialize
         {
             var len = 0;
 
-            value = new BacnetCOVSubscription {Recipient = new BacnetAddress(BacnetAddressTypes.None, 0, null)};
+            value = new BacnetCOVSubscription { Recipient = new BacnetAddress(BacnetAddressTypes.None, 0, null) };
 
             if (!decode_is_opening_tag_number(buffer, offset + len, 0))
                 return -1;
@@ -2289,6 +2369,120 @@ namespace System.IO.BACnet.Serialize
             }
 
             return len;
+        }
+
+        public static int decode_context_property_state(byte[] buffer, int offset, byte tagNumber, out BacnetPropertyState value)
+        {
+            if (!decode_is_opening_tag_number(buffer, offset, tagNumber))
+            {
+                value = default(BacnetPropertyState);
+                return -1;
+            }
+
+            var len = 1;
+            var sectionLength = decode_property_state(buffer, offset + len, out value);
+            if (sectionLength == -1)
+                return -1;
+
+            len += sectionLength;
+            if (!decode_is_closing_tag_number(buffer, offset + len, tagNumber))
+                return -1;
+
+            return len + 1;
+        }
+
+        public static int decode_property_state(byte[] buffer, int offset, out BacnetPropertyState value)
+        {
+            value = default(BacnetPropertyState);
+
+            var len = decode_tag_number_and_value(buffer, offset, out value.tag, out uint lenValueType);
+            if (len == -1)
+                return -1;
+
+            var sectionLength = 0;
+            switch (value.tag)
+            {
+                case BacnetPropertyState.BacnetPropertyStateTypes.BOOLEAN_VALUE:
+                    value.state.boolean_value = lenValueType == 1;
+                    break;
+
+                case BacnetPropertyState.BacnetPropertyStateTypes.BINARY_VALUE:
+                    sectionLength = decode_enumerated(buffer, offset + len, lenValueType, out value.state.binaryValue);
+                    if (sectionLength == -1)
+                        return -1;
+                    break;
+
+                case BacnetPropertyState.BacnetPropertyStateTypes.EVENT_TYPE:
+                    sectionLength = decode_enumerated(buffer, offset + len, lenValueType, out value.state.eventType);
+                    if (sectionLength == -1)
+                        return -1;
+                    break;
+
+                case BacnetPropertyState.BacnetPropertyStateTypes.STATE:
+                    sectionLength = decode_enumerated(buffer, offset + len, lenValueType, out value.state.state);
+                    if (sectionLength == -1)
+                        return -1;
+                    break;
+
+                case BacnetPropertyState.BacnetPropertyStateTypes.UNSIGNED_VALUE:
+                    sectionLength = decode_unsigned(buffer, offset + len, lenValueType, out value.state.unsignedValue);
+                    if (sectionLength == -1)
+                        return -1;
+                    break;
+
+                default:
+                    return -1;
+            }
+
+            return len + sectionLength;
+        }
+
+        public static int decode_context_bitstring(byte[] buffer, int offset, byte tagNumber, out BacnetBitString value)
+        {
+            if (!decode_is_context_tag(buffer, offset, tagNumber) || decode_is_closing_tag(buffer, offset))
+            {
+                value = new BacnetBitString();
+                return -1; // BACNET_STATUS_ERROR
+            }
+
+            var len = decode_tag_number_and_value(buffer, offset, out _, out var lenValue);
+            return len + decode_bitstring(buffer, offset + len, lenValue, out value);
+        }
+
+        public static int decode_context_real(byte[] buffer, int offset, byte tagNumber, out float value)
+        {
+            if (!decode_is_context_tag(buffer, offset, tagNumber))
+            {
+                value = 0;
+                return -1;
+            }
+
+            var len = decode_tag_number_and_value(buffer, offset, out _, out _);
+            return len + decode_real(buffer, offset + len, out value);
+        }
+
+        public static int decode_context_enumerated<TEnum>(byte[] buffer, int offset, byte tagNumber, out TEnum value)
+        {
+            if (!decode_is_context_tag(buffer, offset, tagNumber) || decode_is_closing_tag(buffer, offset))
+            {
+                value = default(TEnum);
+                return -1;
+            }
+
+            var len = decode_tag_number_and_value(buffer, offset, out _, out var lenValue);
+            return len + decode_enumerated(buffer, offset + len, lenValue, out value);
+        }
+        
+        public static int decode_context_unsigned(byte[] buffer, int offset, byte tagNumber, out uint value)
+        {
+            if (!decode_is_context_tag(buffer, offset, tagNumber) || decode_is_closing_tag(buffer, offset))
+            {
+                value = 0;
+                return -1;
+            }
+
+            var len = decode_tag_number_and_value(buffer, offset, out _, out var lenValue);
+            return len + decode_unsigned(buffer, offset + len, lenValue, out value);
         }
     }
 }
