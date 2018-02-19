@@ -21,8 +21,7 @@ namespace System.IO.BACnet
             if (string.IsNullOrEmpty(value)) return ret;
             var tmp = value.Split(':');
             if (tmp.Length < 2) return ret;
-            ret.objectIdentifier.type = (BacnetObjectTypes)Enum.Parse(typeof(BacnetObjectTypes), tmp[0]);
-            ret.objectIdentifier.instance = uint.Parse(tmp[1]);
+            ret.objectIdentifier = new BacnetObjectId((BacnetObjectTypes)Enum.Parse(typeof(BacnetObjectTypes), tmp[0]), uint.Parse(tmp[1]));
             var refs = new List<BacnetPropertyReference>();
             for (var i = 2; i < tmp.Length; i++)
             {

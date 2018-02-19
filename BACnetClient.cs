@@ -1316,7 +1316,7 @@ namespace System.IO.BACnet
         {
             Log.Debug("Sending DeleteObjectRequest");
             return BeginConfirmedServiceRequest(address, BacnetConfirmedServices.SERVICE_CONFIRMED_DELETE_OBJECT,
-                buffer => ASN1.encode_application_object_id(buffer, objectId.type, objectId.instance), waitForTransmit);
+                buffer => ASN1.encode_application_object_id(buffer, objectId.Type, objectId.Instance), waitForTransmit);
         }
 
         public void EndDeleteObjectRequest(BacnetAsyncResult request) => EndConfirmedServiceRequest(request);
@@ -1369,7 +1369,7 @@ namespace System.IO.BACnet
             Log.Debug("Sending RawEncodedDecodedProperty");
             return BeginConfirmedServiceRequest(address, serviceId, buffer =>
             {
-                ASN1.encode_context_object_id(buffer, 0, objectId.type, objectId.instance);
+                ASN1.encode_context_object_id(buffer, 0, objectId.Type, objectId.Instance);
                 ASN1.encode_context_enumerated(buffer, 1, (byte) propertyId);
                 if (inBuffer?.Length > 0)
                     buffer.Add(inBuffer, inBuffer.Length); // No content encoding

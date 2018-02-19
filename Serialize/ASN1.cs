@@ -452,8 +452,8 @@ namespace System.IO.BACnet.Serialize
                     break;
 
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID:
-                    encode_application_object_id(buffer, ((BacnetObjectId)value.Value).type,
-                        ((BacnetObjectId)value.Value).instance);
+                    encode_application_object_id(buffer, ((BacnetObjectId)value.Value).Type,
+                        ((BacnetObjectId)value.Value).Instance);
                     break;
 
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_COV_SUBSCRIPTION:
@@ -474,7 +474,7 @@ namespace System.IO.BACnet.Serialize
                     switch (value.Value)
                     {
                         case BacnetObjectId oid:
-                            EncodeApplicationDestination(buffer, oid.type, oid.instance);
+                            EncodeApplicationDestination(buffer, oid.Type, oid.Instance);
                             break;
                         case BacnetAddress adr:
                             EncodeApplicationDestination(buffer, adr);
@@ -518,7 +518,7 @@ namespace System.IO.BACnet.Serialize
 
         public static void bacapp_encode_device_obj_property_ref(EncodeBuffer buffer, BacnetDeviceObjectPropertyReference value)
         {
-            encode_context_object_id(buffer, 0, value.objectIdentifier.type, value.objectIdentifier.instance);
+            encode_context_object_id(buffer, 0, value.objectIdentifier.Type, value.objectIdentifier.Instance);
             encode_context_enumerated(buffer, 1, (uint)value.propertyIdentifier);
 
             /* Array index is optional so check if needed before inserting */
@@ -527,8 +527,8 @@ namespace System.IO.BACnet.Serialize
 
             /* Likewise, device id is optional so see if needed
              * (set type to non device to omit */
-            if (value.deviceIndentifier.type == BacnetObjectTypes.OBJECT_DEVICE)
-                encode_context_object_id(buffer, 3, value.deviceIndentifier.type, value.deviceIndentifier.instance);
+            if (value.deviceIndentifier.Type == BacnetObjectTypes.OBJECT_DEVICE)
+                encode_context_object_id(buffer, 3, value.deviceIndentifier.Type, value.deviceIndentifier.Instance);
         }
 
         public static void bacapp_encode_context_device_obj_property_ref(EncodeBuffer buffer, byte tagNumber, BacnetDeviceObjectPropertyReference value)
@@ -853,7 +853,7 @@ namespace System.IO.BACnet.Serialize
         public static void encode_read_access_specification(EncodeBuffer buffer, BacnetReadAccessSpecification value)
         {
             /* Tag 0: BACnetObjectIdentifier */
-            encode_context_object_id(buffer, 0, value.objectIdentifier.type, value.objectIdentifier.instance);
+            encode_context_object_id(buffer, 0, value.objectIdentifier.Type, value.objectIdentifier.Instance);
 
             /* Tag 1: sequence of BACnetPropertyReference */
             encode_opening_tag(buffer, 1);
@@ -871,7 +871,7 @@ namespace System.IO.BACnet.Serialize
         public static void encode_read_access_result(EncodeBuffer buffer, BacnetReadAccessResult value)
         {
             /* Tag 0: BACnetObjectIdentifier */
-            encode_context_object_id(buffer, 0, value.objectIdentifier.type, value.objectIdentifier.instance);
+            encode_context_object_id(buffer, 0, value.objectIdentifier.Type, value.objectIdentifier.Instance);
 
             /* Tag 1: listOfResults */
             encode_opening_tag(buffer, 1);
@@ -914,8 +914,8 @@ namespace System.IO.BACnet.Serialize
             if (!decode_is_context_tag(buffer, offset + len, 0))
                 return -1;
             len = 1;
-            len += decode_object_id(buffer, offset + len, out value.objectIdentifier.type,
-                out value.objectIdentifier.instance);
+            len += decode_object_id(buffer, offset + len, out BacnetObjectTypes type, out var instance);
+            value.objectIdentifier = new BacnetObjectId(type, instance);
 
             /* Tag 1: listOfResults */
             if (!decode_is_opening_tag_number(buffer, offset + len, 1))
@@ -959,7 +959,7 @@ namespace System.IO.BACnet.Serialize
                     while (!decode_is_closing_tag_number(buffer, offset + len, 4))
                     {
                         tagLen = bacapp_decode_application_data(address, buffer, offset + len, apdu_len + offset - 1,
-                            value.objectIdentifier.type, (BacnetPropertyIds)new_entry.property.propertyIdentifier, out var v);
+                            value.objectIdentifier.Type, (BacnetPropertyIds)new_entry.property.propertyIdentifier, out var v);
                         if (tagLen < 0) return -1;
                         len += tagLen;
                         localValueList.Add(v);
@@ -1010,8 +1010,8 @@ namespace System.IO.BACnet.Serialize
             if (!decode_is_context_tag(buffer, offset + len, 0))
                 return -1;
             len++;
-            len += decode_object_id(buffer, offset + len, out value.objectIdentifier.type,
-                out value.objectIdentifier.instance);
+            len += decode_object_id(buffer, offset + len, out BacnetObjectTypes type, out var instance);
+            value.objectIdentifier = new BacnetObjectId(type, instance);
 
             /* Tag 1: sequence of ReadAccessSpecification */
             if (!decode_is_opening_tag_number(buffer, offset + len, 1))
@@ -1074,8 +1074,8 @@ namespace System.IO.BACnet.Serialize
                 return -1;
 
             len++;
-            len += decode_object_id(buffer, offset + len, out value.objectIdentifier.type,
-                out value.objectIdentifier.instance);
+            len += decode_object_id(buffer, offset + len, out BacnetObjectTypes type, out var instance);
+            value.objectIdentifier = new BacnetObjectId(type, instance);
 
             /* Tag 1 : Property identifier */
             len += decode_tag_number_and_value(buffer, offset + len, out var tagNumber, out var lenValueType);
@@ -1099,8 +1099,8 @@ namespace System.IO.BACnet.Serialize
 
             len++;
 
-            len += decode_object_id(buffer, offset + len, out value.deviceIndentifier.type,
-                out value.deviceIndentifier.instance);
+            len += decode_object_id(buffer, offset + len, out BacnetObjectTypes deviceType, out var devideInstance);
+            value.deviceIndentifier = new BacnetObjectId(deviceType, devideInstance);
 
             return len;
         }
@@ -2263,8 +2263,8 @@ namespace System.IO.BACnet.Serialize
             /*  MonitoredPropertyReference [1] BACnetObjectPropertyReference, */
             encode_opening_tag(buffer, 1);
             /* objectIdentifier [0] */
-            encode_context_object_id(buffer, 0, value.monitoredObjectIdentifier.type,
-                value.monitoredObjectIdentifier.instance);
+            encode_context_object_id(buffer, 0, value.monitoredObjectIdentifier.Type,
+                value.monitoredObjectIdentifier.Instance);
             /* propertyIdentifier [1] */
             /* FIXME: we are monitoring 2 properties! How to encode? */
             encode_context_enumerated(buffer, 1, value.monitoredProperty.propertyIdentifier);
@@ -2328,8 +2328,9 @@ namespace System.IO.BACnet.Serialize
             len += decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValueType);
             if (tagNumber != 0)
                 return -1;
-            len += decode_object_id(buffer, offset + len, out value.monitoredObjectIdentifier.type,
-                out value.monitoredObjectIdentifier.instance);
+            len += decode_object_id(buffer, offset + len, out BacnetObjectTypes type, out var instance);
+            value.monitoredObjectIdentifier = new BacnetObjectId(type, instance);
+
             len += decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValueType);
             if (tagNumber != 1)
                 return -1;

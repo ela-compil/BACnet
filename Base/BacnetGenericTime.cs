@@ -6,7 +6,7 @@ namespace System.IO.BACnet
         public DateTime Time;
         public ushort Sequence;
 
-        public BacnetGenericTime(DateTime time, BacnetTimestampTags tag, ushort sequence = 0)
+        public BacnetGenericTime(DateTime time, BacnetTimestampTags tag = BacnetTimestampTags.TIME_STAMP_NONE, ushort sequence = 0)
         {
             Time = time;
             Tag = tag;

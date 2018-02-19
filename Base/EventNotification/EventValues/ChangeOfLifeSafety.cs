@@ -1,14 +1,10 @@
-namespace System.IO.BACnet.EventNotification
+namespace System.IO.BACnet.EventNotification.EventValues
 {
-    public class ChangeOfLifeSafety : StateTransition
+    public class ChangeOfLifeSafety : EventValuesBase
     {
         public BacnetLifeSafetyStates NewState;
         public BacnetLifeSafetyModes NewMode;
         public BacnetBitString StatusFlags;
         public BacnetLifeSafetyOperations OperationExpected;
-
-        public ChangeOfLifeSafety(StateTransition transition) : base(transition)
-        {
-        }
     }
 }
