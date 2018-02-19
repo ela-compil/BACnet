@@ -17,15 +17,17 @@ namespace System.IO.BACnet
     {
         private int _retries;
         private byte _invokeId;
-        private byte _lastSequenceNumber;
-
-        /// <summary>
-        /// only used when 'DefaultSegmentationHandling' = true
-        /// </summary>
-        private readonly LinkedList<byte[]> _segments = new LinkedList<byte[]>();
 
         private readonly LastSegmentAck _lastSegmentAck = new LastSegmentAck();
         private uint _writepriority;
+
+        /// <summary>
+        /// Dictionary of List of Tuples with sequence-number and byte[] per invoke-id
+        /// TODO: invoke-id should be PER (remote) DEVICE!
+        /// </summary>
+        private Dictionary<byte, List<Tuple<byte, byte[]>>> _segmentsPerInvokeId = new Dictionary<byte, List<Tuple<byte, byte[]>>>();
+        private Dictionary<byte, object> _locksPerInvokeId = new Dictionary<byte, object>();
+        private Dictionary<byte, byte> _expectedSegmentsPerInvokeId = new Dictionary<byte, byte>();
 
         public const int DEFAULT_UDP_PORT = 0xBAC0;
         public static readonly TimeSpan DEFAULT_TIMEOUT = TimeSpan.FromSeconds(1);
@@ -224,7 +226,7 @@ namespace System.IO.BACnet
                 }
                 else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_WRITE_PROPERTY && OnWritePropertyRequest != null)
                 {
-                    if (Services.DecodeWriteProperty(buffer, offset, length, out var objectId, out var value) >= 0)
+                    if (Services.DecodeWriteProperty(address, buffer, offset, length, out var objectId, out var value) >= 0)
                         OnWritePropertyRequest(this, address, invokeId, objectId, value, maxSegments);
                     else
                     {
@@ -245,7 +247,7 @@ namespace System.IO.BACnet
                 }
                 else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_WRITE_PROP_MULTIPLE && OnWritePropertyMultipleRequest != null)
                 {
-                    if (Services.DecodeWritePropertyMultiple(buffer, offset, length, out var objectId, out var values) >= 0)
+                    if (Services.DecodeWritePropertyMultiple(address, buffer, offset, length, out var objectId, out var values) >= 0)
                         OnWritePropertyMultipleRequest(this, address, invokeId, objectId, values, maxSegments);
                     else
                     {
@@ -255,7 +257,7 @@ namespace System.IO.BACnet
                 }
                 else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_COV_NOTIFICATION && OnCOVNotification != null)
                 {
-                    if (Services.DecodeCOVNotifyUnconfirmed(buffer, offset, length, out var subscriberProcessIdentifier, out var initiatingDeviceIdentifier, out var monitoredObjectIdentifier, out var timeRemaining, out var values) >= 0)
+                    if (Services.DecodeCOVNotifyUnconfirmed(address, buffer, offset, length, out var subscriberProcessIdentifier, out var initiatingDeviceIdentifier, out var monitoredObjectIdentifier, out var timeRemaining, out var values) >= 0)
                         OnCOVNotification(this, address, invokeId, subscriberProcessIdentifier, initiatingDeviceIdentifier, monitoredObjectIdentifier, timeRemaining, true, values, maxSegments);
                     else
                     {
@@ -347,7 +349,7 @@ namespace System.IO.BACnet
                 }
                 else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_CREATE_OBJECT && OnCreateObjectRequest != null)
                 {
-                    if (Services.DecodeCreateObject(buffer, offset, length, out var objectId, out var values) >= 0)
+                    if (Services.DecodeCreateObject(address, buffer, offset, length, out var objectId, out var values) >= 0)
                         OnCreateObjectRequest(this, address, invokeId, objectId, values, maxSegments);
                     else
                     {
@@ -423,7 +425,7 @@ namespace System.IO.BACnet
                 }
                 else if (service == BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_COV_NOTIFICATION && OnCOVNotification != null)
                 {
-                    if (Services.DecodeCOVNotifyUnconfirmed(buffer, offset, length, out var subscriberProcessIdentifier, out var initiatingDeviceIdentifier, out var monitoredObjectIdentifier, out var timeRemaining, out var values) >= 0)
+                    if (Services.DecodeCOVNotifyUnconfirmed(address, buffer, offset, length, out var subscriberProcessIdentifier, out var initiatingDeviceIdentifier, out var monitoredObjectIdentifier, out var timeRemaining, out var values) >= 0)
                         OnCOVNotification(this, address, 0, subscriberProcessIdentifier, initiatingDeviceIdentifier, monitoredObjectIdentifier, timeRemaining, false, values, BacnetMaxSegments.MAX_SEG0);
                     else
                         Log.Warn("Couldn't decode COVNotifyUnconfirmed");
@@ -442,7 +444,7 @@ namespace System.IO.BACnet
                     else
                         Log.Warn("Couldn't decode TimeSynchronize");
                 }
-                else if (service == BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_EVENT_NOTIFICATION && OnEventNotify!=null) // F. Chaxel
+                else if (service == BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_EVENT_NOTIFICATION && OnEventNotify != null) // F. Chaxel
                 {
                     if (Services.DecodeEventNotifyData(buffer, offset, length, out var eventData) >= 0)
                         OnEventNotify(this, address, 0, eventData, false);
@@ -560,34 +562,40 @@ namespace System.IO.BACnet
             }
         }
 
-        public delegate void SegmentHandler(BacnetClient sender, BacnetAddress address, BacnetPduTypes type, BacnetConfirmedServices service, byte invokeId, BacnetMaxSegments maxSegments, BacnetMaxAdpu maxAdpu, byte sequenceNumber, bool first, bool moreFollows, byte[] buffer, int offset, int length);
+        public delegate void SegmentHandler(BacnetClient sender, BacnetAddress address, BacnetPduTypes type, BacnetConfirmedServices service, byte invokeId, BacnetMaxSegments maxSegments, BacnetMaxAdpu maxAdpu, byte sequenceNumber, byte[] buffer, int offset, int length);
         public event SegmentHandler OnSegment;
 
         private void ProcessSegment(BacnetAddress address, BacnetPduTypes type, BacnetConfirmedServices service, byte invokeId, BacnetMaxSegments maxSegments, BacnetMaxAdpu maxAdpu, bool server, byte sequenceNumber, byte proposedWindowNumber, byte[] buffer, int offset, int length)
         {
-            var first = false;
-
-            if (sequenceNumber == 0 && _lastSequenceNumber == 0)
+            if (!_locksPerInvokeId.TryGetValue(invokeId, out var lockObj))
             {
-                first = true;
-            }
-            else
-            {
-                //send negative ack
-                if (sequenceNumber != _lastSequenceNumber + 1)
-                {
-                    SegmentAckResponse(address, true, server, invokeId, _lastSequenceNumber, proposedWindowNumber);
-                    Log.Debug("Segment sequence out of order");
-                    return;
-                }
+                lockObj = new object();
+                _locksPerInvokeId[invokeId] = lockObj;
             }
 
-            _lastSequenceNumber = sequenceNumber;
+            lock (lockObj)
+            {
+                ProcessSegmentLocked(address, type, service, invokeId, maxSegments, maxAdpu, server, sequenceNumber,
+                    proposedWindowNumber, buffer, offset, length);
+            }
+        }
+
+        private void ProcessSegmentLocked(BacnetAddress address, BacnetPduTypes type, BacnetConfirmedServices service,
+            byte invokeId, BacnetMaxSegments maxSegments, BacnetMaxAdpu maxAdpu, bool server, byte sequenceNumber,
+            byte proposedWindowNumber, byte[] buffer, int offset, int length)
+        {
+            Log.Trace($@"Processing Segment #{sequenceNumber} of invoke-id #{invokeId}");
+
+            if (!_segmentsPerInvokeId.ContainsKey(invokeId))
+                _segmentsPerInvokeId[invokeId] = new List<Tuple<byte, byte[]>>();
+
+            if (!_expectedSegmentsPerInvokeId.ContainsKey(invokeId))
+                _expectedSegmentsPerInvokeId[invokeId] = byte.MaxValue;
 
             var moreFollows = (type & BacnetPduTypes.MORE_FOLLOWS) == BacnetPduTypes.MORE_FOLLOWS;
 
             if (!moreFollows)
-                _lastSequenceNumber = 0;  //reset last sequenceNumber
+                _expectedSegmentsPerInvokeId[invokeId] = (byte)(sequenceNumber + 1);
 
             //send ACK
             if (sequenceNumber % proposedWindowNumber == 0 || !moreFollows)
@@ -599,34 +607,23 @@ namespace System.IO.BACnet
             }
 
             //Send on
-            OnSegment?.Invoke(this, address, type, service, invokeId, maxSegments, maxAdpu, sequenceNumber, first, moreFollows, buffer, offset, length);
+            OnSegment?.Invoke(this, address, type, service, invokeId, maxSegments, maxAdpu, sequenceNumber, buffer, offset, length);
 
             //default segment assembly. We run this seperately from the above handler, to make sure that it comes after!
             if (DefaultSegmentationHandling)
-                PerformDefaultSegmentHandling(address, type, service, invokeId, maxSegments, maxAdpu, first, moreFollows, buffer, offset, length);
-        }
-
-        private byte[] AssembleSegments()
-        {
-            return _segments.Aggregate(new byte[0], (result, next) =>
-            {
-                var offset = result.Length;
-                Array.Resize(ref result, result.Length + next.Length);
-                Array.Copy(next, 0, result, offset, next.Length);
-                return result;
-            });
+                PerformDefaultSegmentHandling(address, type, service, invokeId, maxSegments, maxAdpu, sequenceNumber, buffer, offset, length);
         }
 
         /// <summary>
         /// This is a simple handling that stores all segments in memory and assembles them when done
         /// </summary>
-        private void PerformDefaultSegmentHandling(BacnetAddress address, BacnetPduTypes type, BacnetConfirmedServices service, byte invokeId, BacnetMaxSegments maxSegments, BacnetMaxAdpu maxAdpu, bool first, bool moreFollows, byte[] buffer, int offset, int length)
+        private void PerformDefaultSegmentHandling(BacnetAddress address, BacnetPduTypes type, BacnetConfirmedServices service, byte invokeId, BacnetMaxSegments maxSegments, BacnetMaxAdpu maxAdpu, byte sequenceNumber, byte[] buffer, int offset, int length)
         {
-            if (first)
-            {
-                //clear any leftover segments
-                _segments.Clear();
+            var segments = _segmentsPerInvokeId[invokeId];
+            var moreFollows = segments.Count < _expectedSegmentsPerInvokeId[invokeId];
 
+            if (sequenceNumber == 0)
+            {
                 //copy buffer + encode new adpu header
                 type &= ~BacnetPduTypes.SEGMENTED_MESSAGE;
                 var confirmedServiceRequest = (type & BacnetPduTypes.PDU_TYPE_MASK) == BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST;
@@ -641,12 +638,12 @@ namespace System.IO.BACnet
                 else
                     APDU.EncodeComplexAck(encodedBuffer, type, service, invokeId);
 
-                _segments.AddLast(copy); // doesn't include BVLC or NPDU
+                segments.Add(Tuple.Create(sequenceNumber, copy)); // doesn't include BVLC or NPDU
             }
             else
             {
                 //copy only content part
-                _segments.AddLast(buffer.Skip(offset).Take(length).ToArray());
+                segments.Add(Tuple.Create(sequenceNumber, buffer.Skip(offset).Take(length).ToArray()));
             }
 
             //process when finished
@@ -654,8 +651,9 @@ namespace System.IO.BACnet
                 return;
 
             //assemble whole part
-            var apduBuffer = AssembleSegments();
-            _segments.Clear();
+            var apduBuffer = segments.OrderBy(s => s.Item1).SelectMany(s => s.Item2).ToArray();
+            segments.Clear();
+            _expectedSegmentsPerInvokeId[invokeId] = byte.MaxValue;
 
             //process
             ProcessApdu(address, type, apduBuffer, 0, apduBuffer.Length);
@@ -1175,7 +1173,7 @@ namespace System.IO.BACnet
             {
                  return request.GetResult(Timeout, Retries, r =>
                 {
-                    var byteCount = Services.DecodeReadPropertyAcknowledge(r.Result, 0, r.Result.Length,
+                    var byteCount = Services.DecodeReadPropertyAcknowledge(r.Address, r.Result, 0, r.Result.Length,
                         out _, out _, out var valueList);
 
                     if (byteCount < 0)
@@ -1281,8 +1279,9 @@ namespace System.IO.BACnet
             {
                 return request.GetResult(Timeout, Retries, r =>
                 {
-                    var byteCount = Services.DecodeReadPropertyMultipleAcknowledge(
-                        r.Result, 0, r.Result.Length, out var values);
+                    var byteCount =
+                        Services.DecodeReadPropertyMultipleAcknowledge(
+                            r.Address, r.Result, 0, r.Result.Length, out var values);
 
                     if (byteCount < 0)
                         throw new Exception("Failed to decode ReadPropertyMultipleAcknowledge");

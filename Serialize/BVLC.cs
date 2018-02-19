@@ -375,7 +375,7 @@ namespace System.IO.BACnet.Serialize
                             var mask = new byte[4];
                             Array.Copy(buffer, 10 + i * 10, mask, 0, 4);
 
-                            var entry = new Tuple<IPEndPoint, IPAddress>(new IPEndPoint(new IPAddress(add), port), new IPAddress(mask));
+                            var entry = Tuple.Create(new IPEndPoint(new IPAddress(add), port), new IPAddress(mask));
                             entries.Add(entry);
                         }
 
@@ -406,7 +406,7 @@ namespace System.IO.BACnet.Serialize
                             Array.Reverse(buffer, 12 + i * 10, 2);
                             var remainTtl = BitConverter.ToUInt16(buffer, 12 + i * 10);
 
-                            var entry = new Tuple<IPEndPoint, ushort, ushort>(new IPEndPoint(new IPAddress(add), port), ttl, remainTtl);
+                            var entry = Tuple.Create(new IPEndPoint(new IPAddress(add), port), ttl, remainTtl);
                             entries.Add(entry);
                         }
 

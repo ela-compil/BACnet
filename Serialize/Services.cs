@@ -1667,7 +1667,7 @@ namespace System.IO.BACnet.Serialize
             ASN1.encode_closing_tag(buffer, 3);
         }
 
-        public static int DecodeReadPropertyAcknowledge(byte[] buffer, int offset, int apduLen, out BacnetObjectId objectId, out BacnetPropertyReference property, out IList<BacnetValue> valueList)
+        public static int DecodeReadPropertyAcknowledge(BacnetAddress address, byte[] buffer, int offset, int apduLen, out BacnetObjectId objectId, out BacnetPropertyReference property, out IList<BacnetValue> valueList)
         {
             objectId = new BacnetObjectId();
             property = new BacnetPropertyReference();
@@ -1702,7 +1702,7 @@ namespace System.IO.BACnet.Serialize
 
                 while (apduLen - len > 1)
                 {
-                    tagLen = ASN1.bacapp_decode_application_data(buffer, offset + len, apduLen + offset, objectId.type, (BacnetPropertyIds)property.propertyIdentifier, out var value);
+                    tagLen = ASN1.bacapp_decode_application_data(address, buffer, offset + len, apduLen + offset, objectId.type, (BacnetPropertyIds)property.propertyIdentifier, out var value);
                     if (tagLen < 0) return -1;
                     len += tagLen;
                     valueList.Add(value);
@@ -1754,7 +1754,7 @@ namespace System.IO.BACnet.Serialize
                 ASN1.encode_read_access_result(buffer, value);
         }
 
-        public static int DecodeReadPropertyMultipleAcknowledge(byte[] buffer, int offset, int apduLen, out IList<BacnetReadAccessResult> values)
+        public static int DecodeReadPropertyMultipleAcknowledge(BacnetAddress address, byte[] buffer, int offset, int apduLen, out IList<BacnetReadAccessResult> values)
         {
             var len = 0;
 
@@ -1762,7 +1762,7 @@ namespace System.IO.BACnet.Serialize
 
             while (apduLen - len > 0)
             {
-                var tmp = ASN1.decode_read_access_result(buffer, offset + len, apduLen - len, out var value);
+                var tmp = ASN1.decode_read_access_result(address, buffer, offset + len, apduLen - len, out var value);
                 if (tmp < 0)
                 {
                     values = null;
@@ -1802,7 +1802,7 @@ namespace System.IO.BACnet.Serialize
             }
         }
 
-        public static int DecodeCOVNotifyUnconfirmed(byte[] buffer, int offset, int apduLen, out uint subscriberProcessIdentifier, out BacnetObjectId initiatingDeviceIdentifier, out BacnetObjectId monitoredObjectIdentifier, out uint timeRemaining, out ICollection<BacnetPropertyValue> values)
+        public static int DecodeCOVNotifyUnconfirmed(BacnetAddress address, byte[] buffer, int offset, int apduLen, out uint subscriberProcessIdentifier, out BacnetObjectId initiatingDeviceIdentifier, out BacnetObjectId monitoredObjectIdentifier, out uint timeRemaining, out ICollection<BacnetPropertyValue> values)
         {
             var len = 0;
             uint lenValue;
@@ -1887,7 +1887,7 @@ namespace System.IO.BACnet.Serialize
                 var bValues = new List<BacnetValue>();
                 while (!ASN1.decode_is_closing_tag_number(buffer, offset + len, 2))
                 {
-                    var tmp = ASN1.bacapp_decode_application_data(buffer, offset + len, apduLen + offset, monitoredObjectIdentifier.type, (BacnetPropertyIds)newEntry.property.propertyIdentifier, out var bValue);
+                    var tmp = ASN1.bacapp_decode_application_data(address, buffer, offset + len, apduLen + offset, monitoredObjectIdentifier.type, (BacnetPropertyIds)newEntry.property.propertyIdentifier, out var bValue);
                     if (tmp < 0) return -1;
                     len += tmp;
                     bValues.Add(bValue);
@@ -1913,7 +1913,7 @@ namespace System.IO.BACnet.Serialize
             return len;
         }
 
-        public static int DecodeWriteProperty(byte[] buffer, int offset, int apduLen, out BacnetObjectId objectId, out BacnetPropertyValue value)
+        public static int DecodeWriteProperty(BacnetAddress address, byte[] buffer, int offset, int apduLen, out BacnetObjectId objectId, out BacnetPropertyValue value)
         {
             var len = 0;
 
@@ -1949,7 +1949,7 @@ namespace System.IO.BACnet.Serialize
             var valueList = new List<BacnetValue>();
             while (apduLen - len > 1 && !ASN1.decode_is_closing_tag_number(buffer, offset + len, 3))
             {
-                var l = ASN1.bacapp_decode_application_data(buffer, offset + len, apduLen + offset, objectId.type, (BacnetPropertyIds)value.property.propertyIdentifier, out var bValue);
+                var l = ASN1.bacapp_decode_application_data(address, buffer, offset + len, apduLen + offset, objectId.type, (BacnetPropertyIds)value.property.propertyIdentifier, out var bValue);
                 if (l <= 0) return -1;
                 len += l;
                 valueList.Add(bValue);
@@ -2018,7 +2018,7 @@ namespace System.IO.BACnet.Serialize
         
         // By C. Gunter
         // quite the same as DecodeWritePropertyMultiple
-        public static int DecodeCreateObject(byte[] buffer, int offset, int apduLen, out BacnetObjectId objectId, out ICollection<BacnetPropertyValue> valuesRefs)
+        public static int DecodeCreateObject(BacnetAddress address, byte[] buffer, int offset, int apduLen, out BacnetObjectId objectId, out ICollection<BacnetPropertyValue> valuesRefs)
         {
             var len = 0;
 
@@ -2083,7 +2083,7 @@ namespace System.IO.BACnet.Serialize
                     var values = new List<BacnetValue>();
                     while (!ASN1.decode_is_closing_tag(buffer, offset + len))
                     {
-                        var l = ASN1.bacapp_decode_application_data(buffer, offset + len, apduLen + offset, objectId.type, (BacnetPropertyIds)propertyId, out var value);
+                        var l = ASN1.bacapp_decode_application_data(address, buffer, offset + len, apduLen + offset, objectId.type, (BacnetPropertyIds)propertyId, out var value);
                         if (l <= 0) return -1;
                         len += l;
                         values.Add(value);
@@ -2129,7 +2129,7 @@ namespace System.IO.BACnet.Serialize
             ASN1.encode_application_object_id(buffer, objectId.type, objectId.instance);
         }
 
-        public static int DecodeWritePropertyMultiple(byte[] buffer, int offset, int apduLen, out BacnetObjectId objectId, out ICollection<BacnetPropertyValue> valuesRefs)
+        public static int DecodeWritePropertyMultiple(BacnetAddress address, byte[] buffer, int offset, int apduLen, out BacnetObjectId objectId, out ICollection<BacnetPropertyValue> valuesRefs)
         {
             var len = 0;
             objectId = new BacnetObjectId();
@@ -2184,7 +2184,7 @@ namespace System.IO.BACnet.Serialize
                     var values = new List<BacnetValue>();
                     while (!ASN1.decode_is_closing_tag(buffer, offset + len))
                     {
-                        var l = ASN1.bacapp_decode_application_data(buffer, offset + len, apduLen + offset, objectId.type, (BacnetPropertyIds)propertyId, out var value);
+                        var l = ASN1.bacapp_decode_application_data(address, buffer, offset + len, apduLen + offset, objectId.type, (BacnetPropertyIds)propertyId, out var value);
                         if (l <= 0) return -1;
                         len += l;
                         values.Add(value);
