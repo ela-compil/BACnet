@@ -49,7 +49,7 @@ namespace System.IO.BACnet
 
         public BVLC Bvlc { get; private set; }
         public int SharedPort { get; }
-        public int ExclusivePort => ((IPEndPoint)_exclusiveConn.Client.LocalEndPoint).Port;
+        public int ExclusivePort { get; }
 
         // Give 0.0.0.0:xxxx if the socket is open with System.Net.IPAddress.Any
         // Today only used by _GetBroadcastAddress method & the bvlc layer class in BBMD mode
@@ -68,6 +68,13 @@ namespace System.IO.BACnet
             _exclusivePort = useExclusivePort;
             _dontFragment = dontFragment;
             _localEndpoint = localEndpointIp;
+        }
+
+        public BacnetIpUdpProtocolTransport(int sharedPort, int exclusivePort, bool dontFragment = false,
+            int maxPayload = 1472, string localEndpointIp = "")
+            : this(sharedPort, false, dontFragment, maxPayload, localEndpointIp)
+        {
+            ExclusivePort = exclusivePort;
         }
 
         public override bool Equals(object obj)
@@ -108,8 +115,8 @@ namespace System.IO.BACnet
                 /* So this is how we'll present our selves to the world */
                 if (_exclusiveConn == null)
                 {
-                    var ep = new IPEndPoint(IPAddress.Any, 0);
-                    if (!string.IsNullOrEmpty(_localEndpoint)) ep = new IPEndPoint(IPAddress.Parse(_localEndpoint), 0);
+                    var ep = new IPEndPoint(IPAddress.Any, ExclusivePort);
+                    if (!string.IsNullOrEmpty(_localEndpoint)) ep = new IPEndPoint(IPAddress.Parse(_localEndpoint), ExclusivePort);
                     _exclusiveConn = new UdpClient(ep);
 
                     // Gets the Endpoint : the assigned Udp port number in fact
@@ -180,8 +187,29 @@ namespace System.IO.BACnet
 
             try
             {
-                var ep = new IPEndPoint(IPAddress.Any, 0);
-                var receiveBuffer = connection.EndReceive(asyncResult, ref ep);
+                IPEndPoint ep = null;
+                byte[] receiveBuffer;
+
+                try
+                {
+                    receiveBuffer = connection.EndReceive(asyncResult, ref ep);
+                }
+                finally
+                {
+                    if (connection.Client != null && !_disposing)
+                    {
+                        try
+                        {
+                            // BeginReceive ASAP to enable parallel processing (e.g. query additional data while processing a notification)
+                            connection.BeginReceive(OnReceiveData, connection);
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Error($"Failed to restart data receive. {ex}");
+                        }
+                    }
+                }
+
                 var receiveBufferHex = ConvertToHex(receiveBuffer);
                 var receivedLength = receiveBuffer.Length;
 
@@ -252,20 +280,6 @@ namespace System.IO.BACnet
 
                 Log.Error("Exception in OnRecieveData", e);
             }
-            finally
-            {
-                if (connection.Client != null && !_disposing)
-                {
-                    try
-                    {
-                        connection.BeginReceive(OnReceiveData, connection);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Error("Failed to restart data receive", ex);
-                    }
-                }
-            }
         }
 
         public bool SendRegisterAsForeignDevice(IPEndPoint bbmd, short ttl)
@@ -332,20 +346,20 @@ namespace System.IO.BACnet
             }
         }
 
-        public static void Convert(IPEndPoint ep, out BacnetAddress addr)
+        public static void Convert(IPEndPoint ep, out BacnetAddress address)
         {
             var tmp1 = ep.Address.GetAddressBytes();
             var tmp2 = BitConverter.GetBytes((ushort)ep.Port);
             Array.Reverse(tmp2);
             Array.Resize(ref tmp1, tmp1.Length + tmp2.Length);
             Array.Copy(tmp2, 0, tmp1, tmp1.Length - tmp2.Length, tmp2.Length);
-            addr = new BacnetAddress(BacnetAddressTypes.IP, 0, tmp1);
+            address = new BacnetAddress(BacnetAddressTypes.IP, 0, tmp1);
         }
 
-        public static void Convert(BacnetAddress addr, out IPEndPoint ep)
+        public static void Convert(BacnetAddress address, out IPEndPoint ep)
         {
-            long ipAddress = BitConverter.ToUInt32(addr.adr, 0);
-            var port = (ushort)((addr.adr[4] << 8) | (addr.adr[5] << 0));
+            long ipAddress = BitConverter.ToUInt32(address.adr, 0);
+            var port = (ushort)((address.adr[4] << 8) | (address.adr[5] << 0));
             ep = new IPEndPoint(ipAddress, port);
         }
 

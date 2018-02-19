@@ -5,7 +5,6 @@ namespace System.IO.BACnet
     public class BacnetAsyncResult : IAsyncResult, IDisposable
     {
         private BacnetClient _comm;
-        private readonly BacnetAddress _addr;
         private readonly byte _waitInvokeId;
         private Exception _error;
         private readonly byte[] _transmitBuffer;
@@ -20,6 +19,7 @@ namespace System.IO.BACnet
         public bool CompletedSynchronously { get; private set; }
         public WaitHandle AsyncWaitHandle => _waitHandle;
         public bool IsCompleted => _waitHandle.WaitOne(0);
+        public BacnetAddress Address { get; }
 
         public Exception Error
         {
@@ -35,7 +35,7 @@ namespace System.IO.BACnet
         public BacnetAsyncResult(BacnetClient comm, BacnetAddress adr, byte invokeId, byte[] transmitBuffer, int transmitLength, bool waitForTransmit, int transmitTimeout)
         {
             _transmitTimeout = transmitTimeout;
-            _addr = adr;
+            Address = adr;
             _waitForTransmit = waitForTransmit;
             _transmitBuffer = transmitBuffer;
             _transmitLength = transmitLength;
@@ -54,7 +54,7 @@ namespace System.IO.BACnet
         {
             try
             {
-                if (_comm.Transport.Send(_transmitBuffer, _comm.Transport.HeaderLength, _transmitLength, _addr, _waitForTransmit, _transmitTimeout) < 0)
+                if (_comm.Transport.Send(_transmitBuffer, _comm.Transport.HeaderLength, _transmitLength, Address, _waitForTransmit, _transmitTimeout) < 0)
                 {
                     Error = new IOException("Write Timeout");
                 }
@@ -65,7 +65,7 @@ namespace System.IO.BACnet
             }
         }
 
-        private void OnSegment(BacnetClient sender, BacnetAddress adr, BacnetPduTypes type, BacnetConfirmedServices service, byte invokeId, BacnetMaxSegments maxSegments, BacnetMaxAdpu maxAdpu, byte sequenceNumber, bool first, bool moreFollows, byte[] buffer, int offset, int length)
+        private void OnSegment(BacnetClient sender, BacnetAddress adr, BacnetPduTypes type, BacnetConfirmedServices service, byte invokeId, BacnetMaxSegments maxSegments, BacnetMaxAdpu maxAdpu, byte sequenceNumber, byte[] buffer, int offset, int length)
         {
             if (invokeId != _waitInvokeId)
                 return;
