@@ -92,7 +92,7 @@
     <Compile Include="Base\BacnetPropertyIds.cs" />
     <Compile Include="Base\BacnetPropertyReference.cs" />
     <Compile Include="Base\BacnetPropertyValue.cs" />
-    <Compile Include="Base\BacnetPropetyState.cs" />
+    <Compile Include="Base\BacnetPropertyState.cs" />
     <Compile Include="Base\BacnetPtpDisconnectReasons.cs" />
     <Compile Include="Base\BacnetPtpFrameTypes.cs" />
     <Compile Include="Base\BacnetReadAccessResult.cs" />

@@ -538,63 +538,63 @@ namespace System.IO.BACnet.Serialize
             encode_closing_tag(buffer, tagNumber);
         }
 
-        public static void bacapp_encode_property_state(EncodeBuffer buffer, BacnetPropetyState value)
+        public static void bacapp_encode_property_state(EncodeBuffer buffer, BacnetPropertyState value)
         {
             switch (value.tag)
             {
-                case BacnetPropetyState.BacnetPropertyStateTypes.BOOLEAN_VALUE:
+                case BacnetPropertyState.BacnetPropertyStateTypes.BOOLEAN_VALUE:
                     encode_context_boolean(buffer, 0, value.state.boolean_value);
                     break;
 
-                case BacnetPropetyState.BacnetPropertyStateTypes.BINARY_VALUE:
+                case BacnetPropertyState.BacnetPropertyStateTypes.BINARY_VALUE:
                     encode_context_enumerated(buffer, 1, (uint)value.state.binaryValue);
                     break;
 
-                case BacnetPropetyState.BacnetPropertyStateTypes.EVENT_TYPE:
+                case BacnetPropertyState.BacnetPropertyStateTypes.EVENT_TYPE:
                     encode_context_enumerated(buffer, 2, (uint)value.state.eventType);
                     break;
 
-                case BacnetPropetyState.BacnetPropertyStateTypes.POLARITY:
+                case BacnetPropertyState.BacnetPropertyStateTypes.POLARITY:
                     encode_context_enumerated(buffer, 3, (uint)value.state.polarity);
                     break;
 
-                case BacnetPropetyState.BacnetPropertyStateTypes.PROGRAM_CHANGE:
+                case BacnetPropertyState.BacnetPropertyStateTypes.PROGRAM_CHANGE:
                     encode_context_enumerated(buffer, 4, (uint)value.state.programChange);
                     break;
 
-                case BacnetPropetyState.BacnetPropertyStateTypes.PROGRAM_STATE:
+                case BacnetPropertyState.BacnetPropertyStateTypes.PROGRAM_STATE:
                     encode_context_enumerated(buffer, 5, (uint)value.state.programState);
                     break;
 
-                case BacnetPropetyState.BacnetPropertyStateTypes.REASON_FOR_HALT:
+                case BacnetPropertyState.BacnetPropertyStateTypes.REASON_FOR_HALT:
                     encode_context_enumerated(buffer, 6, (uint)value.state.programError);
                     break;
 
-                case BacnetPropetyState.BacnetPropertyStateTypes.RELIABILITY:
+                case BacnetPropertyState.BacnetPropertyStateTypes.RELIABILITY:
                     encode_context_enumerated(buffer, 7, (uint)value.state.reliability);
                     break;
 
-                case BacnetPropetyState.BacnetPropertyStateTypes.STATE:
+                case BacnetPropertyState.BacnetPropertyStateTypes.STATE:
                     encode_context_enumerated(buffer, 8, (uint)value.state.state);
                     break;
 
-                case BacnetPropetyState.BacnetPropertyStateTypes.SYSTEM_STATUS:
+                case BacnetPropertyState.BacnetPropertyStateTypes.SYSTEM_STATUS:
                     encode_context_enumerated(buffer, 9, (uint)value.state.systemStatus);
                     break;
 
-                case BacnetPropetyState.BacnetPropertyStateTypes.UNITS:
+                case BacnetPropertyState.BacnetPropertyStateTypes.UNITS:
                     encode_context_enumerated(buffer, 10, (uint)value.state.units);
                     break;
 
-                case BacnetPropetyState.BacnetPropertyStateTypes.UNSIGNED_VALUE:
+                case BacnetPropertyState.BacnetPropertyStateTypes.UNSIGNED_VALUE:
                     encode_context_unsigned(buffer, 11, value.state.unsignedValue);
                     break;
 
-                case BacnetPropetyState.BacnetPropertyStateTypes.LIFE_SAFETY_MODE:
+                case BacnetPropertyState.BacnetPropertyStateTypes.LIFE_SAFETY_MODE:
                     encode_context_enumerated(buffer, 12, (uint)value.state.lifeSafetyMode);
                     break;
 
-                case BacnetPropetyState.BacnetPropertyStateTypes.LIFE_SAFETY_STATE:
+                case BacnetPropertyState.BacnetPropertyStateTypes.LIFE_SAFETY_STATE:
                     encode_context_enumerated(buffer, 13, (uint)value.state.lifeSafetyState);
                     break;
 
@@ -2353,11 +2353,11 @@ namespace System.IO.BACnet.Serialize
             return len;
         }
 
-        public static int decode_context_property_state(byte[] buffer, int offset, byte tagNumber, out BacnetPropetyState value)
+        public static int decode_context_property_state(byte[] buffer, int offset, byte tagNumber, out BacnetPropertyState value)
         {
             if (!decode_is_opening_tag_number(buffer, offset, tagNumber))
             {
-                value = default(BacnetPropetyState);
+                value = default(BacnetPropertyState);
                 return -1;
             }
 
@@ -2373,9 +2373,9 @@ namespace System.IO.BACnet.Serialize
             return len + 1;
         }
 
-        public static int decode_property_state(byte[] buffer, int offset, out BacnetPropetyState value)
+        public static int decode_property_state(byte[] buffer, int offset, out BacnetPropertyState value)
         {
-            value = default(BacnetPropetyState);
+            value = default(BacnetPropertyState);
 
             var len = decode_tag_number_and_value(buffer, offset, out value.tag, out uint lenValueType);
             if (len == -1)
@@ -2384,29 +2384,29 @@ namespace System.IO.BACnet.Serialize
             var sectionLength = 0;
             switch (value.tag)
             {
-                case BacnetPropetyState.BacnetPropertyStateTypes.BOOLEAN_VALUE:
+                case BacnetPropertyState.BacnetPropertyStateTypes.BOOLEAN_VALUE:
                     value.state.boolean_value = lenValueType == 1;
                     break;
 
-                case BacnetPropetyState.BacnetPropertyStateTypes.BINARY_VALUE:
+                case BacnetPropertyState.BacnetPropertyStateTypes.BINARY_VALUE:
                     sectionLength = decode_enumerated(buffer, offset + len, lenValueType, out value.state.binaryValue);
                     if (sectionLength == -1)
                         return -1;
                     break;
 
-                case BacnetPropetyState.BacnetPropertyStateTypes.EVENT_TYPE:
+                case BacnetPropertyState.BacnetPropertyStateTypes.EVENT_TYPE:
                     sectionLength = decode_enumerated(buffer, offset + len, lenValueType, out value.state.eventType);
                     if (sectionLength == -1)
                         return -1;
                     break;
 
-                case BacnetPropetyState.BacnetPropertyStateTypes.STATE:
+                case BacnetPropertyState.BacnetPropertyStateTypes.STATE:
                     sectionLength = decode_enumerated(buffer, offset + len, lenValueType, out value.state.state);
                     if (sectionLength == -1)
                         return -1;
                     break;
 
-                case BacnetPropetyState.BacnetPropertyStateTypes.UNSIGNED_VALUE:
+                case BacnetPropertyState.BacnetPropertyStateTypes.UNSIGNED_VALUE:
                     sectionLength = decode_unsigned(buffer, offset + len, lenValueType, out value.state.unsignedValue);
                     if (sectionLength == -1)
                         return -1;

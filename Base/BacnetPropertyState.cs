@@ -2,7 +2,7 @@ using System.IO.BACnet.Base;
 
 namespace System.IO.BACnet
 {
-    public struct BacnetPropetyState
+    public struct BacnetPropertyState
     {
         public enum BacnetPropertyStateTypes
         {

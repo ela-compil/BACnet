@@ -28,7 +28,7 @@ namespace System.IO.BACnet
         /*
          ** EVENT_CHANGE_OF_STATE
          */
-        public BacnetPropetyState changeOfState_newState;
+        public BacnetPropertyState changeOfState_newState;
         public BacnetBitString changeOfState_statusFlags;
         /*
          ** EVENT_CHANGE_OF_VALUE
