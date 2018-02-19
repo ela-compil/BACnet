@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.IO.BACnet.EventNotification;
 using System.IO.BACnet.Serialize;
 using System.Linq;
 using System.Net;
@@ -168,7 +169,7 @@ namespace System.IO.BACnet
         public event AtomicReadFileRequestHandler OnAtomicReadFileRequest;
         public delegate void SubscribeCOVRequestHandler(BacnetClient sender, BacnetAddress address, byte invokeId, uint subscriberProcessIdentifier, BacnetObjectId monitoredObjectIdentifier, bool cancellationRequest, bool issueConfirmedNotifications, uint lifetime, BacnetMaxSegments maxSegments);
         public event SubscribeCOVRequestHandler OnSubscribeCOV;
-        public delegate void EventNotificationCallbackHandler(BacnetClient sender, BacnetAddress address, byte invokeId, BacnetEventNotificationData eventData, bool needConfirm);
+        public delegate void EventNotificationCallbackHandler(BacnetClient sender, BacnetAddress address, byte invokeId, EventNotificationData eventData, bool needConfirm);
         public event EventNotificationCallbackHandler OnEventNotify;
         public delegate void SubscribeCOVPropertyRequestHandler(BacnetClient sender, BacnetAddress address, byte invokeId, uint subscriberProcessIdentifier, BacnetObjectId monitoredObjectIdentifier, BacnetPropertyReference monitoredProperty, bool cancellationRequest, bool issueConfirmedNotifications, uint lifetime, float covIncrement, BacnetMaxSegments maxSegments);
         public event SubscribeCOVPropertyRequestHandler OnSubscribeCOVProperty;
@@ -927,9 +928,9 @@ namespace System.IO.BACnet
 
         }
 
-        public void SendUnconfirmedEventNotification(BacnetAddress address, BacnetEventNotificationData eventData)
+        public void SendUnconfirmedEventNotification(BacnetAddress address, StateTransition eventData)
         {
-            Log.Debug($"Sending Event Notification {eventData.eventType} {eventData.eventObjectIdentifier}");
+            Log.Debug($"Sending Event Notification {eventData.EventType} {eventData.EventObjectIdentifier}");
 
             var b = GetEncodeBuffer(Transport.HeaderLength);
             NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, address);

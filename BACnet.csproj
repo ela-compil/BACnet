@@ -75,7 +75,16 @@
     <Compile Include="Base\BacnetDateRange.cs" />
     <Compile Include="Base\BacnetDeviceObjectPropertyReference.cs" />
     <Compile Include="Base\BacnetError.cs" />
-    <Compile Include="Base\BacnetEventNotificationData.cs" />
+    <Compile Include="Base\EventNotification\ChangeOfLifeSafety.cs" />
+    <Compile Include="Base\EventNotification\UnsignedRange.cs" />
+    <Compile Include="Base\EventNotification\ChangeOfState.cs" />
+    <Compile Include="Base\EventNotification\OutOfRange.cs" />
+    <Compile Include="Base\EventNotification\FloatingLimit.cs" />
+    <Compile Include="Base\EventNotification\ChangeOfValue.cs" />
+    <Compile Include="Base\EventNotification\BufferReady.cs" />
+    <Compile Include="Base\EventNotification\ChangeOfBitString.cs" />
+    <Compile Include="Base\EventNotification\StateTransition.cs" />
+    <Compile Include="Base\EventNotification\EventNotificationData.cs" />
     <Compile Include="Base\BacnetGenericTime.cs" />
     <Compile Include="Base\BacnetGetEventInformationData.cs" />
     <Compile Include="Base\BacnetLogRecord.cs" />
