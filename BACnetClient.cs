@@ -646,7 +646,6 @@ namespace System.IO.BACnet
         private void PerformDefaultSegmentHandling(BacnetAddress adr, BacnetPduTypes type, BacnetConfirmedServices service, byte invokeId, BacnetMaxSegments maxSegments, BacnetMaxAdpu maxAdpu, byte sequenceNumber, byte[] buffer, int offset, int length)
         {
             var segments = _segmentsPerInvokeId[invokeId];
-            var moreFollows = segments.Count < _expectedSegmentsPerInvokeId[invokeId];
 
             if (sequenceNumber == 0)
             {
@@ -673,7 +672,7 @@ namespace System.IO.BACnet
             }
 
             //process when finished
-            if (moreFollows)
+            if (segments.Count < _expectedSegmentsPerInvokeId[invokeId])
                 return;
 
             //assemble whole part
