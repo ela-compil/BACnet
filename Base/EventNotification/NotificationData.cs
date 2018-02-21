@@ -1,3 +1,5 @@
+using System.IO.BACnet.Helpers;
+
 namespace System.IO.BACnet.EventNotification
 {
     public class NotificationData
@@ -15,9 +17,7 @@ namespace System.IO.BACnet.EventNotification
 
         public override string ToString()
         {
-            return $"InitiatingObject: {InitiatingObjectIdentifier}, EventObject: {EventObjectIdentifier}, "
-                 + $"NotifyType: {NotifyType}, TimeStamp: {TimeStamp}, "
-                 + $"ToState: {ToState}";
+            return string.Join(", ", this.PropertiesWithValues());
         }
     };
 }

@@ -21,6 +21,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -29,6 +30,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Common.Logging, Version=3.4.1.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
@@ -85,7 +87,7 @@
     <Compile Include="Base\EventNotification\EventValues\ChangeOfValue.cs" />
     <Compile Include="Base\EventNotification\EventValues\BufferReady.cs" />
     <Compile Include="Base\EventNotification\EventValues\ChangeOfBitString.cs" />
-    <Compile Include="Base\EventNotification\StateTransition.cs" />
+    <Compile Include="Base\EventNotification\NotificationDataExtended.cs" />
     <Compile Include="Base\EventNotification\NotificationData.cs" />
     <Compile Include="Base\BacnetGenericTime.cs" />
     <Compile Include="Base\BacnetGetEventInformationData.cs" />
@@ -137,6 +139,7 @@
     <Compile Include="Base\Enums\BacnetNotifyTypes.cs" />
     <Compile Include="Base\Enums\BacnetCOVTypes.cs" />
     <Compile Include="Helpers\BacnetValuesExtensions.cs" />
+    <Compile Include="Helpers\StringFormatterExtension.cs" />
     <Compile Include="Base\BacnetBvlcV6Functions.cs" />
     <Compile Include="Base\BacnetBvlcV6Results.cs" />
     <Compile Include="Transport\BacnetTransportBase.cs" />
