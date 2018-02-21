@@ -50,7 +50,7 @@ namespace System.IO.BACnet.Serialize
             apduLen += len;
             if (tagNumber != (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED)
                 return -1;
-            len = ASN1.decode_enumerated(buffer, offset + apduLen, lenValue, out decodedValue);
+            len = EnumUtils.DecodeEnumerated(buffer, offset + apduLen, lenValue, out decodedValue);
             apduLen += len;
             if (decodedValue > (uint)BacnetSegmentations.SEGMENTATION_NONE)
                 return -1;
@@ -718,7 +718,7 @@ namespace System.IO.BACnet.Serialize
             if (ASN1.decode_is_context_tag(buffer, offset + len, 0))
             {
                 len += ASN1.decode_tag_number_and_value(buffer, offset + len, out _, out lenValue);
-                len += ASN1.decode_enumerated(buffer, offset + len, lenValue, out monitoredProperty.propertyIdentifier);
+                len += EnumUtils.DecodeEnumerated(buffer, offset + len, lenValue, out monitoredProperty.propertyIdentifier);
             }
             else
                 return -1;
@@ -832,7 +832,7 @@ namespace System.IO.BACnet.Serialize
             if (ASN1.decode_is_context_tag(buffer, offset + len, 6))
             {
                 len += ASN1.decode_tag_number_and_value(buffer, offset + len, out _, out lenValue);
-                len += ASN1.decode_enumerated(buffer, offset + len, lenValue, out var eventType);
+                len += ASN1.decode_unsigned(buffer, offset + len, lenValue, out var eventType);
 
                 transition = new StateTransition(eventData)
                 {
@@ -855,7 +855,7 @@ namespace System.IO.BACnet.Serialize
             if (ASN1.decode_is_context_tag(buffer, offset + len, 8))
             {
                 len += ASN1.decode_tag_number_and_value(buffer, offset + len, out _, out lenValue);
-                len += ASN1.decode_enumerated(buffer, offset + len, lenValue, out var notifyType);
+                len += ASN1.decode_unsigned(buffer, offset + len, lenValue, out var notifyType);
                 eventData.NotifyType = (BacnetNotifyTypes) notifyType;
             }
             else
@@ -877,7 +877,7 @@ namespace System.IO.BACnet.Serialize
 
                     /* tag 10 - fromState */
                     len += ASN1.decode_tag_number_and_value(buffer, offset + len, out _, out lenValue);
-                    len += ASN1.decode_enumerated(buffer, offset + len, lenValue, out var fromstate);
+                    len += ASN1.decode_unsigned(buffer, offset + len, lenValue, out var fromstate);
                     transition.FromState = (BacnetEventStates) fromstate;
                     break;
             }
@@ -886,7 +886,7 @@ namespace System.IO.BACnet.Serialize
             if (ASN1.decode_is_context_tag(buffer, offset + len, 11))
             {
                 len += ASN1.decode_tag_number_and_value(buffer, offset + len, out _, out lenValue);
-                len += ASN1.decode_enumerated(buffer, offset + len, lenValue, out var toState);
+                len += ASN1.decode_unsigned(buffer, offset + len, lenValue, out var toState);
                 eventData.ToState = (BacnetEventStates) toState;
             }
             else
@@ -997,10 +997,10 @@ namespace System.IO.BACnet.Serialize
                     break;
 
                 case BacnetEventTypes.EVENT_CHANGE_OF_LIFE_SAFETY:
-                    len += ASN1.decode_context_enumerated(buffer, offset + len, 0, out BacnetLifeSafetyStates lifeSafetyNewState);
-                    len += ASN1.decode_context_enumerated(buffer, offset + len, 1, out BacnetLifeSafetyModes lifeSafetyNewMode);
+                    len += EnumUtils.DecodeContextEnumerated(buffer, offset + len, 0, out BacnetLifeSafetyStates lifeSafetyNewState);
+                    len += EnumUtils.DecodeContextEnumerated(buffer, offset + len, 1, out BacnetLifeSafetyModes lifeSafetyNewMode);
                     len += ASN1.decode_context_bitstring(buffer, offset + len, 2, out var lifeSafetyStatusFlags);
-                    len += ASN1.decode_context_enumerated(buffer, offset + len, 3, out BacnetLifeSafetyOperations operationExpected);
+                    len += EnumUtils.DecodeContextEnumerated(buffer, offset + len, 3, out BacnetLifeSafetyOperations operationExpected);
                     transition.EventValues = new ChangeOfLifeSafety()
                     {
                         NewState = lifeSafetyNewState,
@@ -1213,7 +1213,7 @@ namespace System.IO.BACnet.Serialize
                 value.objectIdentifier = new BacnetObjectId(type, instance);
 
                 len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValue);
-                len += ASN1.decode_enumerated(buffer, offset + len, lenValue, out value.eventState);
+                len += EnumUtils.DecodeEnumerated(buffer, offset + len, lenValue, out value.eventState);
                 len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValue);
                 len += ASN1.decode_bitstring(buffer, offset + len, lenValue, out value.acknowledgedTransitions);
 
@@ -1239,7 +1239,7 @@ namespace System.IO.BACnet.Serialize
                 len++;  // closing Tag 3
 
                     len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValue);
-                    len += ASN1.decode_enumerated(buffer, offset + len, lenValue, out value.notifyType);
+                    len += EnumUtils.DecodeEnumerated(buffer, offset + len, lenValue, out value.notifyType);
                     len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValue);
                     len += ASN1.decode_bitstring(buffer, offset + len, lenValue, out value.eventEnable);
 
@@ -1271,8 +1271,7 @@ namespace System.IO.BACnet.Serialize
                 len += ASN1.decode_object_id(buffer, offset + len, out BacnetObjectTypes type, out var instance);
                 value.objectIdentifier = new BacnetObjectId(type, instance);
                 len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValue);
-                len += ASN1.decode_enumerated(buffer, offset + len, lenValue, out var tmp);
-                value.alarmState = (BacnetEventStates)tmp;
+                len += EnumUtils.DecodeEnumerated(buffer, offset + len, lenValue, out value.alarmState);
                 len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValue);
                 len += ASN1.decode_bitstring(buffer, offset + len, lenValue, out value.acknowledgedTransitions);
 
@@ -1403,7 +1402,7 @@ namespace System.IO.BACnet.Serialize
             if (!ASN1.decode_is_context_tag(buffer, offset + len, 1))
                 return -1;
             len += ASN1.decode_tag_number_and_value(buffer, offset + len, out _, out lenValueType);
-            len += ASN1.decode_enumerated(buffer, offset + len, lenValueType, out enableDisable);
+            len += EnumUtils.DecodeEnumerated(buffer, offset + len, lenValueType, out enableDisable);
 
             /* Tag 2: password --optional-- */
             if (len < apduLen)
@@ -1440,7 +1439,7 @@ namespace System.IO.BACnet.Serialize
             if (!ASN1.decode_is_context_tag(buffer, offset + len, 0))
                 return -1;
             len += ASN1.decode_tag_number_and_value(buffer, offset + len, out _, out var lenValueType);
-            len += ASN1.decode_enumerated(buffer, offset + len, lenValueType, out state);
+            len += EnumUtils.DecodeEnumerated(buffer, offset + len, lenValueType, out state);
             /* Tag 1: password - optional */
             if (len < apduLen)
             {
@@ -1516,7 +1515,7 @@ namespace System.IO.BACnet.Serialize
                 ASN1.decode_tag_number_and_value(buffer, offset + len, out var tagNumber, out var lenValueType);
             if (tagNumber != 1)
                 return -1;
-            len += ASN1.decode_enumerated(buffer, offset + len, lenValueType, out property.propertyIdentifier);
+            len += EnumUtils.DecodeEnumerated(buffer, offset + len, lenValueType, out property.propertyIdentifier);
 
             /* Tag 2: Optional Array Index */
             if (len < apduLen && ASN1.decode_is_context_tag(buffer, offset + len, 0))
@@ -1614,7 +1613,7 @@ namespace System.IO.BACnet.Serialize
             len += ASN1.decode_tag_number_and_value(buffer, offset + len, out var tagNumber, out var lenValueType);
             if (tagNumber != 1)
                 return 0;
-            len += ASN1.decode_enumerated(buffer, offset + len, lenValueType, out _);
+            len += ASN1.decode_unsigned(buffer, offset + len, lenValueType, out _);
 
             /* Tag 2: Optional Array Index or Tag 3:  BACnet Result Flags */
             len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValueType);
@@ -1789,7 +1788,7 @@ namespace System.IO.BACnet.Serialize
             if (tagNumber != 1)
                 return -2;
 
-            len += ASN1.decode_enumerated(buffer, offset + len, lenValueType, out property.propertyIdentifier);
+            len += EnumUtils.DecodeEnumerated(buffer, offset + len, lenValueType, out property.propertyIdentifier);
 
             /* Tag 2: Optional Array Index */
             if (len < apduLen)
@@ -1849,7 +1848,7 @@ namespace System.IO.BACnet.Serialize
             len += ASN1.decode_tag_number_and_value(buffer, offset + len, out var tagNumber, out var lenValueType);
             if (tagNumber != 1)
                 return -1;
-            len += ASN1.decode_enumerated(buffer, offset + len, lenValueType, out property.propertyIdentifier);
+            len += EnumUtils.DecodeEnumerated(buffer, offset + len, lenValueType, out property.propertyIdentifier);
             /* Tag 2: Optional Array Index */
             var tagLen = ASN1.decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValueType);
             if (tagNumber == 2)
@@ -2032,7 +2031,7 @@ namespace System.IO.BACnet.Serialize
                 if (ASN1.decode_is_context_tag(buffer, offset + len, 0))
                 {
                     len += ASN1.decode_tag_number_and_value(buffer, offset + len, out _, out lenValue);
-                    len += ASN1.decode_enumerated(buffer, offset + len, lenValue, out newEntry.property.propertyIdentifier);
+                    len += EnumUtils.DecodeEnumerated(buffer, offset + len, lenValue, out newEntry.property.propertyIdentifier);
                 }
                 else
                     return -1;
@@ -2101,7 +2100,7 @@ namespace System.IO.BACnet.Serialize
             len += ASN1.decode_tag_number_and_value(buffer, offset + len, out var tagNumber, out var lenValueType);
             if (tagNumber != 1)
                 return -1;
-            len += ASN1.decode_enumerated(buffer, offset + len, lenValueType, out value.property.propertyIdentifier);
+            len += EnumUtils.DecodeEnumerated(buffer, offset + len, lenValueType, out value.property.propertyIdentifier);
             /* Tag 2: Optional Array Index */
             /* note: decode without incrementing len so we can check for opening tag */
             var tagLen = ASN1.decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValueType);
@@ -2238,7 +2237,7 @@ namespace System.IO.BACnet.Serialize
                 len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValue);
                 uint propertyId;
                 if (tagNumber == 0)
-                    len += ASN1.decode_enumerated(buffer, offset + len, lenValue, out propertyId);
+                    len += EnumUtils.DecodeEnumerated(buffer, offset + len, lenValue, out propertyId);
                 else
                     return -1;
 
@@ -2345,7 +2344,7 @@ namespace System.IO.BACnet.Serialize
                 len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValue);
                 uint propertyId;
                 if (tagNumber == 0)
-                    len += ASN1.decode_enumerated(buffer, offset + len, lenValue, out propertyId);
+                    len += EnumUtils.DecodeEnumerated(buffer, offset + len, lenValue, out propertyId);
                 else
                     return -1;
 
@@ -2441,10 +2440,10 @@ namespace System.IO.BACnet.Serialize
 
             offset += ASN1.decode_tag_number_and_value(buffer, offset, out _, out var lenValueType);
             /* FIXME: we could validate that the tag is enumerated... */
-            offset += ASN1.decode_enumerated(buffer, offset, lenValueType, out errorClass);
+            offset += EnumUtils.DecodeEnumerated(buffer, offset, lenValueType, out errorClass);
             offset += ASN1.decode_tag_number_and_value(buffer, offset, out _, out lenValueType);
             /* FIXME: we could validate that the tag is enumerated... */
-            offset += ASN1.decode_enumerated(buffer, offset, lenValueType, out errorCode);
+            offset += EnumUtils.DecodeEnumerated(buffer, offset, lenValueType, out errorCode);
 
             return offset - orgOffset;
         }
@@ -2573,7 +2572,7 @@ namespace System.IO.BACnet.Serialize
                         break;
 
                     case BacnetTrendLogValueType.TL_TYPE_ENUM:
-                        len += ASN1.decode_enumerated(buffer, offset + len, lenValue, out var eval);
+                        len += ASN1.decode_unsigned(buffer, offset + len, lenValue, out var eval);
                         records[curveNumber].Value = eval;
                         break;
 

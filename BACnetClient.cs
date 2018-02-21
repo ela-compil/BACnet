@@ -1397,7 +1397,7 @@ namespace System.IO.BACnet
                     len += ASN1.decode_tag_number_and_value(buffer, offset + len, out var tagNumber, out var lenValueType);
                     if (tagNumber != 1)
                         throw new Exception("Failed to decode");
-                    len += ASN1.decode_enumerated(buffer, offset + len, lenValueType, out _);
+                    len += ASN1.decode_unsigned(buffer, offset + len, lenValueType, out _);
 
                     var outBuffer = new byte[buffer.Length - len];
                     Array.Copy(buffer, len, outBuffer, 0, outBuffer.Length);
