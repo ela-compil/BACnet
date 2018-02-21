@@ -2,9 +2,9 @@ using System.IO.BACnet.EventNotification.EventValues;
 
 namespace System.IO.BACnet.EventNotification
 {
-    public class StateTransition : EventNotificationData
+    public class StateTransition : NotificationData
     {
-        private readonly EventNotificationData _eventData;
+        private readonly NotificationData _eventData;
 
         #region EventNotificationData properties
 
@@ -64,14 +64,21 @@ namespace System.IO.BACnet.EventNotification
 
         #endregion
 
-        public BacnetEventTypes EventType;
-        public bool AckRequired;
-        public BacnetEventStates FromState;
-        public EventValuesBase EventValues;
+        public BacnetEventTypes EventType { get; set; }
+        public bool AckRequired { get; set; }
+        public BacnetEventStates FromState { get; set; }
+        public EventValuesBase EventValues { get; set; }
 
-        public StateTransition(EventNotificationData eventData)
+        public StateTransition(NotificationData eventData)
         {
             _eventData = eventData;
+        }
+
+        public override string ToString()
+        {
+            return base.ToString()
+                   + $", EventType: {EventType}, AckRequired: {AckRequired}, "
+                   + $"FromState: {FromState}, {EventValues}";
         }
     }
 }

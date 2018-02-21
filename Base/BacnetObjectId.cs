@@ -5,25 +5,14 @@ namespace System.IO.BACnet
     [Serializable]
     public struct BacnetObjectId : IComparable<BacnetObjectId>
     {
-        private BacnetObjectTypes _type;
-        private uint _instance;
+        public BacnetObjectTypes Type { get; }
 
-        public BacnetObjectTypes Type
-        {
-            get => _type;
-            set => _type = value;
-        }
-
-        public uint Instance
-        {
-            get => _instance;
-            set => _instance = value;
-        }
+        public uint Instance { get; }
 
         public BacnetObjectId(BacnetObjectTypes type, uint instance)
         {
-            _type = type;
-            _instance = instance;
+            Type = type;
+            Instance = instance;
         }
 
         public override string ToString()

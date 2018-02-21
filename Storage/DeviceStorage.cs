@@ -84,7 +84,7 @@ namespace System.IO.BACnet.Storage
 
             //wildcard device_id
             if (objectId.Type == BacnetObjectTypes.OBJECT_DEVICE && objectId.Instance >= Serialize.ASN1.BACNET_MAX_INSTANCE)
-                objectId.Instance = DeviceId;
+                objectId = new BacnetObjectId(objectId.Type, DeviceId);
 
             //overrides
             if (ReadOverride != null)
@@ -209,7 +209,7 @@ namespace System.IO.BACnet.Storage
         {
             //wildcard device_id
             if (objectId.Type == BacnetObjectTypes.OBJECT_DEVICE && objectId.Instance >= Serialize.ASN1.BACNET_MAX_INSTANCE)
-                objectId.Instance = DeviceId;
+                objectId = new BacnetObjectId(objectId.Type, DeviceId);
 
             //overrides
             if (WriteOverride != null)

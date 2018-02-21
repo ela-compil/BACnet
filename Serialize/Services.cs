@@ -755,12 +755,12 @@ namespace System.IO.BACnet.Serialize
         }
 
         // F Chaxel
-        public static int DecodeEventNotifyData(byte[] buffer, int offset, int apduLen, out EventNotificationData eventData)
+        public static int DecodeEventNotifyData(byte[] buffer, int offset, int apduLen, out NotificationData eventData)
         {
             var len = 0;
             uint lenValue;
 
-            eventData = new EventNotificationData();
+            eventData = new NotificationData();
             StateTransition transition = null;
 
             /* tag 0 - processIdentifier */
@@ -1040,9 +1040,9 @@ namespace System.IO.BACnet.Serialize
             return ++len;
         }
 
-        private static void EncodeEventNotifyData(EncodeBuffer buffer, EventNotificationData data)
+        private static void EncodeEventNotifyData(EncodeBuffer buffer, NotificationData data)
         {
-            var transition = data as StateTransition;
+            var stateTransition = data as StateTransition;
 
             /* tag 0 - processIdentifier */
             ASN1.encode_context_unsigned(buffer, 0, data.ProcessIdentifier);
@@ -1063,10 +1063,10 @@ namespace System.IO.BACnet.Serialize
             /* tag 5 - priority */
             ASN1.encode_context_unsigned(buffer, 5, data.Priority);
 
-            if (transition != null)
+            if (stateTransition != null)
             {
                 /* tag 6 - eventType */
-                ASN1.encode_context_enumerated(buffer, 6, (uint) transition.EventType);
+                ASN1.encode_context_enumerated(buffer, 6, (uint) stateTransition.EventType);
             }
 
             /* tag 7 - messageText */
@@ -1076,22 +1076,25 @@ namespace System.IO.BACnet.Serialize
             /* tag 8 - notifyType */
             ASN1.encode_context_enumerated(buffer, 8, (uint) data.NotifyType);
 
-            switch (transition?.NotifyType)
+            switch (stateTransition?.NotifyType)
             {
                 case BacnetNotifyTypes.NOTIFY_ALARM:
                 case BacnetNotifyTypes.NOTIFY_EVENT:
                     /* tag 9 - ackRequired */
-                    ASN1.encode_context_boolean(buffer, 9, transition.AckRequired);
+                    ASN1.encode_context_boolean(buffer, 9, stateTransition.AckRequired);
 
                     /* tag 10 - fromState */
-                    ASN1.encode_context_enumerated(buffer, 10, (uint) transition.FromState);
+                    ASN1.encode_context_enumerated(buffer, 10, (uint) stateTransition.FromState);
                     break;
             }
 
             /* tag 11 - toState */
             ASN1.encode_context_enumerated(buffer, 11, (uint) data.ToState);
 
-            switch (transition?.EventValues)
+            if(stateTransition == null)
+                return; // there are no EventValues if we're not processing a StateTransition
+
+            switch (stateTransition.EventValues)
             {
                 case ChangeOfBitString changeOfBitString:
                     ASN1.encode_opening_tag(buffer, 0);
@@ -1122,7 +1125,7 @@ namespace System.IO.BACnet.Serialize
                             ASN1.encode_context_bitstring(buffer, 0, changeOfValue.ChangedBits);
                             break;
                         default:
-                            throw new Exception("Hmm?");
+                            throw new ArgumentOutOfRangeException($"Unexpected Tag '{changeOfValue.Tag}'");
                     }
 
                     ASN1.encode_closing_tag(buffer, 0);
@@ -1173,7 +1176,7 @@ namespace System.IO.BACnet.Serialize
                     ASN1.encode_closing_tag(buffer, 11);
                     break;
                 default:
-                    throw new NotImplementedException($"EventValues of type {transition?.EventValues.GetType()} is not implemented");
+                    throw new NotImplementedException($"EventValues of type {stateTransition.EventValues.GetType()} is not implemented");
             }
         }
 
