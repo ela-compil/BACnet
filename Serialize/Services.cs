@@ -805,7 +805,8 @@ namespace System.IO.BACnet.Serialize
                 len += ASN1.decode_application_date(buffer, offset + len, out var date);
                 len += ASN1.decode_application_time(buffer, offset + len, out var time);
                 decodedNotificationData.Add(e => e.TimeStamp = new BacnetGenericTime(new DateTime(
-                    date.Year, date.Month, date.Day, time.Hour, time.Minute, time.Second, time.Millisecond)));
+                    date.Year, date.Month, date.Day, time.Hour, time.Minute, time.Second, time.Millisecond),
+                    BacnetTimestampTags.TIME_STAMP_DATETIME));
                 len += 2; // closing tag 2 then 3
             }
             else
@@ -1114,6 +1115,8 @@ namespace System.IO.BACnet.Serialize
             if(stateTransition == null || !stateTransition.GetType().IsGenericType)
                 return; // there are no EventValues if we're not processing a StateTransition
 
+            ASN1.encode_opening_tag(buffer, 12);
+
             switch (stateTransition)
             {
                 case StateTransition<ChangeOfBitString> changeOfBitString:
@@ -1200,6 +1203,8 @@ namespace System.IO.BACnet.Serialize
                     var eventValuesType = stateTransition.GetType().GetGenericArguments().First();
                     throw new NotImplementedException($"EventValues of type {eventValuesType} is not implemented");
             }
+
+            ASN1.encode_closing_tag(buffer, 12);
         }
 
         public static void EncodeAlarmSummary(EncodeBuffer buffer, BacnetObjectId objectIdentifier, BacnetEventStates alarmState, BacnetBitString acknowledgedTransitions)
@@ -2527,7 +2532,7 @@ namespace System.IO.BACnet.Serialize
 
             /* Tag 2: status */
             var recordStatusFlags = BacnetBitString.ConvertFromInt((uint)record.statusFlags, 4);
-            if (recordStatusFlags.bits_used > 0)
+            if (recordStatusFlags.BitsUsed > 0)
             {
                 ASN1.encode_opening_tag(buffer, 2);
                 ASN1.encode_application_bitstring(buffer, recordStatusFlags);

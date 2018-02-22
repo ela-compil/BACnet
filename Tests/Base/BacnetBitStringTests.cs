@@ -1,6 +1,8 @@
-﻿using NUnit.Framework;
+﻿using System.Collections.Generic;
+using System.Linq;
+using NUnit.Framework;
 
-namespace System.IO.BACnet.Base
+namespace System.IO.BACnet.Tests.Base
 {
     public class BacnetBitStringTests
     {
@@ -9,8 +11,7 @@ namespace System.IO.BACnet.Base
         {
             for (byte i = 0; i < 32; i++)
             {
-                var bitString = new BacnetBitString();
-                bitString.SetBit(i, true);
+                var bitString = new BacnetBitString().SetBit(i, true);
                 Assert.AreEqual(true, bitString.GetBit(i));
             }
         }
@@ -18,9 +19,8 @@ namespace System.IO.BACnet.Base
         [Test]
         public void should_calculate_bits_used_when_setting_bit_to_false_test()
         {
-            var bitString = new BacnetBitString();
-            bitString.SetBit(2, false);
-            Assert.AreEqual(3, bitString.bits_used);
+            var bitString = new BacnetBitString().SetBit(2, false);
+            Assert.AreEqual(3, bitString.BitsUsed);
         }
 
         [Test]
@@ -28,9 +28,8 @@ namespace System.IO.BACnet.Base
         {
             for (byte i = 0; i < 32; i++)
             {
-                var bitString = new BacnetBitString();
-                bitString.SetBit(i, true);
-                Assert.AreEqual(i + 1, bitString.bits_used);
+                var bitString = new BacnetBitString().SetBit(i, true);
+                Assert.AreEqual(i + 1, bitString.BitsUsed);
             }
         }
 
@@ -39,8 +38,7 @@ namespace System.IO.BACnet.Base
         {
             for (byte i = 0; i < 32; i++)
             {
-                var bitString = new BacnetBitString();
-                bitString.SetBit(i, true);
+                var bitString = new BacnetBitString().SetBit(i, true);
                 Assert.AreEqual((uint)(1 << i), bitString.ConvertToInt());
             }
         }
@@ -60,7 +58,7 @@ namespace System.IO.BACnet.Base
         {
             const byte bitsUsed = 3;
             var bitString = BacnetBitString.ConvertFromInt(0, bitsUsed);
-            Assert.AreEqual(bitsUsed, bitString.bits_used);
+            Assert.AreEqual(bitsUsed, bitString.BitsUsed);
         }
 
         [TestCase((uint)0b00000000000000000000000000000000, 0)]
@@ -73,7 +71,7 @@ namespace System.IO.BACnet.Base
         public void should_calculate_bits_used_when_converting_from_uint_test(uint value, byte bitsUsed)
         {
             var bitString = BacnetBitString.ConvertFromInt(value);
-            Assert.AreEqual(bitsUsed, bitString.bits_used);
+            Assert.AreEqual(bitsUsed, bitString.BitsUsed);
         }
 
         [TestCase((uint)0b00000000000000000000000000000000)]
@@ -87,6 +85,44 @@ namespace System.IO.BACnet.Base
         {
             var bitString = BacnetBitString.ConvertFromInt(value);
             Assert.AreEqual(value, bitString.ConvertToInt());
+        }
+
+        [Test]
+        public void Equality()
+        {
+            // arrange
+            const string stringForInit = "010101110010011";
+
+            // act
+            var bs1 = BacnetBitString.Parse(stringForInit);
+            var bs2 = BacnetBitString.Parse(stringForInit);
+
+            // assert
+            Assert.That(bs1, Is.EqualTo(bs2));
+            Assert.That(bs1.Value, Is.Not.SameAs(bs2.Value));
+        }
+
+        [Test]
+        public void GetHashCodeDoesNotBreakHashSet()
+        {
+            // arrange
+            const string stringForInit = "010101110010011";
+            var bs1 = BacnetBitString.Parse(stringForInit);
+            var bs2 = BacnetBitString.Parse(stringForInit);
+            var hash = new HashSet<BacnetBitString>();
+
+            // act
+            hash.Add(bs1);
+
+            // assert
+            Assert.That(hash.Add(bs2), Is.False);
+
+            // act
+            bs1 = bs1.SetBit(0, true);
+
+            // assert
+            Assert.That(hash.Add(bs1), Is.True);
+            Assert.That(hash.First(), Is.Not.EqualTo(hash.Last()));
         }
     }
 }

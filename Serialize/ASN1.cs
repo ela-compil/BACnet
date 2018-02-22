@@ -278,10 +278,10 @@ namespace System.IO.BACnet.Serialize
         {
             byte len = 0; /* return value */
 
-            if (bitString.bits_used <= 0)
+            if (bitString.BitsUsed <= 0)
                 return len;
 
-            var lastBit = (byte)(bitString.bits_used - 1);
+            var lastBit = (byte)(bitString.BitsUsed - 1);
             var usedBytes = (byte)(lastBit / 8);
             /* add one for the first byte */
             usedBytes++;
@@ -330,34 +330,21 @@ namespace System.IO.BACnet.Serialize
             return outByte;
         }
 
-        private static byte bitstring_octet(BacnetBitString bitString, byte octetIndex)
-        {
-            byte octet = 0;
-
-            if (bitString.value == null)
-                return octet;
-
-            if (octetIndex < MAX_BITSTRING_BYTES)
-                octet = bitString.value[octetIndex];
-
-            return octet;
-        }
-
         public static void encode_bitstring(EncodeBuffer buffer, BacnetBitString bitString)
         {
             /* if the bit string is empty, then the first octet shall be zero */
-            if (bitString.bits_used == 0)
+            if (bitString.BitsUsed == 0)
             {
                 buffer.Add(0);
             }
             else
             {
                 var usedBytes = bitstring_bytesUsed(bitString);
-                var remainingUsedBits = (byte)(bitString.bits_used - (usedBytes - 1) * 8);
+                var remainingUsedBits = (byte)(bitString.BitsUsed - (usedBytes - 1) * 8);
                 /* number of unused bits in the subsequent final octet */
                 buffer.Add((byte)(8 - remainingUsedBits));
                 for (byte i = 0; i < usedBytes; i++)
-                    buffer.Add(byte_reverse_bits(bitstring_octet(bitString, i)));
+                    buffer.Add(byte_reverse_bits(bitString.Value[i]));
             }
         }
 
@@ -1431,24 +1418,13 @@ namespace System.IO.BACnet.Serialize
             return len;
         }
 
-        private static void bitstring_set_octet(ref BacnetBitString bitString, byte index, byte octet)
-        {
-            if (index < MAX_BITSTRING_BYTES)
-                bitString.value[index] = octet;
-        }
-
-        private static void bitstring_set_bits_used(ref BacnetBitString bitString, byte bytesUsed, byte unusedBits)
-        {
-            /* FIXME: check that bytesUsed is at least one? */
-            bitString.bits_used = (byte)(bytesUsed * 8);
-            bitString.bits_used -= unusedBits;
-        }
-
         public static int decode_bitstring(byte[] buffer, int offset, uint lenValue, out BacnetBitString bitString)
         {
             var len = 0;
 
-            bitString = new BacnetBitString { value = new byte[MAX_BITSTRING_BYTES] };
+            var value = new byte[MAX_BITSTRING_BYTES];
+            byte bitsUsed = 0;
+
             if (lenValue > 0)
             {
                 /* the first octet contains the unused bits */
@@ -1458,12 +1434,14 @@ namespace System.IO.BACnet.Serialize
                     len = 1;
                     for (uint i = 0; i < bytesUsed; i++)
                     {
-                        bitstring_set_octet(ref bitString, (byte)i, byte_reverse_bits(buffer[offset + len++]));
+                        value[i] = byte_reverse_bits(buffer[offset + len++]);
                     }
                     var unusedBits = (byte)(buffer[offset] & 0x07);
-                    bitstring_set_bits_used(ref bitString, (byte)bytesUsed, unusedBits);
+                    bitsUsed = (byte)((bytesUsed * 8) - unusedBits); // FIXME: check that bitsUsed is at least one?
                 }
             }
+
+            bitString = new BacnetBitString(value, bitsUsed);
 
             return len;
         }
