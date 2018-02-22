@@ -765,15 +765,15 @@ namespace System.IO.BACnet.Serialize
             eventData = default;
             BacnetNotifyTypes? notifyType;
             BacnetEventTypes? eventType = default;
-            var decodedValues = new List<Action<NotificationData>>();
-            var decodedValuesExtended = new List<Action<NotificationDataExtended>>();
+            var decodedNotificationData = new List<Action<NotificationData>>();
+            var decodedStateTransition = new List<Action<StateTransition>>();
 
             /* tag 0 - processIdentifier */
             if (ASN1.decode_is_context_tag(buffer, offset + len, 0))
             {
                 len += ASN1.decode_tag_number_and_value(buffer, offset + len, out _, out lenValue);
                 len += ASN1.decode_unsigned(buffer, offset + len, lenValue, out var processIdentifier);
-                decodedValues.Add(e => e.ProcessIdentifier = processIdentifier);
+                decodedNotificationData.Add(e => e.ProcessIdentifier = processIdentifier);
             }
             else
                 return -1;
@@ -783,7 +783,7 @@ namespace System.IO.BACnet.Serialize
             {
                 len += ASN1.decode_tag_number_and_value(buffer, offset + len, out _, out lenValue);
                 len += ASN1.decode_object_id(buffer, offset + len, out BacnetObjectTypes type, out var instance);
-                decodedValues.Add(e => e.InitiatingObjectIdentifier = new BacnetObjectId(type, instance));
+                decodedNotificationData.Add(e => e.InitiatingObjectIdentifier = new BacnetObjectId(type, instance));
             }
             else
                 return -1;
@@ -793,7 +793,7 @@ namespace System.IO.BACnet.Serialize
             {
                 len += ASN1.decode_tag_number_and_value(buffer, offset + len, out _, out lenValue);
                 len += ASN1.decode_object_id(buffer, offset + len, out BacnetObjectTypes type, out var instance);
-                decodedValues.Add(e => e.EventObjectIdentifier = new BacnetObjectId(type, instance));
+                decodedNotificationData.Add(e => e.EventObjectIdentifier = new BacnetObjectId(type, instance));
             }
             else
                 return -1;
@@ -804,7 +804,7 @@ namespace System.IO.BACnet.Serialize
                 len += 2; // opening Tag 3 then 2
                 len += ASN1.decode_application_date(buffer, offset + len, out var date);
                 len += ASN1.decode_application_time(buffer, offset + len, out var time);
-                decodedValues.Add(e => e.TimeStamp = new BacnetGenericTime(new DateTime(
+                decodedNotificationData.Add(e => e.TimeStamp = new BacnetGenericTime(new DateTime(
                     date.Year, date.Month, date.Day, time.Hour, time.Minute, time.Second, time.Millisecond)));
                 len += 2; // closing tag 2 then 3
             }
@@ -816,7 +816,7 @@ namespace System.IO.BACnet.Serialize
             {
                 len += ASN1.decode_tag_number_and_value(buffer, offset + len, out _, out lenValue);
                 len += ASN1.decode_unsigned(buffer, offset + len, lenValue, out var notificationClass);
-                decodedValues.Add(e => e.NotificationClass = notificationClass);
+                decodedNotificationData.Add(e => e.NotificationClass = notificationClass);
             }
             else
                 return -1;
@@ -827,7 +827,7 @@ namespace System.IO.BACnet.Serialize
                 len += ASN1.decode_tag_number_and_value(buffer, offset + len, out _, out lenValue);
                 len += ASN1.decode_unsigned(buffer, offset + len, lenValue, out var priority);
                 if (priority > 0xFF) return -1;
-                decodedValues.Add(e => e.Priority = (byte) priority);
+                decodedNotificationData.Add(e => e.Priority = (byte) priority);
             }
             else
                 return -1;
@@ -837,7 +837,7 @@ namespace System.IO.BACnet.Serialize
             {
                 len += ASN1.decode_tag_number_and_value(buffer, offset + len, out _, out lenValue);
                 len += EnumUtils.DecodeEnumerated<BacnetEventTypes>(buffer, offset + len, lenValue, out var eventTypeValue);
-                decodedValuesExtended.Add(e => e.EventType = eventTypeValue);
+                decodedStateTransition.Add(e => e.EventType = eventTypeValue);
                 eventType = eventTypeValue;
             }
             //else
@@ -849,7 +849,7 @@ namespace System.IO.BACnet.Serialize
             {
                 // max_lenght 20000 sound like a joke
                 len += ASN1.decode_context_character_string(buffer, offset + len, 20000, 7, out var messageText);
-                decodedValues.Add(e => e.MessageText = messageText);
+                decodedNotificationData.Add(e => e.MessageText = messageText);
             }
 
             /* tag 8 - notifyType */
@@ -857,7 +857,7 @@ namespace System.IO.BACnet.Serialize
             {
                 len += ASN1.decode_tag_number_and_value(buffer, offset + len, out _, out lenValue);
                 len += EnumUtils.DecodeEnumerated<BacnetNotifyTypes>(buffer, offset + len, lenValue, out var notifyTypeValue);
-                decodedValuesExtended.Add(e => e.NotifyType = notifyTypeValue);
+                decodedStateTransition.Add(e => e.NotifyType = notifyTypeValue);
                 notifyType = notifyTypeValue;
             }
             else
@@ -870,12 +870,12 @@ namespace System.IO.BACnet.Serialize
                     /* tag 9 - ackRequired */
                     len += ASN1.decode_tag_number_and_value(buffer, offset + len, out _, out lenValue);
                     len += ASN1.decode_unsigned8(buffer, offset + len, out var val);
-                    decodedValuesExtended.Add(e => e.AckRequired = Convert.ToBoolean(val));
+                    decodedStateTransition.Add(e => e.AckRequired = Convert.ToBoolean(val));
 
                     /* tag 10 - fromState */
                     len += ASN1.decode_tag_number_and_value(buffer, offset + len, out _, out lenValue);
                     len += ASN1.decode_unsigned(buffer, offset + len, lenValue, out var fromstate);
-                    decodedValuesExtended.Add(e => e.FromState = (BacnetEventStates) fromstate);
+                    decodedStateTransition.Add(e => e.FromState = (BacnetEventStates) fromstate);
                     break;
             }
 
@@ -884,7 +884,7 @@ namespace System.IO.BACnet.Serialize
             {
                 len += ASN1.decode_tag_number_and_value(buffer, offset + len, out _, out lenValue);
                 len += ASN1.decode_unsigned(buffer, offset + len, lenValue, out var toState);
-                decodedValues.Add(e => e.ToState = (BacnetEventStates) toState);
+                decodedNotificationData.Add(e => e.ToState = (BacnetEventStates) toState);
             }
             else
                 return -1;
@@ -897,20 +897,20 @@ namespace System.IO.BACnet.Serialize
                     if (!DecodeEventValues(buffer, offset, eventType.Value, ref len, out var eventValues))
                         return -1;
 
-                    var targetType = typeof(NotificationData<>).MakeGenericType(eventValues.GetType());
-                    eventData = Activator.CreateInstance(targetType, eventValues) as NotificationDataExtended;
+                    var targetType = typeof(StateTransition<>).MakeGenericType(eventValues.GetType());
+                    eventData = Activator.CreateInstance(targetType, eventValues) as StateTransition;
                     break;
             }
 
-            eventData = eventData ?? (decodedValuesExtended.Any()
-                ? new NotificationDataExtended()
+            eventData = eventData ?? (decodedStateTransition.Any()
+                ? new StateTransition()
                 : new NotificationData());
 
-            if (eventData is NotificationDataExtended extendedData)
-                foreach (var setValue in decodedValuesExtended)
-                    setValue(extendedData);
+            if (eventData is StateTransition stateTransition)
+                foreach (var setValue in decodedStateTransition)
+                    setValue(stateTransition);
 
-            foreach (var setValue in decodedValues)
+            foreach (var setValue in decodedNotificationData)
                 setValue(eventData);
 
             return len;
@@ -1062,8 +1062,6 @@ namespace System.IO.BACnet.Serialize
 
         public static void EncodeEventNotifyData(EncodeBuffer buffer, NotificationData data)
         {
-            var dataExtended = data as NotificationDataExtended;
-
             /* tag 0 - processIdentifier */
             ASN1.encode_context_unsigned(buffer, 0, data.ProcessIdentifier);
             /* tag 1 - initiatingObjectIdentifier */
@@ -1083,10 +1081,12 @@ namespace System.IO.BACnet.Serialize
             /* tag 5 - priority */
             ASN1.encode_context_unsigned(buffer, 5, data.Priority);
 
-            if (dataExtended != null)
+            var stateTransition = data as StateTransition;
+
+            if (stateTransition != null)
             {
                 /* tag 6 - eventType */
-                ASN1.encode_context_enumerated(buffer, 6, (uint) dataExtended.EventType);
+                ASN1.encode_context_enumerated(buffer, 6, (uint) stateTransition.EventType);
             }
 
             /* tag 7 - messageText */
@@ -1096,108 +1096,109 @@ namespace System.IO.BACnet.Serialize
             /* tag 8 - notifyType */
             ASN1.encode_context_enumerated(buffer, 8, (uint) data.NotifyType);
 
-            switch (dataExtended?.NotifyType)
+            switch (stateTransition?.NotifyType)
             {
                 case BacnetNotifyTypes.NOTIFY_ALARM:
                 case BacnetNotifyTypes.NOTIFY_EVENT:
                     /* tag 9 - ackRequired */
-                    ASN1.encode_context_boolean(buffer, 9, dataExtended.AckRequired);
+                    ASN1.encode_context_boolean(buffer, 9, stateTransition.AckRequired);
 
                     /* tag 10 - fromState */
-                    ASN1.encode_context_enumerated(buffer, 10, (uint) dataExtended.FromState);
+                    ASN1.encode_context_enumerated(buffer, 10, (uint) stateTransition.FromState);
                     break;
             }
 
             /* tag 11 - toState */
             ASN1.encode_context_enumerated(buffer, 11, (uint) data.ToState);
 
-            if(dataExtended?.EventValues == null)
+            if(stateTransition == null || !stateTransition.GetType().IsGenericType)
                 return; // there are no EventValues if we're not processing a StateTransition
 
-            switch (dataExtended.EventValues)
+            switch (stateTransition)
             {
-                case ChangeOfBitString changeOfBitString:
+                case StateTransition<ChangeOfBitString> changeOfBitString:
                     ASN1.encode_opening_tag(buffer, 0);
-                    ASN1.encode_context_bitstring(buffer, 0, changeOfBitString.ReferencedBitString);
-                    ASN1.encode_context_bitstring(buffer, 1, changeOfBitString.StatusFlags);
+                    ASN1.encode_context_bitstring(buffer, 0, changeOfBitString.EventValues.ReferencedBitString);
+                    ASN1.encode_context_bitstring(buffer, 1, changeOfBitString.EventValues.StatusFlags);
                     ASN1.encode_closing_tag(buffer, 0);
                     break;
 
-                case ChangeOfState changeOfState:
+                case StateTransition<ChangeOfState> changeOfState:
                     ASN1.encode_opening_tag(buffer, 1);
                     ASN1.encode_opening_tag(buffer, 0);
-                    ASN1.bacapp_encode_property_state(buffer, changeOfState.NewState);
+                    ASN1.bacapp_encode_property_state(buffer, changeOfState.EventValues.NewState);
                     ASN1.encode_closing_tag(buffer, 0);
-                    ASN1.encode_context_bitstring(buffer, 1, changeOfState.StatusFlags);
+                    ASN1.encode_context_bitstring(buffer, 1, changeOfState.EventValues.StatusFlags);
                     ASN1.encode_closing_tag(buffer, 1);
                     break;
 
-                case ChangeOfValue changeOfValue:
+                case StateTransition<ChangeOfValue> changeOfValue:
                     ASN1.encode_opening_tag(buffer, 2);
                     ASN1.encode_opening_tag(buffer, 0);
 
-                    switch (changeOfValue.Tag)
+                    switch (changeOfValue.EventValues.Tag)
                     {
                         case BacnetCOVTypes.CHANGE_OF_VALUE_REAL:
-                            ASN1.encode_context_real(buffer, 1, changeOfValue.ChangeValue);
+                            ASN1.encode_context_real(buffer, 1, changeOfValue.EventValues.ChangeValue);
                             break;
                         case BacnetCOVTypes.CHANGE_OF_VALUE_BITS:
-                            ASN1.encode_context_bitstring(buffer, 0, changeOfValue.ChangedBits);
+                            ASN1.encode_context_bitstring(buffer, 0, changeOfValue.EventValues.ChangedBits);
                             break;
                         default:
-                            throw new ArgumentOutOfRangeException($"Unexpected Tag '{changeOfValue.Tag}'");
+                            throw new ArgumentOutOfRangeException($"Unexpected Tag '{changeOfValue.EventValues.Tag}'");
                     }
 
                     ASN1.encode_closing_tag(buffer, 0);
-                    ASN1.encode_context_bitstring(buffer, 1, changeOfValue.StatusFlags);
+                    ASN1.encode_context_bitstring(buffer, 1, changeOfValue.EventValues.StatusFlags);
                     ASN1.encode_closing_tag(buffer, 2);
                     break;
 
-                case FloatingLimit floatingLimit:
+                case StateTransition<FloatingLimit> floatingLimit:
                     ASN1.encode_opening_tag(buffer, 4);
-                    ASN1.encode_context_real(buffer, 0, floatingLimit.ReferenceValue);
-                    ASN1.encode_context_bitstring(buffer, 1, floatingLimit.StatusFlags);
-                    ASN1.encode_context_real(buffer, 2, floatingLimit.SetPointValue);
-                    ASN1.encode_context_real(buffer, 3, floatingLimit.ErrorLimit);
+                    ASN1.encode_context_real(buffer, 0, floatingLimit.EventValues.ReferenceValue);
+                    ASN1.encode_context_bitstring(buffer, 1, floatingLimit.EventValues.StatusFlags);
+                    ASN1.encode_context_real(buffer, 2, floatingLimit.EventValues.SetPointValue);
+                    ASN1.encode_context_real(buffer, 3, floatingLimit.EventValues.ErrorLimit);
                     ASN1.encode_closing_tag(buffer, 4);
                     break;
 
-                case OutOfRange outOfRange:
+                case StateTransition<OutOfRange> outOfRange:
                     ASN1.encode_opening_tag(buffer, 5);
-                    ASN1.encode_context_real(buffer, 0, outOfRange.ExceedingValue);
-                    ASN1.encode_context_bitstring(buffer, 1, outOfRange.StatusFlags);
-                    ASN1.encode_context_real(buffer, 2, outOfRange.Deadband);
-                    ASN1.encode_context_real(buffer, 3, outOfRange.ExceededLimit);
+                    ASN1.encode_context_real(buffer, 0, outOfRange.EventValues.ExceedingValue);
+                    ASN1.encode_context_bitstring(buffer, 1, outOfRange.EventValues.StatusFlags);
+                    ASN1.encode_context_real(buffer, 2, outOfRange.EventValues.Deadband);
+                    ASN1.encode_context_real(buffer, 3, outOfRange.EventValues.ExceededLimit);
                     ASN1.encode_closing_tag(buffer, 5);
                     break;
 
-                case ChangeOfLifeSafety changeOfLifeSafety:
+                case StateTransition<ChangeOfLifeSafety> changeOfLifeSafety:
                     ASN1.encode_opening_tag(buffer, 8);
-                    ASN1.encode_context_enumerated(buffer, 0, (uint) changeOfLifeSafety.NewState);
-                    ASN1.encode_context_enumerated(buffer, 1, (uint) changeOfLifeSafety.NewMode);
-                    ASN1.encode_context_bitstring(buffer, 2, changeOfLifeSafety.StatusFlags);
-                    ASN1.encode_context_enumerated(buffer, 3, (uint) changeOfLifeSafety.OperationExpected);
+                    ASN1.encode_context_enumerated(buffer, 0, (uint) changeOfLifeSafety.EventValues.NewState);
+                    ASN1.encode_context_enumerated(buffer, 1, (uint) changeOfLifeSafety.EventValues.NewMode);
+                    ASN1.encode_context_bitstring(buffer, 2, changeOfLifeSafety.EventValues.StatusFlags);
+                    ASN1.encode_context_enumerated(buffer, 3, (uint) changeOfLifeSafety.EventValues.OperationExpected);
                     ASN1.encode_closing_tag(buffer, 8);
                     break;
 
-                case BufferReady bufferReady:
+                case StateTransition<BufferReady> bufferReady:
                     ASN1.encode_opening_tag(buffer, 10);
-                    ASN1.bacapp_encode_context_device_obj_property_ref(buffer, 0, bufferReady.BufferProperty);
-                    ASN1.encode_context_unsigned(buffer, 1, bufferReady.PreviousNotification);
-                    ASN1.encode_context_unsigned(buffer, 2, bufferReady.CurrentNotification);
+                    ASN1.bacapp_encode_context_device_obj_property_ref(buffer, 0, bufferReady.EventValues.BufferProperty);
+                    ASN1.encode_context_unsigned(buffer, 1, bufferReady.EventValues.PreviousNotification);
+                    ASN1.encode_context_unsigned(buffer, 2, bufferReady.EventValues.CurrentNotification);
                     ASN1.encode_closing_tag(buffer, 10);
                     break;
 
-                case UnsignedRange unsignedRange:
+                case StateTransition<UnsignedRange> unsignedRange:
                     ASN1.encode_opening_tag(buffer, 11);
-                    ASN1.encode_context_unsigned(buffer, 0, unsignedRange.ExceedingValue);
-                    ASN1.encode_context_bitstring(buffer, 1, unsignedRange.StatusFlags);
-                    ASN1.encode_context_unsigned(buffer, 2, unsignedRange.ExceededLimit);
+                    ASN1.encode_context_unsigned(buffer, 0, unsignedRange.EventValues.ExceedingValue);
+                    ASN1.encode_context_bitstring(buffer, 1, unsignedRange.EventValues.StatusFlags);
+                    ASN1.encode_context_unsigned(buffer, 2, unsignedRange.EventValues.ExceededLimit);
                     ASN1.encode_closing_tag(buffer, 11);
                     break;
 
                 default:
-                    throw new NotImplementedException($"EventValues of type {dataExtended?.EventValues.GetType()} is not implemented");
+                    var eventValuesType = stateTransition.GetType().GetGenericArguments().First();
+                    throw new NotImplementedException($"EventValues of type {eventValuesType} is not implemented");
             }
         }
 

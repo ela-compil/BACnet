@@ -929,7 +929,7 @@ namespace System.IO.BACnet
 
         }
 
-        public void SendUnconfirmedEventNotification(BacnetAddress address, NotificationDataExtended eventData)
+        public void SendUnconfirmedEventNotification(BacnetAddress address, StateTransition eventData)
         {
             Log.Debug($"Sending Event Notification {eventData.EventType} {eventData.EventObjectIdentifier}");
 

@@ -4,24 +4,19 @@ using System.Linq;
 
 namespace System.IO.BACnet.EventNotification
 {
-    public class NotificationDataExtended : NotificationData
+    public class StateTransition : NotificationData
     {
-        public bool AckRequired { get; set; }
         public BacnetEventTypes EventType { get; set; }
+        public bool AckRequired { get; set; }
         public BacnetEventStates FromState { get; set; }
-        public EventValuesBase EventValues { get; protected set; }
     }
 
-    public class NotificationData<TEventValuesBase> : NotificationDataExtended
+    public class StateTransition<TEventValuesBase> : StateTransition
         where TEventValuesBase : EventValuesBase
     {
-        public new TEventValuesBase EventValues
-        {
-            get => base.EventValues as TEventValuesBase;
-            private set => base.EventValues = value;
-        }
+        public TEventValuesBase EventValues { get; }
 
-        public NotificationData(TEventValuesBase eventValues)
+        public StateTransition(TEventValuesBase eventValues)
         {
             EventValues = eventValues ?? throw new ArgumentNullException(nameof(eventValues));
         }

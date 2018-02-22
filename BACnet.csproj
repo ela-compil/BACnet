@@ -87,7 +87,7 @@
     <Compile Include="Base\EventNotification\EventValues\ChangeOfValue.cs" />
     <Compile Include="Base\EventNotification\EventValues\BufferReady.cs" />
     <Compile Include="Base\EventNotification\EventValues\ChangeOfBitString.cs" />
-    <Compile Include="Base\EventNotification\NotificationDataExtended.cs" />
+    <Compile Include="Base\EventNotification\StateTransition.cs" />
     <Compile Include="Base\EventNotification\NotificationData.cs" />
     <Compile Include="Base\BacnetGenericTime.cs" />
     <Compile Include="Base\BacnetGetEventInformationData.cs" />
