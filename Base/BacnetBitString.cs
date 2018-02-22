@@ -82,12 +82,12 @@ namespace System.IO.BACnet
                 : 0;
         }
 
-        public static BacnetBitString ConvertFromInt(uint value)
+        public static BacnetBitString ConvertFromInt(uint value, byte? bitsUsed = null)
         {
             return new BacnetBitString
             {
                 value = BitConverter.GetBytes(value),
-                bits_used = (byte)Math.Ceiling(Math.Log(value, 2))
+                bits_used =  bitsUsed ?? (byte)(Math.Log(value, 2) + 1)
             };
         }
     };
