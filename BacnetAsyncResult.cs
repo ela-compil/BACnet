@@ -96,7 +96,7 @@ namespace System.IO.BACnet
             if (invokeId != _waitInvokeId)
                 return;
 
-            Error = new Exception($"Abort from device, reason: {reason}");
+            Error = new BacnetAbortException(reason);
         }
 
         private void OnReject(BacnetClient sender, BacnetAddress adr, BacnetPduTypes type, byte invokeId, BacnetRejectReason reason, byte[] buffer, int offset, int length)
@@ -104,7 +104,7 @@ namespace System.IO.BACnet
             if (invokeId != _waitInvokeId)
                 return;
 
-            Error = new Exception($"Reject from device, reason: {reason}");
+            Error = new BacnetRejectException(reason);
         }
 
         private void OnError(BacnetClient sender, BacnetAddress adr, BacnetPduTypes type, BacnetConfirmedServices service, byte invokeId, BacnetErrorClasses errorClass, BacnetErrorCodes errorCode, byte[] buffer, int offset, int length)
@@ -112,7 +112,7 @@ namespace System.IO.BACnet
             if (invokeId != _waitInvokeId)
                 return;
 
-            Error = new Exception($"Error from device: {errorClass} - {errorCode}");
+            Error = new BacnetErrorException(errorClass, errorCode);
         }
 
         private void OnComplexAck(BacnetClient sender, BacnetAddress adr, BacnetPduTypes type, BacnetConfirmedServices service, byte invokeId, byte[] buffer, int offset, int length)
@@ -168,12 +168,20 @@ namespace System.IO.BACnet
                 
                 if (retryCount == 0)
                     break;
+                
+                switch (Error)
+                {
+                    case BacnetAbortException abortException:
+                    case BacnetRejectException rejectException:
+                    case BacnetErrorException errorException:
+                        throw Error;
+                }
 
                 retryCount--;
                 Resend();
             }
 
-            throw Error ?? new Exception(Result?.Length > 0
+            throw Error ?? new BacnetApduTimeoutException(Result?.Length > 0
                 ? $"Failed to receive complete response within {timeout}"
                 : $"No response within {timeout}");
         }

@@ -53,6 +53,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BacnetAsyncResult.cs" />
+    <Compile Include="BacnetException.cs" />
     <Compile Include="Base\BacnetAbortReason.cs" />
     <Compile Include="Base\BacnetAddress.cs" />
     <Compile Include="Base\BacnetAddressTypes.cs" />
