@@ -4,6 +4,7 @@ using NUnit.Framework;
 
 namespace System.IO.BACnet.Tests.Base
 {
+    [TestFixture]
     public class BacnetBitStringTests
     {
         [Test]
@@ -81,6 +82,7 @@ namespace System.IO.BACnet.Tests.Base
         [TestCase(0b10101010101010101010101010101010)]
         [TestCase(0b10000000000000000000000000000000)]
         [TestCase(0b11111111111111111111111111111111)]
+        [TestCase((uint)0b00001000)]
         public void should_convert_back_to_uint_when_converting_from_uint_test(uint value)
         {
             var bitString = BacnetBitString.ConvertFromInt(value);

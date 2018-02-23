@@ -358,6 +358,19 @@ namespace System.IO.BACnet.Serialize
             encode_bitstring(buffer, bitString);
         }
 
+        public static int DecodeApplicationBitstring(byte[] buffer, int offset, byte tagNumber, out BacnetBitString value)
+        {
+            var len = decode_tag_number_and_value(buffer, offset, out var decodedTagNumber, out var lenValue);
+
+            if(decodedTagNumber != (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_BIT_STRING)
+            {
+                value = new BacnetBitString();
+                return -1; // BACNET_STATUS_ERROR
+            }
+
+            return len + decode_bitstring(buffer, offset + len, lenValue, out value);
+        }
+
         public static void EncodeApplicationDestination(EncodeBuffer buffer, BacnetObjectTypes objectType, uint instance)
         {
             var tempBuffer = new EncodeBuffer();

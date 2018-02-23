@@ -2534,45 +2534,44 @@ namespace System.IO.BACnet.Serialize
             var recordStatusFlags = BacnetBitString.ConvertFromInt((uint)record.statusFlags, 4);
             if (recordStatusFlags.BitsUsed > 0)
             {
-                ASN1.encode_opening_tag(buffer, 2);
-                ASN1.encode_application_bitstring(buffer, recordStatusFlags);
-                ASN1.encode_closing_tag(buffer, 2);
+                ASN1.encode_tag(buffer, 2, true, 2);
+                ASN1.encode_bitstring(buffer, recordStatusFlags);
             }
         }
 
-        public static int DecodeLogRecord(byte[] buffer, int offset, int length, int nCurves, out BacnetLogRecord[] records)
+        public static int DecodeLogRecord(byte[] buffer, int offset, int length, int nCurves,
+            out BacnetLogRecord[] records)
         {
             var len = 0;
             records = new BacnetLogRecord[nCurves];
 
-            len += ASN1.decode_tag_number(buffer, offset + len, out var tagNumber);
-            if (tagNumber != 0) return -1;
-
-            // Date and Time in Tag 0
-            len += ASN1.decode_application_date(buffer, offset + len, out var date);
-            len += ASN1.decode_application_time(buffer, offset + len, out var time);
-
-            var dt = new DateTime(date.Year, date.Month, date.Day, time.Hour, time.Minute, time.Second, time.Millisecond);
-
-            if (!ASN1.decode_is_closing_tag(buffer, offset + len)) return -1;
-            len++;
-
-            // Value or error in Tag 1
-            len += ASN1.decode_tag_number(buffer, offset + len, out tagNumber);
-            if (tagNumber != 1) return -1;
-
-            // Not test for TrendLogMultiple
-            // Seems to be encoded like this somewhere in an Ashrae document
             for (var curveNumber = 0; curveNumber < nCurves; curveNumber++)
             {
+                len += ASN1.decode_tag_number(buffer, offset + len, out var tagNumber);
+                if (tagNumber != 0) return -1;
+
+                // Date and Time in Tag 0
+                len += ASN1.decode_application_date(buffer, offset + len, out var date);
+                len += ASN1.decode_application_time(buffer, offset + len, out var time);
+
+                var dt = new DateTime(
+                    date.Year, date.Month, date.Day, time.Hour, time.Minute, time.Second, time.Millisecond);
+
+                if (!ASN1.decode_is_closing_tag(buffer, offset + len)) return -1;
+                len++;
+
+                // Value or error in Tag 1
+                len += ASN1.decode_tag_number(buffer, offset + len, out tagNumber);
+                if (tagNumber != 1) return -1;
+
                 len += ASN1.decode_tag_number_and_value(buffer, offset + len, out var contextTagType, out var lenValue);
                 records[curveNumber] = new BacnetLogRecord
                 {
                     timestamp = dt,
-                    type = (BacnetTrendLogValueType)contextTagType
+                    type = (BacnetTrendLogValueType) contextTagType
                 };
 
-                switch ((BacnetTrendLogValueType)contextTagType)
+                switch ((BacnetTrendLogValueType) contextTagType)
                 {
                     case BacnetTrendLogValueType.TL_TYPE_STATUS:
                         len += ASN1.decode_bitstring(buffer, offset + len, lenValue, out var sval);
@@ -2630,29 +2629,29 @@ namespace System.IO.BACnet.Serialize
                     default:
                         return 0;
                 }
-            }
 
-            if (!ASN1.decode_is_closing_tag(buffer, offset + len))
-                return -1;
 
-            len++;
+                if (!ASN1.decode_is_closing_tag(buffer, offset + len))
+                    return -1;
 
-            if (len >= length)
-                return len;
+                len++;
 
-            var l = ASN1.decode_tag_number(buffer, offset + len, out tagNumber);
+                if (len >= length)
+                    return len;
 
-            // Optional Tag 2
-            if (tagNumber != 2)
-                return len;
+                ASN1.decode_tag_number(buffer, offset + len, out tagNumber);
 
-            len += l;
-            len += ASN1.decode_bitstring(buffer, offset + len, 2, out var statusFlagsBits);
+                // Optional Tag 2
+                if (tagNumber != 2)
+                    return len;
 
-            //set status to all returns
-            var statusFlags = (BacnetStatusFlags)statusFlagsBits.ConvertToInt();
-            for (var curveNumber = 0; curveNumber < nCurves; curveNumber++)
+                len++;
+                len += ASN1.decode_bitstring(buffer, offset + len, 2, out var statusFlagsBits);
+
+                //set status to all returns
+                var statusFlags = (BacnetStatusFlags) statusFlagsBits.ConvertToInt();
                 records[curveNumber].statusFlags = statusFlags;
+            }
 
             return len;
         }
