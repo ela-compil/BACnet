@@ -3,10 +3,10 @@
 namespace System.IO.BACnet.Tests
 {
     [TestFixture]
-    public class BACNetClientTests
+    public class BacNetClientTests
     {
         [Test]
-        public void Iam()
+        public void should_send_and_raise_iam()
         {
             // arrange
             const int sendingDeviceId = 123;

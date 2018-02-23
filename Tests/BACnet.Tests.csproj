@@ -42,7 +42,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BACNetClientTests.cs" />
+    <Compile Include="BacNetClientTests.cs" />
     <Compile Include="Base\BacnetBitStringTests.cs" />
     <Compile Include="Base\EventNotification\EventNotificationTests.cs" />
     <Compile Include="Helper.cs" />

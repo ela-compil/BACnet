@@ -8,7 +8,7 @@ namespace System.IO.BACnet.Tests.Base.EventNotification
     public class EventNotificationTests
     {
         [Test]
-        public void ChangeOfLifeSafety()
+        public void should_raise_oneventnotify_when_sending_changeoflifesafety_data()
         {
             // arrange
             var (client1, client2) = Helper.CreateConnectedClients();

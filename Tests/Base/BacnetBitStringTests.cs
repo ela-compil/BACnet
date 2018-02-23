@@ -88,7 +88,7 @@ namespace System.IO.BACnet.Tests.Base
         }
 
         [Test]
-        public void Equality()
+        public void should_be_equal_when_parsed_from_same_string()
         {
             // arrange
             const string stringForInit = "010101110010011";
@@ -103,7 +103,7 @@ namespace System.IO.BACnet.Tests.Base
         }
 
         [Test]
-        public void GetHashCodeDoesNotBreakHashSet()
+        public void should_not_break_hashset()
         {
             // arrange
             const string stringForInit = "010101110010011";
