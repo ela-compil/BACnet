@@ -51,7 +51,7 @@ namespace System.IO.BACnet.Serialize
             apduLen += len;
             if (tagNumber != (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED)
                 return -1;
-            len = EnumUtils.DecodeEnumerated(buffer, offset + apduLen, lenValue, out decodedValue);
+            len = ASN1.decode_unsigned(buffer, offset + apduLen, lenValue, out decodedValue);
             apduLen += len;
             if (decodedValue > (uint)BacnetSegmentations.SEGMENTATION_NONE)
                 return -1;
@@ -719,7 +719,7 @@ namespace System.IO.BACnet.Serialize
             if (ASN1.decode_is_context_tag(buffer, offset + len, 0))
             {
                 len += ASN1.decode_tag_number_and_value(buffer, offset + len, out _, out lenValue);
-                len += EnumUtils.DecodeEnumerated(buffer, offset + len, lenValue, out monitoredProperty.propertyIdentifier);
+                len += ASN1.decode_unsigned(buffer, offset + len, lenValue, out monitoredProperty.propertyIdentifier);
             }
             else
                 return -1;
@@ -1419,7 +1419,7 @@ namespace System.IO.BACnet.Serialize
             if (!ASN1.decode_is_context_tag(buffer, offset + len, 1))
                 return -1;
             len += ASN1.decode_tag_number_and_value(buffer, offset + len, out _, out lenValueType);
-            len += EnumUtils.DecodeEnumerated(buffer, offset + len, lenValueType, out enableDisable);
+            len += ASN1.decode_unsigned(buffer, offset + len, lenValueType, out enableDisable);
 
             /* Tag 2: password --optional-- */
             if (len < apduLen)
@@ -1532,7 +1532,7 @@ namespace System.IO.BACnet.Serialize
                 ASN1.decode_tag_number_and_value(buffer, offset + len, out var tagNumber, out var lenValueType);
             if (tagNumber != 1)
                 return -1;
-            len += EnumUtils.DecodeEnumerated(buffer, offset + len, lenValueType, out property.propertyIdentifier);
+            len += ASN1.decode_unsigned(buffer, offset + len, lenValueType, out property.propertyIdentifier);
 
             /* Tag 2: Optional Array Index */
             if (len < apduLen && ASN1.decode_is_context_tag(buffer, offset + len, 0))
@@ -1805,7 +1805,7 @@ namespace System.IO.BACnet.Serialize
             if (tagNumber != 1)
                 return -2;
 
-            len += EnumUtils.DecodeEnumerated(buffer, offset + len, lenValueType, out property.propertyIdentifier);
+            len += ASN1.decode_unsigned(buffer, offset + len, lenValueType, out property.propertyIdentifier);
 
             /* Tag 2: Optional Array Index */
             if (len < apduLen)
@@ -1865,7 +1865,7 @@ namespace System.IO.BACnet.Serialize
             len += ASN1.decode_tag_number_and_value(buffer, offset + len, out var tagNumber, out var lenValueType);
             if (tagNumber != 1)
                 return -1;
-            len += EnumUtils.DecodeEnumerated(buffer, offset + len, lenValueType, out property.propertyIdentifier);
+            len += ASN1.decode_unsigned(buffer, offset + len, lenValueType, out property.propertyIdentifier);
             /* Tag 2: Optional Array Index */
             var tagLen = ASN1.decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValueType);
             if (tagNumber == 2)
@@ -2048,7 +2048,7 @@ namespace System.IO.BACnet.Serialize
                 if (ASN1.decode_is_context_tag(buffer, offset + len, 0))
                 {
                     len += ASN1.decode_tag_number_and_value(buffer, offset + len, out _, out lenValue);
-                    len += EnumUtils.DecodeEnumerated(buffer, offset + len, lenValue, out newEntry.property.propertyIdentifier);
+                    len += ASN1.decode_unsigned(buffer, offset + len, lenValue, out newEntry.property.propertyIdentifier);
                 }
                 else
                     return -1;
@@ -2117,7 +2117,7 @@ namespace System.IO.BACnet.Serialize
             len += ASN1.decode_tag_number_and_value(buffer, offset + len, out var tagNumber, out var lenValueType);
             if (tagNumber != 1)
                 return -1;
-            len += EnumUtils.DecodeEnumerated(buffer, offset + len, lenValueType, out value.property.propertyIdentifier);
+            len += ASN1.decode_unsigned(buffer, offset + len, lenValueType, out value.property.propertyIdentifier);
             /* Tag 2: Optional Array Index */
             /* note: decode without incrementing len so we can check for opening tag */
             var tagLen = ASN1.decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValueType);
@@ -2254,7 +2254,7 @@ namespace System.IO.BACnet.Serialize
                 len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValue);
                 uint propertyId;
                 if (tagNumber == 0)
-                    len += EnumUtils.DecodeEnumerated(buffer, offset + len, lenValue, out propertyId);
+                    len += ASN1.decode_unsigned(buffer, offset + len, lenValue, out propertyId);
                 else
                     return -1;
 
@@ -2352,7 +2352,7 @@ namespace System.IO.BACnet.Serialize
                 return -1;
             len++;
 
-            var _values = new LinkedList<BacnetPropertyValue>();
+            var linkedList = new LinkedList<BacnetPropertyValue>();
             while (apduLen - len > 1)
             {
                 var newEntry = new BacnetPropertyValue();
@@ -2361,7 +2361,7 @@ namespace System.IO.BACnet.Serialize
                 len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValue);
                 uint propertyId;
                 if (tagNumber == 0)
-                    len += EnumUtils.DecodeEnumerated(buffer, offset + len, lenValue, out propertyId);
+                    len += ASN1.decode_unsigned(buffer, offset + len, lenValue, out propertyId);
                 else
                     return -1;
 
@@ -2378,7 +2378,7 @@ namespace System.IO.BACnet.Serialize
                 /* tag 2 - Property Value */
                 if (tagNumber == 2 && ASN1.decode_is_opening_tag(buffer, offset + len - 1))
                 {
-                    var values = new List<BacnetValue>();
+                    var list = new List<BacnetValue>();
                     while (!ASN1.decode_is_closing_tag(buffer, offset + len))
                     {
                         var l = ASN1.bacapp_decode_application_data(
@@ -2387,10 +2387,10 @@ namespace System.IO.BACnet.Serialize
 
                         if (l <= 0) return -1;
                         len += l;
-                        values.Add(value);
+                        list.Add(value);
                     }
                     len++;
-                    newEntry.value = values;
+                    newEntry.value = list;
                 }
                 else
                     return -1;
@@ -2404,7 +2404,7 @@ namespace System.IO.BACnet.Serialize
                     len--;
                 newEntry.priority = (byte)ulVal;
 
-                _values.AddLast(newEntry);
+                linkedList.AddLast(newEntry);
             }
 
             /* Closing tag 1 - List of Properties */
@@ -2412,7 +2412,7 @@ namespace System.IO.BACnet.Serialize
                 return -1;
             len++;
 
-            valuesRefs = _values;
+            valuesRefs = linkedList;
 
             return len;
         }
