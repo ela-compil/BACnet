@@ -51,7 +51,7 @@ namespace System.IO.BACnet.Storage
         public Object FindObject(BacnetObjectId objectId)
         {
             //liniear search
-            return Objects.FirstOrDefault(obj => obj.Type == objectId.type && obj.Instance == objectId.instance);
+            return Objects.FirstOrDefault(obj => obj.Type == objectId.Type && obj.Instance == objectId.Instance);
         }
 
         public enum ErrorCodes
@@ -83,8 +83,8 @@ namespace System.IO.BACnet.Storage
             value = new BacnetValue[0];
 
             //wildcard device_id
-            if (objectId.type == BacnetObjectTypes.OBJECT_DEVICE && objectId.instance >= Serialize.ASN1.BACNET_MAX_INSTANCE)
-                objectId.instance = DeviceId;
+            if (objectId.Type == BacnetObjectTypes.OBJECT_DEVICE && objectId.Instance >= Serialize.ASN1.BACNET_MAX_INSTANCE)
+                objectId = new BacnetObjectId(objectId.Type, DeviceId);
 
             //overrides
             if (ReadOverride != null)
@@ -208,8 +208,8 @@ namespace System.IO.BACnet.Storage
         public ErrorCodes WriteProperty(BacnetObjectId objectId, BacnetPropertyIds propertyId, uint arrayIndex, IList<BacnetValue> value, bool addIfNotExits = false)
         {
             //wildcard device_id
-            if (objectId.type == BacnetObjectTypes.OBJECT_DEVICE && objectId.instance >= Serialize.ASN1.BACNET_MAX_INSTANCE)
-                objectId.instance = DeviceId;
+            if (objectId.Type == BacnetObjectTypes.OBJECT_DEVICE && objectId.Instance >= Serialize.ASN1.BACNET_MAX_INSTANCE)
+                objectId = new BacnetObjectId(objectId.Type, DeviceId);
 
             //overrides
             if (WriteOverride != null)
@@ -233,8 +233,8 @@ namespace System.IO.BACnet.Storage
                 {
                     obj = new Object
                     {
-                        Type = objectId.type,
-                        Instance = objectId.instance
+                        Type = objectId.Type,
+                        Instance = objectId.Instance
                     };
                     var arr = Objects;
                     Array.Resize(ref arr, arr.Length + 1);

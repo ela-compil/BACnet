@@ -76,7 +76,7 @@ namespace System.IO.BACnet
             else
             {
                 // BacnetObjectId is context specific encoded
-                ASN1.encode_context_object_id(buffer, 0, Id.type, Id.instance);
+                ASN1.encode_context_object_id(buffer, 0, Id.Type, Id.Instance);
             }
 
             ASN1.bacapp_encode_application_data(buffer, new BacnetValue(processIdentifier));

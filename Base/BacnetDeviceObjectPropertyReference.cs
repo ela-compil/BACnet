@@ -41,16 +41,11 @@ namespace System.IO.BACnet
 
         public BacnetObjectId? DeviceId  // shows null when it's not OBJECT_DEVICE
         {
-            get
-            {
-                return deviceIndentifier.type == BacnetObjectTypes.OBJECT_DEVICE
-                    ? (BacnetObjectId?)deviceIndentifier
-                    : null;
-            }
-            set
-            {
-                deviceIndentifier = value ?? new BacnetObjectId();
-            }
+            get => deviceIndentifier.Type == BacnetObjectTypes.OBJECT_DEVICE
+                ? (BacnetObjectId?)deviceIndentifier
+                : null;
+
+            set => deviceIndentifier = value ?? default(BacnetObjectId);
         }
 
         public BacnetPropertyIds PropertyId
