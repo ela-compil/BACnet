@@ -7,6 +7,19 @@ namespace System.IO.BACnet.Tests.Base.EventNotification
     [TestFixture]
     public class EventNotificationTests
     {
+        [TestCase(typeof(StateTransition<ChangeOfLifeSafety>))]
+        [TestCase(typeof(NotificationData))]
+        public void should_override_tostring(Type type)
+        {
+            var args = type.GetGenericArguments();
+
+            var instance = args.Length > 0
+                ? Activator.CreateInstance(type, Activator.CreateInstance(args[0]))
+                : Activator.CreateInstance(type);
+
+            Assert.That(instance.ToString(), Is.Not.EqualTo(type.ToString()));
+        }
+
         [Test]
         public void should_raise_oneventnotify_when_sending_changeoflifesafety_data()
         {
