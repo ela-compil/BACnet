@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.IO.BACnet.EventNotification;
+using System.IO.BACnet.EventNotification.EventValues;
 using System.IO.BACnet.Serialize;
 using System.Linq;
 using System.Net;
@@ -168,7 +170,7 @@ namespace System.IO.BACnet
         public event AtomicReadFileRequestHandler OnAtomicReadFileRequest;
         public delegate void SubscribeCOVRequestHandler(BacnetClient sender, BacnetAddress address, byte invokeId, uint subscriberProcessIdentifier, BacnetObjectId monitoredObjectIdentifier, bool cancellationRequest, bool issueConfirmedNotifications, uint lifetime, BacnetMaxSegments maxSegments);
         public event SubscribeCOVRequestHandler OnSubscribeCOV;
-        public delegate void EventNotificationCallbackHandler(BacnetClient sender, BacnetAddress address, byte invokeId, BacnetEventNotificationData eventData, bool needConfirm);
+        public delegate void EventNotificationCallbackHandler(BacnetClient sender, BacnetAddress address, byte invokeId, NotificationData eventData, bool needConfirm);
         public event EventNotificationCallbackHandler OnEventNotify;
         public delegate void SubscribeCOVPropertyRequestHandler(BacnetClient sender, BacnetAddress address, byte invokeId, uint subscriberProcessIdentifier, BacnetObjectId monitoredObjectIdentifier, BacnetPropertyReference monitoredProperty, bool cancellationRequest, bool issueConfirmedNotifications, uint lifetime, float covIncrement, BacnetMaxSegments maxSegments);
         public event SubscribeCOVPropertyRequestHandler OnSubscribeCOVProperty;
@@ -927,14 +929,14 @@ namespace System.IO.BACnet
 
         }
 
-        public void SendUnconfirmedEventNotification(BacnetAddress address, BacnetEventNotificationData eventData)
+        public void SendUnconfirmedEventNotification(BacnetAddress address, StateTransition eventData)
         {
-            Log.Debug($"Sending Event Notification {eventData.eventType} {eventData.eventObjectIdentifier}");
+            Log.Debug($"Sending Event Notification {eventData.EventType} {eventData.EventObjectIdentifier}");
 
             var b = GetEncodeBuffer(Transport.HeaderLength);
             NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, address);
             APDU.EncodeUnconfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_EVENT_NOTIFICATION);
-            Services.EncodeEventNotifyUnconfirmed(b, eventData);
+            Services.EncodeEventNotifyData(b, eventData);
             Transport.Send(b.buffer, Transport.HeaderLength, b.offset - Transport.HeaderLength, address, false, 0);
         }
 
@@ -1315,7 +1317,7 @@ namespace System.IO.BACnet
         {
             Log.Debug("Sending DeleteObjectRequest");
             return BeginConfirmedServiceRequest(address, BacnetConfirmedServices.SERVICE_CONFIRMED_DELETE_OBJECT,
-                buffer => ASN1.encode_application_object_id(buffer, objectId.type, objectId.instance), waitForTransmit);
+                buffer => ASN1.encode_application_object_id(buffer, objectId.Type, objectId.Instance), waitForTransmit);
         }
 
         public void EndDeleteObjectRequest(BacnetAsyncResult request) => EndConfirmedServiceRequest(request);
@@ -1368,7 +1370,7 @@ namespace System.IO.BACnet
             Log.Debug("Sending RawEncodedDecodedProperty");
             return BeginConfirmedServiceRequest(address, serviceId, buffer =>
             {
-                ASN1.encode_context_object_id(buffer, 0, objectId.type, objectId.instance);
+                ASN1.encode_context_object_id(buffer, 0, objectId.Type, objectId.Instance);
                 ASN1.encode_context_enumerated(buffer, 1, (byte) propertyId);
                 if (inBuffer?.Length > 0)
                     buffer.Add(inBuffer, inBuffer.Length); // No content encoding
@@ -1396,7 +1398,7 @@ namespace System.IO.BACnet
                     len += ASN1.decode_tag_number_and_value(buffer, offset + len, out var tagNumber, out var lenValueType);
                     if (tagNumber != 1)
                         throw new Exception("Failed to decode");
-                    len += ASN1.decode_enumerated(buffer, offset + len, lenValueType, out _);
+                    len += ASN1.decode_unsigned(buffer, offset + len, lenValueType, out _);
 
                     var outBuffer = new byte[buffer.Length - len];
                     Array.Copy(buffer, len, outBuffer, 0, outBuffer.Length);
