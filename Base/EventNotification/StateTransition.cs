@@ -6,9 +6,14 @@ namespace System.IO.BACnet.EventNotification
 {
     public class StateTransition : NotificationData
     {
-        public BacnetEventTypes EventType { get; set; }
+        public BacnetEventTypes EventType { get; }
         public bool AckRequired { get; set; }
         public BacnetEventStates FromState { get; set; }
+
+        public StateTransition(BacnetEventTypes eventType)
+        {
+            EventType = eventType;
+        }
     }
 
     public class StateTransition<TEventValuesBase> : StateTransition
@@ -17,8 +22,9 @@ namespace System.IO.BACnet.EventNotification
         public TEventValuesBase EventValues { get; }
 
         public StateTransition(TEventValuesBase eventValues)
+            : base((eventValues ?? throw new ArgumentNullException(nameof(eventValues))).EventType)
         {
-            EventValues = eventValues ?? throw new ArgumentNullException(nameof(eventValues));
+            EventValues = eventValues;
         }
 
         public override string ToString()

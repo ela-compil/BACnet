@@ -838,7 +838,6 @@ namespace System.IO.BACnet.Serialize
             {
                 len += ASN1.decode_tag_number_and_value(buffer, offset + len, out _, out lenValue);
                 len += EnumUtils.DecodeEnumerated<BacnetEventTypes>(buffer, offset + len, lenValue, out var eventTypeValue);
-                decodedStateTransition.Add(e => e.EventType = eventTypeValue);
                 eventType = eventTypeValue;
             }
             //else
@@ -904,7 +903,7 @@ namespace System.IO.BACnet.Serialize
             }
 
             eventData = eventData ?? (decodedStateTransition.Any()
-                ? new StateTransition()
+                ? new StateTransition(eventType ?? throw new ArgumentNullException($"Need eventType to initialize StateTransition"))
                 : new NotificationData());
 
             if (eventData is StateTransition stateTransition)
@@ -984,7 +983,7 @@ namespace System.IO.BACnet.Serialize
                         return false;
 
                     len++;
-                    len += ASN1.decode_context_bitstring(buffer, offset + len, 0, out var changeOfValueStatusFlags);
+                    len += ASN1.decode_context_bitstring(buffer, offset + len, 1, out var changeOfValueStatusFlags);
                     ((ChangeOfValue)eventValues).StatusFlags = changeOfValueStatusFlags;
                     break;
 
@@ -1031,7 +1030,15 @@ namespace System.IO.BACnet.Serialize
                     break;
 
                 case BacnetEventTypes.EVENT_BUFFER_READY:
-                    // Too lazy for this one and not sure if really needed, somebody want to do it ? :)
+                    len += ASN1.decode_context_device_obj_property_ref(buffer, offset + len, 0, out var bufferProperty);
+                    len += ASN1.decode_context_unsigned(buffer, offset + len, 1, out var previousNotification);
+                    len += ASN1.decode_context_unsigned(buffer, offset + len, 2, out var currentNotification);
+                    eventValues = new BufferReady
+                    {
+                        BufferProperty = bufferProperty,
+                        CurrentNotification = currentNotification,
+                        PreviousNotification = previousNotification
+                    };
                     break;
 
                 case BacnetEventTypes.EVENT_UNSIGNED_RANGE:
@@ -1047,7 +1054,7 @@ namespace System.IO.BACnet.Serialize
                     break;
 
                 default:
-                    return false;
+                    throw new ArgumentOutOfRangeException($"Event-Type {eventType} is not supported");
             }
 
             if (!ASN1.decode_is_closing_tag_number(buffer, offset + len, (byte)eventType))
@@ -1128,9 +1135,7 @@ namespace System.IO.BACnet.Serialize
 
                 case StateTransition<ChangeOfState> changeOfState:
                     ASN1.encode_opening_tag(buffer, 1);
-                    ASN1.encode_opening_tag(buffer, 0);
-                    ASN1.bacapp_encode_property_state(buffer, changeOfState.EventValues.NewState);
-                    ASN1.encode_closing_tag(buffer, 0);
+                    ASN1.encode_context_property_state(buffer, 0, changeOfState.EventValues.NewState);
                     ASN1.encode_context_bitstring(buffer, 1, changeOfState.EventValues.StatusFlags);
                     ASN1.encode_closing_tag(buffer, 1);
                     break;

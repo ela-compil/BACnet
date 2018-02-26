@@ -25,6 +25,14 @@ namespace System.IO.BACnet.Tests
 
         public static void AssertPropertiesAndFieldsAreEqual(object expected, object actual)
         {
+            if (expected == null)
+            {
+                Assert.That(actual, Is.Null, "expected == null, checking actual");
+                return;
+            }
+
+            Assert.That(actual, Is.Not.Null, "checking actual");
+
             var t = expected.GetType();
 
             foreach (var pi in t.GetProperties())

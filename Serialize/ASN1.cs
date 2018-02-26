@@ -538,8 +538,9 @@ namespace System.IO.BACnet.Serialize
             encode_closing_tag(buffer, tagNumber);
         }
 
-        public static void bacapp_encode_property_state(EncodeBuffer buffer, BacnetPropertyState value)
+        public static void encode_context_property_state(EncodeBuffer buffer, byte tagNumber, BacnetPropertyState value)
         {
+            encode_opening_tag(buffer, tagNumber);
             switch (value.tag)
             {
                 case BacnetPropertyState.BacnetPropertyStateTypes.BOOLEAN_VALUE:
@@ -599,9 +600,9 @@ namespace System.IO.BACnet.Serialize
                     break;
 
                 default:
-                    /* FIXME: assert(0); - return a negative len? */
-                    break;
+                    throw new ArgumentOutOfRangeException($"tag {value.tag} is not supported");
             }
+            encode_closing_tag(buffer, tagNumber);
         }
 
         public static void encode_context_bitstring(EncodeBuffer buffer, byte tagNumber, BacnetBitString bitString)
@@ -1063,7 +1064,21 @@ namespace System.IO.BACnet.Serialize
             return len;
         }
 
-        public static int decode_device_obj_property_ref(byte[] buffer, int offset, int apdu_len, out BacnetDeviceObjectPropertyReference value)
+        public static int decode_context_device_obj_property_ref(byte[] buffer, int offset, byte tagNumber, out BacnetDeviceObjectPropertyReference value)
+        {
+            if (decode_is_context_tag_with_length(buffer, offset, tagNumber, out var len))
+            {
+                len += decode_device_obj_property_ref(buffer, offset + len, out value);
+            }
+            else
+            {
+                value = default;
+            }
+
+            return ++len; // closing tag
+        }
+
+        public static int decode_device_obj_property_ref(byte[] buffer, int offset, out BacnetDeviceObjectPropertyReference value)
         {
             var len = 0;
 
@@ -1981,7 +1996,7 @@ namespace System.IO.BACnet.Serialize
                     propertyId == BacnetPropertyIds.PROP_LOG_DEVICE_OBJECT_PROPERTY ||
                     propertyId == BacnetPropertyIds.PROP_OBJECT_PROPERTY_REFERENCE)
                 {
-                    tagLen = decode_device_obj_property_ref(buffer, offset, maxOffset, out var v);
+                    tagLen = decode_device_obj_property_ref(buffer, offset, out var v);
                     if (tagLen < 0) return -1;
                     value.Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_PROPERTY_REFERENCE;
                     value.Value = v;
@@ -2353,17 +2368,11 @@ namespace System.IO.BACnet.Serialize
         public static int decode_context_property_state(byte[] buffer, int offset, byte tagNumber, out BacnetPropertyState value)
         {
             if (!decode_is_opening_tag_number(buffer, offset, tagNumber))
-            {
-                value = default(BacnetPropertyState);
-                return -1;
-            }
+                throw new InvalidOperationException($"expected tag {tagNumber} not found");
 
             var len = 1;
-            var sectionLength = decode_property_state(buffer, offset + len, out value);
-            if (sectionLength == -1)
-                return -1;
+            len += decode_property_state(buffer, offset + len, out value);
 
-            len += sectionLength;
             if (!decode_is_closing_tag_number(buffer, offset + len, tagNumber))
                 return -1;
 
@@ -2372,17 +2381,18 @@ namespace System.IO.BACnet.Serialize
 
         public static int decode_property_state(byte[] buffer, int offset, out BacnetPropertyState value)
         {
-            value = default(BacnetPropertyState);
+            value = default;
 
             var len = decode_tag_number_and_value(buffer, offset, out value.tag, out uint lenValueType);
             if (len == -1)
-                return -1;
+                throw new InvalidOperationException($"expected tag {value.tag} not found");
 
             var sectionLength = 0;
             switch (value.tag)
             {
                 case BacnetPropertyState.BacnetPropertyStateTypes.BOOLEAN_VALUE:
-                    value.state.boolean_value = lenValueType == 1;
+                    sectionLength = 1;
+                    value.state.boolean_value = buffer[offset+len] == 1;
                     break;
 
                 case BacnetPropertyState.BacnetPropertyStateTypes.BINARY_VALUE:
@@ -2410,7 +2420,7 @@ namespace System.IO.BACnet.Serialize
                     break;
 
                 default:
-                    return -1;
+                    throw new ArgumentOutOfRangeException($"tag {value.tag} is not supported");
             }
 
             return len + sectionLength;
@@ -2444,8 +2454,7 @@ namespace System.IO.BACnet.Serialize
         {
             if (!decode_is_context_tag(buffer, offset, tagNumber) || decode_is_closing_tag(buffer, offset))
             {
-                value = 0;
-                return -1;
+                throw new InvalidOperationException($"expected tag {tagNumber} not found");
             }
 
             var len = decode_tag_number_and_value(buffer, offset, out _, out var lenValue);
