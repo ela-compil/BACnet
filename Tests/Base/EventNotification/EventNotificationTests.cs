@@ -13,7 +13,6 @@ namespace System.IO.BACnet.Tests.Base.EventNotification
         [TestCase(typeof(StateTransition<BufferReady>))]
         [TestCase(typeof(StateTransition<OutOfRange>))]
         [TestCase(typeof(StateTransition<FloatingLimit>))]
-        [TestCase(typeof(StateTransition<ChangeOfValue>))]
         [TestCase(typeof(StateTransition<ChangeOfLifeSafety>))]
         [TestCase(typeof(NotificationData))]
         public void should_override_tostring(Type type)
@@ -25,6 +24,14 @@ namespace System.IO.BACnet.Tests.Base.EventNotification
                 : Activator.CreateInstance(type);
 
             Assert.That(instance.ToString(), Is.Not.EqualTo(type.ToString()));
+        }
+
+        [Test]
+        public void should_override_tostring_in_changeofvalue_float()
+        {
+            var instance = new StateTransition<ChangeOfValue<float>>(ChangeOfValueFactory.CreateNew((float)123.456));
+
+            Assert.That(instance.ToString(), Is.Not.EqualTo(instance.GetType().ToString()));
         }
 
         [Test]
@@ -220,12 +227,10 @@ namespace System.IO.BACnet.Tests.Base.EventNotification
             StateTransition receivedData = null;
             client2.OnEventNotify += (sender, address, id, data, confirm) => receivedData = data as StateTransition;
 
-            var sentData = new StateTransition<ChangeOfValue>(new ChangeOfValue()
-            {
-                Tag = BacnetCOVTypes.CHANGE_OF_VALUE_REAL,
-                ChangeValue = (float)123.456,
-                StatusFlags = BacnetBitString.Parse("010")
-            })
+            var sentData = new StateTransition<ChangeOfValue<float>>(
+                ChangeOfValueFactory
+                    .CreateNew((float)123.456)
+                    .SetStatusFlags(BacnetBitString.Parse("010")))
             {
                 AckRequired = false,
                 EventObjectIdentifier = new BacnetObjectId(BacnetObjectTypes.OBJECT_LIFE_SAFETY_ZONE, 123),
@@ -256,12 +261,10 @@ namespace System.IO.BACnet.Tests.Base.EventNotification
             StateTransition receivedData = null;
             client2.OnEventNotify += (sender, address, id, data, confirm) => receivedData = data as StateTransition;
 
-            var sentData = new StateTransition<ChangeOfValue>(new ChangeOfValue()
-            {
-                Tag = BacnetCOVTypes.CHANGE_OF_VALUE_BITS,
-                ChangedBits = BacnetBitString.Parse("101"),
-                StatusFlags = BacnetBitString.Parse("010")
-            })
+            var sentData = new StateTransition<ChangeOfValue<BacnetBitString>>(
+                ChangeOfValueFactory
+                    .CreateNew(BacnetBitString.Parse("101"))
+                    .SetStatusFlags(BacnetBitString.Parse("010")))
             {
                 AckRequired = false,
                 EventObjectIdentifier = new BacnetObjectId(BacnetObjectTypes.OBJECT_LIFE_SAFETY_ZONE, 123),

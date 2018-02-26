@@ -761,7 +761,6 @@ namespace System.IO.BACnet.Serialize
             var len = 0;
             uint lenValue;
 
-            eventData = new NotificationData();
             eventData = default;
             BacnetNotifyTypes? notifyType;
             BacnetEventTypes? eventType = default;
@@ -959,20 +958,12 @@ namespace System.IO.BACnet.Serialize
                     if (ASN1.decode_is_context_tag(buffer, offset + len, (byte)BacnetCOVTypes.CHANGE_OF_VALUE_BITS))
                     {
                         len += ASN1.decode_context_bitstring(buffer, offset + len, 0, out var changedBits);
-                        eventValues = new ChangeOfValue
-                        {
-                            ChangedBits = changedBits,
-                            Tag = BacnetCOVTypes.CHANGE_OF_VALUE_BITS
-                        };
+                        eventValues = ChangeOfValueFactory.CreateNew(changedBits);
                     }
                     else if (ASN1.decode_is_context_tag(buffer, offset + len, (byte)BacnetCOVTypes.CHANGE_OF_VALUE_REAL))
                     {
                         len += ASN1.decode_context_real(buffer, offset + len, 1, out var changeValue);
-                        eventValues = new ChangeOfValue
-                        {
-                            ChangeValue = changeValue,
-                            Tag = BacnetCOVTypes.CHANGE_OF_VALUE_REAL
-                        };
+                        eventValues = ChangeOfValueFactory.CreateNew(changeValue);
                     }
                     else
                     {
@@ -1140,24 +1131,28 @@ namespace System.IO.BACnet.Serialize
                     ASN1.encode_closing_tag(buffer, 1);
                     break;
 
-                case StateTransition<ChangeOfValue> changeOfValue:
+                case StateTransition changeOfValueTransition when changeOfValueTransition.GetType().GetGenericArguments()[0].BaseType == typeof(ChangeOfValue):
                     ASN1.encode_opening_tag(buffer, 2);
                     ASN1.encode_opening_tag(buffer, 0);
 
-                    switch (changeOfValue.EventValues.Tag)
+                    BacnetBitString covStatusFlags;
+
+                    switch (changeOfValueTransition)
                     {
-                        case BacnetCOVTypes.CHANGE_OF_VALUE_REAL:
-                            ASN1.encode_context_real(buffer, 1, changeOfValue.EventValues.ChangeValue);
+                        case StateTransition<ChangeOfValue<float>> covFLoat:
+                            ASN1.encode_context_real(buffer, 1, covFLoat.EventValues.ChangedValue);
+                            covStatusFlags = covFLoat.EventValues.StatusFlags;
                             break;
-                        case BacnetCOVTypes.CHANGE_OF_VALUE_BITS:
-                            ASN1.encode_context_bitstring(buffer, 0, changeOfValue.EventValues.ChangedBits);
+                        case StateTransition<ChangeOfValue<BacnetBitString>> covBits:
+                            ASN1.encode_context_bitstring(buffer, 0, covBits.EventValues.ChangedValue);
+                            covStatusFlags = covBits.EventValues.StatusFlags;
                             break;
                         default:
-                            throw new ArgumentOutOfRangeException($"Unexpected Tag '{changeOfValue.EventValues.Tag}'");
+                            throw new ArgumentOutOfRangeException($"Unexpected Type '{changeOfValueTransition.GetType()}'");
                     }
 
                     ASN1.encode_closing_tag(buffer, 0);
-                    ASN1.encode_context_bitstring(buffer, 1, changeOfValue.EventValues.StatusFlags);
+                    ASN1.encode_context_bitstring(buffer, 1, covStatusFlags);
                     ASN1.encode_closing_tag(buffer, 2);
                     break;
 
