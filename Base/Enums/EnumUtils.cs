@@ -10,9 +10,18 @@ namespace System.IO.BACnet
 {
     public abstract class EnumClassUtils<TClass> where TClass : class
     {
+        public static TEnum DecodeEnumerated<TEnum>(byte[] buffer, int offset, uint lenValue, out int sectionLength) where TEnum : struct, TClass
+        {
+            sectionLength = ASN1.decode_unsigned(buffer, offset, lenValue, out uint rawValue);
+            if(sectionLength == -1)
+                throw new InvalidOperationException($"{nameof(ASN1.decode_unsigned)} returned -1");
+
+            return (TEnum)(dynamic)rawValue;
+        }
+
         public static int DecodeEnumerated<TEnum>(byte[] buffer, int offset, uint lenValue, out TEnum value) where TEnum: struct, TClass
         {
-            var len = ASN1.decode_unsigned(buffer, offset, lenValue, out var rawValue);
+            var len = ASN1.decode_unsigned(buffer, offset, lenValue, out uint rawValue);
             value = (TEnum)(dynamic)rawValue;
             return len;
         }

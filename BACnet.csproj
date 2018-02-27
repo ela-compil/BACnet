@@ -81,6 +81,7 @@
     <Compile Include="Base\Enums\EnumUtils.cs" />
     <Compile Include="Base\EventNotification\EventValues\EventValuesBase.cs" />
     <Compile Include="Base\EventNotification\EventValues\ChangeOfLifeSafety.cs" />
+    <Compile Include="Helpers\FactoryHelper.cs" />
     <Compile Include="Base\EventNotification\EventValues\UnsignedRange.cs" />
     <Compile Include="Base\EventNotification\EventValues\ChangeOfState.cs" />
     <Compile Include="Base\EventNotification\EventValues\OutOfRange.cs" />
@@ -108,7 +109,6 @@
     <Compile Include="Base\BacnetPropertyIds.cs" />
     <Compile Include="Base\BacnetPropertyReference.cs" />
     <Compile Include="Base\BacnetPropertyValue.cs" />
-    <Compile Include="Base\BacnetPropertyState.cs" />
     <Compile Include="Base\BacnetPtpDisconnectReasons.cs" />
     <Compile Include="Base\BacnetPtpFrameTypes.cs" />
     <Compile Include="Base\BacnetReadAccessResult.cs" />
@@ -139,6 +139,7 @@
     <Compile Include="Base\Enums\BacnetLimitEnable.cs" />
     <Compile Include="Base\Enums\BacnetNotifyTypes.cs" />
     <Compile Include="Base\Enums\BacnetCOVTypes.cs" />
+    <Compile Include="Base\IHasStatusFlags.cs" />
     <Compile Include="Helpers\BacnetValuesExtensions.cs" />
     <Compile Include="Helpers\StringFormatterExtension.cs" />
     <Compile Include="Base\BacnetBvlcV6Functions.cs" />

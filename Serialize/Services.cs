@@ -42,7 +42,7 @@ namespace System.IO.BACnet.Serialize
             apduLen += len;
             if (tagNumber != (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT)
                 return -1;
-            len = ASN1.decode_unsigned(buffer, offset + apduLen, lenValue, out var decodedValue);
+            len = ASN1.decode_unsigned(buffer, offset + apduLen, lenValue, out uint decodedValue);
             apduLen += len;
             maxApdu = decodedValue;
             /* Segmentation - enumerated */
@@ -124,7 +124,7 @@ namespace System.IO.BACnet.Serialize
                 return -1;
             if (apduLen > len)
             {
-                len += ASN1.decode_unsigned(buffer, offset + len, lenValue, out var decodedValue);
+                len += ASN1.decode_unsigned(buffer, offset + len, lenValue, out uint decodedValue);
                 if (decodedValue <= ASN1.BACNET_MAX_INSTANCE)
                     lowLimit = (int)decodedValue;
                 if (apduLen > len)
@@ -771,7 +771,7 @@ namespace System.IO.BACnet.Serialize
             if (ASN1.decode_is_context_tag(buffer, offset + len, 0))
             {
                 len += ASN1.decode_tag_number_and_value(buffer, offset + len, out _, out lenValue);
-                len += ASN1.decode_unsigned(buffer, offset + len, lenValue, out var processIdentifier);
+                len += ASN1.decode_unsigned(buffer, offset + len, lenValue, out uint processIdentifier);
                 decodedNotificationData.Add(e => e.ProcessIdentifier = processIdentifier);
             }
             else
@@ -815,7 +815,7 @@ namespace System.IO.BACnet.Serialize
             if (ASN1.decode_is_context_tag(buffer, offset + len, 4))
             {
                 len += ASN1.decode_tag_number_and_value(buffer, offset + len, out _, out lenValue);
-                len += ASN1.decode_unsigned(buffer, offset + len, lenValue, out var notificationClass);
+                len += ASN1.decode_unsigned(buffer, offset + len, lenValue, out uint notificationClass);
                 decodedNotificationData.Add(e => e.NotificationClass = notificationClass);
             }
             else
@@ -825,7 +825,7 @@ namespace System.IO.BACnet.Serialize
             if (ASN1.decode_is_context_tag(buffer, offset + len, 5))
             {
                 len += ASN1.decode_tag_number_and_value(buffer, offset + len, out _, out lenValue);
-                len += ASN1.decode_unsigned(buffer, offset + len, lenValue, out var priority);
+                len += ASN1.decode_unsigned(buffer, offset + len, lenValue, out uint priority);
                 if (priority > 0xFF) return -1;
                 decodedNotificationData.Add(e => e.Priority = (byte) priority);
             }
@@ -836,7 +836,7 @@ namespace System.IO.BACnet.Serialize
             if (ASN1.decode_is_context_tag(buffer, offset + len, 6))
             {
                 len += ASN1.decode_tag_number_and_value(buffer, offset + len, out _, out lenValue);
-                len += EnumUtils.DecodeEnumerated<BacnetEventTypes>(buffer, offset + len, lenValue, out var eventTypeValue);
+                len += EnumUtils.DecodeEnumerated(buffer, offset + len, lenValue, out BacnetEventTypes eventTypeValue);
                 eventType = eventTypeValue;
             }
             //else
@@ -855,7 +855,7 @@ namespace System.IO.BACnet.Serialize
             if (ASN1.decode_is_context_tag(buffer, offset + len, 8))
             {
                 len += ASN1.decode_tag_number_and_value(buffer, offset + len, out _, out lenValue);
-                len += EnumUtils.DecodeEnumerated<BacnetNotifyTypes>(buffer, offset + len, lenValue, out var notifyTypeValue);
+                len += EnumUtils.DecodeEnumerated(buffer, offset + len, lenValue, out BacnetNotifyTypes notifyTypeValue);
                 decodedStateTransition.Add(e => e.NotifyType = notifyTypeValue);
                 notifyType = notifyTypeValue;
             }
@@ -873,7 +873,7 @@ namespace System.IO.BACnet.Serialize
 
                     /* tag 10 - fromState */
                     len += ASN1.decode_tag_number_and_value(buffer, offset + len, out _, out lenValue);
-                    len += ASN1.decode_unsigned(buffer, offset + len, lenValue, out var fromstate);
+                    len += ASN1.decode_unsigned(buffer, offset + len, lenValue, out uint fromstate);
                     decodedStateTransition.Add(e => e.FromState = (BacnetEventStates) fromstate);
                     break;
             }
@@ -882,7 +882,7 @@ namespace System.IO.BACnet.Serialize
             if (ASN1.decode_is_context_tag(buffer, offset + len, 11))
             {
                 len += ASN1.decode_tag_number_and_value(buffer, offset + len, out _, out lenValue);
-                len += ASN1.decode_unsigned(buffer, offset + len, lenValue, out var toState);
+                len += ASN1.decode_unsigned(buffer, offset + len, lenValue, out uint toState);
                 decodedNotificationData.Add(e => e.ToState = (BacnetEventStates) toState);
             }
             else
@@ -943,11 +943,7 @@ namespace System.IO.BACnet.Serialize
                 case BacnetEventTypes.EVENT_CHANGE_OF_STATE:
                     len += ASN1.decode_context_property_state(buffer, offset + len, 0, out var newState);
                     len += ASN1.decode_context_bitstring(buffer, offset + len, 1, out var changeOfStateStatusFlags);
-                    eventValues = new ChangeOfState
-                    {
-                        NewState = newState,
-                        StatusFlags = changeOfStateStatusFlags
-                    };
+                    eventValues = (newState as ChangeOfState).SetStatusFlags(changeOfStateStatusFlags);
                     break;
 
                 case BacnetEventTypes.EVENT_CHANGE_OF_VALUE:
@@ -958,12 +954,12 @@ namespace System.IO.BACnet.Serialize
                     if (ASN1.decode_is_context_tag(buffer, offset + len, (byte)BacnetCOVTypes.CHANGE_OF_VALUE_BITS))
                     {
                         len += ASN1.decode_context_bitstring(buffer, offset + len, 0, out var changedBits);
-                        eventValues = ChangeOfValueFactory.CreateNew(changedBits);
+                        eventValues = ChangeOfValueFactory.Create(changedBits);
                     }
                     else if (ASN1.decode_is_context_tag(buffer, offset + len, (byte)BacnetCOVTypes.CHANGE_OF_VALUE_REAL))
                     {
                         len += ASN1.decode_context_real(buffer, offset + len, 1, out var changeValue);
-                        eventValues = ChangeOfValueFactory.CreateNew(changeValue);
+                        eventValues = ChangeOfValueFactory.Create(changeValue);
                     }
                     else
                     {
@@ -1124,10 +1120,10 @@ namespace System.IO.BACnet.Serialize
                     ASN1.encode_closing_tag(buffer, 0);
                     break;
 
-                case StateTransition<ChangeOfState> changeOfState:
+                case StateTransition changeOfStateTransition when changeOfStateTransition.GetType().GetGenericArguments()[0].BaseType == typeof(ChangeOfState):
                     ASN1.encode_opening_tag(buffer, 1);
-                    ASN1.encode_context_property_state(buffer, 0, changeOfState.EventValues.NewState);
-                    ASN1.encode_context_bitstring(buffer, 1, changeOfState.EventValues.StatusFlags);
+                    ASN1.encode_context_property_state(buffer, 0, changeOfStateTransition, out var changeOfState);
+                    ASN1.encode_context_bitstring(buffer, 1, changeOfState.StatusFlags);
                     ASN1.encode_closing_tag(buffer, 1);
                     break;
 
@@ -1630,19 +1626,19 @@ namespace System.IO.BACnet.Serialize
             len += ASN1.decode_tag_number_and_value(buffer, offset + len, out var tagNumber, out var lenValueType);
             if (tagNumber != 1)
                 return 0;
-            len += ASN1.decode_unsigned(buffer, offset + len, lenValueType, out _);
+            len += ASN1.decode_unsigned(buffer, offset + len, lenValueType, out uint _);
 
             /* Tag 2: Optional Array Index or Tag 3:  BACnet Result Flags */
             len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValueType);
             if (tagNumber == 2 && len < apduLen)
-                len += ASN1.decode_unsigned(buffer, offset + len, lenValueType, out _);
+                len += ASN1.decode_unsigned(buffer, offset + len, lenValueType, out uint _);
             else
                 /* Tag 3:  BACnet Result Flags */
                 len += ASN1.decode_bitstring(buffer, offset + len, 2, out _);
 
             /* Tag 4 Item Count */
             len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValueType);
-            len += ASN1.decode_unsigned(buffer, offset + len, lenValueType, out var itemCount);
+            len += ASN1.decode_unsigned(buffer, offset + len, lenValueType, out uint itemCount);
 
             if (!ASN1.decode_is_opening_tag(buffer, offset + len))
                 return 0;
@@ -2087,7 +2083,7 @@ namespace System.IO.BACnet.Serialize
                 if (ASN1.decode_is_context_tag(buffer, offset + len, 3))
                 {
                     len += ASN1.decode_tag_number_and_value(buffer, offset + len, out _, out lenValue);
-                    len += ASN1.decode_unsigned(buffer, offset + len, lenValue, out var decodedValue);
+                    len += ASN1.decode_unsigned(buffer, offset + len, lenValue, out uint decodedValue);
                     newEntry.priority = (byte)decodedValue;
                 }
                 else
@@ -2159,7 +2155,7 @@ namespace System.IO.BACnet.Serialize
                 if (tagNumber == 4)
                 {
                     len += tagLen;
-                    len = ASN1.decode_unsigned(buffer, offset + len, lenValueType, out var unsignedValue);
+                    len = ASN1.decode_unsigned(buffer, offset + len, lenValueType, out uint unsignedValue);
                     if (unsignedValue >= ASN1.BACNET_MIN_PRIORITY && unsignedValue <= ASN1.BACNET_MAX_PRIORITY)
                         value.priority = (byte)unsignedValue;
                     else
@@ -2589,7 +2585,7 @@ namespace System.IO.BACnet.Serialize
                         break;
 
                     case BacnetTrendLogValueType.TL_TYPE_ENUM:
-                        len += ASN1.decode_unsigned(buffer, offset + len, lenValue, out var eval);
+                        len += ASN1.decode_unsigned(buffer, offset + len, lenValue, out uint eval);
                         records[curveNumber].Value = eval;
                         break;
 
@@ -2599,7 +2595,7 @@ namespace System.IO.BACnet.Serialize
                         break;
 
                     case BacnetTrendLogValueType.TL_TYPE_UNSIGN:
-                        len += ASN1.decode_unsigned(buffer, offset + len, lenValue, out var uinval);
+                        len += ASN1.decode_unsigned(buffer, offset + len, lenValue, out uint uinval);
                         records[curveNumber].Value = uinval;
                         break;
 

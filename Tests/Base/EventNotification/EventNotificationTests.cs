@@ -1,5 +1,7 @@
-﻿using System.IO.BACnet.EventNotification;
+﻿using System.IO.BACnet.Base;
+using System.IO.BACnet.EventNotification;
 using System.IO.BACnet.EventNotification.EventValues;
+using System.IO.BACnet.Helpers;
 using NUnit.Framework;
 
 namespace System.IO.BACnet.Tests.Base.EventNotification
@@ -7,7 +9,6 @@ namespace System.IO.BACnet.Tests.Base.EventNotification
     [TestFixture]
     public class EventNotificationTests
     {
-        [TestCase(typeof(StateTransition<ChangeOfState>))]
         [TestCase(typeof(StateTransition<ChangeOfBitString>))]
         [TestCase(typeof(StateTransition<UnsignedRange>))]
         [TestCase(typeof(StateTransition<BufferReady>))]
@@ -29,7 +30,15 @@ namespace System.IO.BACnet.Tests.Base.EventNotification
         [Test]
         public void should_override_tostring_in_changeofvalue_float()
         {
-            var instance = new StateTransition<ChangeOfValue<float>>(ChangeOfValueFactory.CreateNew((float)123.456));
+            var instance = new StateTransition<ChangeOfValue<float>>(ChangeOfValueFactory.Create((float)123.456));
+
+            Assert.That(instance.ToString(), Is.Not.EqualTo(instance.GetType().ToString()));
+        }
+
+        [Test]
+        public void should_override_tostring_in_changeofvalue_bool()
+        {
+            var instance = new StateTransition<ChangeOfState<bool>>(ChangeOfStateFactory.Create(true));
 
             Assert.That(instance.ToString(), Is.Not.EqualTo(instance.GetType().ToString()));
         }
@@ -188,28 +197,75 @@ namespace System.IO.BACnet.Tests.Base.EventNotification
             StateTransition receivedData = null;
             client2.OnEventNotify += (sender, address, id, data, confirm) => receivedData = data as StateTransition;
 
-            var sentData = new StateTransition<ChangeOfState>(new ChangeOfState()
-            {
-                NewState = new BacnetPropertyState
+            var sentData =
+                new StateTransition<ChangeOfState<bool>>(ChangeOfStateFactory.Create(value)
+                    .SetStatusFlags(BacnetBitString.Parse("010")))
                 {
-                    tag = BacnetPropertyState.BacnetPropertyStateTypes.BOOLEAN_VALUE,
-                    state = new BacnetPropertyState.State() { boolean_value = value }
-                },
-                StatusFlags = BacnetBitString.Parse("010")
-            })
-            {
-                AckRequired = false,
-                EventObjectIdentifier = new BacnetObjectId(BacnetObjectTypes.OBJECT_LIFE_SAFETY_ZONE, 123),
-                FromState = BacnetEventStates.EVENT_STATE_NORMAL,
-                InitiatingObjectIdentifier = new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, 1),
-                MessageText = "Dummy Operation",
-                NotificationClass = 10,
-                NotifyType = BacnetNotifyTypes.NOTIFY_EVENT,
-                Priority = 1,
-                TimeStamp = new BacnetGenericTime(new DateTime(2018, 2, 22, 16, 14, 15), BacnetTimestampTags.TIME_STAMP_DATETIME),
-                ProcessIdentifier = 1,
-                ToState = BacnetEventStates.EVENT_STATE_NORMAL
-            };
+                    AckRequired = false,
+                    EventObjectIdentifier = new BacnetObjectId(BacnetObjectTypes.OBJECT_LIFE_SAFETY_ZONE, 123),
+                    FromState = BacnetEventStates.EVENT_STATE_NORMAL,
+                    InitiatingObjectIdentifier = new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, 1),
+                    MessageText = "Dummy Operation",
+                    NotificationClass = 10,
+                    NotifyType = BacnetNotifyTypes.NOTIFY_EVENT,
+                    Priority = 1,
+                    TimeStamp = new BacnetGenericTime(new DateTime(2018, 2, 22, 16, 14, 15),
+                        BacnetTimestampTags.TIME_STAMP_DATETIME),
+                    ProcessIdentifier = 1,
+                    ToState = BacnetEventStates.EVENT_STATE_NORMAL
+                };
+
+            // act
+            client1.SendUnconfirmedEventNotification(Helper.DummyAddress, sentData);
+
+            // assert
+            Assert.That(receivedData, Is.Not.SameAs(sentData));
+            Helper.AssertPropertiesAndFieldsAreEqual(sentData, receivedData);
+        }
+
+        [TestCase(default(BacnetBinaryPv))]
+        [TestCase(default(BacnetEventTypes))]
+        [TestCase(default(BacnetPolarity))]
+        [TestCase(default(BacnetProgramRequest))]
+        [TestCase(default(BacnetProgramState))]
+        [TestCase(default(BacnetProgramError))]
+        [TestCase(default(BacnetReliability))]
+        [TestCase(default(BacnetEventStates))]
+        [TestCase(default(BacnetDeviceStatus))]
+        [TestCase(default(BacnetUnitsId))]
+        [TestCase(default(uint))]
+        [TestCase(default(BacnetLifeSafetyModes))]
+        [TestCase(default(BacnetLifeSafetyStates))]
+        public void should_raise_oneventnotify_when_sending_changeofstate_data(object value)
+        {
+            // arrange
+            var (client1, client2) = Helper.CreateConnectedClients();
+            StateTransition receivedData = null;
+            client2.OnEventNotify += (sender, address, id, data, confirm) => receivedData = data as StateTransition;
+
+            var t = value.GetType();
+            var cosType = typeof(ChangeOfState<>).MakeGenericType(t);
+            var stType = typeof(StateTransition<>).MakeGenericType(cosType);
+
+            var sentData = Activator.CreateInstance(stType,
+                    FactoryHelper.CreateReflected<ChangeOfStateFactory, ChangeOfState>(value).SetStatusFlags(
+                        BacnetBitString.Parse("010")))
+                as StateTransition;
+
+            Assert.That(sentData, Is.Not.Null);
+
+            sentData.AckRequired = false;
+            sentData.EventObjectIdentifier = new BacnetObjectId(BacnetObjectTypes.OBJECT_LIFE_SAFETY_ZONE, 123);
+            sentData.FromState = BacnetEventStates.EVENT_STATE_NORMAL;
+            sentData.InitiatingObjectIdentifier = new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, 1);
+            sentData.MessageText = "Dummy Operation";
+            sentData.NotificationClass = 10;
+            sentData.NotifyType = BacnetNotifyTypes.NOTIFY_EVENT;
+            sentData.Priority = 1;
+            sentData.TimeStamp = new BacnetGenericTime(new DateTime(2018, 2, 22, 16, 14, 15),
+                BacnetTimestampTags.TIME_STAMP_DATETIME);
+            sentData.ProcessIdentifier = 1;
+            sentData.ToState = BacnetEventStates.EVENT_STATE_NORMAL;
 
             // act
             client1.SendUnconfirmedEventNotification(Helper.DummyAddress, sentData);
@@ -229,7 +285,7 @@ namespace System.IO.BACnet.Tests.Base.EventNotification
 
             var sentData = new StateTransition<ChangeOfValue<float>>(
                 ChangeOfValueFactory
-                    .CreateNew((float)123.456)
+                    .Create((float)123.456)
                     .SetStatusFlags(BacnetBitString.Parse("010")))
             {
                 AckRequired = false,
@@ -263,7 +319,7 @@ namespace System.IO.BACnet.Tests.Base.EventNotification
 
             var sentData = new StateTransition<ChangeOfValue<BacnetBitString>>(
                 ChangeOfValueFactory
-                    .CreateNew(BacnetBitString.Parse("101"))
+                    .Create(BacnetBitString.Parse("101"))
                     .SetStatusFlags(BacnetBitString.Parse("010")))
             {
                 AckRequired = false,

@@ -2,7 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace System.IO.BACnet.EventNotification.EventValues
 {
-    public abstract class ChangeOfValue : EventValuesBase
+    public abstract class ChangeOfValue : EventValuesBase, IHasStatusFlags
     {
         public override BacnetEventTypes EventType => BacnetEventTypes.EVENT_CHANGE_OF_VALUE;
         public BacnetCOVTypes Tag { get; protected set; }
@@ -19,10 +19,10 @@ namespace System.IO.BACnet.EventNotification.EventValues
             Tag = type;
         }
 
-        public static ChangeOfValue<float> CreateNew(float value)
+        public static ChangeOfValue<float> Create(float value)
             => new ChangeOfValue<float>(value, BacnetCOVTypes.CHANGE_OF_VALUE_REAL);
 
-        public static ChangeOfValue<BacnetBitString> CreateNew(BacnetBitString value)
+        public static ChangeOfValue<BacnetBitString> Create(BacnetBitString value)
             => new ChangeOfValue<BacnetBitString>(value, BacnetCOVTypes.CHANGE_OF_VALUE_BITS);
     }
 
@@ -32,15 +32,6 @@ namespace System.IO.BACnet.EventNotification.EventValues
         protected ChangeOfValueFactory(object value, BacnetCOVTypes type) : base(value, type)
         {
             throw new InvalidOperationException("this is a dummy class to avoid static call with generic type parameter");
-        }
-    }
-
-    public static class Extensions
-    {
-        public static ChangeOfValue<T> SetStatusFlags<T>(this ChangeOfValue<T> cov, BacnetBitString statusFlags)
-        {
-            cov.StatusFlags = statusFlags;
-            return cov;
         }
     }
 }
