@@ -1,4 +1,7 @@
 ﻿using System.Collections;
+using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
 using NUnit.Framework;
 
 namespace System.IO.BACnet.Tests
@@ -56,6 +59,21 @@ namespace System.IO.BACnet.Tests
                 else
                     Assert.AreEqual(expectedValue, fi.GetValue(actual), "Field: " + fi.Name);
             }
+        }
+
+        public static string Doc2Code(string input)
+        {
+            var hexCodes = input.Split('\r', '\n')
+                .Select(line => Regex.Match(line, @"^X'(?<hex>[^']+)'"))
+                .Where(m => m.Success)
+                .SelectMany(m => m.Groups["hex"].Value).ToArray();
+
+            var pairs = Enumerable.Range(0, hexCodes.Length)
+                .GroupBy(x => x / 2)
+                .Select(x => "0x" + new string(x.Select(y => hexCodes[y]).ToArray()))
+                .ToArray();
+
+            return $"var expectedBytes = new byte[] {{{string.Join(", ", pairs)}}};";
         }
     }
 }
