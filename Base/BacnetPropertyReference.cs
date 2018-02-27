@@ -1,5 +1,6 @@
 ﻿namespace System.IO.BACnet
 {
+    // TODO you have been flagged for refactoring due to un-C#-iness
     public struct BacnetPropertyReference
     {
         public uint propertyIdentifier;
