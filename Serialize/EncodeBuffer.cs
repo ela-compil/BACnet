@@ -70,6 +70,9 @@
                 Add(buffer[i]);
         }
 
+        public void Add(byte[] buffer)
+            => Add(buffer, buffer.Length);
+
         public int GetDiff(EncodeBuffer buffer)
         {
             var diff = Math.Abs(buffer.offset - offset);

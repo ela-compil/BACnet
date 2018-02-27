@@ -24,6 +24,8 @@ namespace System.IO.BACnet.Serialize
         /// </summary>
         public static Func<BacnetAddress, BacnetPropertyIds, byte, BacnetApplicationTags> CustomTagResolver;
 
+        private static readonly byte[] AnyDateOrTime = new byte[] {0xFF, 0xFF, 0xFF, 0xFF};
+
         public interface IEncode
         {
             void Encode(EncodeBuffer buffer);
@@ -706,10 +708,17 @@ namespace System.IO.BACnet.Serialize
 
         public static void encode_bacnet_time(EncodeBuffer buffer, DateTime value)
         {
-            buffer.Add((byte)value.Hour);
-            buffer.Add((byte)value.Minute);
-            buffer.Add((byte)value.Second);
-            buffer.Add((byte)(value.Millisecond / 10));
+            if (value == default)
+            {
+                buffer.Add(AnyDateOrTime);
+            }
+            else
+            {
+                buffer.Add((byte)value.Hour);
+                buffer.Add((byte)value.Minute);
+                buffer.Add((byte)value.Second);
+                buffer.Add((byte)(value.Millisecond / 10));
+            }
         }
 
         public static void encode_context_time(EncodeBuffer buffer, byte tagNumber, DateTime value)
@@ -722,10 +731,7 @@ namespace System.IO.BACnet.Serialize
         {
             if (value == new DateTime(1, 1, 1)) // this is the way decode do for 'Date any' = DateTime(0)
             {
-                buffer.Add(0xFF);
-                buffer.Add(0xFF);
-                buffer.Add(0xFF);
-                buffer.Add(0xFF);
+                buffer.Add(AnyDateOrTime);
                 return;
             }
 

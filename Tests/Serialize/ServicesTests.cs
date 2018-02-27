@@ -400,22 +400,157 @@ namespace System.IO.BACnet.Tests.Serialize
 
             // assert
             Assert.That(encodedBytes, Is.EquivalentTo(expectedBytes));
+        }
 
+        [Test]
+        public void should_encode_geteventinformation_according_to_ashrae_example()
+        {
+            // arrange
+            var buffer = new EncodeBuffer();
+
+            // example taken from ANNEX F - Examples of APDU Encoding - F.1.8
+            var expectedBytes = new byte[]
+            {
+                0x00 /* docs say 0x02, but that's wrong! */, 0x02, 0x01, 0x1D
+            };
+
+            // act
+            APDU.EncodeConfirmedServiceRequest(buffer, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST,
+                BacnetConfirmedServices.SERVICE_CONFIRMED_GET_EVENT_INFORMATION, BacnetMaxSegments.MAX_SEG0,
+                BacnetMaxAdpu.MAX_APDU206, 1);
+
+            var encodedBytes = buffer.ToArray();
+
+            // assert
+            Assert.That(encodedBytes, Is.EquivalentTo(expectedBytes));
+        }
+
+        [Test]
+        public void should_encode_geteventinformation_ack_according_to_ashrae_example()
+        {
+            // arrange
+            var buffer = new EncodeBuffer();
+
+            var data = new[]
+            {
+                new BacnetGetEventInformationData()
+                {
+                    objectIdentifier = new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 2),
+                    eventState = BacnetEventStates.EVENT_STATE_HIGH_LIMIT,
+                    acknowledgedTransitions = BacnetBitString.Parse("011"),
+                    eventTimeStamps = new[]
+                    {
+                        new BacnetGenericTime(new DateTime(1, 1, 1, 15, 35, 00).AddMilliseconds(200), BacnetTimestampTags.TIME_STAMP_TIME),
+                        new BacnetGenericTime(default(DateTime), BacnetTimestampTags.TIME_STAMP_TIME),
+                        new BacnetGenericTime(default(DateTime), BacnetTimestampTags.TIME_STAMP_TIME),
+                    },
+                    notifyType = BacnetNotifyTypes.NOTIFY_ALARM,
+                    eventEnable = BacnetBitString.Parse("111"),
+                    eventPriorities = new uint[] {15, 15, 20}
+                },
+                new BacnetGetEventInformationData()
+                {
+                objectIdentifier = new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 3),
+                eventState = BacnetEventStates.EVENT_STATE_NORMAL,
+                acknowledgedTransitions = BacnetBitString.Parse("110"),
+                eventTimeStamps = new[]
+                {
+                    new BacnetGenericTime(new DateTime(1, 1, 1, 15, 40, 00), BacnetTimestampTags.TIME_STAMP_TIME),
+                    new BacnetGenericTime(default(DateTime), BacnetTimestampTags.TIME_STAMP_TIME),
+                    new BacnetGenericTime(new DateTime(1, 1, 1, 15, 45, 30).AddMilliseconds(300), BacnetTimestampTags.TIME_STAMP_TIME),
+                },
+                notifyType = BacnetNotifyTypes.NOTIFY_ALARM,
+                eventEnable = BacnetBitString.Parse("111"),
+                eventPriorities = new uint[] {15, 15, 20}
+                }
+            };
+
+            // example taken from ANNEX F - Examples of APDU Encoding - F.1.8
+            var expectedBytes = new byte[]
+            {
+                0x30, 0x01, 0x1D, 0x0E, 0x0C, 0x00, 0x00, 0x00, 0x02, 0x19, 0x03, 0x2A, 0x05, 0x60, 0x3E, 0x0C, 0x0F,
+                0x23, 0x00, 0x14, 0x0C, 0xFF, 0xFF, 0xFF, 0xFF, 0x0C, 0xFF, 0xFF, 0xFF, 0xFF, 0x3F, 0x49, 0x00, 0x5A,
+                0x05, 0xE0, 0x6E, 0x21, 0x0F, 0x21, 0x0F, 0x21, 0x14, 0x6F, 0x0C, 0x00, 0x00, 0x00, 0x03, 0x19, 0x00,
+                0x2A, 0x05, 0xC0, 0x3E, 0x0C, 0x0F, 0x28, 0x00, 0x00, 0x0C, 0xFF, 0xFF, 0xFF, 0xFF, 0x0C, 0x0F, 0x2D,
+                0x1E, 0x1E, 0x3F, 0x49, 0x00, 0x5A, 0x05, 0xE0, 0x6E, 0x21, 0x0F, 0x21, 0x0F, 0x21, 0x14, 0x6F, 0x0F,
+                0x19, 0x00
+            };
+
+            // act
+            APDU.EncodeComplexAck(buffer, BacnetPduTypes.PDU_TYPE_COMPLEX_ACK,
+                BacnetConfirmedServices.SERVICE_CONFIRMED_GET_EVENT_INFORMATION, 1);
+
+            Services.EncodeGetEventInformationAcknowledge(buffer, data, false);
+
+            var encodedBytes = buffer.ToArray();
+
+            // assert
+            Assert.That(encodedBytes, Is.EquivalentTo(expectedBytes));
         }
 
         [Test]
         public void GenerateCode()
         {
             Console.WriteLine(Helper.Doc2Code(@"
-X'30' PDU Type=3 (BACnet-ComplexACK-PDU, SEG=0, MOR=0)
-X'01' Invoke ID=1
-X'03' Service ACK Choice=3 (GetAlarmSummary-ACK)
-X'C4' Application Tag 12 (Object Identifier, L=4) (Object Identifier)
-X'00000002' Analog Input, Instance Number=2
-X'91' Application Tag 9 (Enumerated, L=1) (Alarm State)
+X'30' PDU Type = 3 (BACnet-ComplexACK-PDU, SEG=0, MOR=0)
+X'01' Invoke ID=01
+X'1D' Service ACK Choice = 29, (GetEventInformation-ACK)
+X'0E' PD opening Tag 0
+X'0C' SD context Tag 0 (ObjectIdentifier, L=4)
+X'00000002' Analog Input, Instance Number = 2
+X'19' SD context Tag 1 (Enumerated, L=1)
 X'03' 3 (HIGH_LIMIT)
-X'82' Application Tag 8 (Bit String, L=2) (Acknowledged Transitions)
+X'2A' SD context Tag 2 (Bit String, L=2)
 X'0560' 0,1,1 (FALSE, TRUE, TRUE)
+X'3E' PD opening Tag 3
+X'0C' SD context Tag 0 (Time L=4)
+X'0F230014' Time 15:35:00.20
+X'0C' SD context Tag 0 (Time L=4)
+X'FFFFFFFF' Time unspecified
+X'0C' SD context Tag 0 (Time L=4)
+X'FFFFFFFF' Time unspecified
+X'3F' PD closing Tag 3
+X'49' SD context Tag 4 (Enumerated, L=1)
+X'00' 0 (ALARM)
+X'5A' SD context Tag 5 (Bit String, L=2)
+X'05E0' 1,1,1 (TRUE, TRUE, TRUE)
+X'6E' PD opening Tag 6
+X'21' Application Tag 2 (Unsigned Integer, L=1)
+X'0F' 15 (Priority)
+X'21' Application Tag 2 (Unsigned Integer, L=1)
+X'0F' 15 (Priority)
+X'21' Application Tag 2 (Unsigned Integer, L=1)
+X'14' 20 (Priority)
+X'6F' PD closing Tag 6
+X'0C' SD context Tag 0 (ObjectIdentifier, L=4)
+X'00000003' Analog Input, Instance Number = 3
+X'19' SD context Tag 1 (Enumerated, L=1)
+X'00' 0 (NORMAL)
+X'2A' SD context Tag 2 (Bit String, L=2)
+X'05C0' 1,1,0 (TRUE, TRUE, FALSE)
+X'3E' PD opening Tag 3
+X'0C' SD context Tag 0 (Time L=4)
+X'0F280000' Time 15:40:00.00
+X'0C' SD context Tag 0 (Time L=4)
+X'FFFFFFFF' Time unspecified
+X'0C' SD context Tag 0 (Time L=4)
+X'0F2D1E1E' 15:45:30.30
+X'3F' PD closing Tag 3
+X'49' SD context Tag 4 (Enumerated, L=1)
+X'00' 0 (ALARM)
+X'5A' SD context Tag 5 (Bit String, L=2)
+X'05E0' 1,1,1 (TRUE, TRUE, TRUE)
+X'6E' PD opening Tag 6
+X'21' Application Tag 2 (Unsigned Integer, L=1)
+X'0F' 15 (Priority)
+X'21' Application Tag 2 (Unsigned Integer, L=1)
+X'0F' 15 (Priority)
+X'21' Application Tag 2 (Unsigned Integer, L=1)
+X'14' 20 (Priority)
+X'6F' PD closing Tag 6
+X'0F' PD closing Tag 0
+X'19' SD context Tag 1 (Boolean, L=1)
+X'00' FALSE (More Events)
 "));
         }
     }
