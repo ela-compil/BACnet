@@ -571,31 +571,6 @@ namespace System.IO.BACnet.Tests.Serialize
 
             // assert
             Assert.That(encodedBytes, Is.EquivalentTo(expectedBytes));
-        }
-
-        [Test]
-        public void GenerateCode()
-        {
-            Console.WriteLine(Helper.Doc2Code(@"
-X'00' PDU Type=0 (BACnet-Confirmed-Request-PDU, SEG=0, MOR=0, SA=0)
-X'02' Maximum APDU Size Accepted=206 octets
-X'0F' Invoke ID=15
-X'1C' Service Choice=28 (SubscribeCOVProperty-Request)
-X'09' SD Context Tag 0 (Subscriber Process Identifier, L=1)
-X'12' 18
-X'1C' SD Context Tag 1 (Monitored Object Identifier, L=4)
-X'0000000A' Analog Input, Instance Number=10
-X'29' SD Context Tag 2 (Issue Confirmed Notifications, L=1)
-X'01' 1 (TRUE)
-X'39' SD Context Tag 3 (Lifetime, L=1)
-X'3C' 60
-X'4E' PD Opening Tag 4 (Monitored Property, L=1)
-X'09' SD Context Tag 0 (Property Identifier, L=1)
-X'55' 85 (PRESENT_VALUE)
-X'4F' PD Closing Tag 4 (Property Identifier)
-X'5C' SD Context Tag 5 (COV Increment, L=4)
-X'3F800000' 1.0
-"));
-        }
+        }    
     }
 }

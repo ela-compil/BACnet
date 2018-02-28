@@ -50,6 +50,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Serialize\Services\AlarmAndEventServicesTests.cs" />
     <Compile Include="Serialize\ASN1Tests.cs" />
+    <Compile Include="Serialize\Services\FileAccessServicesTests.cs" />
     <Compile Include="Serialize\Services\ObjectAccessServicesTests.cs" />
   </ItemGroup>
   <ItemGroup>
