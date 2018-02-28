@@ -80,7 +80,7 @@ namespace System.IO.BACnet.Tests.Serialize
                 {
                     property = new BacnetPropertyReference((uint) BacnetPropertyIds.PROP_PRESENT_VALUE,
                         ASN1.BACNET_ARRAY_ALL),
-                    value = new List<BacnetValue> {new BacnetValue((float) 65.0)}
+                    value = new List<BacnetValue> {new BacnetValue(65.0f)}
                 },
                 new BacnetPropertyValue
                 {
@@ -146,7 +146,7 @@ namespace System.IO.BACnet.Tests.Serialize
                 {
                     property = new BacnetPropertyReference((uint) BacnetPropertyIds.PROP_PRESENT_VALUE,
                         ASN1.BACNET_ARRAY_ALL),
-                    value = new List<BacnetValue> {new BacnetValue((float) 65.0)}
+                    value = new List<BacnetValue> {new BacnetValue(65.0f)}
                 },
                 new BacnetPropertyValue
                 {
@@ -185,10 +185,10 @@ namespace System.IO.BACnet.Tests.Serialize
             var buffer = new EncodeBuffer();
             var data = new StateTransition<OutOfRange>(new OutOfRange()
             {
-                ExceedingValue = (float) 80.1,
+                ExceedingValue = 80.1f,
                 StatusFlags = BacnetBitString.Parse("1000"),
-                Deadband = (float) 1.0,
-                ExceededLimit = (float) 80.0
+                Deadband = 1.0f,
+                ExceededLimit = 80.0f
             })
             {
                 ProcessIdentifier = 1,
@@ -309,10 +309,10 @@ namespace System.IO.BACnet.Tests.Serialize
             var buffer = new EncodeBuffer();
             var data = new StateTransition<OutOfRange>(new OutOfRange()
             {
-                ExceedingValue = (float)80.1,
+                ExceedingValue = 80.1f,
                 StatusFlags = BacnetBitString.Parse("1000"),
-                Deadband = (float)1.0,
-                ExceededLimit = (float)80.0
+                Deadband = 1.0f,
+                ExceededLimit = 80.0f
             })
             {
                 ProcessIdentifier = 1,
@@ -369,7 +369,6 @@ namespace System.IO.BACnet.Tests.Serialize
 
             // assert
             Assert.That(encodedBytes, Is.EquivalentTo(expectedBytes));
-
         }
 
         [Test]
@@ -489,68 +488,173 @@ namespace System.IO.BACnet.Tests.Serialize
         }
 
         [Test]
+        public void should_encode_lifesafetyoperation_according_to_ashrae_example()
+        {
+            // arrange
+            var buffer = new EncodeBuffer();
+
+            // example taken from ANNEX F - Examples of APDU Encoding - F.1.9
+            var expectedBytes = new byte[]
+            {
+                0x00, 0x02, 0x0F, 0x1B, 0x09, 0x12, 0x1C, 0x00, 0x4D, 0x44, 0x4C, 0x29, 0x04, 0x3C, 0x05, 0x40, 0x00,
+                0x01
+            };
+
+            // act
+            APDU.EncodeConfirmedServiceRequest(buffer, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST,
+                BacnetConfirmedServices.SERVICE_CONFIRMED_LIFE_SAFETY_OPERATION, BacnetMaxSegments.MAX_SEG0,
+                BacnetMaxAdpu.MAX_APDU206, 15);
+
+            Services.EncodeLifeSafetyOperation(buffer, 18, "MDL",
+                (uint) BacnetLifeSafetyOperations.LIFE_SAFETY_OP_RESET,
+                new BacnetObjectId(BacnetObjectTypes.OBJECT_LIFE_SAFETY_POINT, 1));
+
+            var encodedBytes = buffer.ToArray();
+
+            // assert
+            Assert.That(encodedBytes, Is.EquivalentTo(expectedBytes));
+        }
+
+        [Test]
+        public void should_encode_lifesafetyoperation_ack_according_to_ashrae_example()
+        {
+            // arrange
+            var buffer = new EncodeBuffer();
+
+            // example taken from ANNEX F - Examples of APDU Encoding - F.1.9
+            var expectedBytes = new byte[]
+            {
+                0x20, 0x0F, 0x1B
+            };
+
+            // act
+            APDU.EncodeSimpleAck(buffer, BacnetPduTypes.PDU_TYPE_SIMPLE_ACK,
+                BacnetConfirmedServices.SERVICE_CONFIRMED_LIFE_SAFETY_OPERATION, 15);
+
+            var encodedBytes = buffer.ToArray();
+
+            // assert
+            Assert.That(encodedBytes, Is.EquivalentTo(expectedBytes));
+        }
+
+        [Test]
+        public void should_encode_subscribecov_according_to_ashrae_example()
+        {
+            // arrange
+            var buffer = new EncodeBuffer();
+
+            // example taken from ANNEX F - Examples of APDU Encoding - F.1.10
+            var expectedBytes = new byte[]
+                {0x00, 0x02, 0x0F, 0x05, 0x09, 0x12, 0x1C, 0x00, 0x00, 0x00, 0x0A, 0x29, 0x01, 0x39, 0x00};
+
+            // act
+            APDU.EncodeConfirmedServiceRequest(buffer, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST,
+                BacnetConfirmedServices.SERVICE_CONFIRMED_SUBSCRIBE_COV, BacnetMaxSegments.MAX_SEG0,
+                BacnetMaxAdpu.MAX_APDU206, 15);
+
+            Services.EncodeSubscribeCOV(buffer, 18, new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 10),
+                false, true, 0);
+
+            var encodedBytes = buffer.ToArray();
+
+            // assert
+            Assert.That(encodedBytes, Is.EquivalentTo(expectedBytes));
+        }
+
+        [Test]
+        public void should_encode_subscribecov_ack_according_to_ashrae_example()
+        {
+            // arrange
+            var buffer = new EncodeBuffer();
+
+            // example taken from ANNEX F - Examples of APDU Encoding - F.1.10
+            var expectedBytes = new byte[]
+            {
+                0x20, 0x0F, 0x05
+            };
+
+            // act
+            APDU.EncodeSimpleAck(buffer, BacnetPduTypes.PDU_TYPE_SIMPLE_ACK,
+                BacnetConfirmedServices.SERVICE_CONFIRMED_SUBSCRIBE_COV, 15);
+
+            var encodedBytes = buffer.ToArray();
+
+            // assert
+            Assert.That(encodedBytes, Is.EquivalentTo(expectedBytes));
+        }
+
+        [Test]
+        public void should_encode_subscribecovproperty_according_to_ashrae_example()
+        {
+            // arrange
+            var buffer = new EncodeBuffer();
+
+            // example taken from ANNEX F - Examples of APDU Encoding - F.1.11
+            var expectedBytes = new byte[]
+            {
+                0x00, 0x02, 0x0F, 0x1C, 0x09, 0x12, 0x1C, 0x00, 0x00, 0x00, 0x0A, 0x29, 0x01, 0x39, 0x3C, 0x4E, 0x09,
+                0x55, 0x4F, 0x5C, 0x3F, 0x80, 0x00, 0x00
+            };
+            // act
+            APDU.EncodeConfirmedServiceRequest(buffer, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST,
+                BacnetConfirmedServices.SERVICE_CONFIRMED_SUBSCRIBE_COV_PROPERTY, BacnetMaxSegments.MAX_SEG0,
+                BacnetMaxAdpu.MAX_APDU206, 15);
+
+            Services.EncodeSubscribeProperty(buffer, 18, new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 10),
+                false, true, 60,
+                new BacnetPropertyReference((uint) BacnetPropertyIds.PROP_PRESENT_VALUE, ASN1.BACNET_ARRAY_ALL), true,
+                1.0f);
+
+            var encodedBytes = buffer.ToArray();
+
+            // assert
+            Assert.That(encodedBytes, Is.EquivalentTo(expectedBytes));
+        }
+
+        [Test]
+        public void should_encode_subscribecovproperty_ack_according_to_ashrae_example()
+        {
+            // arrange
+            var buffer = new EncodeBuffer();
+
+            // example taken from ANNEX F - Examples of APDU Encoding - F.1.11
+            var expectedBytes = new byte[]
+            {
+                0x20, 0x0F, 0x1C
+            };
+
+            // act
+            APDU.EncodeSimpleAck(buffer, BacnetPduTypes.PDU_TYPE_SIMPLE_ACK,
+                BacnetConfirmedServices.SERVICE_CONFIRMED_SUBSCRIBE_COV_PROPERTY, 15);
+
+            var encodedBytes = buffer.ToArray();
+
+            // assert
+            Assert.That(encodedBytes, Is.EquivalentTo(expectedBytes));
+        }
+
+        [Test]
         public void GenerateCode()
         {
             Console.WriteLine(Helper.Doc2Code(@"
-X'30' PDU Type = 3 (BACnet-ComplexACK-PDU, SEG=0, MOR=0)
-X'01' Invoke ID=01
-X'1D' Service ACK Choice = 29, (GetEventInformation-ACK)
-X'0E' PD opening Tag 0
-X'0C' SD context Tag 0 (ObjectIdentifier, L=4)
-X'00000002' Analog Input, Instance Number = 2
-X'19' SD context Tag 1 (Enumerated, L=1)
-X'03' 3 (HIGH_LIMIT)
-X'2A' SD context Tag 2 (Bit String, L=2)
-X'0560' 0,1,1 (FALSE, TRUE, TRUE)
-X'3E' PD opening Tag 3
-X'0C' SD context Tag 0 (Time L=4)
-X'0F230014' Time 15:35:00.20
-X'0C' SD context Tag 0 (Time L=4)
-X'FFFFFFFF' Time unspecified
-X'0C' SD context Tag 0 (Time L=4)
-X'FFFFFFFF' Time unspecified
-X'3F' PD closing Tag 3
-X'49' SD context Tag 4 (Enumerated, L=1)
-X'00' 0 (ALARM)
-X'5A' SD context Tag 5 (Bit String, L=2)
-X'05E0' 1,1,1 (TRUE, TRUE, TRUE)
-X'6E' PD opening Tag 6
-X'21' Application Tag 2 (Unsigned Integer, L=1)
-X'0F' 15 (Priority)
-X'21' Application Tag 2 (Unsigned Integer, L=1)
-X'0F' 15 (Priority)
-X'21' Application Tag 2 (Unsigned Integer, L=1)
-X'14' 20 (Priority)
-X'6F' PD closing Tag 6
-X'0C' SD context Tag 0 (ObjectIdentifier, L=4)
-X'00000003' Analog Input, Instance Number = 3
-X'19' SD context Tag 1 (Enumerated, L=1)
-X'00' 0 (NORMAL)
-X'2A' SD context Tag 2 (Bit String, L=2)
-X'05C0' 1,1,0 (TRUE, TRUE, FALSE)
-X'3E' PD opening Tag 3
-X'0C' SD context Tag 0 (Time L=4)
-X'0F280000' Time 15:40:00.00
-X'0C' SD context Tag 0 (Time L=4)
-X'FFFFFFFF' Time unspecified
-X'0C' SD context Tag 0 (Time L=4)
-X'0F2D1E1E' 15:45:30.30
-X'3F' PD closing Tag 3
-X'49' SD context Tag 4 (Enumerated, L=1)
-X'00' 0 (ALARM)
-X'5A' SD context Tag 5 (Bit String, L=2)
-X'05E0' 1,1,1 (TRUE, TRUE, TRUE)
-X'6E' PD opening Tag 6
-X'21' Application Tag 2 (Unsigned Integer, L=1)
-X'0F' 15 (Priority)
-X'21' Application Tag 2 (Unsigned Integer, L=1)
-X'0F' 15 (Priority)
-X'21' Application Tag 2 (Unsigned Integer, L=1)
-X'14' 20 (Priority)
-X'6F' PD closing Tag 6
-X'0F' PD closing Tag 0
-X'19' SD context Tag 1 (Boolean, L=1)
-X'00' FALSE (More Events)
+X'00' PDU Type=0 (BACnet-Confirmed-Request-PDU, SEG=0, MOR=0, SA=0)
+X'02' Maximum APDU Size Accepted=206 octets
+X'0F' Invoke ID=15
+X'1C' Service Choice=28 (SubscribeCOVProperty-Request)
+X'09' SD Context Tag 0 (Subscriber Process Identifier, L=1)
+X'12' 18
+X'1C' SD Context Tag 1 (Monitored Object Identifier, L=4)
+X'0000000A' Analog Input, Instance Number=10
+X'29' SD Context Tag 2 (Issue Confirmed Notifications, L=1)
+X'01' 1 (TRUE)
+X'39' SD Context Tag 3 (Lifetime, L=1)
+X'3C' 60
+X'4E' PD Opening Tag 4 (Monitored Property, L=1)
+X'09' SD Context Tag 0 (Property Identifier, L=1)
+X'55' 85 (PRESENT_VALUE)
+X'4F' PD Closing Tag 4 (Property Identifier)
+X'5C' SD Context Tag 5 (COV Increment, L=4)
+X'3F800000' 1.0
 "));
         }
     }

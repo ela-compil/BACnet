@@ -30,7 +30,7 @@ namespace System.IO.BACnet.Tests.Base.EventNotification
         [Test]
         public void should_override_tostring_in_changeofvalue_float()
         {
-            var instance = new StateTransition<ChangeOfValue<float>>(ChangeOfValueFactory.Create((float)123.456));
+            var instance = new StateTransition<ChangeOfValue<float>>(ChangeOfValueFactory.Create(123.456f));
 
             Assert.That(instance.ToString(), Is.Not.EqualTo(instance.GetType().ToString()));
         }
@@ -163,7 +163,7 @@ namespace System.IO.BACnet.Tests.Base.EventNotification
             {
                 ExceededLimit = float.MinValue,
                 ExceedingValue = float.MaxValue,
-                Deadband = (float)17.01,
+                Deadband = 17.01f,
                 StatusFlags = BacnetBitString.Parse("010")
             })
             {
@@ -285,7 +285,7 @@ namespace System.IO.BACnet.Tests.Base.EventNotification
 
             var sentData = new StateTransition<ChangeOfValue<float>>(
                 ChangeOfValueFactory
-                    .Create((float)123.456)
+                    .Create(123.456f)
                     .SetStatusFlags(BacnetBitString.Parse("010")))
             {
                 AckRequired = false,
@@ -392,9 +392,9 @@ namespace System.IO.BACnet.Tests.Base.EventNotification
 
             var sentData = new StateTransition<FloatingLimit>(new FloatingLimit()
             {
-                ErrorLimit = (float)12.34,
-                ReferenceValue = (float)56.78,
-                SetPointValue = (float)91.011,
+                ErrorLimit = 12.34f,
+                ReferenceValue = 56.78f,
+                SetPointValue = 91.011f,
                 StatusFlags = BacnetBitString.Parse("010")
             })
             {

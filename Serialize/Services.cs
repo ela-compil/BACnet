@@ -626,6 +626,7 @@ namespace System.IO.BACnet.Serialize
             return len;
         }
 
+        // TODO CHECK: rename to EncodeSubscribeCovProperty ?
         public static void EncodeSubscribeProperty(EncodeBuffer buffer, uint subscriberProcessIdentifier, BacnetObjectId monitoredObjectIdentifier, bool cancellationRequest, bool issueConfirmedNotifications, uint lifetime, BacnetPropertyReference monitoredProperty, bool covIncrementPresent, float covIncrement)
         {
             /* tag 0 - subscriberProcessIdentifier */
