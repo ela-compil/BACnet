@@ -2517,5 +2517,25 @@ namespace System.IO.BACnet.Serialize
             var len = decode_tag_number_and_value(buffer, offset, out _, out var lenValue);
             return len + decode_unsigned(buffer, offset + len, lenValue, out value);
         }
+
+        public static void EncodeError(EncodeBuffer buffer, BacnetErrorClasses errorClass, BacnetErrorCodes errorCode)
+        {
+            encode_application_enumerated(buffer, (uint)errorClass);
+            encode_application_enumerated(buffer, (uint)errorCode);
+        }
+
+        public static int DecodeError(byte[] buffer, int offset, int length, out BacnetErrorClasses errorClass, out BacnetErrorCodes errorCode)
+        {
+            var orgOffset = offset;
+
+            offset += decode_tag_number_and_value(buffer, offset, out _, out var lenValueType);
+            /* FIXME: we could validate that the tag is enumerated... */
+            offset += EnumUtils.DecodeEnumerated(buffer, offset, lenValueType, out errorClass);
+            offset += decode_tag_number_and_value(buffer, offset, out _, out lenValueType);
+            /* FIXME: we could validate that the tag is enumerated... */
+            offset += EnumUtils.DecodeEnumerated(buffer, offset, lenValueType, out errorCode);
+
+            return offset - orgOffset;
+        }
     }
 }

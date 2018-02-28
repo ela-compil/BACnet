@@ -7,68 +7,8 @@ using NUnit.Framework;
 namespace System.IO.BACnet.Tests.Serialize
 {
     [TestFixture]
-    public class ServicesTests
+    public class AlarmAndEventServicesTests
     {
-        [Test]
-        public void should_encode_logrecord_according_to_ashrae_example()
-        {
-            // arrange
-            var buffer = new EncodeBuffer();
-            var record1 = new BacnetLogRecord(BacnetTrendLogValueType.TL_TYPE_REAL, 18.0,
-                new DateTime(1998, 3, 23, 19, 54, 27), 0);
-            var record2 = new BacnetLogRecord(BacnetTrendLogValueType.TL_TYPE_REAL, 18.1,
-                new DateTime(1998, 3, 23, 19, 56, 27), 0);
-
-            // example taken from ANNEX F - Examples of APDU Encoding
-            var expectedBytes = new byte[]
-            {
-                0x0E, 0xA4, 0x62, 0x03, 0x17, 0x01, 0xB4, 0x13, 0x36, 0x1B, 0x00, 0x0F,
-                0x1E, 0x2C, 0x41, 0x90, 0x00, 0x00, 0x1F, 0x2A, 0x04, 0x00, 0x0E, 0xA4,
-                0x62, 0x03, 0x17, 0x01, 0xB4, 0x13, 0x38, 0x1B, 0x00, 0x0F, 0x1E, 0x2C,
-                0x41, 0x90, 0xCC, 0xCD, 0x1F, 0x2A, 0x04, 0x00
-            };
-
-            // act
-            Services.EncodeLogRecord(buffer, record1);
-            Services.EncodeLogRecord(buffer, record2);
-            var encodedBytes = buffer.ToArray();
-
-            // assert
-            Assert.That(encodedBytes, Is.EquivalentTo(expectedBytes));
-        }
-
-        [Test]
-        public void should_decode_multiple_logrecords()
-        {
-            // arrange
-            var buffer = new EncodeBuffer();
-            var record1 = new BacnetLogRecord(BacnetTrendLogValueType.TL_TYPE_REAL, 18.0,
-                new DateTime(1998, 3, 23, 19, 54, 27), 0);
-            var record2 = new BacnetLogRecord(BacnetTrendLogValueType.TL_TYPE_REAL, 18.1,
-                new DateTime(1998, 3, 23, 19, 56, 27), 0);
-
-            // act
-            Services.EncodeLogRecord(buffer, record1);
-            Services.EncodeLogRecord(buffer, record2);
-            Services.DecodeLogRecord(buffer.buffer, 0, buffer.GetLength(), 2, out var decodedRecords);
-
-            /*
-             * Debug - write packet to network to analyze in WireShark
-             *
-
-            var client = new BacnetClient(new BacnetIpUdpProtocolTransport(47808, true));
-            client.Start();
-            client.ReadRangeResponse(new BacnetAddress(BacnetAddressTypes.IP, "192.168.1.99"), 42, null,
-                new BacnetObjectId(BacnetObjectTypes.OBJECT_TRENDLOG, 1),
-                new BacnetPropertyReference((uint) BacnetPropertyIds.PROP_LOG_BUFFER, ASN1.BACNET_ARRAY_ALL),
-                BacnetResultFlags.LAST_ITEM, 2, buffer.ToArray(), BacnetReadRangeRequestTypes.RR_BY_TIME, 79201);
-            */
-
-            // assert
-            Helper.AssertPropertiesAndFieldsAreEqual(record1, decodedRecords[0]);
-            Helper.AssertPropertiesAndFieldsAreEqual(record2, decodedRecords[1]);
-        }
-
         [Test]
         public void should_encode_confirmendcovnotificationrequest_according_to_ashrae_example()
         {
@@ -105,7 +45,7 @@ namespace System.IO.BACnet.Tests.Serialize
                 BacnetConfirmedServices.SERVICE_CONFIRMED_COV_NOTIFICATION, BacnetMaxSegments.MAX_SEG0,
                 BacnetMaxAdpu.MAX_APDU206, 15);
 
-            Services.EncodeCOVNotifyConfirmed(buffer, 18, 4,
+            AlarmAndEventServices.EncodeCOVNotifyConfirmed(buffer, 18, 4,
                 new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 10), 0, data);
             var encodedBytes = buffer.ToArray();
 
@@ -170,7 +110,7 @@ namespace System.IO.BACnet.Tests.Serialize
             APDU.EncodeUnconfirmedServiceRequest(buffer, BacnetPduTypes.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST,
                 BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_COV_NOTIFICATION);
 
-            Services.EncodeCOVNotifyConfirmed(buffer, 18, 4,
+            AlarmAndEventServices.EncodeCOVNotifyConfirmed(buffer, 18, 4,
                 new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 10), 0, data);
             var encodedBytes = buffer.ToArray();
 
@@ -217,7 +157,7 @@ namespace System.IO.BACnet.Tests.Serialize
                 BacnetConfirmedServices.SERVICE_CONFIRMED_EVENT_NOTIFICATION, BacnetMaxSegments.MAX_SEG0,
                 BacnetMaxAdpu.MAX_APDU206, 16);
 
-            Services.EncodeEventNotifyData(buffer, data);
+            AlarmAndEventServices.EncodeEventNotifyData(buffer, data);
 
             var encodedBytes = buffer.ToArray();
 
@@ -267,7 +207,7 @@ namespace System.IO.BACnet.Tests.Serialize
                 BacnetConfirmedServices.SERVICE_CONFIRMED_ACKNOWLEDGE_ALARM, BacnetMaxSegments.MAX_SEG0,
                 BacnetMaxAdpu.MAX_APDU206, 7);
 
-            Services.EncodeAlarmAcknowledge(buffer, 1, new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 2),
+            AlarmAndEventServices.EncodeAlarmAcknowledge(buffer, 1, new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 2),
                 (uint) BacnetEventStates.EVENT_STATE_HIGH_LIMIT, "MDL",
                 new BacnetGenericTime(default(DateTime), BacnetTimestampTags.TIME_STAMP_SEQUENCE, 16),
                 new BacnetGenericTime(new DateTime(1992, 6, 21, 13, 3, 41).AddMilliseconds(90),
@@ -340,7 +280,7 @@ namespace System.IO.BACnet.Tests.Serialize
             APDU.EncodeUnconfirmedServiceRequest(buffer, BacnetPduTypes.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST,
                 BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_EVENT_NOTIFICATION);
 
-            Services.EncodeEventNotifyData(buffer, data);
+            AlarmAndEventServices.EncodeEventNotifyData(buffer, data);
 
             var encodedBytes = buffer.ToArray();
 
@@ -389,10 +329,10 @@ namespace System.IO.BACnet.Tests.Serialize
             APDU.EncodeComplexAck(buffer, BacnetPduTypes.PDU_TYPE_COMPLEX_ACK,
                 BacnetConfirmedServices.SERVICE_CONFIRMED_GET_ALARM_SUMMARY, 1);
 
-            Services.EncodeAlarmSummary(buffer, new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 2),
+            AlarmAndEventServices.EncodeAlarmSummary(buffer, new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 2),
                 BacnetEventStates.EVENT_STATE_HIGH_LIMIT, BacnetBitString.Parse("011"));
 
-            Services.EncodeAlarmSummary(buffer, new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 3),
+            AlarmAndEventServices.EncodeAlarmSummary(buffer, new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 3),
                 BacnetEventStates.EVENT_STATE_LOW_LIMIT, BacnetBitString.Parse("111"));
 
             var encodedBytes = buffer.ToArray();
@@ -479,7 +419,7 @@ namespace System.IO.BACnet.Tests.Serialize
             APDU.EncodeComplexAck(buffer, BacnetPduTypes.PDU_TYPE_COMPLEX_ACK,
                 BacnetConfirmedServices.SERVICE_CONFIRMED_GET_EVENT_INFORMATION, 1);
 
-            Services.EncodeGetEventInformationAcknowledge(buffer, data, false);
+            AlarmAndEventServices.EncodeGetEventInformationAcknowledge(buffer, data, false);
 
             var encodedBytes = buffer.ToArray();
 
@@ -505,7 +445,7 @@ namespace System.IO.BACnet.Tests.Serialize
                 BacnetConfirmedServices.SERVICE_CONFIRMED_LIFE_SAFETY_OPERATION, BacnetMaxSegments.MAX_SEG0,
                 BacnetMaxAdpu.MAX_APDU206, 15);
 
-            Services.EncodeLifeSafetyOperation(buffer, 18, "MDL",
+            AlarmAndEventServices.EncodeLifeSafetyOperation(buffer, 18, "MDL",
                 (uint) BacnetLifeSafetyOperations.LIFE_SAFETY_OP_RESET,
                 new BacnetObjectId(BacnetObjectTypes.OBJECT_LIFE_SAFETY_POINT, 1));
 
@@ -552,7 +492,7 @@ namespace System.IO.BACnet.Tests.Serialize
                 BacnetConfirmedServices.SERVICE_CONFIRMED_SUBSCRIBE_COV, BacnetMaxSegments.MAX_SEG0,
                 BacnetMaxAdpu.MAX_APDU206, 15);
 
-            Services.EncodeSubscribeCOV(buffer, 18, new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 10),
+            AlarmAndEventServices.EncodeSubscribeCOV(buffer, 18, new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 10),
                 false, true, 0);
 
             var encodedBytes = buffer.ToArray();
@@ -600,7 +540,7 @@ namespace System.IO.BACnet.Tests.Serialize
                 BacnetConfirmedServices.SERVICE_CONFIRMED_SUBSCRIBE_COV_PROPERTY, BacnetMaxSegments.MAX_SEG0,
                 BacnetMaxAdpu.MAX_APDU206, 15);
 
-            Services.EncodeSubscribeProperty(buffer, 18, new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 10),
+            AlarmAndEventServices.EncodeSubscribeProperty(buffer, 18, new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 10),
                 false, true, 60,
                 new BacnetPropertyReference((uint) BacnetPropertyIds.PROP_PRESENT_VALUE, ASN1.BACNET_ARRAY_ALL), true,
                 1.0f);

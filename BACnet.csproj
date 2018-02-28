@@ -144,6 +144,10 @@
     <Compile Include="Helpers\StringFormatterExtension.cs" />
     <Compile Include="Base\BacnetBvlcV6Functions.cs" />
     <Compile Include="Base\BacnetBvlcV6Results.cs" />
+    <Compile Include="Serialize\Services\AlarmAndEventServices.cs" />
+    <Compile Include="Serialize\Services\FileAccessServices.cs" />
+    <Compile Include="Serialize\Services\ObjectAccessServices.cs" />
+    <Compile Include="Serialize\Services\RemoteDeviceManagementServices.cs" />
     <Compile Include="Transport\BacnetTransportBase.cs" />
     <Compile Include="Transport\IBacnetSerialTransport.cs" />
     <Compile Include="Transport\IBacnetTransport.cs" />
@@ -168,7 +172,6 @@
     <Compile Include="Serialize\MSTP.cs" />
     <Compile Include="Serialize\NPDU.cs" />
     <Compile Include="Serialize\PTP.cs" />
-    <Compile Include="Serialize\Services.cs" />
     <Compile Include="Storage\DeviceStorage.cs" />
     <Compile Include="Storage\Object.cs" />
     <Compile Include="Storage\Property.cs" />
