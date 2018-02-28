@@ -18,14 +18,12 @@ namespace System.IO.BACnet.Tests.Serialize
             {
                 new BacnetPropertyValue
                 {
-                    property = new BacnetPropertyReference((uint) BacnetPropertyIds.PROP_PRESENT_VALUE,
-                        ASN1.BACNET_ARRAY_ALL),
+                    property = new BacnetPropertyReference((uint) BacnetPropertyIds.PROP_PRESENT_VALUE),
                     value = new List<BacnetValue> {new BacnetValue(65.0f)}
                 },
                 new BacnetPropertyValue
                 {
-                    property = new BacnetPropertyReference((uint) BacnetPropertyIds.PROP_STATUS_FLAGS,
-                        ASN1.BACNET_ARRAY_ALL),
+                    property = new BacnetPropertyReference((uint) BacnetPropertyIds.PROP_STATUS_FLAGS),
                     value = new List<BacnetValue> {new BacnetValue(BacnetBitString.Parse("0000"))}
                 }
             };
@@ -66,8 +64,7 @@ namespace System.IO.BACnet.Tests.Serialize
             };
 
             // act
-            APDU.EncodeSimpleAck(buffer, BacnetPduTypes.PDU_TYPE_SIMPLE_ACK,
-                BacnetConfirmedServices.SERVICE_CONFIRMED_COV_NOTIFICATION, 15);
+            APDU.EncodeSimpleAck(buffer, BacnetConfirmedServices.SERVICE_CONFIRMED_COV_NOTIFICATION, 15);
 
             var encodedBytes = buffer.ToArray();
 
@@ -84,14 +81,12 @@ namespace System.IO.BACnet.Tests.Serialize
             {
                 new BacnetPropertyValue
                 {
-                    property = new BacnetPropertyReference((uint) BacnetPropertyIds.PROP_PRESENT_VALUE,
-                        ASN1.BACNET_ARRAY_ALL),
+                    property = new BacnetPropertyReference((uint) BacnetPropertyIds.PROP_PRESENT_VALUE),
                     value = new List<BacnetValue> {new BacnetValue(65.0f)}
                 },
                 new BacnetPropertyValue
                 {
-                    property = new BacnetPropertyReference((uint) BacnetPropertyIds.PROP_STATUS_FLAGS,
-                        ASN1.BACNET_ARRAY_ALL),
+                    property = new BacnetPropertyReference((uint) BacnetPropertyIds.PROP_STATUS_FLAGS),
                     value = new List<BacnetValue> {new BacnetValue(BacnetBitString.Parse("0000"))}
                 }
             };
@@ -178,8 +173,7 @@ namespace System.IO.BACnet.Tests.Serialize
             };
 
             // act
-            APDU.EncodeSimpleAck(buffer, BacnetPduTypes.PDU_TYPE_SIMPLE_ACK,
-                BacnetConfirmedServices.SERVICE_CONFIRMED_EVENT_NOTIFICATION, 16);
+            APDU.EncodeSimpleAck(buffer, BacnetConfirmedServices.SERVICE_CONFIRMED_EVENT_NOTIFICATION, 16);
 
             var encodedBytes = buffer.ToArray();
 
@@ -232,8 +226,7 @@ namespace System.IO.BACnet.Tests.Serialize
             };
 
             // act
-            APDU.EncodeSimpleAck(buffer, BacnetPduTypes.PDU_TYPE_SIMPLE_ACK,
-                BacnetConfirmedServices.SERVICE_CONFIRMED_ACKNOWLEDGE_ALARM, 7);
+            APDU.EncodeSimpleAck(buffer, BacnetConfirmedServices.SERVICE_CONFIRMED_ACKNOWLEDGE_ALARM, 7);
 
             var encodedBytes = buffer.ToArray();
 
@@ -326,8 +319,7 @@ namespace System.IO.BACnet.Tests.Serialize
             };
 
             // act
-            APDU.EncodeComplexAck(buffer, BacnetPduTypes.PDU_TYPE_COMPLEX_ACK,
-                BacnetConfirmedServices.SERVICE_CONFIRMED_GET_ALARM_SUMMARY, 1);
+            APDU.EncodeComplexAck(buffer, BacnetConfirmedServices.SERVICE_CONFIRMED_GET_ALARM_SUMMARY, 1);
 
             AlarmAndEventServices.EncodeAlarmSummary(buffer, new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 2),
                 BacnetEventStates.EVENT_STATE_HIGH_LIMIT, BacnetBitString.Parse("011"));
@@ -416,8 +408,7 @@ namespace System.IO.BACnet.Tests.Serialize
             };
 
             // act
-            APDU.EncodeComplexAck(buffer, BacnetPduTypes.PDU_TYPE_COMPLEX_ACK,
-                BacnetConfirmedServices.SERVICE_CONFIRMED_GET_EVENT_INFORMATION, 1);
+            APDU.EncodeComplexAck(buffer, BacnetConfirmedServices.SERVICE_CONFIRMED_GET_EVENT_INFORMATION, 1);
 
             AlarmAndEventServices.EncodeGetEventInformationAcknowledge(buffer, data, false);
 
@@ -468,8 +459,7 @@ namespace System.IO.BACnet.Tests.Serialize
             };
 
             // act
-            APDU.EncodeSimpleAck(buffer, BacnetPduTypes.PDU_TYPE_SIMPLE_ACK,
-                BacnetConfirmedServices.SERVICE_CONFIRMED_LIFE_SAFETY_OPERATION, 15);
+            APDU.EncodeSimpleAck(buffer, BacnetConfirmedServices.SERVICE_CONFIRMED_LIFE_SAFETY_OPERATION, 15);
 
             var encodedBytes = buffer.ToArray();
 
@@ -514,8 +504,7 @@ namespace System.IO.BACnet.Tests.Serialize
             };
 
             // act
-            APDU.EncodeSimpleAck(buffer, BacnetPduTypes.PDU_TYPE_SIMPLE_ACK,
-                BacnetConfirmedServices.SERVICE_CONFIRMED_SUBSCRIBE_COV, 15);
+            APDU.EncodeSimpleAck(buffer, BacnetConfirmedServices.SERVICE_CONFIRMED_SUBSCRIBE_COV, 15);
 
             var encodedBytes = buffer.ToArray();
 
@@ -542,7 +531,7 @@ namespace System.IO.BACnet.Tests.Serialize
 
             AlarmAndEventServices.EncodeSubscribeProperty(buffer, 18, new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 10),
                 false, true, 60,
-                new BacnetPropertyReference((uint) BacnetPropertyIds.PROP_PRESENT_VALUE, ASN1.BACNET_ARRAY_ALL), true,
+                new BacnetPropertyReference((uint) BacnetPropertyIds.PROP_PRESENT_VALUE), true,
                 1.0f);
 
             var encodedBytes = buffer.ToArray();
@@ -564,8 +553,7 @@ namespace System.IO.BACnet.Tests.Serialize
             };
 
             // act
-            APDU.EncodeSimpleAck(buffer, BacnetPduTypes.PDU_TYPE_SIMPLE_ACK,
-                BacnetConfirmedServices.SERVICE_CONFIRMED_SUBSCRIBE_COV_PROPERTY, 15);
+            APDU.EncodeSimpleAck(buffer, BacnetConfirmedServices.SERVICE_CONFIRMED_SUBSCRIBE_COV_PROPERTY, 15);
 
             var encodedBytes = buffer.ToArray();
 

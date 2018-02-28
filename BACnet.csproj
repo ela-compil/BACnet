@@ -62,6 +62,7 @@
     <Compile Include="Base\BacnetAlarmSummaryData.cs" />
     <Compile Include="Base\BacnetApplicationTags.cs" />
     <Compile Include="Base\BacnetBinaryPv.cs" />
+    <Compile Include="Base\BacnetObjectPropertyReference.cs" />
     <Compile Include="Base\BacnetProgramError.cs" />
     <Compile Include="Base\BacnetProgramRequest.cs" />
     <Compile Include="Base\BacnetProgramState.cs" />

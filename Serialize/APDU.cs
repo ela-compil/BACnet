@@ -83,7 +83,8 @@
             return offset - orgOffset;
         }
 
-        public static void EncodeSimpleAck(EncodeBuffer buffer, BacnetPduTypes type, BacnetConfirmedServices service, byte invokeId)
+        public static void EncodeSimpleAck(EncodeBuffer buffer, BacnetConfirmedServices service, byte invokeId,
+            BacnetPduTypes type = BacnetPduTypes.PDU_TYPE_SIMPLE_ACK) // TODO can this be something else??
         {
             buffer.buffer[buffer.offset++] = (byte)type;
             buffer.buffer[buffer.offset++] = invokeId;
@@ -101,10 +102,12 @@
             return offset - orgOffset;
         }
 
-        public static int EncodeComplexAck(EncodeBuffer buffer, BacnetPduTypes type, BacnetConfirmedServices service, byte invokeId, byte sequenceNumber = 0, byte proposedWindowNumber = 0)
+        public static int EncodeComplexAck(EncodeBuffer buffer, BacnetConfirmedServices service, byte invokeId,
+            BacnetPduTypes type = BacnetPduTypes.PDU_TYPE_COMPLEX_ACK, byte sequenceNumber = 0,
+            byte proposedWindowNumber = 0)
         {
             var len = 3;
-            buffer.buffer[buffer.offset++] = (byte)type;
+            buffer.buffer[buffer.offset++] = (byte) type;
             buffer.buffer[buffer.offset++] = invokeId;
             if ((type & BacnetPduTypes.SEGMENTED_MESSAGE) > 0)
             {
@@ -112,7 +115,8 @@
                 buffer.buffer[buffer.offset++] = proposedWindowNumber;
                 len += 2;
             }
-            buffer.buffer[buffer.offset++] = (byte)service;
+
+            buffer.buffer[buffer.offset++] = (byte) service;
             return len;
         }
 

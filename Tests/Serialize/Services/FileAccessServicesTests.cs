@@ -51,8 +51,7 @@ namespace System.IO.BACnet.Tests.Serialize
             };
 
             // act
-            APDU.EncodeComplexAck(buffer, BacnetPduTypes.PDU_TYPE_COMPLEX_ACK,
-                BacnetConfirmedServices.SERVICE_CONFIRMED_ATOMIC_READ_FILE, 0);
+            APDU.EncodeComplexAck(buffer, BacnetConfirmedServices.SERVICE_CONFIRMED_ATOMIC_READ_FILE, 0);
 
             FileAccessServices.EncodeAtomicReadFileAcknowledge(buffer, true, false, 0, 1, data,
                 data.Select(arr => arr.Length).ToArray());
@@ -106,7 +105,7 @@ namespace System.IO.BACnet.Tests.Serialize
             };
 
             // act
-            APDU.EncodeComplexAck(buffer, BacnetPduTypes.PDU_TYPE_COMPLEX_ACK,
+            APDU.EncodeComplexAck(buffer,
                 BacnetConfirmedServices.SERVICE_CONFIRMED_ATOMIC_READ_FILE, 18);
 
             FileAccessServices.EncodeAtomicReadFileAcknowledge(buffer, false, true, 14, 2, data,
@@ -159,7 +158,7 @@ namespace System.IO.BACnet.Tests.Serialize
             var expectedBytes = new byte[] {0x30, 0x55, 0x07, 0x09, 0x1E};
 
             // act
-            APDU.EncodeComplexAck(buffer, BacnetPduTypes.PDU_TYPE_COMPLEX_ACK,
+            APDU.EncodeComplexAck(buffer,
                 BacnetConfirmedServices.SERVICE_CONFIRMED_ATOMIC_WRITE_FILE, 85);
 
             FileAccessServices.EncodeAtomicWriteFileAcknowledge(buffer, true, 30);
@@ -214,7 +213,7 @@ namespace System.IO.BACnet.Tests.Serialize
             var expectedBytes = new byte[] {0x30, 0x55, 0x07, 0x19, 0x0E};
 
             // act
-            APDU.EncodeComplexAck(buffer, BacnetPduTypes.PDU_TYPE_COMPLEX_ACK,
+            APDU.EncodeComplexAck(buffer,
                 BacnetConfirmedServices.SERVICE_CONFIRMED_ATOMIC_WRITE_FILE, 85);
 
             FileAccessServices.EncodeAtomicWriteFileAcknowledge(buffer, false, 14);
@@ -224,18 +223,5 @@ namespace System.IO.BACnet.Tests.Serialize
             // assert
             Assert.That(encodedBytes, Is.EquivalentTo(expectedBytes));
         }
-
-        [Test]
-        public void GenerateCode()
-        {
-            Console.WriteLine(Helper.Doc2Code(@"
-X'30' PDU Type=3 (BACnet-ComplexACK-PDU, SEG=0, MOR=0)
-X'55' Invoke ID=85
-X'07' Service ACK Choice=7 (AtomicWriteFile-ACK)
-X'19' SD Context Tag 1 (File Start Record, L=1)
-X'0E' 14
-"));
-        }
-
     }
 }

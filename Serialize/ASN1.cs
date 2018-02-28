@@ -24,8 +24,20 @@ namespace System.IO.BACnet.Serialize
         /// </summary>
         public static Func<BacnetAddress, BacnetPropertyIds, byte, BacnetApplicationTags> CustomTagResolver;
 
-        private static readonly byte[] AnyDateOrTime = new byte[] {0xFF, 0xFF, 0xFF, 0xFF};
+        private static readonly byte[] AnyDateOrTime = {0xFF, 0xFF, 0xFF, 0xFF};
 
+        /*
+         * TODO: I'm sorry, but I am going to paint a big, fat, "kill me" on you, IEncode / IDecode.
+         *
+         * There is this little thing known as "separation of concerns", and I don't think a class that
+         * holds data should be concernd with how (or even if) it gets serialized - that would make it
+         * very hard to have different encoders/decoders. We won't have different encoders because BACnet
+         * is a standard and there is only one way to encode/decode? Well, yes, except for application
+         * specifics and / or buggy hardware. Idealy, I'd be able to use a specific en/decoder per device
+         * I'm talking with, which inherits from a standard bacnet-decoder and can be extended / overridden.
+         *
+         * Also: cyclic dependencies. Bad thing.
+         */
         public interface IEncode
         {
             void Encode(EncodeBuffer buffer);
@@ -190,6 +202,7 @@ namespace System.IO.BACnet.Serialize
             buffer.Add(tmp.buffer, tmp.offset);
         }
 
+        // TODO: should't this be the same as encode_context_unsigned --> kill this, keep unsigned
         public static void encode_context_enumerated(EncodeBuffer buffer, byte tagNumber, uint value)
         {
             int len; /* return value */
@@ -461,6 +474,10 @@ namespace System.IO.BACnet.Serialize
                         ((BacnetObjectId)value.Value).Instance);
                     break;
 
+                case BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_PROPERTY_REFERENCE:
+                    EncodeApplicationObjectPropertyReference(buffer, (BacnetObjectPropertyReference) value.Value);
+                    break;
+
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_COV_SUBSCRIPTION:
                     encode_cov_subscription(buffer, (BacnetCOVSubscription)value.Value);
                     //is this the right way to do it, I wonder?
@@ -519,6 +536,45 @@ namespace System.IO.BACnet.Serialize
                     }
                     break;
             }
+        }
+
+        // TODO why is this called ...Application... ?
+        private static void EncodeApplicationObjectPropertyReference(EncodeBuffer buffer, BacnetObjectPropertyReference value)
+        {
+            encode_context_object_id(buffer, 0, value.ObjectId.Type, value.ObjectId.Instance);
+
+            /*
+             * TODO this is just a guess
+             * I'm implementing this for a LIST_OF_GROUP_MEMBERS, where I need a list of PropRefs per object
+             */
+            if (value.PropertyReferences.Length < 2) // can't be 0, but just in case I'd rather have you throw below
+            {
+                EncodePropertyReference(buffer, value.PropertyReferences[0], 1);
+                return;
+            }
+
+            encode_opening_tag(buffer, 1);
+
+            foreach (var propRef in value.PropertyReferences)
+                EncodePropertyReference(buffer, propRef, 0);
+
+            encode_closing_tag(buffer, 1);
+        }
+
+        public static void EncodePropertyReference(EncodeBuffer buffer, BacnetPropertyReference value, byte? contextTag=null)
+        {
+            if(contextTag.HasValue)
+                encode_context_unsigned(buffer, contextTag.Value, value.propertyIdentifier);
+            else
+                encode_unsigned32(buffer, value.propertyIdentifier);
+
+            if (value.propertyArrayIndex == BACNET_ARRAY_ALL)
+                return;
+
+            if(contextTag.HasValue)
+                encode_context_unsigned(buffer, (byte) (contextTag.Value+1), value.propertyArrayIndex);
+            else
+                encode_unsigned32(buffer, value.propertyArrayIndex);
         }
 
         public static void bacapp_encode_device_obj_property_ref(EncodeBuffer buffer, BacnetDeviceObjectPropertyReference value)

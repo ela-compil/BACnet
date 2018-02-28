@@ -637,7 +637,7 @@ namespace System.IO.BACnet
                 if (confirmedServiceRequest)
                     APDU.EncodeConfirmedServiceRequest(encodedBuffer, type, service, maxSegments, maxAdpu, invokeId);
                 else
-                    APDU.EncodeComplexAck(encodedBuffer, type, service, invokeId);
+                    APDU.EncodeComplexAck(encodedBuffer, service, invokeId, type);
 
                 segments.Add(Tuple.Create(sequenceNumber, copy)); // doesn't include BVLC or NPDU
             }
@@ -1070,8 +1070,8 @@ namespace System.IO.BACnet
         {
             Log.Debug("Sending ReadRangeRequest");
             return BeginConfirmedServiceRequest(address, BacnetConfirmedServices.SERVICE_CONFIRMED_READ_RANGE,
-                buffer => ObjectAccessServices.EncodeReadRange(buffer, objectId, (uint)BacnetPropertyIds.PROP_LOG_BUFFER, ASN1.BACNET_ARRAY_ALL,
-                    BacnetReadRangeRequestTypes.RR_BY_POSITION, idxBegin, DateTime.Now, (int)quantity), waitForTransmit);
+                buffer => ObjectAccessServices.EncodeReadRange(buffer, objectId, BacnetPropertyIds.PROP_LOG_BUFFER,
+                    BacnetReadRangeRequestTypes.RR_BY_POSITION, idxBegin, DateTime.Now, (int)quantity, ASN1.BACNET_ARRAY_ALL), waitForTransmit);
         }
 
         public void EndReadRangeRequest(BacnetAsyncResult request, out byte[] trendBuffer, out uint itemCount)
@@ -1165,7 +1165,7 @@ namespace System.IO.BACnet
             var propertyIndex = index == ASN1.BACNET_ARRAY_ALL ? "" : $"[{index}]";
             Log.Debug($"Sending ReadPropertyRequest {objectId} {propertyId}{propertyIndex}");
             return BeginConfirmedServiceRequest(address, BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROPERTY,
-                buffer => ObjectAccessServices.EncodeReadProperty(buffer, objectId, (uint)propertyId, index), waitForTransmit);
+                buffer => ObjectAccessServices.EncodeReadProperty(buffer, objectId, propertyId, index), waitForTransmit);
         }
 
         public IList<BacnetValue> EndReadPropertyRequest(BacnetAsyncResult request)
@@ -1317,7 +1317,7 @@ namespace System.IO.BACnet
         {
             Log.Debug("Sending DeleteObjectRequest");
             return BeginConfirmedServiceRequest(address, BacnetConfirmedServices.SERVICE_CONFIRMED_DELETE_OBJECT,
-                buffer => ASN1.encode_application_object_id(buffer, objectId.Type, objectId.Instance), waitForTransmit);
+                buffer => ObjectAccessServices.EncodeDeleteObject(buffer, objectId), waitForTransmit);
         }
 
         public void EndDeleteObjectRequest(BacnetAsyncResult request) => EndConfirmedServiceRequest(request);
@@ -1650,7 +1650,7 @@ namespace System.IO.BACnet
 
             //set segments limits
             buffer.max_offset = buffer.offset + GetMaxApdu();
-            var apduHeader = APDU.EncodeComplexAck(buffer, BacnetPduTypes.PDU_TYPE_COMPLEX_ACK | (isSegmented ? BacnetPduTypes.SEGMENTED_MESSAGE | BacnetPduTypes.SERVER : 0) | (moreFollows ? BacnetPduTypes.MORE_FOLLOWS : 0), service, invokeId, segmentation?.sequence_number ?? 0, segmentation?.window_size ?? 0);
+            var apduHeader = APDU.EncodeComplexAck(buffer, service, invokeId, type: BacnetPduTypes.PDU_TYPE_COMPLEX_ACK | (isSegmented ? BacnetPduTypes.SEGMENTED_MESSAGE | BacnetPduTypes.SERVER : 0) | (moreFollows ? BacnetPduTypes.MORE_FOLLOWS : 0), sequenceNumber: segmentation?.sequence_number ?? 0, proposedWindowNumber: segmentation?.window_size ?? 0);
             buffer.min_limit = (GetMaxApdu() - apduHeader) * (segmentation?.sequence_number ?? 0);
 
             return buffer;
@@ -1786,7 +1786,7 @@ namespace System.IO.BACnet
             {
                 SendComplexAck(address, invokeId, segmentation, BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROPERTY, b =>
                 {
-                    ObjectAccessServices.EncodeReadPropertyAcknowledge(b, objectId, property.propertyIdentifier, property.propertyArrayIndex, value);
+                    ObjectAccessServices.EncodeReadPropertyAcknowledge(b, objectId, (BacnetPropertyIds) property.propertyIdentifier, value, property.propertyArrayIndex);
                 });
             });
         }
@@ -1816,7 +1816,7 @@ namespace System.IO.BACnet
             {
                 SendComplexAck(address, invokeId, segmentation, BacnetConfirmedServices.SERVICE_CONFIRMED_READ_RANGE, b =>
                 {
-                    ObjectAccessServices.EncodeReadRangeAcknowledge(b, objectId, property.propertyIdentifier, property.propertyArrayIndex, BacnetBitString.ConvertFromInt((uint)status), itemCount, applicationData, requestType, firstSequenceNo);
+                    ObjectAccessServices.EncodeReadRangeAcknowledge(b, objectId, (BacnetPropertyIds) property.propertyIdentifier, BacnetBitString.ConvertFromInt((uint)status), itemCount, applicationData, requestType, firstSequenceNo, property.propertyArrayIndex);
                 });
             });
         }
@@ -1855,7 +1855,7 @@ namespace System.IO.BACnet
             Log.Debug($"Sending SimpleAckResponse for {service}");
             var buffer = GetEncodeBuffer(Transport.HeaderLength);
             NPDU.Encode(buffer, BacnetNpduControls.PriorityNormalMessage, address.RoutedSource);
-            APDU.EncodeSimpleAck(buffer, BacnetPduTypes.PDU_TYPE_SIMPLE_ACK, service, invokeId);
+            APDU.EncodeSimpleAck(buffer, service, invokeId);
             Transport.Send(buffer.buffer, Transport.HeaderLength, buffer.offset - Transport.HeaderLength, address, false, 0);
         }
 
