@@ -2,14 +2,14 @@
 {
     public static class RemoteDeviceManagementServices
     {
-        public static void EncodeDeviceCommunicationControl(EncodeBuffer buffer, uint timeDuration, uint enableDisable, string password)
+        public static void EncodeDeviceCommunicationControl(EncodeBuffer buffer, uint timeDuration, EnableDisable enableDisable, string password)
         {
             /* optional timeDuration */
             if (timeDuration > 0)
                 ASN1.encode_context_unsigned(buffer, 0, timeDuration);
 
             /* enable disable */
-            ASN1.encode_context_enumerated(buffer, 1, enableDisable);
+            ASN1.encode_context_unsigned(buffer, 1, (uint)enableDisable);
 
             /* optional password */
             if (!String.IsNullOrEmpty(password))
@@ -77,6 +77,10 @@
         {
             ASN1.encode_context_unsigned(buffer, 0, vendorID);
             ASN1.encode_context_unsigned(buffer, 1, serviceNumber);
+
+            if (data == null || data.Length == 0)
+                return; // that's ok.
+
             ASN1.encode_opening_tag(buffer, 2);
             buffer.Add(data, data.Length);
             ASN1.encode_closing_tag(buffer, 2);

@@ -53,6 +53,7 @@
     <Compile Include="Serialize\ASN1Tests.cs" />
     <Compile Include="Serialize\Services\FileAccessServicesTests.cs" />
     <Compile Include="Serialize\Services\ObjectAccessServicesTests.cs" />
+    <Compile Include="Serialize\Services\RemoteDeviceManagementServicesTests.cs" />
     <Compile Include="TestData\ASHRAE.cs" />
   </ItemGroup>
   <ItemGroup>

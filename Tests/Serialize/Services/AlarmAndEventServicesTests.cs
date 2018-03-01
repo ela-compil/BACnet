@@ -102,8 +102,7 @@ namespace System.IO.BACnet.Tests.Serialize
             };
 
             // act
-            APDU.EncodeUnconfirmedServiceRequest(buffer, BacnetPduTypes.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST,
-                BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_COV_NOTIFICATION);
+            APDU.EncodeUnconfirmedServiceRequest(buffer, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_COV_NOTIFICATION);
 
             AlarmAndEventServices.EncodeCOVNotifyConfirmed(buffer, 18, 4,
                 new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 10), 0, data);
@@ -270,7 +269,7 @@ namespace System.IO.BACnet.Tests.Serialize
             };
 
             // act
-            APDU.EncodeUnconfirmedServiceRequest(buffer, BacnetPduTypes.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST,
+            APDU.EncodeUnconfirmedServiceRequest(buffer,
                 BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_EVENT_NOTIFICATION);
 
             AlarmAndEventServices.EncodeEventNotifyData(buffer, data);

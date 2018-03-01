@@ -678,48 +678,5 @@ namespace System.IO.BACnet.Tests.Serialize
             // assert
             Assert.That(encodedBytes, Is.EquivalentTo(expectedBytes));
         }
-
-        [Test]
-        public void GenerateCode()
-        {
-            Console.WriteLine(Doc2Code(@"
-F.3.10 Encoding for Example E.3.10 - WritePropertyMultiple Service
-X'00' PDU Type=0 (BACnet-Confirmed-Request-PDU, SEG=0, MOR=0, SA=0)
-X'04' Maximum APDU Size Accepted=1024 octets
-X'01' Invoke ID=1
-X'10' Service Choice=16 (WritePropertyMultiple-Request)
-X'0C' SD Context Tag 0 (Object Identifier, L=4)
-X'00800005' Analog Value, Instance Number=5
-X'1E' PD Opening Tag 1 (List Of Properties)
-X'09' SD Context Tag 0 (Property Identifier, L=1)
-X'55' 85 (PRESENT_VALUE)
-X'2E' PD Opening Tag 2 (Property Value)
-X'44' Application Tag 4 (Real, L=4)
-X'42860000' 67.0
-X'2F' PD Closing Tag 2 (Property Value)
-X'1F' PD Closing Tag 1 (List Of Properties)
-X'0C' SD Context Tag 0 (Object Identifier, L=4)
-X'00800006' Analog Value, Instance Number=6
-X'1E' PD Opening Tag 1 (List Of Properties)
-X'09' SD Context Tag 0 (Property Identifier, L=1)
-X'55' 85 (PRESENT_VALUE)
-X'2E' PD Opening Tag 2 (Property Value)
-X'44' Application Tag 4 (Real, L=4)
-X'42860000' 67.0
-X'2F' PD Closing Tag 2 (Property Value)
-X'1F' PD Closing Tag 1 (List Of Properties)
-X'0C' SD Context Tag 0 (Object Identifier, L=4)
-X'00800007' Analog Value, Instance Number=7
-X'1E' PD Opening Tag 1 (List Of Properties)
-X'09' SD Context Tag 0 (Property Identifier, L=1)
-X'55' 85 (PRESENT_VALUE)
-X'2E' PD Opening Tag 2 (Property Value)
-X'44' Application Tag 4 (Real, L=4)
-X'42900000' 72.0
-X'2F' PD Closing Tag 2 (Property Value)
-X'1F' PD Closing Tag 1 (List Of Properties)
-Assuming
-"));
-        }
     }
 }

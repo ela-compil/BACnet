@@ -70,7 +70,8 @@
             return offset - orgOffset;
         }
 
-        public static void EncodeUnconfirmedServiceRequest(EncodeBuffer buffer, BacnetPduTypes type, BacnetUnconfirmedServices service)
+        public static void EncodeUnconfirmedServiceRequest(EncodeBuffer buffer, BacnetUnconfirmedServices service,
+            BacnetPduTypes type = BacnetPduTypes.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST)
         {
             buffer.buffer[buffer.offset++] = (byte)type;
             buffer.buffer[buffer.offset++] = (byte)service;

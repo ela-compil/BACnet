@@ -844,7 +844,7 @@ namespace System.IO.BACnet
                 var b = GetEncodeBuffer(Transport.HeaderLength);
                 var broadcast = Transport.GetBroadcastAddress();
                 NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, broadcast);
-                APDU.EncodeUnconfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_WHO_IS);
+                APDU.EncodeUnconfirmedServiceRequest(b, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_WHO_IS);
                 RemoteDeviceManagementServices.EncodeWhoIsBroadcast(b, lowLimit, highLimit);
 
                 var sent = false;
@@ -888,7 +888,7 @@ namespace System.IO.BACnet
 
             var b = GetEncodeBuffer(Transport.HeaderLength);
             NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, receiver);
-            APDU.EncodeUnconfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_WHO_IS);
+            APDU.EncodeUnconfirmedServiceRequest(b, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_WHO_IS);
             RemoteDeviceManagementServices.EncodeWhoIsBroadcast(b, lowLimit, highLimit);
 
             Transport.Send(b.buffer, Transport.HeaderLength, b.offset - Transport.HeaderLength, receiver, false, 0);
@@ -908,7 +908,7 @@ namespace System.IO.BACnet
 
             var b = GetEncodeBuffer(Transport.HeaderLength);
             NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, receiver);
-            APDU.EncodeUnconfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_I_AM);
+            APDU.EncodeUnconfirmedServiceRequest(b, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_I_AM);
             RemoteDeviceManagementServices.EncodeIamBroadcast(b, deviceId, (uint)GetMaxApdu(), segmentation, VendorId);
 
             Transport.Send(b.buffer, Transport.HeaderLength, b.offset - Transport.HeaderLength, receiver, false, 0);
@@ -922,7 +922,7 @@ namespace System.IO.BACnet
             var b = GetEncodeBuffer(Transport.HeaderLength);
             var broadcast = Transport.GetBroadcastAddress();
             NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, broadcast);
-            APDU.EncodeUnconfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_I_HAVE);
+            APDU.EncodeUnconfirmedServiceRequest(b, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_I_HAVE);
             RemoteDeviceManagementServices.EncodeIhaveBroadcast(b, deviceId, objId, objName);
 
             Transport.Send(b.buffer, Transport.HeaderLength, b.offset - Transport.HeaderLength, broadcast, false, 0);
@@ -935,7 +935,7 @@ namespace System.IO.BACnet
 
             var b = GetEncodeBuffer(Transport.HeaderLength);
             NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, address);
-            APDU.EncodeUnconfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_EVENT_NOTIFICATION);
+            APDU.EncodeUnconfirmedServiceRequest(b, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_EVENT_NOTIFICATION);
             AlarmAndEventServices.EncodeEventNotifyData(b, eventData);
             Transport.Send(b.buffer, Transport.HeaderLength, b.offset - Transport.HeaderLength, address, false, 0);
         }
@@ -957,9 +957,9 @@ namespace System.IO.BACnet
 
             var buffer = GetEncodeBuffer(Transport.HeaderLength);
             NPDU.Encode(buffer, BacnetNpduControls.PriorityNormalMessage, address);
-            APDU.EncodeUnconfirmedServiceRequest(buffer, BacnetPduTypes.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST, dateTime.Kind == DateTimeKind.Utc
-                    ? BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_UTC_TIME_SYNCHRONIZATION
-                    : BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_TIME_SYNCHRONIZATION);
+            APDU.EncodeUnconfirmedServiceRequest(buffer, dateTime.Kind == DateTimeKind.Utc
+                ? BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_UTC_TIME_SYNCHRONIZATION
+                : BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_TIME_SYNCHRONIZATION);
             RemoteDeviceManagementServices.EncodeTimeSync(buffer, dateTime);
             Transport.Send(buffer.buffer, Transport.HeaderLength, buffer.offset - Transport.HeaderLength, address, false, 0);
         }
@@ -1407,13 +1407,13 @@ namespace System.IO.BACnet
             }
         }
 
-        public void DeviceCommunicationControlRequest(BacnetAddress address, uint timeDuration, uint enableDisable, string password)
+        public void DeviceCommunicationControlRequest(BacnetAddress address, uint timeDuration, EnableDisable enableDisable, string password)
         {
             using (var request = BeginDeviceCommunicationControlRequest(address, timeDuration, enableDisable, password, true))
                 EndDeviceCommunicationControlRequest(request);
         }
 
-        public BacnetAsyncResult BeginDeviceCommunicationControlRequest(BacnetAddress address, uint timeDuration, uint enableDisable, string password, bool waitForTransmit = false)
+        public BacnetAsyncResult BeginDeviceCommunicationControlRequest(BacnetAddress address, uint timeDuration, EnableDisable enableDisable, string password, bool waitForTransmit = false)
         {
             Log.Debug("Sending DeviceCommunicationControlRequest");
             return BeginConfirmedServiceRequest(address, BacnetConfirmedServices.SERVICE_CONFIRMED_DEVICE_COMMUNICATION_CONTROL,
@@ -1544,7 +1544,7 @@ namespace System.IO.BACnet
                 Log.Debug("Sending Notify (unconfirmed)");
                 var buffer = GetEncodeBuffer(Transport.HeaderLength);
                 NPDU.Encode(buffer, BacnetNpduControls.PriorityNormalMessage, address.RoutedSource);
-                APDU.EncodeUnconfirmedServiceRequest(buffer, BacnetPduTypes.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_COV_NOTIFICATION);
+                APDU.EncodeUnconfirmedServiceRequest(buffer, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_COV_NOTIFICATION);
                 AlarmAndEventServices.EncodeCOVNotifyUnconfirmed(buffer, subscriberProcessIdentifier, initiatingDeviceIdentifier, monitoredObjectIdentifier, timeRemaining, values);
                // Modif F. Chaxel
                 
