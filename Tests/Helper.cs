@@ -13,7 +13,7 @@ namespace System.IO.BACnet.Tests
 
         public static readonly BacnetAddress DummyAddress = new BacnetAddress(BacnetAddressTypes.None, 0, new byte[] { 42 });
 
-        public static (BacnetClient, BacnetClient) CreateConnectedClients()
+        public static (BacnetClient Client1, BacnetClient Client2) CreateConnectedClients()
         {
             var transport1 = new InMemoryTransport();
             var client1 = new BacnetClient(transport1);

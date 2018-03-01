@@ -864,6 +864,38 @@ namespace System.IO.BACnet.Serialize
             }
         }
 
+        public static int bacapp_decode_timestamp(byte[] buffer, int offset, out BacnetGenericTime value)
+        {
+            var len = decode_tag_number_and_value(buffer, offset, out var tag, out var lenValue);
+
+            switch ((BacnetTimestampTags)tag)
+            {
+                case BacnetTimestampTags.TIME_STAMP_TIME:
+                    len += decode_application_time(buffer, offset + len, out var time);
+                    value = new BacnetGenericTime(time, BacnetTimestampTags.TIME_STAMP_TIME);
+                    break;
+
+                case BacnetTimestampTags.TIME_STAMP_SEQUENCE:
+                    len += decode_unsigned(buffer, offset + len, lenValue, out uint sequence);
+                    value = new BacnetGenericTime(default, BacnetTimestampTags.TIME_STAMP_SEQUENCE, (ushort)sequence);
+                    break;
+
+                case BacnetTimestampTags.TIME_STAMP_DATETIME:
+                    len += decode_application_date(buffer, offset + len, out var date);
+                    len += decode_application_time(buffer, offset + len, out time);
+                    value = new BacnetGenericTime(
+                        new DateTime(
+                            date.Year, date.Month, date.Day, time.Hour, time.Minute, time.Second, time.Millisecond),
+                        BacnetTimestampTags.TIME_STAMP_DATETIME);
+                    ++len; // closing tag
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException($"tag {tag} is not supported");
+            }
+
+            return len;
+        }
+
         public static void bacapp_encode_context_timestamp(EncodeBuffer buffer, byte tagNumber, BacnetGenericTime value)
         {
             if (value.Tag != BacnetTimestampTags.TIME_STAMP_NONE)

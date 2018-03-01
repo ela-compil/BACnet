@@ -259,7 +259,7 @@ namespace System.IO.BACnet
                 }
                 else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_COV_NOTIFICATION && OnCOVNotification != null)
                 {
-                    if (AlarmAndEventServices.DecodeCOVNotifyUnconfirmed(address, buffer, offset, length, out var subscriberProcessIdentifier, out var initiatingDeviceIdentifier, out var monitoredObjectIdentifier, out var timeRemaining, out var values) >= 0)
+                    if (AlarmAndEventServices.DecodeCOVNotify(address, buffer, offset, length, out var subscriberProcessIdentifier, out var initiatingDeviceIdentifier, out var monitoredObjectIdentifier, out var timeRemaining, out var values) >= 0)
                         OnCOVNotification(this, address, invokeId, subscriberProcessIdentifier, initiatingDeviceIdentifier, monitoredObjectIdentifier, timeRemaining, true, values, maxSegments);
                     else
                     {
@@ -427,7 +427,7 @@ namespace System.IO.BACnet
                 }
                 else if (service == BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_COV_NOTIFICATION && OnCOVNotification != null)
                 {
-                    if (AlarmAndEventServices.DecodeCOVNotifyUnconfirmed(address, buffer, offset, length, out var subscriberProcessIdentifier, out var initiatingDeviceIdentifier, out var monitoredObjectIdentifier, out var timeRemaining, out var values) >= 0)
+                    if (AlarmAndEventServices.DecodeCOVNotify(address, buffer, offset, length, out var subscriberProcessIdentifier, out var initiatingDeviceIdentifier, out var monitoredObjectIdentifier, out var timeRemaining, out var values) >= 0)
                         OnCOVNotification(this, address, 0, subscriberProcessIdentifier, initiatingDeviceIdentifier, monitoredObjectIdentifier, timeRemaining, false, values, BacnetMaxSegments.MAX_SEG0);
                     else
                         Log.Warn("Couldn't decode COVNotifyUnconfirmed");
@@ -1530,7 +1530,7 @@ namespace System.IO.BACnet
         {
             Log.Debug("Sending Notify (confirmed)");
             return BeginConfirmedServiceRequest(address, BacnetConfirmedServices.SERVICE_CONFIRMED_COV_NOTIFICATION,
-                buffer => AlarmAndEventServices.EncodeCOVNotifyConfirmed(buffer, subscriberProcessIdentifier, initiatingDeviceIdentifier,
+                buffer => AlarmAndEventServices.EncodeCOVNotify(buffer, subscriberProcessIdentifier, initiatingDeviceIdentifier,
                 monitoredObjectIdentifier, timeRemaining, values), waitForTransmit);
         }
 
@@ -1545,7 +1545,7 @@ namespace System.IO.BACnet
                 var buffer = GetEncodeBuffer(Transport.HeaderLength);
                 NPDU.Encode(buffer, BacnetNpduControls.PriorityNormalMessage, address.RoutedSource);
                 APDU.EncodeUnconfirmedServiceRequest(buffer, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_COV_NOTIFICATION);
-                AlarmAndEventServices.EncodeCOVNotifyUnconfirmed(buffer, subscriberProcessIdentifier, initiatingDeviceIdentifier, monitoredObjectIdentifier, timeRemaining, values);
+                AlarmAndEventServices.EncodeCOVNotify(buffer, subscriberProcessIdentifier, initiatingDeviceIdentifier, monitoredObjectIdentifier, timeRemaining, values);
                // Modif F. Chaxel
                 
                 var sendbytes=Transport.Send(buffer.buffer, Transport.HeaderLength, buffer.offset - Transport.HeaderLength, address, false, 0);

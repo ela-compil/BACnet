@@ -17,7 +17,7 @@ namespace System.IO.BACnet.Serialize
             ASN1.bacapp_encode_context_timestamp(buffer, 5, ackTimeStamp);
         }
 
-        public static void EncodeCOVNotifyConfirmed(EncodeBuffer buffer, uint subscriberProcessIdentifier, uint initiatingDeviceIdentifier, BacnetObjectId monitoredObjectIdentifier, uint timeRemaining, IEnumerable<BacnetPropertyValue> values)
+        public static void EncodeCOVNotify(EncodeBuffer buffer, uint subscriberProcessIdentifier, uint initiatingDeviceIdentifier, BacnetObjectId monitoredObjectIdentifier, uint timeRemaining, IEnumerable<BacnetPropertyValue> values)
         {
             /* tag 0 - subscriberProcessIdentifier */
             ASN1.encode_context_unsigned(buffer, 0, subscriberProcessIdentifier);
@@ -57,47 +57,7 @@ namespace System.IO.BACnet.Serialize
             ASN1.encode_closing_tag(buffer, 4);
         }
 
-        public static void EncodeCOVNotifyUnconfirmed(EncodeBuffer buffer, uint subscriberProcessIdentifier, uint initiatingDeviceIdentifier, BacnetObjectId monitoredObjectIdentifier, uint timeRemaining, IEnumerable<BacnetPropertyValue> values)
-        {
-            /* tag 0 - subscriberProcessIdentifier */
-            ASN1.encode_context_unsigned(buffer, 0, subscriberProcessIdentifier);
-            /* tag 1 - initiatingDeviceIdentifier */
-            ASN1.encode_context_object_id(buffer, 1, BacnetObjectTypes.OBJECT_DEVICE, initiatingDeviceIdentifier);
-            /* tag 2 - monitoredObjectIdentifier */
-            ASN1.encode_context_object_id(buffer, 2, monitoredObjectIdentifier.Type, monitoredObjectIdentifier.Instance);
-            /* tag 3 - timeRemaining */
-            ASN1.encode_context_unsigned(buffer, 3, timeRemaining);
-            /* tag 4 - listOfValues */
-            ASN1.encode_opening_tag(buffer, 4);
-            foreach (var value in values)
-            {
-                /* tag 0 - propertyIdentifier */
-                ASN1.encode_context_enumerated(buffer, 0, value.property.propertyIdentifier);
-                /* tag 1 - propertyArrayIndex OPTIONAL */
-                if (value.property.propertyArrayIndex != ASN1.BACNET_ARRAY_ALL)
-                {
-                    ASN1.encode_context_unsigned(buffer, 1, value.property.propertyArrayIndex);
-                }
-                /* tag 2 - value */
-                /* abstract syntax gets enclosed in a context tag */
-                ASN1.encode_opening_tag(buffer, 2);
-                foreach (var v in value.value)
-                {
-                    ASN1.bacapp_encode_application_data(buffer, v);
-                }
-                ASN1.encode_closing_tag(buffer, 2);
-                /* tag 3 - priority OPTIONAL */
-                if (value.priority != ASN1.BACNET_NO_PRIORITY)
-                {
-                    ASN1.encode_context_unsigned(buffer, 3, value.priority);
-                }
-                /* is there another one to encode? */
-                /* FIXME: check to see if there is room in the APDU */
-            }
-            ASN1.encode_closing_tag(buffer, 4);
-        }
-
-        public static int DecodeCOVNotifyUnconfirmed(BacnetAddress address, byte[] buffer, int offset, int apduLen, out uint subscriberProcessIdentifier, out BacnetObjectId initiatingDeviceIdentifier, out BacnetObjectId monitoredObjectIdentifier, out uint timeRemaining, out ICollection<BacnetPropertyValue> values)
+        public static int DecodeCOVNotify(BacnetAddress address, byte[] buffer, int offset, int apduLen, out uint subscriberProcessIdentifier, out BacnetObjectId initiatingDeviceIdentifier, out BacnetObjectId monitoredObjectIdentifier, out uint timeRemaining, out ICollection<BacnetPropertyValue> values)
         {
             var len = 0;
             uint lenValue;
@@ -405,13 +365,18 @@ namespace System.IO.BACnet.Serialize
             /*  tag 3 - timeStamp */
             if (ASN1.decode_is_context_tag(buffer, offset + len, 3))
             {
-                len += 2; // opening Tag 3 then 2
+                len += 1; // opening Tag 3
+                /*
                 len += ASN1.decode_application_date(buffer, offset + len, out var date);
                 len += ASN1.decode_application_time(buffer, offset + len, out var time);
                 decodedNotificationData.Add(e => e.TimeStamp = new BacnetGenericTime(new DateTime(
                         date.Year, date.Month, date.Day, time.Hour, time.Minute, time.Second, time.Millisecond),
                     BacnetTimestampTags.TIME_STAMP_DATETIME));
                 len += 2; // closing tag 2 then 3
+                */
+                len += ASN1.bacapp_decode_timestamp(buffer, offset + len, out var genericTime);
+                decodedNotificationData.Add(e => e.TimeStamp = genericTime);
+                ++len; // closing tag 3
             }
             else
                 return -1;

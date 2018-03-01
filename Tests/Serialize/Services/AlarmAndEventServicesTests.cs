@@ -2,6 +2,8 @@
 using System.IO.BACnet.EventNotification;
 using System.IO.BACnet.EventNotification.EventValues;
 using System.IO.BACnet.Serialize;
+using System.IO.BACnet.Tests.TestData;
+using System.Linq;
 using NUnit.Framework;
 
 namespace System.IO.BACnet.Tests.Serialize
@@ -14,19 +16,7 @@ namespace System.IO.BACnet.Tests.Serialize
         {
             // arrange
             var buffer = new EncodeBuffer();
-            var data = new[]
-            {
-                new BacnetPropertyValue
-                {
-                    property = new BacnetPropertyReference((uint) BacnetPropertyIds.PROP_PRESENT_VALUE),
-                    value = new List<BacnetValue> {new BacnetValue(65.0f)}
-                },
-                new BacnetPropertyValue
-                {
-                    property = new BacnetPropertyReference((uint) BacnetPropertyIds.PROP_STATUS_FLAGS),
-                    value = new List<BacnetValue> {new BacnetValue(BacnetBitString.Parse("0000"))}
-                }
-            };
+            var data = ASHRAE.F_1_2();
 
             // example taken from ANNEX F - Examples of APDU Encoding - F.1.2
             var expectedBytes = new byte[]
@@ -43,12 +33,38 @@ namespace System.IO.BACnet.Tests.Serialize
                 BacnetConfirmedServices.SERVICE_CONFIRMED_COV_NOTIFICATION, BacnetMaxSegments.MAX_SEG0,
                 BacnetMaxAdpu.MAX_APDU206, 15);
 
-            AlarmAndEventServices.EncodeCOVNotifyConfirmed(buffer, 18, 4,
-                new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 10), 0, data);
+            AlarmAndEventServices.EncodeCOVNotify(buffer, data.SubscriberProcessIdentifier,
+                data.InitiatingDeviceIdentifier, data.MonitoredObjectIdentifier, data.TimeRemaining, data.Values);
+
             var encodedBytes = buffer.ToArray();
 
             // assert
             Assert.That(encodedBytes, Is.EquivalentTo(expectedBytes));
+        }
+
+        [Test]
+        public void should_decode_confirmendcovnotificationrequest_after_encode()
+        {
+            // arrange
+            var buffer = new EncodeBuffer();
+            var data = ASHRAE.F_1_2();
+
+            // act
+            AlarmAndEventServices.EncodeCOVNotify(buffer, data.SubscriberProcessIdentifier,
+                data.InitiatingDeviceIdentifier, data.MonitoredObjectIdentifier, data.TimeRemaining, data.Values);
+
+            var encodedBytes = buffer.ToArray();
+
+            AlarmAndEventServices.DecodeCOVNotify(Helper.DummyAddress, encodedBytes, 0, encodedBytes.Length,
+                out var subscriberProcessIdentifier, out var initiatingDeviceIdentifier,
+                out var monitoredObjectIdentifier, out var timeRemaining, out var values);
+
+            var valuesArray = values.ToArray();
+
+            // assert
+            Assert.That(valuesArray.Length, Is.EqualTo(2));
+            Helper.AssertPropertiesAndFieldsAreEqual(data.Values[0], valuesArray[0]);
+            Helper.AssertPropertiesAndFieldsAreEqual(data.Values[1], valuesArray[1]);
         }
 
         [Test]
@@ -77,19 +93,7 @@ namespace System.IO.BACnet.Tests.Serialize
         {
             // arrange
             var buffer = new EncodeBuffer();
-            var data = new[]
-            {
-                new BacnetPropertyValue
-                {
-                    property = new BacnetPropertyReference((uint) BacnetPropertyIds.PROP_PRESENT_VALUE),
-                    value = new List<BacnetValue> {new BacnetValue(65.0f)}
-                },
-                new BacnetPropertyValue
-                {
-                    property = new BacnetPropertyReference((uint) BacnetPropertyIds.PROP_STATUS_FLAGS),
-                    value = new List<BacnetValue> {new BacnetValue(BacnetBitString.Parse("0000"))}
-                }
-            };
+            var data = ASHRAE.F_1_3();
 
             // example taken from ANNEX F - Examples of APDU Encoding - F.1.3
             var expectedBytes = new byte[]
@@ -104,8 +108,9 @@ namespace System.IO.BACnet.Tests.Serialize
             // act
             APDU.EncodeUnconfirmedServiceRequest(buffer, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_COV_NOTIFICATION);
 
-            AlarmAndEventServices.EncodeCOVNotifyConfirmed(buffer, 18, 4,
-                new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 10), 0, data);
+            AlarmAndEventServices.EncodeCOVNotify(buffer, data.SubscriberProcessIdentifier,
+                data.InitiatingDeviceIdentifier, data.MonitoredObjectIdentifier, data.TimeRemaining, data.Values);
+
             var encodedBytes = buffer.ToArray();
 
             // assert
@@ -117,25 +122,7 @@ namespace System.IO.BACnet.Tests.Serialize
         {
             // arrange
             var buffer = new EncodeBuffer();
-            var data = new StateTransition<OutOfRange>(new OutOfRange()
-            {
-                ExceedingValue = 80.1f,
-                StatusFlags = BacnetBitString.Parse("1000"),
-                Deadband = 1.0f,
-                ExceededLimit = 80.0f
-            })
-            {
-                ProcessIdentifier = 1,
-                InitiatingObjectIdentifier = new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, 4),
-                EventObjectIdentifier = new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 2),
-                TimeStamp = new BacnetGenericTime(default(DateTime), BacnetTimestampTags.TIME_STAMP_SEQUENCE, 16),
-                NotificationClass = 4,
-                Priority = 100,
-                NotifyType = BacnetNotifyTypes.NOTIFY_ALARM,
-                AckRequired = true,
-                FromState = BacnetEventStates.EVENT_STATE_NORMAL,
-                ToState = BacnetEventStates.EVENT_STATE_HIGH_LIMIT
-            };
+            var data = ASHRAE.F_1_4();
 
             // example taken from ANNEX F - Examples of APDU Encoding - F.1.4
             var expectedBytes = new byte[]
@@ -157,6 +144,25 @@ namespace System.IO.BACnet.Tests.Serialize
 
             // assert
             Assert.That(encodedBytes, Is.EquivalentTo(expectedBytes));
+        }
+
+        [Test]
+        public void should_decode_confirmendeventnotificationrequest_after_encode()
+        {
+            // arrange
+            var buffer = new EncodeBuffer();
+            var input = ASHRAE.F_1_4();
+
+            // act
+            AlarmAndEventServices.EncodeEventNotifyData(buffer, input);
+
+            var encodedBytes = buffer.ToArray();
+
+            AlarmAndEventServices.DecodeEventNotifyData(encodedBytes, 0, encodedBytes.Length, out var output);
+
+            // assert
+            Assert.That(output, Is.Not.SameAs(input));
+            Helper.AssertPropertiesAndFieldsAreEqual(input, output);
         }
 
         [Test]
