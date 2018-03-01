@@ -8,6 +8,9 @@ namespace System.IO.BACnet.Tests
 {
     public static class Helper
     {
+        public static T[] A<T>(params T[] values)
+            => values;
+
         public static readonly BacnetAddress DummyAddress = new BacnetAddress(BacnetAddressTypes.None, 0, new byte[] { 42 });
 
         public static (BacnetClient, BacnetClient) CreateConnectedClients()

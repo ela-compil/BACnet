@@ -732,6 +732,9 @@ namespace System.IO.BACnet.Serialize
             encode_bacnet_signed(buffer, value);
         }
 
+        public static void encode_context_object_id(EncodeBuffer buffer, byte tagNumber, BacnetObjectId objectId)
+            => encode_context_object_id(buffer, tagNumber, objectId.Type, objectId.Instance);
+
         public static void encode_context_object_id(EncodeBuffer buffer, byte tagNumber, BacnetObjectTypes objectType, uint instance)
         {
             encode_tag(buffer, tagNumber, true, 4);

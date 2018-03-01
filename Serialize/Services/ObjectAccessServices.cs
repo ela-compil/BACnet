@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.Remoting.Messaging;
 
 namespace System.IO.BACnet.Serialize
 {
@@ -772,10 +774,12 @@ namespace System.IO.BACnet.Serialize
             return len;
         }
 
-        public static void EncodeWriteProperty(EncodeBuffer buffer, BacnetObjectId objectId, uint propertyId, uint arrayIndex, uint priority, IEnumerable<BacnetValue> valueList)
+        public static void EncodeWriteProperty(EncodeBuffer buffer, BacnetObjectId objectId,
+            BacnetPropertyIds propertyId, IEnumerable<BacnetValue> valueList, uint arrayIndex = ASN1.BACNET_ARRAY_ALL,
+            uint priority=0)
         {
             ASN1.encode_context_object_id(buffer, 0, objectId.Type, objectId.Instance);
-            ASN1.encode_context_enumerated(buffer, 1, propertyId);
+            ASN1.encode_context_unsigned(buffer, 1, (uint)propertyId);
 
             /* optional array index; ALL is -1 which is assumed when missing */
             if (arrayIndex != ASN1.BACNET_ARRAY_ALL)
@@ -868,35 +872,57 @@ namespace System.IO.BACnet.Serialize
             return len;
         }
 
-        public static void EncodeWritePropertyMultiple(EncodeBuffer buffer, BacnetObjectId objectId, ICollection<BacnetPropertyValue> valueList)
+        // TODO check if this still works and / or makes any sense.
+        public static void EncodeWritePropertyMultiple(EncodeBuffer buffer, BacnetObjectId objectId,
+            ICollection<BacnetPropertyValue> valueList)
+            => EncodeWritePropertyMultiple(
+                buffer,
+                new BacnetWriteAccessSpecification(
+                    objectId,
+                    valueList.Select(
+                        pv => new BacnetWriteAccessSpecification.Property(
+                            pv.property.GetPropertyId(), pv.value.Single(), // TODO CHECK is someone really passing multiple values here? I don't see that in the spec
+                            pv.property.propertyArrayIndex == ASN1.BACNET_ARRAY_ALL
+                                ? null
+                                : (uint?) pv.property.propertyArrayIndex,
+                            pv.priority == 0 ? null : (uint?) pv.priority))));
+
+        public static void EncodeWritePropertyMultiple(EncodeBuffer buffer,
+            params BacnetWriteAccessSpecification[] writeAccessSpec)
         {
-            ASN1.encode_context_object_id(buffer, 0, objectId.Type, objectId.Instance);
-            /* Tag 1: sequence of WriteAccessSpecification */
-            ASN1.encode_opening_tag(buffer, 1);
-
-            foreach (var pValue in valueList)
+            foreach (var objectWithProps in writeAccessSpec)
             {
-                /* Tag 0: Property */
-                ASN1.encode_context_enumerated(buffer, 0, pValue.property.propertyIdentifier);
 
-                /* Tag 1: array index */
-                if (pValue.property.propertyArrayIndex != ASN1.BACNET_ARRAY_ALL)
-                    ASN1.encode_context_unsigned(buffer, 1, pValue.property.propertyArrayIndex);
+                ASN1.encode_context_object_id(buffer, 0, objectWithProps.ObjectId);
+                /* Tag 1: sequence of WriteAccessSpecification */
+                ASN1.encode_opening_tag(buffer, 1);
 
-                /* Tag 2: Value */
-                ASN1.encode_opening_tag(buffer, 2);
-                foreach (var value in pValue.value)
+                foreach (var prop in objectWithProps.Properties)
                 {
-                    ASN1.bacapp_encode_application_data(buffer, value);
+                    /* Tag 0: Property */
+                    ASN1.encode_context_unsigned(buffer, 0, (uint) prop.Id);
+
+                    /* Tag 1: array index */
+                    if (prop.ArrayIndex != null)
+                        ASN1.encode_context_unsigned(buffer, 1, prop.ArrayIndex.Value);
+
+                    /* Tag 2: Value */
+                    ASN1.encode_opening_tag(buffer, 2);
+                    /*
+                     * TODO CHECK: removed the loop, because I don't think we can have a list of values here.
+                     * If we can, it should still only be a single BacnetValue which has its own type - e.g. ListOfBacnetValues,
+                     * and the encode-call should handle it.
+                     */
+                    ASN1.bacapp_encode_application_data(buffer, prop.Value);
+                    ASN1.encode_closing_tag(buffer, 2);
+
+                    /* Tag 3: Priority */
+                    if (prop.Priority != null)
+                        ASN1.encode_context_unsigned(buffer, 3, prop.Priority.Value);
                 }
-                ASN1.encode_closing_tag(buffer, 2);
 
-                /* Tag 3: Priority */
-                if (pValue.priority != ASN1.BACNET_NO_PRIORITY)
-                    ASN1.encode_context_unsigned(buffer, 3, pValue.priority);
+                ASN1.encode_closing_tag(buffer, 1);
             }
-
-            ASN1.encode_closing_tag(buffer, 1);
         }
 
         public static int DecodeWritePropertyMultiple(BacnetAddress address, byte[] buffer, int offset, int apduLen, out BacnetObjectId objectId, out ICollection<BacnetPropertyValue> valuesRefs)

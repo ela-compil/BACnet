@@ -635,7 +635,7 @@ namespace System.IO.BACnet
                 var encodedBuffer = new EncodeBuffer(copy, 0);
 
                 if (confirmedServiceRequest)
-                    APDU.EncodeConfirmedServiceRequest(encodedBuffer, type, service, maxSegments, maxAdpu, invokeId);
+                    APDU.EncodeConfirmedServiceRequest(encodedBuffer, service, maxSegments, maxAdpu, invokeId, type: type);
                 else
                     APDU.EncodeComplexAck(encodedBuffer, service, invokeId, type);
 
@@ -1206,7 +1206,7 @@ namespace System.IO.BACnet
         {
             Log.Debug($"Sending WritePropertyRequest {objectId} {propertyId}");
             return BeginConfirmedServiceRequest(address, BacnetConfirmedServices.SERVICE_CONFIRMED_WRITE_PROPERTY,
-                buffer => ObjectAccessServices.EncodeWriteProperty(buffer, objectId, (uint)propertyId, ASN1.BACNET_ARRAY_ALL, _writepriority, valueList), waitForTransmit);
+                buffer => ObjectAccessServices.EncodeWriteProperty(buffer, objectId, propertyId, valueList, _writepriority), waitForTransmit);
         }
 
         public void EndWritePropertyRequest(BacnetAsyncResult request) => EndConfirmedServiceRequest(request);
@@ -1896,7 +1896,7 @@ namespace System.IO.BACnet
             var function = BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply;
             
             NPDU.Encode(buffer, function, address.RoutedSource);
-            APDU.EncodeConfirmedServiceRequest(buffer, PduConfirmedServiceRequest(), service, MaxSegments, Transport.MaxAdpuLength, invokeId);
+            APDU.EncodeConfirmedServiceRequest(buffer, service, MaxSegments, Transport.MaxAdpuLength, invokeId,  type:PduConfirmedServiceRequest());
             encode?.Invoke(buffer);
 
             var transmitLength = buffer.offset - Transport.HeaderLength;

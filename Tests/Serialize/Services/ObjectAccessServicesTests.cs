@@ -1,9 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.IO.BACnet.Serialize;
 using System.IO.BACnet.Tests.TestData;
-using System.Linq;
-using System.Text;
 using NUnit.Framework;
+using static System.IO.BACnet.Tests.Helper;
 
 namespace System.IO.BACnet.Tests.Serialize
 {
@@ -32,7 +31,7 @@ namespace System.IO.BACnet.Tests.Serialize
             };
 
             // act
-            APDU.EncodeConfirmedServiceRequest(buffer, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST,
+            APDU.EncodeConfirmedServiceRequest(buffer,
                 BacnetConfirmedServices.SERVICE_CONFIRMED_ADD_LIST_ELEMENT, BacnetMaxSegments.MAX_SEG0,
                 BacnetMaxAdpu.MAX_APDU206, 1);
 
@@ -94,7 +93,7 @@ namespace System.IO.BACnet.Tests.Serialize
             };
 
             // act
-            APDU.EncodeConfirmedServiceRequest(buffer, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST,
+            APDU.EncodeConfirmedServiceRequest(buffer,
                 BacnetConfirmedServices.SERVICE_CONFIRMED_REMOVE_LIST_ELEMENT, BacnetMaxSegments.MAX_SEG0,
                 BacnetMaxAdpu.MAX_APDU206, 52);
 
@@ -154,7 +153,7 @@ namespace System.IO.BACnet.Tests.Serialize
             };
 
             // act
-            APDU.EncodeConfirmedServiceRequest(buffer, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST,
+            APDU.EncodeConfirmedServiceRequest(buffer,
                 BacnetConfirmedServices.SERVICE_CONFIRMED_CREATE_OBJECT, BacnetMaxSegments.MAX_SEG0,
                 BacnetMaxAdpu.MAX_APDU1024, 86);
 
@@ -197,7 +196,7 @@ namespace System.IO.BACnet.Tests.Serialize
             var expectedBytes = new byte[] {0x00, 0x04, 0x57, 0x0B, 0xC4, 0x02, 0xC0, 0x00, 0x06};
 
             // act
-            APDU.EncodeConfirmedServiceRequest(buffer, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST,
+            APDU.EncodeConfirmedServiceRequest(buffer,
                 BacnetConfirmedServices.SERVICE_CONFIRMED_DELETE_OBJECT, BacnetMaxSegments.MAX_SEG0,
                 BacnetMaxAdpu.MAX_APDU1024, 87);
 
@@ -258,7 +257,7 @@ namespace System.IO.BACnet.Tests.Serialize
             var expectedBytes = new byte[] {0x00, 0x00, 0x01, 0x0C, 0x0C, 0x00, 0x00, 0x00, 0x05, 0x19, 0x55};
 
             // act
-            APDU.EncodeConfirmedServiceRequest(buffer, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST,
+            APDU.EncodeConfirmedServiceRequest(buffer,
                 BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROPERTY, BacnetMaxSegments.MAX_SEG0,
                 BacnetMaxAdpu.MAX_APDU50, 1);
 
@@ -315,7 +314,7 @@ namespace System.IO.BACnet.Tests.Serialize
                 {0x00, 0x04, 0xF1, 0x0E, 0x0C, 0x00, 0x00, 0x00, 0x10, 0x1E, 0x09, 0x55, 0x09, 0x67, 0x1F};
 
             // act
-            APDU.EncodeConfirmedServiceRequest(buffer, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST,
+            APDU.EncodeConfirmedServiceRequest(buffer,
                 BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROP_MULTIPLE, BacnetMaxSegments.MAX_SEG0,
                 BacnetMaxAdpu.MAX_APDU1024, 241);
 
@@ -407,7 +406,7 @@ namespace System.IO.BACnet.Tests.Serialize
             };
 
             // act
-            APDU.EncodeConfirmedServiceRequest(buffer, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST,
+            APDU.EncodeConfirmedServiceRequest(buffer,
                 BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROP_MULTIPLE, BacnetMaxSegments.MAX_SEG0,
                 BacnetMaxAdpu.MAX_APDU1024, 2);
 
@@ -495,9 +494,9 @@ namespace System.IO.BACnet.Tests.Serialize
 
             // act
             APDU.EncodeConfirmedServiceRequest(buffer,
-                BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST | BacnetPduTypes.SEGMENTED_RESPONSE_ACCEPTED,
                 BacnetConfirmedServices.SERVICE_CONFIRMED_READ_RANGE, BacnetMaxSegments.MAX_SEG0,
-                BacnetMaxAdpu.MAX_APDU206, 1);
+                BacnetMaxAdpu.MAX_APDU206, 1,
+                type: BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST | BacnetPduTypes.SEGMENTED_RESPONSE_ACCEPTED);
 
             ObjectAccessServices.EncodeReadRange(buffer, new BacnetObjectId(BacnetObjectTypes.OBJECT_TRENDLOG, 1),
                 BacnetPropertyIds.PROP_LOG_BUFFER, BacnetReadRangeRequestTypes.RR_BY_TIME, 0,
@@ -569,30 +568,157 @@ namespace System.IO.BACnet.Tests.Serialize
             Assert.That(decodedRecords.Length, Is.EqualTo(2));
             Assert.That(data.Record1, Is.Not.SameAs(decodedRecords[0]));
             Assert.That(data.Record2, Is.Not.SameAs(decodedRecords[1]));
-            Helper.AssertPropertiesAndFieldsAreEqual(data.Record1, decodedRecords[0]);
-            Helper.AssertPropertiesAndFieldsAreEqual(data.Record2, decodedRecords[1]);
+            AssertPropertiesAndFieldsAreEqual(data.Record1, decodedRecords[0]);
+            AssertPropertiesAndFieldsAreEqual(data.Record2, decodedRecords[1]);
+        }
+
+        [Test]
+        public void should_encode_writepropertyrequest_according_to_ashrae_example()
+        {
+            // arrange
+            var buffer = new EncodeBuffer();
+
+            // example taken from ANNEX F - Examples of APDU Encoding - F.3.9
+            var expectedBytes = new byte[]
+            {
+                0x00, 0x04, 0x59, 0x0F, 0x0C, 0x00, 0x80, 0x00, 0x01, 0x19, 0x55, 0x3E, 0x44, 0x43, 0x34, 0x00, 0x00,
+                0x3F
+            };
+
+            // act
+            APDU.EncodeConfirmedServiceRequest(buffer, BacnetConfirmedServices.SERVICE_CONFIRMED_WRITE_PROPERTY,
+                BacnetMaxSegments.MAX_SEG0, BacnetMaxAdpu.MAX_APDU1024, 89);
+
+            ObjectAccessServices.EncodeWriteProperty(buffer,
+                new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_VALUE, 1), BacnetPropertyIds.PROP_PRESENT_VALUE,
+                new List<BacnetValue> {new BacnetValue(180f)});
+
+            var encodedBytes = buffer.ToArray();
+
+            // assert
+            Assert.That(encodedBytes, Is.EquivalentTo(expectedBytes));
+        }
+
+        [Test]
+        public void should_encode_writepropertyrequest_ack_according_to_ashrae_example()
+        {
+            // arrange
+            var buffer = new EncodeBuffer();
+
+            // example taken from ANNEX F - Examples of APDU Encoding - F.3.9
+            var expectedBytes = new byte[] { 0x20, 0x59, 0x0F };
+
+            // act
+            APDU.EncodeSimpleAck(buffer, BacnetConfirmedServices.SERVICE_CONFIRMED_WRITE_PROPERTY, 89);
+
+            var encodedBytes = buffer.ToArray();
+
+            // assert
+            Assert.That(encodedBytes, Is.EquivalentTo(expectedBytes));
+        }
+
+        [Test]
+        public void should_encode_writepropertymultiplerequest_according_to_ashrae_example()
+        {
+            // arrange
+            var buffer = new EncodeBuffer();
+            var data = new[]
+            {
+                new BacnetWriteAccessSpecification(
+                    new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_VALUE, 5),
+                    A(new BacnetWriteAccessSpecification.Property(BacnetPropertyIds.PROP_PRESENT_VALUE,
+                        new BacnetValue(67f)))),
+
+                new BacnetWriteAccessSpecification(
+                    new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_VALUE, 6),
+                    A(new BacnetWriteAccessSpecification.Property(BacnetPropertyIds.PROP_PRESENT_VALUE,
+                        new BacnetValue(67f)))),
+
+                new BacnetWriteAccessSpecification(
+                    new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_VALUE, 7),
+                    A(new BacnetWriteAccessSpecification.Property(BacnetPropertyIds.PROP_PRESENT_VALUE,
+                        new BacnetValue(72f)))),
+            };
+
+            // example taken from ANNEX F - Examples of APDU Encoding - F.3.10
+            var expectedBytes = new byte[]
+            {
+                0x00, 0x04, 0x01, 0x10, 0x0C, 0x00, 0x80, 0x00, 0x05, 0x1E, 0x09, 0x55, 0x2E, 0x44, 0x42, 0x86, 0x00,
+                0x00, 0x2F, 0x1F, 0x0C, 0x00, 0x80, 0x00, 0x06, 0x1E, 0x09, 0x55, 0x2E, 0x44, 0x42, 0x86, 0x00, 0x00,
+                0x2F, 0x1F, 0x0C, 0x00, 0x80, 0x00, 0x07, 0x1E, 0x09, 0x55, 0x2E, 0x44, 0x42, 0x90, 0x00, 0x00, 0x2F,
+                0x1F
+            };
+
+            // act
+            APDU.EncodeConfirmedServiceRequest(buffer, BacnetConfirmedServices.SERVICE_CONFIRMED_WRITE_PROP_MULTIPLE,
+                BacnetMaxSegments.MAX_SEG0, BacnetMaxAdpu.MAX_APDU1024, 1);
+
+            ObjectAccessServices.EncodeWritePropertyMultiple(buffer, data);
+
+            var encodedBytes = buffer.ToArray();
+
+            // assert
+            Assert.That(encodedBytes, Is.EquivalentTo(expectedBytes));
+        }
+
+        [Test]
+        public void should_encode_writepropertymultiplerequest_ack_according_to_ashrae_example()
+        {
+            // arrange
+            var buffer = new EncodeBuffer();
+
+            // example taken from ANNEX F - Examples of APDU Encoding - F.3.10
+            var expectedBytes = new byte[] { 0x20, 0x01, 0x10 };
+
+            // act
+            APDU.EncodeSimpleAck(buffer, BacnetConfirmedServices.SERVICE_CONFIRMED_WRITE_PROP_MULTIPLE, 1);
+
+            var encodedBytes = buffer.ToArray();
+
+            // assert
+            Assert.That(encodedBytes, Is.EquivalentTo(expectedBytes));
         }
 
         [Test]
         public void GenerateCode()
         {
-            Console.WriteLine(Helper.Doc2Code(@"
-X'02' PDU Type = 0 (BACnet-Confirmed-Request-PDU, SEG=0, MOR=0, SA=1)
-X'02' Maximum APDU Size Accepted = 206 octets
-X'01' Invoke ID = 1
-X'1A' Service Choice = (26), (ReadRange-Request)
+            Console.WriteLine(Doc2Code(@"
+F.3.10 Encoding for Example E.3.10 - WritePropertyMultiple Service
+X'00' PDU Type=0 (BACnet-Confirmed-Request-PDU, SEG=0, MOR=0, SA=0)
+X'04' Maximum APDU Size Accepted=1024 octets
+X'01' Invoke ID=1
+X'10' Service Choice=16 (WritePropertyMultiple-Request)
 X'0C' SD Context Tag 0 (Object Identifier, L=4)
-X'05000001' Trend Log, Instance Number = 1
-X'19' SD Context Tag 1 (Property Identifier, L=1)
-X'83' 131 (LOG_BUFFER)
-X'7E' PD Opening Tag 7 (By Time)
-X'A4' Application Tag 10 (Date, L=4)
-X'62031701' March 23, 1998 (Day Of Week Monday)
-X'B4' Application Tag 11, (Time, L=4)
-X'13342200' 19:52:34.0
-X'31' Application Tag 1 (Signed Integer, L=1)
-X'04' 4 (Count)
-X'7F' PD Closing Tag 7 (By Time)
+X'00800005' Analog Value, Instance Number=5
+X'1E' PD Opening Tag 1 (List Of Properties)
+X'09' SD Context Tag 0 (Property Identifier, L=1)
+X'55' 85 (PRESENT_VALUE)
+X'2E' PD Opening Tag 2 (Property Value)
+X'44' Application Tag 4 (Real, L=4)
+X'42860000' 67.0
+X'2F' PD Closing Tag 2 (Property Value)
+X'1F' PD Closing Tag 1 (List Of Properties)
+X'0C' SD Context Tag 0 (Object Identifier, L=4)
+X'00800006' Analog Value, Instance Number=6
+X'1E' PD Opening Tag 1 (List Of Properties)
+X'09' SD Context Tag 0 (Property Identifier, L=1)
+X'55' 85 (PRESENT_VALUE)
+X'2E' PD Opening Tag 2 (Property Value)
+X'44' Application Tag 4 (Real, L=4)
+X'42860000' 67.0
+X'2F' PD Closing Tag 2 (Property Value)
+X'1F' PD Closing Tag 1 (List Of Properties)
+X'0C' SD Context Tag 0 (Object Identifier, L=4)
+X'00800007' Analog Value, Instance Number=7
+X'1E' PD Opening Tag 1 (List Of Properties)
+X'09' SD Context Tag 0 (Property Identifier, L=1)
+X'55' 85 (PRESENT_VALUE)
+X'2E' PD Opening Tag 2 (Property Value)
+X'44' Application Tag 4 (Real, L=4)
+X'42900000' 72.0
+X'2F' PD Closing Tag 2 (Property Value)
+X'1F' PD Closing Tag 1 (List Of Properties)
+Assuming
 "));
         }
     }

@@ -30,11 +30,13 @@
             }
         }
 
-        public static void EncodeConfirmedServiceRequest(EncodeBuffer buffer, BacnetPduTypes type, BacnetConfirmedServices service, BacnetMaxSegments maxSegments,
-            BacnetMaxAdpu maxAdpu, byte invokeId, byte sequenceNumber = 0, byte proposedWindowSize = 0)
+        public static void EncodeConfirmedServiceRequest(EncodeBuffer buffer, BacnetConfirmedServices service,
+            BacnetMaxSegments maxSegments, BacnetMaxAdpu maxAdpu, byte invokeId,
+            BacnetPduTypes type = BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST, byte sequenceNumber = 0,
+            byte proposedWindowSize = 0)
         {
-            buffer.buffer[buffer.offset++] = (byte)type;
-            buffer.buffer[buffer.offset++] = (byte)((byte)maxSegments | (byte)maxAdpu);
+            buffer.buffer[buffer.offset++] = (byte) type;
+            buffer.buffer[buffer.offset++] = (byte) ((byte) maxSegments | (byte) maxAdpu);
             buffer.buffer[buffer.offset++] = invokeId;
 
             if ((type & BacnetPduTypes.SEGMENTED_MESSAGE) > 0)
@@ -42,7 +44,8 @@
                 buffer.buffer[buffer.offset++] = sequenceNumber;
                 buffer.buffer[buffer.offset++] = proposedWindowSize;
             }
-            buffer.buffer[buffer.offset++] = (byte)service;
+
+            buffer.buffer[buffer.offset++] = (byte) service;
         }
 
         public static int DecodeConfirmedServiceRequest(byte[] buffer, int offset, out BacnetPduTypes type, out BacnetConfirmedServices service,

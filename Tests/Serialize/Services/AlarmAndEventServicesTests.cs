@@ -39,7 +39,7 @@ namespace System.IO.BACnet.Tests.Serialize
             };
 
             // act
-            APDU.EncodeConfirmedServiceRequest(buffer, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST,
+            APDU.EncodeConfirmedServiceRequest(buffer,
                 BacnetConfirmedServices.SERVICE_CONFIRMED_COV_NOTIFICATION, BacnetMaxSegments.MAX_SEG0,
                 BacnetMaxAdpu.MAX_APDU206, 15);
 
@@ -148,7 +148,7 @@ namespace System.IO.BACnet.Tests.Serialize
             };
 
             // act
-            APDU.EncodeConfirmedServiceRequest(buffer, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST,
+            APDU.EncodeConfirmedServiceRequest(buffer,
                 BacnetConfirmedServices.SERVICE_CONFIRMED_EVENT_NOTIFICATION, BacnetMaxSegments.MAX_SEG0,
                 BacnetMaxAdpu.MAX_APDU206, 16);
 
@@ -197,7 +197,7 @@ namespace System.IO.BACnet.Tests.Serialize
             };
 
             // act
-            APDU.EncodeConfirmedServiceRequest(buffer, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST,
+            APDU.EncodeConfirmedServiceRequest(buffer,
                 BacnetConfirmedServices.SERVICE_CONFIRMED_ACKNOWLEDGE_ALARM, BacnetMaxSegments.MAX_SEG0,
                 BacnetMaxAdpu.MAX_APDU206, 7);
 
@@ -294,7 +294,7 @@ namespace System.IO.BACnet.Tests.Serialize
             };
 
             // act
-            APDU.EncodeConfirmedServiceRequest(buffer, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST,
+            APDU.EncodeConfirmedServiceRequest(buffer,
                 BacnetConfirmedServices.SERVICE_CONFIRMED_GET_ALARM_SUMMARY, BacnetMaxSegments.MAX_SEG0,
                 BacnetMaxAdpu.MAX_APDU206, 1);
 
@@ -346,7 +346,7 @@ namespace System.IO.BACnet.Tests.Serialize
             };
 
             // act
-            APDU.EncodeConfirmedServiceRequest(buffer, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST,
+            APDU.EncodeConfirmedServiceRequest(buffer,
                 BacnetConfirmedServices.SERVICE_CONFIRMED_GET_EVENT_INFORMATION, BacnetMaxSegments.MAX_SEG0,
                 BacnetMaxAdpu.MAX_APDU206, 1);
 
@@ -432,7 +432,7 @@ namespace System.IO.BACnet.Tests.Serialize
             };
 
             // act
-            APDU.EncodeConfirmedServiceRequest(buffer, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST,
+            APDU.EncodeConfirmedServiceRequest(buffer,
                 BacnetConfirmedServices.SERVICE_CONFIRMED_LIFE_SAFETY_OPERATION, BacnetMaxSegments.MAX_SEG0,
                 BacnetMaxAdpu.MAX_APDU206, 15);
 
@@ -478,7 +478,7 @@ namespace System.IO.BACnet.Tests.Serialize
                 {0x00, 0x02, 0x0F, 0x05, 0x09, 0x12, 0x1C, 0x00, 0x00, 0x00, 0x0A, 0x29, 0x01, 0x39, 0x00};
 
             // act
-            APDU.EncodeConfirmedServiceRequest(buffer, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST,
+            APDU.EncodeConfirmedServiceRequest(buffer,
                 BacnetConfirmedServices.SERVICE_CONFIRMED_SUBSCRIBE_COV, BacnetMaxSegments.MAX_SEG0,
                 BacnetMaxAdpu.MAX_APDU206, 15);
 
@@ -525,7 +525,7 @@ namespace System.IO.BACnet.Tests.Serialize
                 0x55, 0x4F, 0x5C, 0x3F, 0x80, 0x00, 0x00
             };
             // act
-            APDU.EncodeConfirmedServiceRequest(buffer, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST,
+            APDU.EncodeConfirmedServiceRequest(buffer,
                 BacnetConfirmedServices.SERVICE_CONFIRMED_SUBSCRIBE_COV_PROPERTY, BacnetMaxSegments.MAX_SEG0,
                 BacnetMaxAdpu.MAX_APDU206, 15);
 

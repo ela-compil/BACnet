@@ -19,7 +19,7 @@ namespace System.IO.BACnet.Tests.Serialize
                 {0x00, 0x02, 0x00, 0x06, 0xC4, 0x02, 0x80, 0x00, 0x01, 0x0E, 0x31, 0x00, 0x21, 0x1B, 0x0F};
 
             // act
-            APDU.EncodeConfirmedServiceRequest(buffer, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST,
+            APDU.EncodeConfirmedServiceRequest(buffer,
                 BacnetConfirmedServices.SERVICE_CONFIRMED_ATOMIC_READ_FILE, BacnetMaxSegments.MAX_SEG0,
                 BacnetMaxAdpu.MAX_APDU206, 0);
 
@@ -73,7 +73,7 @@ namespace System.IO.BACnet.Tests.Serialize
                 {0x00, 0x02, 0x12, 0x06, 0xC4, 0x02, 0x80, 0x00, 0x02, 0x1E, 0x31, 0x0E, 0x21, 0x03, 0x1F};
 
             // act
-            APDU.EncodeConfirmedServiceRequest(buffer, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST,
+            APDU.EncodeConfirmedServiceRequest(buffer,
                 BacnetConfirmedServices.SERVICE_CONFIRMED_ATOMIC_READ_FILE, BacnetMaxSegments.MAX_SEG0,
                 BacnetMaxAdpu.MAX_APDU206, 18);
 
@@ -135,7 +135,7 @@ namespace System.IO.BACnet.Tests.Serialize
                 0x33, 0x20, 0x48, 0x6F, 0x75, 0x72, 0x73, 0x0F
             };
             // act
-            APDU.EncodeConfirmedServiceRequest(buffer, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST,
+            APDU.EncodeConfirmedServiceRequest(buffer,
                 BacnetConfirmedServices.SERVICE_CONFIRMED_ATOMIC_WRITE_FILE, BacnetMaxSegments.MAX_SEG0,
                 BacnetMaxAdpu.MAX_APDU206, 85);
 
@@ -189,7 +189,7 @@ namespace System.IO.BACnet.Tests.Serialize
             };
 
             // act
-            APDU.EncodeConfirmedServiceRequest(buffer, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST,
+            APDU.EncodeConfirmedServiceRequest(buffer,
                 BacnetConfirmedServices.SERVICE_CONFIRMED_ATOMIC_WRITE_FILE, BacnetMaxSegments.MAX_SEG0,
                 BacnetMaxAdpu.MAX_APDU206, 85);
 

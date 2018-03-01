@@ -79,6 +79,7 @@
     <Compile Include="Base\BacnetDateRange.cs" />
     <Compile Include="Base\BacnetDeviceObjectPropertyReference.cs" />
     <Compile Include="Base\BacnetError.cs" />
+    <Compile Include="Base\BacnetWriteAccessSpecification.cs" />
     <Compile Include="Base\Enums\EnumUtils.cs" />
     <Compile Include="Base\EventNotification\EventValues\EventValuesBase.cs" />
     <Compile Include="Base\EventNotification\EventValues\ChangeOfLifeSafety.cs" />
