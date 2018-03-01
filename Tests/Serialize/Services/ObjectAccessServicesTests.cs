@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO.BACnet.Serialize;
+using System.IO.BACnet.Tests.TestData;
 using System.Linq;
 using System.Text;
 using NUnit.Framework;
@@ -513,11 +514,7 @@ namespace System.IO.BACnet.Tests.Serialize
         {
             // arrange
             var buffer = new EncodeBuffer();
-
-            var record1 = new BacnetLogRecord(BacnetTrendLogValueType.TL_TYPE_REAL, 18.0,
-                new DateTime(1998, 3, 23, 19, 54, 27), 0);
-            var record2 = new BacnetLogRecord(BacnetTrendLogValueType.TL_TYPE_REAL, 18.1,
-                new DateTime(1998, 3, 23, 19, 56, 27), 0);
+            var data = ASHRAE.F_3_8();
 
             // example taken from ANNEX F - Examples of APDU Encoding - F.3.8
             var expectedBytes = new byte[]
@@ -532,13 +529,11 @@ namespace System.IO.BACnet.Tests.Serialize
             APDU.EncodeComplexAck(buffer, BacnetConfirmedServices.SERVICE_CONFIRMED_READ_RANGE, 1);
 
             var applicationData = new EncodeBuffer();
-            ObjectAccessServices.EncodeLogRecord(applicationData, record1);
-            ObjectAccessServices.EncodeLogRecord(applicationData, record2);
+            ObjectAccessServices.EncodeLogRecord(applicationData, data.Record1);
+            ObjectAccessServices.EncodeLogRecord(applicationData, data.Record2);
 
-            ObjectAccessServices.EncodeReadRangeAcknowledge(buffer,
-                new BacnetObjectId(BacnetObjectTypes.OBJECT_TRENDLOG, 1), BacnetPropertyIds.PROP_LOG_BUFFER,
-                BacnetBitString.Parse("110"), 2, applicationData.ToArray(), BacnetReadRangeRequestTypes.RR_BY_SEQUENCE,
-                79201);
+            ObjectAccessServices.EncodeReadRangeAcknowledge(buffer, data.ObjectId, data.PropertyId, data.Flags,
+                data.ItemCount, applicationData.ToArray(), data.RequestType, data.FirstSequence);
 
             var encodedBytes = buffer.ToArray();
 
@@ -551,15 +546,12 @@ namespace System.IO.BACnet.Tests.Serialize
         {
             // arrange
             var buffer = new EncodeBuffer();
-            var record1 = new BacnetLogRecord(BacnetTrendLogValueType.TL_TYPE_REAL, 18.0,
-                new DateTime(1998, 3, 23, 19, 54, 27), 0);
-            var record2 = new BacnetLogRecord(BacnetTrendLogValueType.TL_TYPE_REAL, 18.1,
-                new DateTime(1998, 3, 23, 19, 56, 27), 0);
+            var data = ASHRAE.F_3_8();
 
             // act
-            ObjectAccessServices.EncodeLogRecord(buffer, record1);
-            ObjectAccessServices.EncodeLogRecord(buffer, record2);
-            ObjectAccessServices.DecodeLogRecord(buffer.buffer, 0, buffer.GetLength(), 2, out var decodedRecords);
+            ObjectAccessServices.EncodeLogRecord(buffer, data.Record1);
+            ObjectAccessServices.EncodeLogRecord(buffer, data.Record2);
+            ObjectAccessServices.DecodeLogRecord(buffer.buffer, 0, buffer.GetLength(), (int)data.ItemCount, out var decodedRecords);
 
             /*
              * Debug - write packet to network to analyze in WireShark
@@ -574,8 +566,11 @@ namespace System.IO.BACnet.Tests.Serialize
             */
 
             // assert
-            Helper.AssertPropertiesAndFieldsAreEqual(record1, decodedRecords[0]);
-            Helper.AssertPropertiesAndFieldsAreEqual(record2, decodedRecords[1]);
+            Assert.That(decodedRecords.Length, Is.EqualTo(2));
+            Assert.That(data.Record1, Is.Not.SameAs(decodedRecords[0]));
+            Assert.That(data.Record2, Is.Not.SameAs(decodedRecords[1]));
+            Helper.AssertPropertiesAndFieldsAreEqual(data.Record1, decodedRecords[0]);
+            Helper.AssertPropertiesAndFieldsAreEqual(data.Record2, decodedRecords[1]);
         }
 
         [Test]
