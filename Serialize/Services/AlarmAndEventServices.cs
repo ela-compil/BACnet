@@ -640,16 +640,15 @@ namespace System.IO.BACnet.Serialize
             var len = 0;
 
             while (apduLen - 3 - len > 0)
-            {
-                var value = new BacnetAlarmSummaryData();
-
+            {                
                 len += ASN1.decode_tag_number_and_value(buffer, offset + len, out var tagNumber, out var lenValue);
                 len += ASN1.decode_object_id(buffer, offset + len, out BacnetObjectTypes type, out var instance);
-                value.objectIdentifier = new BacnetObjectId(type, instance);
                 len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValue);
-                len += EnumUtils.DecodeEnumerated(buffer, offset + len, lenValue, out value.alarmState);
+                len += EnumUtils.DecodeEnumerated(buffer, offset + len, lenValue, out BacnetEventStates alarmState);
                 len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValue);
-                len += ASN1.decode_bitstring(buffer, offset + len, lenValue, out value.acknowledgedTransitions);
+                len += ASN1.decode_bitstring(buffer, offset + len, lenValue, out var acknowledgedTransitions);
+
+                var value = new BacnetAlarmSummaryData(new BacnetObjectId(type, instance), alarmState, acknowledgedTransitions);
 
                 alarms.Add(value);
             }
@@ -722,18 +721,8 @@ namespace System.IO.BACnet.Serialize
 
                 for (var i = 0; i < 3; i++)
                 {
-                    len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValue); // opening tag
-
-                    if (tagNumber != (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_NULL)
-                    {
-                        len += ASN1.decode_application_date(buffer, offset + len, out var date);
-                        len += ASN1.decode_application_time(buffer, offset + len, out var time);
-                        var timestamp = date.Date + time.TimeOfDay;
-                        value.eventTimeStamps[i] = new BacnetGenericTime(timestamp, BacnetTimestampTags.TIME_STAMP_DATETIME);
-                        len++; // closing tag
-                    }
-                    else
-                        len += (int)lenValue;
+                    len += ASN1.bacapp_decode_timestamp(buffer, offset + len, out var timeStamp);
+                    value.eventTimeStamps[i] = timeStamp;
                 }
 
                 len++;  // closing Tag 3
@@ -755,7 +744,7 @@ namespace System.IO.BACnet.Serialize
                 events.Add(value);
             }
 
-            moreEvent = buffer[apduLen - 1] == 1;
+            moreEvent = buffer[offset+len++] == 1;
             return len;
         }
 

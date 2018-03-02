@@ -55,6 +55,18 @@ namespace System.IO.BACnet.Tests.TestData
             };
         }
 
+        public static BacnetAlarmSummaryData[]
+            F_1_6()
+        {
+            return new[]
+            {
+                new BacnetAlarmSummaryData(new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 2),
+                    BacnetEventStates.EVENT_STATE_HIGH_LIMIT, BacnetBitString.Parse("011")),
+                new BacnetAlarmSummaryData(new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 3),
+                    BacnetEventStates.EVENT_STATE_LOW_LIMIT, BacnetBitString.Parse("111"))
+            };
+        }
+
         public static (BacnetLogRecord Record1, BacnetLogRecord Record2, BacnetObjectId ObjectId, BacnetPropertyIds
             PropertyId, BacnetBitString Flags, uint ItemCount, BacnetReadRangeRequestTypes RequestType, uint
             FirstSequence
@@ -68,6 +80,60 @@ namespace System.IO.BACnet.Tests.TestData
             return (record1, record2, new BacnetObjectId(BacnetObjectTypes.OBJECT_TRENDLOG, 1),
                 BacnetPropertyIds.PROP_LOG_BUFFER, BacnetBitString.Parse("110"), 2,
                 BacnetReadRangeRequestTypes.RR_BY_SEQUENCE, 79201);
+        }
+
+        public static (BacnetGetEventInformationData[] Data, bool MoreEvents) F_1_8()
+        {
+            return (new[]
+            {
+                new BacnetGetEventInformationData()
+                {
+                    objectIdentifier = new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 2),
+                    eventState = BacnetEventStates.EVENT_STATE_HIGH_LIMIT,
+                    acknowledgedTransitions = BacnetBitString.Parse("011"),
+                    eventTimeStamps = new[]
+                    {
+                        new BacnetGenericTime(new DateTime(1, 1, 1, 15, 35, 00).AddMilliseconds(200),
+                            BacnetTimestampTags.TIME_STAMP_TIME),
+                        new BacnetGenericTime(default(DateTime), BacnetTimestampTags.TIME_STAMP_TIME),
+                        new BacnetGenericTime(default(DateTime), BacnetTimestampTags.TIME_STAMP_TIME),
+                    },
+                    notifyType = BacnetNotifyTypes.NOTIFY_ALARM,
+                    eventEnable = BacnetBitString.Parse("111"),
+                    eventPriorities = new uint[] {15, 15, 20}
+                },
+                new BacnetGetEventInformationData()
+                {
+                    objectIdentifier = new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 3),
+                    eventState = BacnetEventStates.EVENT_STATE_NORMAL,
+                    acknowledgedTransitions = BacnetBitString.Parse("110"),
+                    eventTimeStamps = new[]
+                    {
+                        new BacnetGenericTime(new DateTime(1, 1, 1, 15, 40, 00), BacnetTimestampTags.TIME_STAMP_TIME),
+                        new BacnetGenericTime(default(DateTime), BacnetTimestampTags.TIME_STAMP_TIME),
+                        new BacnetGenericTime(new DateTime(1, 1, 1, 15, 45, 30).AddMilliseconds(300),
+                            BacnetTimestampTags.TIME_STAMP_TIME),
+                    },
+                    notifyType = BacnetNotifyTypes.NOTIFY_ALARM,
+                    eventEnable = BacnetBitString.Parse("111"),
+                    eventPriorities = new uint[] {15, 15, 20}
+                }
+            }, false);
+        }
+
+        public static (uint SubscriberProcessIdentifier, BacnetObjectId MonitoredObjectIdentifier, bool
+            CancellationRequest, bool IssueConfirmedNotifications, uint Lifetime)
+            F_1_10()
+        {
+            return (18, new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 10),
+                false, true, 0);
+        }
+
+        public static (uint SubscriberProcessIdentifier, BacnetObjectId MonitoredObjectIdentifier, bool CancellationRequest, bool IssueConfirmedNotifications, uint Lifetime, BacnetPropertyReference MonitoredProperty, bool CovIncrementPresent, float CovIncrement)
+            F_1_11()
+        {
+            return (18, new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 10), false, true, 60,
+                new BacnetPropertyReference((uint) BacnetPropertyIds.PROP_PRESENT_VALUE), true, 1.0f);
         }
     }
 }

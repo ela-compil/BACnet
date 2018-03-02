@@ -63,6 +63,10 @@ namespace System.IO.BACnet.Tests.Serialize
 
             // assert
             Assert.That(valuesArray.Length, Is.EqualTo(2));
+            Assert.That(subscriberProcessIdentifier, Is.EqualTo(data.SubscriberProcessIdentifier));
+            Assert.That(initiatingDeviceIdentifier.Instance, Is.EqualTo(data.InitiatingDeviceIdentifier));
+            Assert.That(monitoredObjectIdentifier, Is.EqualTo(data.MonitoredObjectIdentifier));
+            Assert.That(timeRemaining, Is.EqualTo(data.TimeRemaining));
             Helper.AssertPropertiesAndFieldsAreEqual(data.Values[0], valuesArray[0]);
             Helper.AssertPropertiesAndFieldsAreEqual(data.Values[1], valuesArray[1]);
         }
@@ -314,6 +318,7 @@ namespace System.IO.BACnet.Tests.Serialize
         {
             // arrange
             var buffer = new EncodeBuffer();
+            var data = ASHRAE.F_1_6();
 
             // example taken from ANNEX F - Examples of APDU Encoding - F.1.6
 
@@ -326,16 +331,42 @@ namespace System.IO.BACnet.Tests.Serialize
             // act
             APDU.EncodeComplexAck(buffer, BacnetConfirmedServices.SERVICE_CONFIRMED_GET_ALARM_SUMMARY, 1);
 
-            AlarmAndEventServices.EncodeAlarmSummary(buffer, new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 2),
-                BacnetEventStates.EVENT_STATE_HIGH_LIMIT, BacnetBitString.Parse("011"));
+            AlarmAndEventServices.EncodeAlarmSummary(buffer, data[0].ObjectIdentifier, data[0].AlarmState,
+                data[0].AcknowledgedTransitions);
 
-            AlarmAndEventServices.EncodeAlarmSummary(buffer, new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 3),
-                BacnetEventStates.EVENT_STATE_LOW_LIMIT, BacnetBitString.Parse("111"));
+            AlarmAndEventServices.EncodeAlarmSummary(buffer, data[1].ObjectIdentifier, data[1].AlarmState,
+                data[1].AcknowledgedTransitions);
 
             var encodedBytes = buffer.ToArray();
 
             // assert
             Assert.That(encodedBytes, Is.EquivalentTo(expectedBytes));
+        }
+
+        [Test]
+        public void should_decode_alarmsummary_after_encode()
+        {
+            // arrange
+            var buffer = new EncodeBuffer();
+            var input = ASHRAE.F_1_6();
+            IList<BacnetAlarmSummaryData> output = new List<BacnetAlarmSummaryData>();
+
+
+            // act
+            AlarmAndEventServices.EncodeAlarmSummary(buffer, input[0].ObjectIdentifier, input[0].AlarmState,
+                input[0].AcknowledgedTransitions);
+
+            AlarmAndEventServices.EncodeAlarmSummary(buffer, input[1].ObjectIdentifier, input[1].AlarmState,
+                input[1].AcknowledgedTransitions);
+
+            var encodedBytes = buffer.ToArray();
+
+            AlarmAndEventServices.DecodeAlarmSummary(encodedBytes, 0, encodedBytes.Length, ref output);
+
+            // assert
+            Assert.That(output.Count, Is.EqualTo(2));
+            Helper.AssertPropertiesAndFieldsAreEqual(input[0], output[0]);
+            Helper.AssertPropertiesAndFieldsAreEqual(input[1], output[1]);
         }
 
         [Test]
@@ -367,39 +398,7 @@ namespace System.IO.BACnet.Tests.Serialize
             // arrange
             var buffer = new EncodeBuffer();
 
-            var data = new[]
-            {
-                new BacnetGetEventInformationData()
-                {
-                    objectIdentifier = new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 2),
-                    eventState = BacnetEventStates.EVENT_STATE_HIGH_LIMIT,
-                    acknowledgedTransitions = BacnetBitString.Parse("011"),
-                    eventTimeStamps = new[]
-                    {
-                        new BacnetGenericTime(new DateTime(1, 1, 1, 15, 35, 00).AddMilliseconds(200), BacnetTimestampTags.TIME_STAMP_TIME),
-                        new BacnetGenericTime(default(DateTime), BacnetTimestampTags.TIME_STAMP_TIME),
-                        new BacnetGenericTime(default(DateTime), BacnetTimestampTags.TIME_STAMP_TIME),
-                    },
-                    notifyType = BacnetNotifyTypes.NOTIFY_ALARM,
-                    eventEnable = BacnetBitString.Parse("111"),
-                    eventPriorities = new uint[] {15, 15, 20}
-                },
-                new BacnetGetEventInformationData()
-                {
-                objectIdentifier = new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 3),
-                eventState = BacnetEventStates.EVENT_STATE_NORMAL,
-                acknowledgedTransitions = BacnetBitString.Parse("110"),
-                eventTimeStamps = new[]
-                {
-                    new BacnetGenericTime(new DateTime(1, 1, 1, 15, 40, 00), BacnetTimestampTags.TIME_STAMP_TIME),
-                    new BacnetGenericTime(default(DateTime), BacnetTimestampTags.TIME_STAMP_TIME),
-                    new BacnetGenericTime(new DateTime(1, 1, 1, 15, 45, 30).AddMilliseconds(300), BacnetTimestampTags.TIME_STAMP_TIME),
-                },
-                notifyType = BacnetNotifyTypes.NOTIFY_ALARM,
-                eventEnable = BacnetBitString.Parse("111"),
-                eventPriorities = new uint[] {15, 15, 20}
-                }
-            };
+            var data = ASHRAE.F_1_8();
 
             // example taken from ANNEX F - Examples of APDU Encoding - F.1.8
             var expectedBytes = new byte[]
@@ -415,12 +414,32 @@ namespace System.IO.BACnet.Tests.Serialize
             // act
             APDU.EncodeComplexAck(buffer, BacnetConfirmedServices.SERVICE_CONFIRMED_GET_EVENT_INFORMATION, 1);
 
-            AlarmAndEventServices.EncodeGetEventInformationAcknowledge(buffer, data, false);
+            AlarmAndEventServices.EncodeGetEventInformationAcknowledge(buffer, data.Data, data.MoreEvents);
 
             var encodedBytes = buffer.ToArray();
 
             // assert
             Assert.That(encodedBytes, Is.EquivalentTo(expectedBytes));
+        }
+
+        [Test]
+        public void should_decode_eventinformation_after_encode()
+        {
+            // arrange
+            var buffer = new EncodeBuffer();
+            var input = ASHRAE.F_1_8();
+            IList<BacnetGetEventInformationData> output = new List<BacnetGetEventInformationData>();
+
+            // act
+            AlarmAndEventServices.EncodeGetEventInformationAcknowledge(buffer, input.Data, input.MoreEvents);
+            var encodedBytes = buffer.ToArray();
+            AlarmAndEventServices.DecodeEventInformation(encodedBytes, 0, encodedBytes.Length, ref output, out var moreEvents);
+
+            // assert
+            Assert.That(moreEvents, Is.EqualTo(input.MoreEvents));
+            Assert.That(output.Count, Is.EqualTo(2));
+            Helper.AssertPropertiesAndFieldsAreEqual(input.Data[0], output[0]);
+            Helper.AssertPropertiesAndFieldsAreEqual(input.Data[1], output[1]);
         }
 
         [Test]
@@ -477,6 +496,7 @@ namespace System.IO.BACnet.Tests.Serialize
         {
             // arrange
             var buffer = new EncodeBuffer();
+            var data = ASHRAE.F_1_10();
 
             // example taken from ANNEX F - Examples of APDU Encoding - F.1.10
             var expectedBytes = new byte[]
@@ -487,13 +507,39 @@ namespace System.IO.BACnet.Tests.Serialize
                 BacnetConfirmedServices.SERVICE_CONFIRMED_SUBSCRIBE_COV, BacnetMaxSegments.MAX_SEG0,
                 BacnetMaxAdpu.MAX_APDU206, 15);
 
-            AlarmAndEventServices.EncodeSubscribeCOV(buffer, 18, new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 10),
-                false, true, 0);
+            AlarmAndEventServices.EncodeSubscribeCOV(buffer, data.SubscriberProcessIdentifier,
+                data.MonitoredObjectIdentifier, data.CancellationRequest, data.IssueConfirmedNotifications,
+                data.Lifetime);
 
             var encodedBytes = buffer.ToArray();
 
             // assert
             Assert.That(encodedBytes, Is.EquivalentTo(expectedBytes));
+        }
+
+        [Test]
+        public void should_decode_subscribecov_after_encode()
+        {
+            // arrange
+            var buffer = new EncodeBuffer();
+            var input = ASHRAE.F_1_10();
+            IList<BacnetGetEventInformationData> output = new List<BacnetGetEventInformationData>();
+
+            // act
+            AlarmAndEventServices.EncodeSubscribeCOV(buffer, input.SubscriberProcessIdentifier,
+                input.MonitoredObjectIdentifier, input.CancellationRequest, input.IssueConfirmedNotifications,
+                input.Lifetime);
+            var encodedBytes = buffer.ToArray();
+            AlarmAndEventServices.DecodeSubscribeCOV(encodedBytes, 0, encodedBytes.Length,
+                out var subscriberProcessIdentifier, out var monitoredObjectIdentifier, out var cancellationRequest,
+                out var issueConfirmedNotifications, out var lifetime);
+
+            // assert
+            Assert.That(subscriberProcessIdentifier, Is.EqualTo(input.SubscriberProcessIdentifier));
+            Assert.That(monitoredObjectIdentifier, Is.EqualTo(input.MonitoredObjectIdentifier));
+            Assert.That(cancellationRequest, Is.EqualTo(input.CancellationRequest));
+            Assert.That(issueConfirmedNotifications, Is.EqualTo(input.IssueConfirmedNotifications));
+            Assert.That(lifetime, Is.EqualTo(input.Lifetime));
         }
 
         [Test]
@@ -522,6 +568,7 @@ namespace System.IO.BACnet.Tests.Serialize
         {
             // arrange
             var buffer = new EncodeBuffer();
+            var data = ASHRAE.F_1_11();
 
             // example taken from ANNEX F - Examples of APDU Encoding - F.1.11
             var expectedBytes = new byte[]
@@ -534,15 +581,43 @@ namespace System.IO.BACnet.Tests.Serialize
                 BacnetConfirmedServices.SERVICE_CONFIRMED_SUBSCRIBE_COV_PROPERTY, BacnetMaxSegments.MAX_SEG0,
                 BacnetMaxAdpu.MAX_APDU206, 15);
 
-            AlarmAndEventServices.EncodeSubscribeProperty(buffer, 18, new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 10),
-                false, true, 60,
-                new BacnetPropertyReference((uint) BacnetPropertyIds.PROP_PRESENT_VALUE), true,
-                1.0f);
+            AlarmAndEventServices.EncodeSubscribeProperty(buffer, data.SubscriberProcessIdentifier,
+                data.MonitoredObjectIdentifier, data.CancellationRequest, data.IssueConfirmedNotifications,
+                data.Lifetime, data.MonitoredProperty, data.CovIncrementPresent, data.CovIncrement);
 
             var encodedBytes = buffer.ToArray();
 
             // assert
             Assert.That(encodedBytes, Is.EquivalentTo(expectedBytes));
+        }
+
+        [Test]
+        public void should_decode_subscribecovproperty_after_encode()
+        {
+            // arrange
+            var buffer = new EncodeBuffer();
+            var input = ASHRAE.F_1_11();
+
+            // act
+            AlarmAndEventServices.EncodeSubscribeProperty(buffer, input.SubscriberProcessIdentifier,
+                input.MonitoredObjectIdentifier, input.CancellationRequest, input.IssueConfirmedNotifications,
+                input.Lifetime, input.MonitoredProperty, input.CovIncrementPresent, input.CovIncrement);
+
+            var encodedBytes = buffer.ToArray();
+
+            AlarmAndEventServices.DecodeSubscribeProperty(encodedBytes, 0, encodedBytes.Length,
+                out var subscriberProcessIdentifier, out var monitoredObjectIdentifier, out var monitoredProperty,
+                out var cancellationRequest, out var issueConfirmedNotifications, out var lifetime,
+                out var covIncrement);
+
+            // assert
+            Assert.That(subscriberProcessIdentifier, Is.EqualTo(input.SubscriberProcessIdentifier));
+            Assert.That(monitoredObjectIdentifier, Is.EqualTo(input.MonitoredObjectIdentifier));
+            Assert.That(monitoredProperty, Is.EqualTo(input.MonitoredProperty));
+            Assert.That(cancellationRequest, Is.EqualTo(input.CancellationRequest));
+            Assert.That(issueConfirmedNotifications, Is.EqualTo(input.IssueConfirmedNotifications));
+            Assert.That(lifetime, Is.EqualTo(input.Lifetime));
+            Assert.That(covIncrement, Is.EqualTo(input.CovIncrement));
         }
 
         [Test]

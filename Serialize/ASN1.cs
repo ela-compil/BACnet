@@ -871,7 +871,7 @@ namespace System.IO.BACnet.Serialize
             switch ((BacnetTimestampTags)tag)
             {
                 case BacnetTimestampTags.TIME_STAMP_TIME:
-                    len += decode_application_time(buffer, offset + len, out var time);
+                    len += decode_bacnet_time(buffer, offset + len, out var time);
                     value = new BacnetGenericTime(time, BacnetTimestampTags.TIME_STAMP_TIME);
                     break;
 
