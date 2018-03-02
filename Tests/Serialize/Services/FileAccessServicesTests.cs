@@ -1,4 +1,5 @@
 ﻿using System.IO.BACnet.Serialize;
+using System.IO.BACnet.Tests.TestData;
 using System.Linq;
 using System.Text;
 using NUnit.Framework;
@@ -37,10 +38,7 @@ namespace System.IO.BACnet.Tests.Serialize
         {
             // arrange
             var buffer = new EncodeBuffer();
-            var data = new[]
-            {
-                Encoding.ASCII.GetBytes("Chiller01 On-Time=4.3 Hours")
-            };
+            var data = ASHRAE.F_2_1();
 
             // example taken from ANNEX F - Examples of APDU Encoding - F.2.1
             var expectedBytes = new byte[]
@@ -53,13 +51,34 @@ namespace System.IO.BACnet.Tests.Serialize
             // act
             APDU.EncodeComplexAck(buffer, BacnetConfirmedServices.SERVICE_CONFIRMED_ATOMIC_READ_FILE, 0);
 
-            FileAccessServices.EncodeAtomicReadFileAcknowledge(buffer, true, false, 0, 1, data,
-                data.Select(arr => arr.Length).ToArray());
+            FileAccessServices.EncodeAtomicReadFileAcknowledge(buffer, data.IsStream, data.EndOfFile, data.Position,
+                data.BlockCount, data.Blocks, data.Counts);
 
             var encodedBytes = buffer.ToArray();
 
             // assert
             Assert.That(encodedBytes, Is.EquivalentTo(expectedBytes));
+        }
+
+        [Test]
+        public void should_decode_atomicreadfilerequest_data_ack_after_encode()
+        {
+            // arrange
+            var buffer = new EncodeBuffer();
+            var input = ASHRAE.F_2_1();
+
+            // act
+            FileAccessServices.EncodeAtomicReadFileAcknowledge(buffer, input.IsStream, input.EndOfFile, input.Position,
+                input.BlockCount, input.Blocks, input.Counts);
+            FileAccessServices.DecodeAtomicReadFileAcknowledge(buffer.buffer, 0, buffer.GetLength(), out var endOfFile,
+                out var isStream, out var position, out var count, out var targetBuffer, out var targetOffset);
+
+            // assert
+            Assert.That(endOfFile, Is.EqualTo(input.EndOfFile));
+            Assert.That(isStream, Is.EqualTo(input.IsStream));
+            Assert.That(position, Is.EqualTo(input.Position));
+            Assert.That(count, Is.EqualTo(input.Counts[0]));
+            Assert.That(targetBuffer.Skip(targetOffset).Take((int)count), Is.EquivalentTo(input.Blocks[0]));
         }
 
         [Test]
@@ -115,6 +134,25 @@ namespace System.IO.BACnet.Tests.Serialize
 
             // assert
             Assert.That(encodedBytes, Is.EquivalentTo(expectedBytes));
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void should_decode_atomicreadfile_after_encode(bool isStream)
+        {
+            // arrange
+            var buffer = new EncodeBuffer();
+            var oid = new BacnetObjectId(BacnetObjectTypes.OBJECT_FILE, 42);
+
+            // act
+            FileAccessServices.EncodeAtomicReadFile(buffer, isStream, oid, 5, 10);
+            FileAccessServices.DecodeAtomicReadFile(buffer.buffer, 0, buffer.GetLength(), out var wasStream,
+                out var objectId, out var position, out var count);
+
+            Assert.That(wasStream, Is.EqualTo(isStream));
+            Assert.That(objectId, Is.EqualTo(oid));
+            Assert.That(position, Is.EqualTo(5));
+            Assert.That(count, Is.EqualTo(10));
         }
 
         [Test]
@@ -222,6 +260,52 @@ namespace System.IO.BACnet.Tests.Serialize
 
             // assert
             Assert.That(encodedBytes, Is.EquivalentTo(expectedBytes));
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void should_decode_atomicwritefile_after_encode(bool isStream)
+        {
+            // arrange
+            var buffer = new EncodeBuffer();
+            var oid = new BacnetObjectId(BacnetObjectTypes.OBJECT_FILE, 42);
+            var input = new[]
+            {
+                new byte[] {0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x20, 0x57, 0x6f, 0x72, 0x6c, 0x64, 0x21},
+                new byte[] {0x42}
+            };
+
+            // act
+            FileAccessServices.EncodeAtomicWriteFile(buffer, isStream, oid, 5, (uint)input.Length, input,
+                input.Select(d => d.Length).ToArray());
+            FileAccessServices.DecodeAtomicWriteFile(buffer.buffer, 0, buffer.GetLength(), out var wasStream,
+                out var objectId, out var position, out var blockCount, out var blocks, out var counts);
+
+            // assert
+            Assert.That(wasStream, Is.EqualTo(isStream));
+            Assert.That(objectId, Is.EqualTo(oid));
+            Assert.That(position, Is.EqualTo(5));
+            Assert.That(blockCount, Is.EqualTo((uint)(isStream ? 1 : input.Length)));
+            for (var i = 0; i < (isStream ? 1 : input.Length); i++)
+                Assert.That(blocks[i], Is.EqualTo(input[i]));
+        }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void should_decode_atomicwritefile_ack_after_encode(bool isStream)
+        {
+            // arrange
+            var buffer = new EncodeBuffer();
+            const int expectedPosition = 30;
+
+            // act
+            FileAccessServices.EncodeAtomicWriteFileAcknowledge(buffer, isStream, expectedPosition);
+            FileAccessServices.DecodeAtomicWriteFileAcknowledge(buffer.buffer, 0, buffer.GetLength(), out var wasStream,
+                out var position);
+
+            // assert
+            Assert.That(wasStream, Is.EqualTo(isStream));
+            Assert.That(position, Is.EqualTo(expectedPosition));
         }
     }
 }

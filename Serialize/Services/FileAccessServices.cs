@@ -108,7 +108,7 @@
             var len = 0;
             int tagLen;
 
-            objectId = default(BacnetObjectId);
+            objectId = default;
             isStream = true;
             position = -1;
             blockCount = 0;
@@ -188,6 +188,7 @@
             return len;
         }
 
+        // TODO: use overloads to get rid of params that don't make sense (stream vs. record)
         public static void EncodeAtomicReadFileAcknowledge(EncodeBuffer buffer, bool isStream, bool endOfFile, int position, uint blockCount, byte[][] blocks, int[] counts)
         {
             ASN1.encode_application_boolean(buffer, endOfFile);
@@ -254,15 +255,15 @@
             else if (ASN1.decode_is_opening_tag_number(buffer, offset + len, 1))
             {
                 throw new NotImplementedException("Non stream File transfers are not supported");
-                ///* a tag number is not extended so only one octet */
+                //* a tag number is not extended so only one octet */
                 //len++;
-                ///* fileStartRecord */
+                //* fileStartRecord */
                 //tag_len = ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value_type);
                 //len += tag_len;
                 //if (tag_number != (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_SIGNED_INT)
                 //    return -1;
                 //len += ASN1.decode_signed(buffer, offset + len, len_value_type, out position);
-                ///* returnedRecordCount */
+                //* returnedRecordCount */
                 //tag_len = ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value_type);
                 //len += tag_len;
                 //if (tag_number != (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT)
@@ -279,7 +280,7 @@
                 //}
                 //if (!ASN1.decode_is_closing_tag_number(buffer, offset + len, 1))
                 //    return -1;
-                ///* a tag number is not extended so only one octet */
+                //* a tag number is not extended so only one octet */
                 //len++;
             }
             else

@@ -2,6 +2,8 @@
 using System.IO.BACnet.EventNotification;
 using System.IO.BACnet.EventNotification.EventValues;
 using System.IO.BACnet.Serialize;
+using System.Linq;
+using System.Text;
 
 namespace System.IO.BACnet.Tests.TestData
 {
@@ -134,6 +136,17 @@ namespace System.IO.BACnet.Tests.TestData
         {
             return (18, new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 10), false, true, 60,
                 new BacnetPropertyReference((uint) BacnetPropertyIds.PROP_PRESENT_VALUE), true, 1.0f);
+        }
+
+        public static (bool IsStream, bool EndOfFile, int Position, uint BlockCount, byte[][] Blocks, int[] Counts)
+            F_2_1()
+        {
+            var data = new[]
+            {
+                Encoding.ASCII.GetBytes("Chiller01 On-Time=4.3 Hours")
+            };
+
+            return (true, false, 0, 1, data, data.Select(arr => arr.Length).ToArray());
         }
     }
 }
