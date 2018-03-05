@@ -315,6 +315,7 @@ namespace System.IO.BACnet.Serialize
             /* Tag 0: Object ID */
             if (!ASN1.decode_is_context_tag(buffer, offset, 0))
                 return -1;
+
             var len = 1;
             len += ASN1.decode_object_id(buffer, offset + len, out BacnetObjectTypes type, out var instance);
             objectId = new BacnetObjectId(type, instance);
@@ -322,6 +323,7 @@ namespace System.IO.BACnet.Serialize
             len += ASN1.decode_tag_number_and_value(buffer, offset + len, out var tagNumber, out var lenValueType);
             if (tagNumber != 1)
                 return -1;
+
             len += ASN1.decode_unsigned(buffer, offset + len, lenValueType, out property.propertyIdentifier);
             /* Tag 2: Optional Array Index */
             var tagLen = ASN1.decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValueType);
@@ -342,7 +344,9 @@ namespace System.IO.BACnet.Serialize
                 while (apduLen - len > 1)
                 {
                     tagLen = ASN1.bacapp_decode_application_data(address, buffer, offset + len, apduLen + offset, objectId.Type, (BacnetPropertyIds)property.propertyIdentifier, out var value);
-                    if (tagLen < 0) return -1;
+                    if (tagLen < 0)
+                        return -1;
+
                     len += tagLen;
                     valueList.Add(value);
                 }
@@ -352,6 +356,7 @@ namespace System.IO.BACnet.Serialize
 
             if (!ASN1.decode_is_closing_tag_number(buffer, offset + len, 3))
                 return -1;
+
             len++;
 
             return len;

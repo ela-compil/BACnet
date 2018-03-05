@@ -351,6 +351,34 @@ namespace System.IO.BACnet.Tests.Serialize
             Assert.That(valueList, Is.EquivalentTo(input.ValueList));
         }
 
+        [TestCase(0)]
+        [TestCase(5)]
+        [TestCase(7)]
+        [TestCase(13)]
+        public void should_not_decode_malformed_readpropertyrequest_ack(int errorPos)
+        {
+            // arrange
+            var buffer = new EncodeBuffer();
+
+            var input = ASHRAE.F_3_5_Ack();
+
+            // act
+            ObjectAccessServices.EncodeReadPropertyAcknowledge(buffer, input.ObjectId, input.PropertyId,
+                input.ValueList, input.ArrayIndex);
+
+            var encodedBytes = buffer.ToArray();
+            unchecked
+            {
+                encodedBytes[errorPos] += 128;
+            }
+
+            var retVal = ObjectAccessServices.DecodeReadPropertyAcknowledge(DummyAddress, encodedBytes, 0,
+                encodedBytes.Length, out var objectId, out var propertyReference, out var valueList);
+
+            // assert
+            Assert.That(retVal, Is.EqualTo(-1));
+        }
+
         [Test]
         public void should_encode_readpropertymultiplerequest_according_to_ashrae_example()
         {
