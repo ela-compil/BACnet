@@ -162,7 +162,7 @@ namespace System.IO.BACnet
         public event ReadPropertyMultipleRequestHandler OnReadPropertyMultipleRequest;
         public delegate void WritePropertyRequestHandler(BacnetClient sender, BacnetAddress address, byte invokeId, BacnetObjectId objectId, BacnetPropertyValue value, BacnetMaxSegments maxSegments);
         public event WritePropertyRequestHandler OnWritePropertyRequest;
-        public delegate void WritePropertyMultipleRequestHandler(BacnetClient sender, BacnetAddress address, byte invokeId, BacnetObjectId objectId, ICollection<BacnetPropertyValue> values, BacnetMaxSegments maxSegments);
+        public delegate void WritePropertyMultipleRequestHandler(BacnetClient sender, BacnetAddress address, byte invokeId, IEnumerable<BacnetWriteAccessSpecification> values, BacnetMaxSegments maxSegments);
         public event WritePropertyMultipleRequestHandler OnWritePropertyMultipleRequest;
         public delegate void AtomicWriteFileRequestHandler(BacnetClient sender, BacnetAddress address, byte invokeId, bool isStream, BacnetObjectId objectId, int position, uint blockCount, byte[][] blocks, int[] counts, BacnetMaxSegments maxSegments);
         public event AtomicWriteFileRequestHandler OnAtomicWriteFileRequest;
@@ -180,7 +180,7 @@ namespace System.IO.BACnet
         public event ReinitializedRequestHandler OnReinitializedDevice;
         public delegate void ReadRangeHandler(BacnetClient sender, BacnetAddress address, byte invokeId, BacnetObjectId objectId, BacnetPropertyReference property, BacnetReadRangeRequestTypes requestType, uint position, DateTime time, int count, BacnetMaxSegments maxSegments);
         public event ReadRangeHandler OnReadRange;
-        public delegate void CreateObjectRequestHandler(BacnetClient sender, BacnetAddress address, byte invokeId, BacnetObjectId objectId, ICollection<BacnetPropertyValue> values, BacnetMaxSegments maxSegments);
+        public delegate void CreateObjectRequestHandler(BacnetClient sender, BacnetAddress address, byte invokeId, object identifier, ICollection<BacnetPropertyValue> values, BacnetMaxSegments maxSegments);
         public event CreateObjectRequestHandler OnCreateObjectRequest;
         public delegate void DeleteObjectRequestHandler(BacnetClient sender, BacnetAddress address, byte invokeId, BacnetObjectId objectId, BacnetMaxSegments maxSegments);
         public event DeleteObjectRequestHandler OnDeleteObjectRequest;
@@ -249,8 +249,8 @@ namespace System.IO.BACnet
                 }
                 else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_WRITE_PROP_MULTIPLE && OnWritePropertyMultipleRequest != null)
                 {
-                    if (ObjectAccessServices.DecodeWritePropertyMultiple(address, buffer, offset, length, out var objectId, out var values) >= 0)
-                        OnWritePropertyMultipleRequest(this, address, invokeId, objectId, values, maxSegments);
+                    if (ObjectAccessServices.DecodeWritePropertyMultiple(address, buffer, offset, length, out var values) >= 0)
+                        OnWritePropertyMultipleRequest(this, address, invokeId, values, maxSegments);
                     else
                     {
                         ErrorResponse(address, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
@@ -1232,7 +1232,7 @@ namespace System.IO.BACnet
             var objectIds = string.Join(", ", valueList.Select(v => v.objectIdentifier));
             Log.Debug($"Sending WritePropertyMultipleRequest {objectIds}");
             return BeginConfirmedServiceRequest(address, BacnetConfirmedServices.SERVICE_CONFIRMED_WRITE_PROP_MULTIPLE,
-                buffer => ObjectAccessServices.EncodeWriteObjectMultiple(buffer, valueList), waitForTransmit);
+                buffer => ObjectAccessServices.EncodeWritePropertyMultiple(buffer, valueList), waitForTransmit);
         }
 
         public IList<BacnetReadAccessResult> ReadPropertyMultipleRequest(BacnetAddress address, BacnetObjectId objectId, IList<BacnetPropertyReference> propertyIdAndIndex)

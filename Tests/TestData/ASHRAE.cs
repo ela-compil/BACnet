@@ -4,6 +4,7 @@ using System.IO.BACnet.EventNotification.EventValues;
 using System.IO.BACnet.Serialize;
 using System.Linq;
 using System.Text;
+using static System.IO.BACnet.Tests.Helper;
 
 namespace System.IO.BACnet.Tests.TestData
 {
@@ -72,7 +73,7 @@ namespace System.IO.BACnet.Tests.TestData
         public static (BacnetLogRecord Record1, BacnetLogRecord Record2, BacnetObjectId ObjectId, BacnetPropertyIds
             PropertyId, BacnetBitString Flags, uint ItemCount, BacnetReadRangeRequestTypes RequestType, uint
             FirstSequence
-            ) F_3_8()
+            ) F_3_8_Ack()
         {
             var record1 = new BacnetLogRecord(BacnetTrendLogValueType.TL_TYPE_REAL, 18.0,
                 new DateTime(1998, 3, 23, 19, 54, 27), 0);
@@ -131,7 +132,9 @@ namespace System.IO.BACnet.Tests.TestData
                 false, true, 0);
         }
 
-        public static (uint SubscriberProcessIdentifier, BacnetObjectId MonitoredObjectIdentifier, bool CancellationRequest, bool IssueConfirmedNotifications, uint Lifetime, BacnetPropertyReference MonitoredProperty, bool CovIncrementPresent, float CovIncrement)
+        public static (uint SubscriberProcessIdentifier, BacnetObjectId MonitoredObjectIdentifier, bool
+            CancellationRequest, bool IssueConfirmedNotifications, uint Lifetime, BacnetPropertyReference
+            MonitoredProperty, bool CovIncrementPresent, float CovIncrement)
             F_1_11()
         {
             return (18, new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 10), false, true, 60,
@@ -148,5 +151,104 @@ namespace System.IO.BACnet.Tests.TestData
 
             return (true, false, 0, 1, data, data.Select(arr => arr.Length).ToArray());
         }
+
+        public static (BacnetObjectTypes ObjectType, ICollection<BacnetPropertyValue> ValueList)
+            F_3_3()
+        {
+            var data = new List<BacnetPropertyValue>
+            {
+                new BacnetPropertyValue
+                {
+                    property = new BacnetPropertyReference(BacnetPropertyIds.PROP_OBJECT_NAME),
+                    value = new List<BacnetValue> {new BacnetValue("Trend 1")}
+                },
+                new BacnetPropertyValue
+                {
+                    property = new BacnetPropertyReference(BacnetPropertyIds.PROP_FILE_ACCESS_METHOD),
+                    value = new List<BacnetValue> {new BacnetValue(BacnetFileAccessMethod.RECORD_ACCESS)}
+                }
+            };
+
+            return (BacnetObjectTypes.OBJECT_FILE, data);
+        }
+
+        public static BacnetObjectId F_3_4()
+            => new BacnetObjectId(BacnetObjectTypes.OBJECT_GROUP, 6);
+
+        public static (BacnetObjectId ObjectId, BacnetPropertyIds PropertyId, uint ArrayIndex)
+            F_3_5()
+            => (new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 5), BacnetPropertyIds.PROP_PRESENT_VALUE,
+                ASN1.BACNET_ARRAY_ALL);
+
+        public static (BacnetObjectId ObjectId, BacnetPropertyIds PropertyId, IEnumerable<BacnetValue> ValueList, uint
+            ArrayIndex)
+            F_3_5_Ack()
+            => (new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 5), BacnetPropertyIds.PROP_PRESENT_VALUE,
+                new List<BacnetValue>
+                {
+                    new BacnetValue(72.3f)
+                }, ASN1.BACNET_ARRAY_ALL);
+
+        public static (BacnetObjectId ObjectId, IList<BacnetPropertyReference> Properties)
+            F_3_7()
+            => (new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 16), new List<BacnetPropertyReference>
+            {
+                new BacnetPropertyReference(BacnetPropertyIds.PROP_PRESENT_VALUE),
+                new BacnetPropertyReference(BacnetPropertyIds.PROP_RELIABILITY)
+            });
+
+        public static IList<BacnetReadAccessResult> F_3_7_Ack()
+            => new List<BacnetReadAccessResult>
+            {
+                new BacnetReadAccessResult(new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 16),
+                    new List<BacnetPropertyValue>
+                    {
+                        new BacnetPropertyValue
+                        {
+                            property = new BacnetPropertyReference(BacnetPropertyIds.PROP_PRESENT_VALUE),
+                            value = new List<BacnetValue> {new BacnetValue(72.3f)},
+                        },
+                        new BacnetPropertyValue
+                        {
+                            property = new BacnetPropertyReference(BacnetPropertyIds.PROP_RELIABILITY),
+                            value = new List<BacnetValue>
+                            {
+                                new BacnetValue(BacnetReliability.RELIABILITY_NO_FAULT_DETECTED)
+                            },
+                        }
+                    })
+            };
+
+        public static (BacnetObjectId ObjectId, BacnetPropertyIds PropertyId, BacnetReadRangeRequestTypes RequestType,
+            uint Position, DateTime Time, int Count, uint ArrayIndex)
+            F_3_8()
+            => (new BacnetObjectId(BacnetObjectTypes.OBJECT_TRENDLOG, 1),
+                BacnetPropertyIds.PROP_LOG_BUFFER, BacnetReadRangeRequestTypes.RR_BY_TIME, 0,
+                new DateTime(1998, 3, 23, 19, 52, 34), 4, ASN1.BACNET_ARRAY_ALL);
+
+        public static (BacnetObjectId ObjectId, BacnetPropertyIds PropertyId, IEnumerable<BacnetValue> ValueList, uint
+            ArrayIndex, uint Priority)
+            F_3_9()
+            => (new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_VALUE, 1), BacnetPropertyIds.PROP_PRESENT_VALUE,
+                new List<BacnetValue> {new BacnetValue(180f)}, ASN1.BACNET_ARRAY_ALL, 0);
+
+        public static BacnetWriteAccessSpecification[] F_3_10()
+            => new[]
+            {
+                new BacnetWriteAccessSpecification(
+                    new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_VALUE, 5),
+                    A(new BacnetWriteAccessSpecification.Property(BacnetPropertyIds.PROP_PRESENT_VALUE,
+                        new BacnetValue(67f)))),
+
+                new BacnetWriteAccessSpecification(
+                    new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_VALUE, 6),
+                    A(new BacnetWriteAccessSpecification.Property(BacnetPropertyIds.PROP_PRESENT_VALUE,
+                        new BacnetValue(67f)))),
+
+                new BacnetWriteAccessSpecification(
+                    new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_VALUE, 7),
+                    A(new BacnetWriteAccessSpecification.Property(BacnetPropertyIds.PROP_PRESENT_VALUE,
+                        new BacnetValue(72f)))),
+            };
     }
 }

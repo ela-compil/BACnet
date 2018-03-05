@@ -3,6 +3,7 @@ using System.IO.BACnet.Base;
 using System.IO.BACnet.EventNotification;
 using System.IO.BACnet.EventNotification.EventValues;
 using System.Text;
+using Microsoft.Win32;
 
 namespace System.IO.BACnet.Serialize
 {
@@ -1783,8 +1784,11 @@ namespace System.IO.BACnet.Serialize
             return len;
         }
 
-        public static int bacapp_decode_data(byte[] buffer, int offset, int maxLength, BacnetApplicationTags tagDataType, uint lenValueType, out BacnetValue value)
+        public static int bacapp_decode_data(byte[] buffer, int offset, int maxLength, BacnetApplicationTags tagDataType, uint lenValueType, out BacnetValue value, Type enumType = null)
         {
+            if (tagDataType == BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED && enumType == null)
+                throw new ArgumentNullException(nameof(enumType));
+
             var len = 0;
             uint uintValue;
 
@@ -1838,7 +1842,8 @@ namespace System.IO.BACnet.Serialize
 
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED:
                     len = decode_unsigned(buffer, offset, lenValueType, out uint enumeratedValue);
-                    value.Value = enumeratedValue;
+                    // ReSharper disable once AssignNullToNotNullAttribute - this is checked at the top
+                    value.Value = Enum.ToObject(enumType, enumeratedValue);
                     break;
 
                 case BacnetApplicationTags.BACNET_APPLICATION_TAG_DATE:
@@ -2050,6 +2055,8 @@ namespace System.IO.BACnet.Serialize
         {
             var len = 0;
 
+            var enumType = GetEnumTypeForPropertyOrNull(propertyId);
+
             value = new BacnetValue();
 
             /* FIXME: use max_apdu_len! */
@@ -2059,7 +2066,7 @@ namespace System.IO.BACnet.Serialize
                 if (tagLen > 0)
                 {
                     len += tagLen;
-                    var decodeLen = bacapp_decode_data(buffer, offset + len, maxOffset, tagNumber, lenValueType, out value);
+                    var decodeLen = bacapp_decode_data(buffer, offset + len, maxOffset, tagNumber, lenValueType, out value, enumType);
                     if (decodeLen < 0) return decodeLen;
                     len += decodeLen;
                 }
@@ -2071,6 +2078,19 @@ namespace System.IO.BACnet.Serialize
             }
 
             return len;
+        }
+
+        private static Type GetEnumTypeForPropertyOrNull(BacnetPropertyIds propertyId)
+        {
+            switch (propertyId)
+            {
+                case BacnetPropertyIds.PROP_FILE_ACCESS_METHOD:
+                    return typeof(BacnetFileAccessMethod);
+                case BacnetPropertyIds.PROP_RELIABILITY:
+                    return typeof(BacnetReliability);
+                default:
+                    return null;
+            }
         }
 
         public static int bacapp_decode_context_application_data(BacnetAddress address, byte[] buffer, int offset, int maxOffset, BacnetObjectTypes objectType, BacnetPropertyIds propertyId, out BacnetValue value)
@@ -2252,6 +2272,13 @@ namespace System.IO.BACnet.Serialize
             return len;
         }
 
+        public static int decode_object_id(byte[] buffer, int offset, out BacnetObjectId objectId)
+        {
+            var len = decode_object_id(buffer, offset, out BacnetObjectTypes type, out var instance);
+            objectId = new BacnetObjectId(type, instance);
+            return len;
+        }
+
         public static int decode_object_id(byte[] buffer, int offset, out BacnetObjectTypes objectType, out uint instance)
         {
             var len = decode_unsigned32(buffer, offset, out var value);
@@ -2288,6 +2315,17 @@ namespace System.IO.BACnet.Serialize
         {
             return (buffer[offset] & 0x07) == 6;
         }
+
+        public static int DecodeExpectedTagNumberAndValue(byte[] buffer, int offset, byte expectedTag, out uint value)
+        {
+            var len = decode_tag_number_and_value(buffer, offset, out var tagNumber, out value);
+
+            if(tagNumber != expectedTag)
+                throw new InvalidOperationException($"expected tag {expectedTag} not found");
+
+            return len;
+        }
+
 
         public static int decode_tag_number_and_value(byte[] buffer, int offset, out byte tagNumber, out uint value)
         {
@@ -2627,6 +2665,24 @@ namespace System.IO.BACnet.Serialize
             offset += EnumUtils.DecodeEnumerated(buffer, offset, lenValueType, out errorCode);
 
             return offset - orgOffset;
+        }
+
+        public static int DecodeOptionalArrayIndex(byte[] buffer, int offset, byte tag, uint defaultValue,
+            out uint arrayIndex)
+        {
+            var len = decode_tag_number_and_value(buffer, offset, out var tagNumber, out var lenValue);
+            if (tagNumber == tag)
+            {
+                len += decode_unsigned(buffer, offset + len, lenValue, out arrayIndex);
+                len += decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValue);
+            }
+            else
+            {
+                len--;
+                arrayIndex = defaultValue;
+            }
+
+            return len;
         }
     }
 }

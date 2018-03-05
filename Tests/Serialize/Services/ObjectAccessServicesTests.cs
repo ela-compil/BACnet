@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO.BACnet.Serialize;
 using System.IO.BACnet.Tests.TestData;
+using System.Linq;
 using NUnit.Framework;
 using static System.IO.BACnet.Tests.Helper;
 
@@ -130,20 +131,7 @@ namespace System.IO.BACnet.Tests.Serialize
         {
             // arrange
             var buffer = new EncodeBuffer();
-
-            var data = new List<BacnetPropertyValue>
-            {
-                new BacnetPropertyValue
-                {
-                    property = new BacnetPropertyReference(BacnetPropertyIds.PROP_OBJECT_NAME),
-                    value = new List<BacnetValue> {new BacnetValue("Trend 1")}
-                },
-                new BacnetPropertyValue
-                {
-                    property = new BacnetPropertyReference(BacnetPropertyIds.PROP_FILE_ACCESS_METHOD),
-                    value = new List<BacnetValue> {new BacnetValue(BacnetFileAccessMethod.RECORD_ACCESS)}
-                }
-            };
+            var input = ASHRAE.F_3_3();
 
             // example taken from ANNEX F - Examples of APDU Encoding - F.3.3
             var expectedBytes = new byte[]
@@ -157,12 +145,29 @@ namespace System.IO.BACnet.Tests.Serialize
                 BacnetConfirmedServices.SERVICE_CONFIRMED_CREATE_OBJECT, BacnetMaxSegments.MAX_SEG0,
                 BacnetMaxAdpu.MAX_APDU1024, 86);
 
-            ObjectAccessServices.EncodeCreateObject(buffer, BacnetObjectTypes.OBJECT_FILE, data);
+            ObjectAccessServices.EncodeCreateObject(buffer, input.ObjectType, input.ValueList);
 
             var encodedBytes = buffer.ToArray();
 
             // assert
-            Assert.That(encodedBytes, Is.EquivalentTo(expectedBytes));
+            Assert.That(encodedBytes, Is.EqualTo(expectedBytes));
+        }
+
+        [Test]
+        public void should_decode_createobjectrequest_after_encode()
+        {
+            // arrange
+            var buffer = new EncodeBuffer();
+            var input = ASHRAE.F_3_3();
+
+            // act
+            ObjectAccessServices.EncodeCreateObject(buffer, input.ObjectType, input.ValueList);
+            ObjectAccessServices.DecodeCreateObject(default(BacnetAddress), buffer.buffer, 0, buffer.GetLength(),
+                out var objectId, out var valuesRefs);
+
+            // assert
+            Assert.That(objectId, Is.EqualTo(input.ObjectType));
+            Assert.That(valuesRefs, Is.EquivalentTo(input.ValueList));
         }
 
         [Test]
@@ -200,12 +205,26 @@ namespace System.IO.BACnet.Tests.Serialize
                 BacnetConfirmedServices.SERVICE_CONFIRMED_DELETE_OBJECT, BacnetMaxSegments.MAX_SEG0,
                 BacnetMaxAdpu.MAX_APDU1024, 87);
 
-            ObjectAccessServices.EncodeDeleteObject(buffer, new BacnetObjectId(BacnetObjectTypes.OBJECT_GROUP, 6));
+            ObjectAccessServices.EncodeDeleteObject(buffer, ASHRAE.F_3_4());
 
             var encodedBytes = buffer.ToArray();
 
             // assert
             Assert.That(encodedBytes, Is.EquivalentTo(expectedBytes));
+        }
+
+        [Test]
+        public void should_decode_deleteobjectrequest_after_encode()
+        {
+            // arrange
+            var buffer = new EncodeBuffer();
+            var input = ASHRAE.F_3_4();
+
+            ObjectAccessServices.EncodeDeleteObject(buffer, input);
+            ObjectAccessServices.DecodeDeleteObject(buffer.buffer, 0, buffer.GetLength(), out var objectId);
+
+            // assert
+            Assert.That(objectId, Is.EqualTo(input));
         }
 
         [Test]
@@ -252,6 +271,7 @@ namespace System.IO.BACnet.Tests.Serialize
         {
             // arrange
             var buffer = new EncodeBuffer();
+            var data = ASHRAE.F_3_5();
 
             // example taken from ANNEX F - Examples of APDU Encoding - F.3.5
             var expectedBytes = new byte[] {0x00, 0x00, 0x01, 0x0C, 0x0C, 0x00, 0x00, 0x00, 0x05, 0x19, 0x55};
@@ -261,13 +281,29 @@ namespace System.IO.BACnet.Tests.Serialize
                 BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROPERTY, BacnetMaxSegments.MAX_SEG0,
                 BacnetMaxAdpu.MAX_APDU50, 1);
 
-            ObjectAccessServices.EncodeReadProperty(buffer,
-                new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 5), BacnetPropertyIds.PROP_PRESENT_VALUE);
+            ObjectAccessServices.EncodeReadProperty(buffer, data.ObjectId, data.PropertyId, data.ArrayIndex);
 
             var encodedBytes = buffer.ToArray();
 
             // assert
             Assert.That(encodedBytes, Is.EquivalentTo(expectedBytes));
+        }
+
+        [Test]
+        public void should_decode_readpropertyrequest_after_encode()
+        {
+            // arrange
+            var buffer = new EncodeBuffer();
+            var input = ASHRAE.F_3_5();
+
+            ObjectAccessServices.EncodeReadProperty(buffer, input.ObjectId, input.PropertyId, input.ArrayIndex);
+            ObjectAccessServices.DecodeReadProperty(buffer.buffer, 0, buffer.GetLength(), out var objectId,
+                out var propertyReference);
+
+            // assert
+            Assert.That(objectId, Is.EqualTo(input.ObjectId));
+            Assert.That(propertyReference.propertyIdentifier, Is.EqualTo((uint)input.PropertyId));
+            Assert.That(propertyReference.propertyArrayIndex, Is.EqualTo(input.ArrayIndex));
         }
 
         [Test]
@@ -276,10 +312,7 @@ namespace System.IO.BACnet.Tests.Serialize
             // arrange
             var buffer = new EncodeBuffer();
 
-            var data = new List<BacnetValue>
-            {
-                new BacnetValue(72.3f)
-            };
+            var data = ASHRAE.F_3_5_Ack();
 
             // example taken from ANNEX F - Examples of APDU Encoding - F.3.5
             var expectedBytes = new byte[]
@@ -287,9 +320,8 @@ namespace System.IO.BACnet.Tests.Serialize
 
             // act
             APDU.EncodeComplexAck(buffer, BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROPERTY, 1);
-            ObjectAccessServices.EncodeReadPropertyAcknowledge(buffer,
-                new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 5), BacnetPropertyIds.PROP_PRESENT_VALUE,
-                data);
+            ObjectAccessServices.EncodeReadPropertyAcknowledge(buffer, data.ObjectId, data.PropertyId, data.ValueList,
+                data.ArrayIndex);
 
             var encodedBytes = buffer.ToArray();
 
@@ -298,16 +330,34 @@ namespace System.IO.BACnet.Tests.Serialize
         }
 
         [Test]
+        public void should_decode_readpropertyrequest_ack_after_encode()
+        {
+            // arrange
+            var buffer = new EncodeBuffer();
+
+            var input = ASHRAE.F_3_5_Ack();
+
+            // act
+            ObjectAccessServices.EncodeReadPropertyAcknowledge(buffer, input.ObjectId, input.PropertyId,
+                input.ValueList, input.ArrayIndex);
+            ObjectAccessServices.DecodeReadPropertyAcknowledge(DummyAddress, buffer.buffer, 0, buffer.GetLength(),
+                out var objectId, out var propertyReference, out var valueList);
+
+
+            // assert
+            Assert.That(objectId, Is.EqualTo(input.ObjectId));
+            Assert.That(propertyReference.propertyIdentifier, Is.EqualTo((uint)input.PropertyId));
+            Assert.That(propertyReference.propertyArrayIndex, Is.EqualTo(input.ArrayIndex));
+            Assert.That(valueList, Is.EquivalentTo(input.ValueList));
+        }
+
+        [Test]
         public void should_encode_readpropertymultiplerequest_according_to_ashrae_example()
         {
             // arrange
             var buffer = new EncodeBuffer();
 
-            var data = new List<BacnetPropertyReference>
-            {
-                new BacnetPropertyReference(BacnetPropertyIds.PROP_PRESENT_VALUE),
-                new BacnetPropertyReference(BacnetPropertyIds.PROP_RELIABILITY)
-            };
+            var data = ASHRAE.F_3_7();
 
             // example taken from ANNEX F - Examples of APDU Encoding - F.3.7
             var expectedBytes = new byte[]
@@ -318,8 +368,7 @@ namespace System.IO.BACnet.Tests.Serialize
                 BacnetConfirmedServices.SERVICE_CONFIRMED_READ_PROP_MULTIPLE, BacnetMaxSegments.MAX_SEG0,
                 BacnetMaxAdpu.MAX_APDU1024, 241);
 
-            ObjectAccessServices.EncodeReadPropertyMultiple(buffer,
-                new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 16), data);
+            ObjectAccessServices.EncodeReadPropertyMultiple(buffer, data.ObjectId, data.Properties);
 
             var encodedBytes = buffer.ToArray();
 
@@ -328,31 +377,30 @@ namespace System.IO.BACnet.Tests.Serialize
         }
 
         [Test]
+        public void should_decode_readpropertymultiplerequest_after_encode()
+        {
+            // arrange
+            var buffer = new EncodeBuffer();
+
+            var input = ASHRAE.F_3_7();
+
+            // act
+            ObjectAccessServices.EncodeReadPropertyMultiple(buffer, input.ObjectId, input.Properties);
+            ObjectAccessServices.DecodeReadPropertyMultiple(buffer.buffer, 0, buffer.GetLength(), out var properties);
+
+            // assert
+            Assert.That(properties.Count, Is.EqualTo(1));
+            Assert.That(properties[0].objectIdentifier, Is.EqualTo(input.ObjectId));
+            Assert.That(properties[0].propertyReferences, Is.EquivalentTo(input.Properties));
+        }
+
+        [Test]
         public void should_encode_readpropertymultiplerequest_ack_according_to_ashrae_example()
         {
             // arrange
             var buffer = new EncodeBuffer();
 
-            var data = new List<BacnetReadAccessResult>
-            {
-                new BacnetReadAccessResult(new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 16),
-                    new List<BacnetPropertyValue>
-                    {
-                        new BacnetPropertyValue
-                        {
-                            property = new BacnetPropertyReference(BacnetPropertyIds.PROP_PRESENT_VALUE),
-                            value = new List<BacnetValue> {new BacnetValue(72.3f)}
-                        },
-                        new BacnetPropertyValue
-                        {
-                            property = new BacnetPropertyReference(BacnetPropertyIds.PROP_RELIABILITY),
-                            value = new List<BacnetValue>
-                            {
-                                new BacnetValue(BacnetReliability.RELIABILITY_NO_FAULT_DETECTED)
-                            }
-                        }
-                    })
-            };
+            var data = ASHRAE.F_3_7_Ack();
 
             // example taken from ANNEX F - Examples of APDU Encoding - F.3.7
             var expectedBytes = new byte[]
@@ -369,6 +417,23 @@ namespace System.IO.BACnet.Tests.Serialize
 
             // assert
             Assert.That(encodedBytes, Is.EquivalentTo(expectedBytes));
+        }
+
+        [Test]
+        public void should_decode_readpropertymultiplerequest_ack_after_encode()
+        {
+            // arrange
+            var buffer = new EncodeBuffer();
+
+            var input = ASHRAE.F_3_7_Ack();
+
+            // act
+            ObjectAccessServices.EncodeReadPropertyMultipleAcknowledge(buffer, input);
+            ObjectAccessServices.DecodeReadPropertyMultipleAcknowledge(DummyAddress, buffer.buffer, 0,
+                buffer.GetLength(), out var values);
+
+            // assert
+            Assert.That(values, Is.EquivalentTo(input));
         }
 
         [Test]
@@ -432,7 +497,7 @@ namespace System.IO.BACnet.Tests.Serialize
                         new BacnetPropertyValue
                         {
                             property = new BacnetPropertyReference(BacnetPropertyIds.PROP_PRESENT_VALUE),
-                            value = new List<BacnetValue> {new BacnetValue(42.3f)}
+                            value = new List<BacnetValue> {new BacnetValue(42.3f)},
                         }
                     }),
 
@@ -446,7 +511,7 @@ namespace System.IO.BACnet.Tests.Serialize
                             {
                                 new BacnetValue(new BacnetError(BacnetErrorClasses.ERROR_CLASS_OBJECT,
                                     BacnetErrorCodes.ERROR_CODE_UNKNOWN_OBJECT))
-                            }
+                            },
                         }
                     }),
 
@@ -456,7 +521,7 @@ namespace System.IO.BACnet.Tests.Serialize
                         new BacnetPropertyValue
                         {
                             property = new BacnetPropertyReference(BacnetPropertyIds.PROP_PRESENT_VALUE),
-                            value = new List<BacnetValue> {new BacnetValue(435.7f)}
+                            value = new List<BacnetValue> {new BacnetValue(435.7f)},
                         }
                     })
             };
@@ -484,6 +549,7 @@ namespace System.IO.BACnet.Tests.Serialize
         {
             // arrange
             var buffer = new EncodeBuffer();
+            var data = ASHRAE.F_3_8();
 
             // example taken from ANNEX F - Examples of APDU Encoding - F.3.8
             var expectedBytes = new byte[]
@@ -498,9 +564,8 @@ namespace System.IO.BACnet.Tests.Serialize
                 BacnetMaxAdpu.MAX_APDU206, 1,
                 type: BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST | BacnetPduTypes.SEGMENTED_RESPONSE_ACCEPTED);
 
-            ObjectAccessServices.EncodeReadRange(buffer, new BacnetObjectId(BacnetObjectTypes.OBJECT_TRENDLOG, 1),
-                BacnetPropertyIds.PROP_LOG_BUFFER, BacnetReadRangeRequestTypes.RR_BY_TIME, 0,
-                new DateTime(1998, 3, 23, 19, 52, 34), 4);
+            ObjectAccessServices.EncodeReadRange(buffer, data.ObjectId, data.PropertyId, data.RequestType,
+                data.Position, data.Time, data.Count, data.ArrayIndex);
 
             var encodedBytes = buffer.ToArray();
 
@@ -509,11 +574,34 @@ namespace System.IO.BACnet.Tests.Serialize
         }
 
         [Test]
+        public void should_decode_readrangerequest_after_encode()
+        {
+            // arrange
+            var buffer = new EncodeBuffer();
+            var input = ASHRAE.F_3_8();
+
+            // act
+            ObjectAccessServices.EncodeReadRange(buffer, input.ObjectId, input.PropertyId, input.RequestType,
+                input.Position, input.Time, input.Count, input.ArrayIndex);
+            ObjectAccessServices.DecodeReadRange(buffer.buffer, 0, buffer.GetLength(), out var objectId,
+                out var property, out var requestType, out var position, out var time, out var count);
+
+            // assert
+            Assert.That(objectId, Is.EqualTo(input.ObjectId));
+            Assert.That(property.propertyIdentifier, Is.EqualTo((uint)input.PropertyId));
+            Assert.That(property.propertyArrayIndex, Is.EqualTo(input.ArrayIndex));
+            Assert.That(requestType, Is.EqualTo(input.RequestType));
+            Assert.That(position, Is.EqualTo(input.Position));
+            Assert.That(time, Is.EqualTo(input.Time));
+            Assert.That(count, Is.EqualTo(input.Count));
+        }
+
+        [Test]
         public void should_encode_readrangerequest_ack_according_to_ashrae_example()
         {
             // arrange
             var buffer = new EncodeBuffer();
-            var data = ASHRAE.F_3_8();
+            var data = ASHRAE.F_3_8_Ack();
 
             // example taken from ANNEX F - Examples of APDU Encoding - F.3.8
             var expectedBytes = new byte[]
@@ -541,11 +629,35 @@ namespace System.IO.BACnet.Tests.Serialize
         }
 
         [Test]
+        /*
+         * TODO: DecodeReadRangeAcknowledge should return the properties it decodes, and we should compare them to the input
+         */
+        public void should_decode_readrangerequest_ack_after_encode()
+        {
+            // arrange
+            var buffer = new EncodeBuffer();
+            var input = ASHRAE.F_3_8_Ack();
+
+            // act
+            var applicationData = new EncodeBuffer();
+            ObjectAccessServices.EncodeLogRecord(applicationData, input.Record1);
+            ObjectAccessServices.EncodeLogRecord(applicationData, input.Record2);
+
+            ObjectAccessServices.EncodeReadRangeAcknowledge(buffer, input.ObjectId, input.PropertyId, input.Flags,
+                input.ItemCount, applicationData.ToArray(), input.RequestType, input.FirstSequence);
+
+            ObjectAccessServices.DecodeReadRangeAcknowledge(buffer.buffer, 0, buffer.GetLength(), out var rangeBuffer);
+
+            // assert
+            Assert.That(rangeBuffer, Is.EquivalentTo(applicationData.ToArray()));
+        }
+
+        [Test]
         public void should_decode_multiple_logrecords()
         {
             // arrange
             var buffer = new EncodeBuffer();
-            var data = ASHRAE.F_3_8();
+            var data = ASHRAE.F_3_8_Ack();
 
             // act
             ObjectAccessServices.EncodeLogRecord(buffer, data.Record1);
@@ -577,6 +689,7 @@ namespace System.IO.BACnet.Tests.Serialize
         {
             // arrange
             var buffer = new EncodeBuffer();
+            var data = ASHRAE.F_3_9();
 
             // example taken from ANNEX F - Examples of APDU Encoding - F.3.9
             var expectedBytes = new byte[]
@@ -589,14 +702,33 @@ namespace System.IO.BACnet.Tests.Serialize
             APDU.EncodeConfirmedServiceRequest(buffer, BacnetConfirmedServices.SERVICE_CONFIRMED_WRITE_PROPERTY,
                 BacnetMaxSegments.MAX_SEG0, BacnetMaxAdpu.MAX_APDU1024, 89);
 
-            ObjectAccessServices.EncodeWriteProperty(buffer,
-                new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_VALUE, 1), BacnetPropertyIds.PROP_PRESENT_VALUE,
-                new List<BacnetValue> {new BacnetValue(180f)});
+            ObjectAccessServices.EncodeWriteProperty(buffer, data.ObjectId, data.PropertyId, data.ValueList,
+                data.ArrayIndex, data.Priority);
 
             var encodedBytes = buffer.ToArray();
 
             // assert
             Assert.That(encodedBytes, Is.EquivalentTo(expectedBytes));
+        }
+
+        [Test]
+        public void should_decode_writepropertyrequest_after_encode()
+        {
+            // arrange
+            var buffer = new EncodeBuffer();
+            var input = ASHRAE.F_3_9();
+
+            ObjectAccessServices.EncodeWriteProperty(buffer, input.ObjectId, input.PropertyId, input.ValueList,
+                input.ArrayIndex, input.Priority);
+            ObjectAccessServices.DecodeWriteProperty(DummyAddress, buffer.buffer, 0, buffer.GetLength(),
+                out var objectId, out var value);
+
+            // assert
+            Assert.That(objectId, Is.EqualTo(input.ObjectId));
+            Assert.That(value.property.propertyIdentifier, Is.EqualTo((uint)input.PropertyId));
+            Assert.That(value.property.propertyArrayIndex, Is.EqualTo(input.ArrayIndex));
+            Assert.That(value.value, Is.EquivalentTo(input.ValueList));
+            Assert.That(value.priority, Is.EqualTo(input.Priority == ASN1.BACNET_NO_PRIORITY ? 16 : input.Priority));
         }
 
         [Test]
@@ -622,23 +754,7 @@ namespace System.IO.BACnet.Tests.Serialize
         {
             // arrange
             var buffer = new EncodeBuffer();
-            var data = new[]
-            {
-                new BacnetWriteAccessSpecification(
-                    new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_VALUE, 5),
-                    A(new BacnetWriteAccessSpecification.Property(BacnetPropertyIds.PROP_PRESENT_VALUE,
-                        new BacnetValue(67f)))),
-
-                new BacnetWriteAccessSpecification(
-                    new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_VALUE, 6),
-                    A(new BacnetWriteAccessSpecification.Property(BacnetPropertyIds.PROP_PRESENT_VALUE,
-                        new BacnetValue(67f)))),
-
-                new BacnetWriteAccessSpecification(
-                    new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_VALUE, 7),
-                    A(new BacnetWriteAccessSpecification.Property(BacnetPropertyIds.PROP_PRESENT_VALUE,
-                        new BacnetValue(72f)))),
-            };
+            var data = ASHRAE.F_3_10();
 
             // example taken from ANNEX F - Examples of APDU Encoding - F.3.10
             var expectedBytes = new byte[]
@@ -659,6 +775,22 @@ namespace System.IO.BACnet.Tests.Serialize
 
             // assert
             Assert.That(encodedBytes, Is.EquivalentTo(expectedBytes));
+        }
+
+        [Test]
+        public void should_decode_writepropertymultiplerequest_after_encode()
+        {
+            // arrange
+            var buffer = new EncodeBuffer();
+            var input = ASHRAE.F_3_10();
+
+            // act
+            ObjectAccessServices.EncodeWritePropertyMultiple(buffer, input);
+            ObjectAccessServices.DecodeWritePropertyMultiple(DummyAddress, buffer.buffer, 0, buffer.GetLength(),
+                out var output);
+
+            // assert
+            Assert.That(output, Is.EquivalentTo(input));
         }
 
         [Test]
