@@ -250,5 +250,25 @@ namespace System.IO.BACnet.Tests.TestData
                     A(new BacnetWriteAccessSpecification.Property(BacnetPropertyIds.PROP_PRESENT_VALUE,
                         new BacnetValue(72f)))),
             };
+
+        public static (uint TimeDuration, EnableDisable EnableDisable, string Password)
+            F_4_1()
+            => (5, EnableDisable.DISABLE, "#egbdf!");
+
+        public static (BacnetReinitializedStates State, string Password)
+            F_4_4()
+            => (BacnetReinitializedStates.BACNET_REINIT_WARMSTART, "AbCdEfGh");
+
+        public static DateTime F_4_7()
+            => new DateTime(1992, 11, 17, 22, 45, 30).AddMilliseconds(700);
+
+        public static string F_4_8_Name()
+            => "OATemp";
+
+        public static BacnetObjectId F_4_8_Id()
+            => new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 3);
+
+        public static (int LowLimit, int HighLimit) F_4_9()
+            => (3, 3);
     }
 }

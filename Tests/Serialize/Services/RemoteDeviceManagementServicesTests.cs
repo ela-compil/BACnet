@@ -1,4 +1,5 @@
 ﻿using System.IO.BACnet.Serialize;
+using System.IO.BACnet.Tests.TestData;
 using NUnit.Framework;
 using static System.IO.BACnet.Tests.Helper;
 
@@ -12,6 +13,7 @@ namespace System.IO.BACnet.Tests.Serialize
         {
             // arrange
             var buffer = new EncodeBuffer();
+            var data = ASHRAE.F_4_1();
 
             // example taken from ANNEX F - Examples of APDU Encoding - F.4.1
             var expectedBytes = new byte[]
@@ -25,12 +27,32 @@ namespace System.IO.BACnet.Tests.Serialize
                 BacnetConfirmedServices.SERVICE_CONFIRMED_DEVICE_COMMUNICATION_CONTROL, BacnetMaxSegments.MAX_SEG0,
                 BacnetMaxAdpu.MAX_APDU1024, 5);
 
-            RemoteDeviceManagementServices.EncodeDeviceCommunicationControl(buffer, 5, EnableDisable.DISABLE, "#egbdf!");
+            RemoteDeviceManagementServices.EncodeDeviceCommunicationControl(buffer, data.TimeDuration,
+                data.EnableDisable, data.Password);
 
             var encodedBytes = buffer.ToArray();
 
             // assert
             Assert.That(encodedBytes, Is.EquivalentTo(expectedBytes));
+        }
+
+        [Test]
+        public void should_decode_devicecommunicationcontrolrequest_after_encode()
+        {
+            // arrange
+            var buffer = new EncodeBuffer();
+            var input = ASHRAE.F_4_1();
+
+            // act
+            RemoteDeviceManagementServices.EncodeDeviceCommunicationControl(buffer, input.TimeDuration,
+                input.EnableDisable, input.Password);
+            RemoteDeviceManagementServices.DecodeDeviceCommunicationControl(buffer.buffer, 0, buffer.GetLength(),
+                out var timeDuration, out var enableDisable, out var password);
+
+            // assert
+            Assert.That(timeDuration, Is.EqualTo(input.TimeDuration));
+            Assert.That(enableDisable, Is.EqualTo((uint)input.EnableDisable));
+            Assert.That(password, Is.EqualTo(input.Password));
         }
 
         [Test]
@@ -132,6 +154,7 @@ namespace System.IO.BACnet.Tests.Serialize
         {
             // arrange
             var buffer = new EncodeBuffer();
+            var data = ASHRAE.F_4_4();
 
             // example taken from ANNEX F - Examples of APDU Encoding - F.4.4
             var expectedBytes = new byte[]
@@ -142,13 +165,29 @@ namespace System.IO.BACnet.Tests.Serialize
                 BacnetConfirmedServices.SERVICE_CONFIRMED_REINITIALIZE_DEVICE, BacnetMaxSegments.MAX_SEG0,
                 BacnetMaxAdpu.MAX_APDU128, 2);
 
-            RemoteDeviceManagementServices.EncodeReinitializeDevice(buffer,
-                BacnetReinitializedStates.BACNET_REINIT_WARMSTART, "AbCdEfGh");
+            RemoteDeviceManagementServices.EncodeReinitializeDevice(buffer, data.State, data.Password);
 
             var encodedBytes = buffer.ToArray();
 
             // assert
             Assert.That(encodedBytes, Is.EquivalentTo(expectedBytes));
+        }
+
+        [Test]
+        public void should_decode_reinitializedevicerequest_after_encode()
+        {
+            // arrange
+            var buffer = new EncodeBuffer();
+            var input = ASHRAE.F_4_4();
+
+            // act
+            RemoteDeviceManagementServices.EncodeReinitializeDevice(buffer, input.State, input.Password);
+            RemoteDeviceManagementServices.DecodeReinitializeDevice(buffer.buffer, 0, buffer.GetLength(), out var state,
+                out var password);
+
+            // assert
+            Assert.That(state, Is.EqualTo(input.State));
+            Assert.That(password, Is.EqualTo(input.Password));
         }
 
         [Test]
@@ -181,8 +220,7 @@ namespace System.IO.BACnet.Tests.Serialize
             // act
             APDU.EncodeUnconfirmedServiceRequest(buffer, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_TIME_SYNCHRONIZATION);
 
-            RemoteDeviceManagementServices.EncodeTimeSync(buffer,
-                new DateTime(1992, 11, 17, 22, 45, 30).AddMilliseconds(700));
+            RemoteDeviceManagementServices.EncodeTimeSync(buffer, ASHRAE.F_4_7());
 
             var encodedBytes = buffer.ToArray();
 
@@ -191,10 +229,26 @@ namespace System.IO.BACnet.Tests.Serialize
         }
 
         [Test]
+        public void should_decode_timesynchronizationrequest_after_encode()
+        {
+            // arrange
+            var buffer = new EncodeBuffer();
+            var input = ASHRAE.F_4_7();
+
+            // act
+            RemoteDeviceManagementServices.EncodeTimeSync(buffer, input);
+            RemoteDeviceManagementServices.DecodeTimeSync(buffer.buffer, 0, buffer.GetLength(), out var dateTime);
+
+            // assert
+            Assert.That(dateTime, Is.EqualTo(input));
+        }
+
+        [Test]
         public void should_encode_whohas_via_objectname_according_to_ashrae_example()
         {
             // arrange
             var buffer = new EncodeBuffer();
+            var data = ASHRAE.F_4_8_Name();
 
             // example taken from ANNEX F - Examples of APDU Encoding - F.4.8
             var expectedBytes = new byte[] {0x10, 0x07, 0x3D, 0x07, 0x00, 0x4F, 0x41, 0x54, 0x65, 0x6D, 0x70};
@@ -202,12 +256,29 @@ namespace System.IO.BACnet.Tests.Serialize
             // act
             APDU.EncodeUnconfirmedServiceRequest(buffer, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_WHO_HAS);
 
-            RemoteDeviceManagementServices.EncodeWhoHasBroadcast(buffer, -1, -1, default(BacnetObjectId), "OATemp");
+            RemoteDeviceManagementServices.EncodeWhoHasBroadcast(buffer, -1, -1, default(BacnetObjectId), data);
 
             var encodedBytes = buffer.ToArray();
 
             // assert
             Assert.That(encodedBytes, Is.EquivalentTo(expectedBytes));
+        }
+
+        [Test]
+        public void should_decode_whohas_via_objectname_after_encode()
+        {
+            // arrange
+            var buffer = new EncodeBuffer();
+            var input = ASHRAE.F_4_8_Name();
+
+            // act
+            RemoteDeviceManagementServices.EncodeWhoHasBroadcast(buffer, -1, -1, default(BacnetObjectId), input);
+            RemoteDeviceManagementServices.DecodeWhoHasBroadcast(buffer.buffer, 0, buffer.GetLength(), out var lowLimit,
+                out var highLimit, out var objectId, out var objectName);
+
+
+            // assert
+            Assert.That(objectName, Is.EqualTo(input));
         }
 
         [Test]
@@ -241,6 +312,7 @@ namespace System.IO.BACnet.Tests.Serialize
         {
             // arrange
             var buffer = new EncodeBuffer();
+            var data = ASHRAE.F_4_8_Id();
 
             // example taken from ANNEX F - Examples of APDU Encoding - F.4.8
             var expectedBytes = new byte[] {0x10, 0x07, 0x2C, 0x00, 0x00, 0x00, 0x03};
@@ -248,8 +320,7 @@ namespace System.IO.BACnet.Tests.Serialize
             // act
             APDU.EncodeUnconfirmedServiceRequest(buffer, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_WHO_HAS);
 
-            RemoteDeviceManagementServices.EncodeWhoHasBroadcast(buffer, -1, -1,
-                new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 3), null);
+            RemoteDeviceManagementServices.EncodeWhoHasBroadcast(buffer, -1, -1, data, null);
 
             var encodedBytes = buffer.ToArray();
 
@@ -258,10 +329,29 @@ namespace System.IO.BACnet.Tests.Serialize
         }
 
         [Test]
+        public void should_decode_whohas_via_id_after_encode()
+        {
+            // arrange
+            var buffer = new EncodeBuffer();
+            var input = ASHRAE.F_4_8_Id();
+
+            // act
+            RemoteDeviceManagementServices.EncodeWhoHasBroadcast(buffer, -1, -1, input, null);
+            RemoteDeviceManagementServices.DecodeWhoHasBroadcast(buffer.buffer, 0, buffer.GetLength(), out var lowLimit,
+                out var highLimit, out var objectId, out var objectName);
+
+
+            // assert
+            Assert.That(objectId, Is.EqualTo(input));
+        }
+
+
+        [Test]
         public void should_encode_whois_via_id_according_to_ashrae_example()
         {
             // arrange
             var buffer = new EncodeBuffer();
+            var data = ASHRAE.F_4_9();
 
             // example taken from ANNEX F - Examples of APDU Encoding - F.4.9
             var expectedBytes = new byte[] { 0x10, 0x08, 0x09, 0x03, 0x19, 0x03 };
@@ -269,12 +359,30 @@ namespace System.IO.BACnet.Tests.Serialize
             // act
             APDU.EncodeUnconfirmedServiceRequest(buffer, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_WHO_IS);
 
-            RemoteDeviceManagementServices.EncodeWhoIsBroadcast(buffer, 3, 3);
+            RemoteDeviceManagementServices.EncodeWhoIsBroadcast(buffer, data.LowLimit, data.HighLimit);
 
             var encodedBytes = buffer.ToArray();
 
             // assert
             Assert.That(encodedBytes, Is.EquivalentTo(expectedBytes));
+        }
+
+        [Test]
+        public void should_decode_whois_via_id_after_encode()
+        {
+            // arrange
+            var buffer = new EncodeBuffer();
+            var input = ASHRAE.F_4_9();
+
+            // act
+            RemoteDeviceManagementServices.EncodeWhoIsBroadcast(buffer, input.LowLimit, input.HighLimit);
+            RemoteDeviceManagementServices.DecodeWhoIsBroadcast(buffer.buffer, 0, buffer.GetLength(), out var lowLimit,
+                out var highLimit);
+
+
+            // assert
+            Assert.That(lowLimit, Is.EqualTo(input.LowLimit));
+            Assert.That(highLimit, Is.EqualTo(input.HighLimit));
         }
 
         [Test]
