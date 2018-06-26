@@ -483,6 +483,19 @@ namespace System.IO.BACnet.Serialize
                             throw new ArgumentException($"Unsupported destination value '{value.Value}' (type {value.GetType()})");
                     }
                     break;
+                case BacnetApplicationTags.BACNET_APPLICATION_TAG_WEEKLY_SCHEDULE:
+                    if(value.Value is BacnetDailySchedule[] dayArr && dayArr.Length == 7)
+                    {
+                        for (int i = 0; i < 7; i++)
+                        {
+                            dayArr[i].Encode(buffer);
+                        }
+                    }
+                    else
+                    {
+                        throw new ArgumentException("Value has to be array of 7 of daily schedule ");
+                    }
+                    break;
                 default:
                     //context specific
                     if (value.Value is byte[] arr)
@@ -2033,6 +2046,19 @@ namespace System.IO.BACnet.Serialize
 
                     return len;
                 }
+                if(propertyId == BacnetPropertyIds.PROP_WEEKLY_SCHEDULE)
+                {
+                    //has to be an array of 7
+                    var schedule = new BacnetDailySchedule[7];                    
+                    for (int i = 0; i < 7; i++)
+                    {
+                        schedule[i] = new BacnetDailySchedule();
+                        len += schedule[i].Decode(buffer, offset + len, (uint)maxOffset);
+                    }
+                    value.Value = schedule;
+                    value.Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_WEEKLY_SCHEDULE;
+                    return len;
+                }
 
                 value.Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC_DECODED;
                 var list = new List<BacnetValue>();
@@ -2418,6 +2444,7 @@ namespace System.IO.BACnet.Serialize
 
             return len + sectionLength;
         }
+        
 
         public static int decode_context_bitstring(byte[] buffer, int offset, byte tagNumber, out BacnetBitString value)
         {
@@ -2466,5 +2493,8 @@ namespace System.IO.BACnet.Serialize
             var len = decode_tag_number_and_value(buffer, offset, out _, out var lenValue);
             return len + decode_unsigned(buffer, offset + len, lenValue, out value);
         }
+
+
+
     }
 }
