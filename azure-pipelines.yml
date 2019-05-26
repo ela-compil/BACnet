@@ -27,7 +27,10 @@ steps:
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
 
-- task: VSTest@2
+- task: NuGetCommand@2
   inputs:
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
+    command: 'pack'
+    feedsToUse: 'select'
+    packagesToPack: 'BACnet.csproj'
+    versioningScheme: byBuildNumber
+    includeSymbols: true
