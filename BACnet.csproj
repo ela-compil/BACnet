@@ -1,189 +1,41 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>8.0.30703</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{66832876-01FC-4B7C-8D92-54195773FABF}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <TargetFrameworks>net40;net462;netstandard2.0;</TargetFrameworks>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Company>Ela-compil sp. z o. o.</Company>
+    <Product>BACnet</Product>
+    <Authors>Morten Kvistgaard, Ela-compil</Authors>
+    <Copyright>Copyright (c) 2017 Jakub Bartkowiak, MIT License</Copyright>
+    <PackageTags>fce4c8e3-0d3a-4d90-9c26-349177129433</PackageTags>
+    <PackageProjectUrl>https://github.com/ela-compil/BACnet</PackageProjectUrl>
+    <PackageIconUrl>https://raw.githubusercontent.com/ela-compil/BACnet/master/logo.png</PackageIconUrl>
+    <PackageReleaseNotes>BACnet protocol library for .NET</PackageReleaseNotes>
     <RootNamespace>System.IO.BACnet</RootNamespace>
-    <AssemblyName>BACnet</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <LangVersion>latest</LangVersion>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <LangVersion>latest</LangVersion>
+    <LangVersion>7.1</LangVersion>
+    <Description>BACnet protocol library for .NET</Description>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Common.Logging, Version=3.4.1.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
-      <HintPath>$(SolutionDir)\packages\Common.Logging.3.4.1\lib\net40\Common.Logging.dll</HintPath>
-    </Reference>
-    <Reference Include="Common.Logging.Core, Version=3.4.1.0, Culture=neutral, PublicKeyToken=af08829b84f0328e, processorArchitecture=MSIL">
-      <HintPath>$(SolutionDir)\packages\Common.Logging.Core.3.4.1\lib\net40\Common.Logging.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="PacketDotNet, Version=0.13.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>$(SolutionDir)\packages\PacketDotNet.0.13.0\lib\net\PacketDotNet.dll</HintPath>
-    </Reference>
-    <Reference Include="SharpPcap, Version=4.2.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>$(SolutionDir)\packages\SharpPcap.4.2.0\lib\net\SharpPcap.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
+    <Compile Remove="packages\**" />
+    <Compile Remove="Tests\**" />
+    <EmbeddedResource Remove="packages\**" />
+    <EmbeddedResource Remove="Tests\**" />
+    <None Remove="packages\**" />
+    <None Remove="Tests\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Common.Logging" Version="3.4.1" />
+    <PackageReference Include="Common.Logging.Core" Version="3.4.1" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net40'">
+    <PackageReference Include="PacketDotNet" Version="0.13.0" />
+    <PackageReference Include="SharpPcap" Version="4.2.0" />
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Include="BacnetAsyncResult.cs" />
-    <Compile Include="BacnetException.cs" />
-    <Compile Include="Base\BacnetAbortReason.cs" />
-    <Compile Include="Base\BacnetAddress.cs" />
-    <Compile Include="Base\BacnetAddressTypes.cs" />
-    <Compile Include="Base\BacnetAlarmSummaryData.cs" />
-    <Compile Include="Base\BacnetApplicationTags.cs" />
-    <Compile Include="Base\BacnetBinaryPv.cs" />
-    <Compile Include="Base\BacnetProgramError.cs" />
-    <Compile Include="Base\BacnetProgramRequest.cs" />
-    <Compile Include="Base\BacnetProgramState.cs" />
-    <Compile Include="Base\BacnetPrescale.cs" />
-    <Compile Include="Base\BacnetReinitializedStates.cs" />
-    <Compile Include="BACnetClient.cs" />
-    <Compile Include="Base\BacnetBitString.cs" />
-    <Compile Include="Base\BacnetBvlcFunctions.cs" />
-    <Compile Include="Base\BacnetBvlcResults.cs" />
-    <Compile Include="Base\BACnetCalendarEntry.cs" />
-    <Compile Include="Base\BacnetCharacterStringEncodings.cs" />
-    <Compile Include="Base\BacnetCOVSubscription.cs" />
-    <Compile Include="Base\BacnetDate.cs" />
-    <Compile Include="Base\BacnetDateRange.cs" />
-    <Compile Include="Base\BacnetDeviceObjectPropertyReference.cs" />
-    <Compile Include="Base\BacnetError.cs" />
-    <Compile Include="Base\Enums\EnumUtils.cs" />
-    <Compile Include="Base\EventNotification\EventValues\EventValuesBase.cs" />
-    <Compile Include="Base\EventNotification\EventValues\ChangeOfLifeSafety.cs" />
-    <Compile Include="Base\EventNotification\EventValues\UnsignedRange.cs" />
-    <Compile Include="Base\EventNotification\EventValues\ChangeOfState.cs" />
-    <Compile Include="Base\EventNotification\EventValues\OutOfRange.cs" />
-    <Compile Include="Base\EventNotification\EventValues\FloatingLimit.cs" />
-    <Compile Include="Base\EventNotification\EventValues\ChangeOfValue.cs" />
-    <Compile Include="Base\EventNotification\EventValues\BufferReady.cs" />
-    <Compile Include="Base\EventNotification\EventValues\ChangeOfBitString.cs" />
-    <Compile Include="Base\EventNotification\StateTransition.cs" />
-    <Compile Include="Base\EventNotification\NotificationData.cs" />
-    <Compile Include="Base\BacnetGenericTime.cs" />
-    <Compile Include="Base\BacnetGetEventInformationData.cs" />
-    <Compile Include="Base\BacnetLogRecord.cs" />
-    <Compile Include="Base\BacnetMaxAdpu.cs" />
-    <Compile Include="Base\BacnetMaxSegments.cs" />
-    <Compile Include="Base\BacnetConfirmedServices.cs" />
-    <Compile Include="Base\BacnetErrorCodes.cs" />
-    <Compile Include="Base\BacnetMstpFrameTypes.cs" />
-    <Compile Include="Base\BacnetNetworkMessageTypes.cs" />
-    <Compile Include="Base\BacnetNodeTypes.cs" />
-    <Compile Include="Base\BacnetNpduControls.cs" />
-    <Compile Include="Base\BacnetObjectDescription.cs" />
-    <Compile Include="Base\BacnetObjectId.cs" />
-    <Compile Include="Base\BacnetObjectTypes.cs" />
-    <Compile Include="Base\BacnetPolarity.cs" />
-    <Compile Include="Base\BacnetPropertyIds.cs" />
-    <Compile Include="Base\BacnetPropertyReference.cs" />
-    <Compile Include="Base\BacnetPropertyValue.cs" />
-    <Compile Include="Base\BacnetPropertyState.cs" />
-    <Compile Include="Base\BacnetPtpDisconnectReasons.cs" />
-    <Compile Include="Base\BacnetPtpFrameTypes.cs" />
-    <Compile Include="Base\BacnetReadAccessResult.cs" />
-    <Compile Include="Base\BacnetReadAccessSpecification.cs" />
-    <Compile Include="Base\BacnetReliability.cs" />
-    <Compile Include="Base\BacnetScale.cs" />
-    <Compile Include="Base\BacnetServicesSupported.cs" />
-    <Compile Include="Base\BacnetStatusFlags.cs" />
-    <Compile Include="Base\BacnetUnconfirmedServices.cs" />
-    <Compile Include="Base\BacnetTimestampTags.cs" />
-    <Compile Include="Base\BacnetTrendLogValueType.cs" />
-    <Compile Include="Base\BacnetUnitsId.cs" />
-    <Compile Include="Base\BacnetDeviceStatus.cs" />
-    <Compile Include="Base\BacnetErrorClasses.cs" />
-    <Compile Include="Base\BacnetPduTypes.cs" />
-    <Compile Include="Base\BacnetRejectReason.cs" />
-    <Compile Include="Base\BacnetRestartReason.cs" />
-    <Compile Include="Base\BacnetResultFlags.cs" />
-    <Compile Include="Base\BacnetSegmentations.cs" />
-    <Compile Include="Base\Enums\BacnetBackupState.cs" />
-    <Compile Include="Base\Enums\BacnetEventEnable.cs" />
-    <Compile Include="Base\Enums\BacnetEventStates.cs" />
-    <Compile Include="Base\Enums\BacnetEventTypes.cs" />
-    <Compile Include="Base\Enums\BacnetFileAccessMethod.cs" />
-    <Compile Include="Base\Enums\BacnetLifeSafetyModes.cs" />
-    <Compile Include="Base\Enums\BacnetLifeSafetyOperations.cs" />
-    <Compile Include="Base\Enums\BacnetLifeSafetyStates.cs" />
-    <Compile Include="Base\Enums\BacnetLimitEnable.cs" />
-    <Compile Include="Base\Enums\BacnetNotifyTypes.cs" />
-    <Compile Include="Base\Enums\BacnetCOVTypes.cs" />
-    <Compile Include="Helpers\BacnetValuesExtensions.cs" />
-    <Compile Include="Helpers\StringFormatterExtension.cs" />
-    <Compile Include="Base\BacnetBvlcV6Functions.cs" />
-    <Compile Include="Base\BacnetBvlcV6Results.cs" />
-    <Compile Include="Transport\BacnetTransportBase.cs" />
-    <Compile Include="Transport\IBacnetSerialTransport.cs" />
-    <Compile Include="Transport\IBacnetTransport.cs" />
-    <Compile Include="Transport\BacnetMstpProtocolTransport.cs" />
-    <Compile Include="Transport\BacnetPipeTransport.cs" />
-    <Compile Include="Transport\BacnetPtpProtocolTransport.cs" />
-    <Compile Include="Transport\BacnetSerialPortTransport.cs" />
-    <Compile Include="Transport\BacnetIpUdpProtocolTransport.cs" />
-    <Compile Include="Transport\BacnetTransportEthernet.cs" />
-    <Compile Include="Transport\BacnetIpV6UdpProtocolTransport.cs" />
-    <Compile Include="Transport\BVLCV6.cs" />
-    <Compile Include="Base\BacnetValue.cs" />
-    <Compile Include="Base\BacnetweekNDay.cs" />
-    <Compile Include="Base\BacnetWritePriority.cs" />
-    <Compile Include="Base\DeviceReportingRecipient.cs" />
-    <Compile Include="Serialize\APDU.cs" />
-    <Compile Include="Serialize\ASN1.cs" />
-    <Compile Include="Base\BacnetReadRangeRequestTypes.cs" />
-    <Compile Include="Serialize\BVLC.cs" />
-    <Compile Include="Serialize\EncodeBuffer.cs" />
-    <Compile Include="Serialize\EncodeResult.cs" />
-    <Compile Include="Serialize\MSTP.cs" />
-    <Compile Include="Serialize\NPDU.cs" />
-    <Compile Include="Serialize\PTP.cs" />
-    <Compile Include="Serialize\Services.cs" />
-    <Compile Include="Storage\DeviceStorage.cs" />
-    <Compile Include="Storage\Object.cs" />
-    <Compile Include="Storage\Property.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="System.IO.Ports" Version="4.5.0" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="BACnet.nuspec" />
-    <None Include="packages.config" />
+  <ItemGroup Condition="'$(TargetFramework)' == 'net462' or '$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="PacketDotNet" Version="0.19.3" />
+    <PackageReference Include="SharpPcap" Version="4.5.0" />
   </ItemGroup>
-  <ItemGroup />
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>
