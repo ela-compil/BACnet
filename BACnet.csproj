@@ -5,13 +5,13 @@
     <Company>Ela-compil sp. z o. o.</Company>
     <Product>BACnet</Product>
     <Authors>Morten Kvistgaard, Ela-compil</Authors>
-    <Copyright>Copyright (c) 2017 Jakub Bartkowiak, MIT License</Copyright>
+    <Copyright>Copyright (c) 2019 Jakub Bartkowiak, MIT License</Copyright>
     <PackageTags>fce4c8e3-0d3a-4d90-9c26-349177129433</PackageTags>
     <PackageProjectUrl>https://github.com/ela-compil/BACnet</PackageProjectUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/ela-compil/BACnet/master/logo.png</PackageIconUrl>
     <PackageReleaseNotes>BACnet protocol library for .NET</PackageReleaseNotes>
     <RootNamespace>System.IO.BACnet</RootNamespace>
-    <LangVersion>7.1</LangVersion>
+    <LangVersion>7.3</LangVersion>
     <Description>BACnet protocol library for .NET</Description>
   </PropertyGroup>
   <ItemGroup>
