@@ -62,6 +62,7 @@
     <Compile Include="Base\BacnetAlarmSummaryData.cs" />
     <Compile Include="Base\BacnetApplicationTags.cs" />
     <Compile Include="Base\BacnetBinaryPv.cs" />
+    <Compile Include="Base\BacnetObjectPropertyReference.cs" />
     <Compile Include="Base\BacnetProgramError.cs" />
     <Compile Include="Base\BacnetProgramRequest.cs" />
     <Compile Include="Base\BacnetProgramState.cs" />
@@ -78,9 +79,12 @@
     <Compile Include="Base\BacnetDateRange.cs" />
     <Compile Include="Base\BacnetDeviceObjectPropertyReference.cs" />
     <Compile Include="Base\BacnetError.cs" />
+    <Compile Include="Base\BacnetWriteAccessSpecification.cs" />
+    <Compile Include="Base\Enums\EnableDisable.cs" />
     <Compile Include="Base\Enums\EnumUtils.cs" />
     <Compile Include="Base\EventNotification\EventValues\EventValuesBase.cs" />
     <Compile Include="Base\EventNotification\EventValues\ChangeOfLifeSafety.cs" />
+    <Compile Include="Helpers\FactoryHelper.cs" />
     <Compile Include="Base\EventNotification\EventValues\UnsignedRange.cs" />
     <Compile Include="Base\EventNotification\EventValues\ChangeOfState.cs" />
     <Compile Include="Base\EventNotification\EventValues\OutOfRange.cs" />
@@ -108,7 +112,6 @@
     <Compile Include="Base\BacnetPropertyIds.cs" />
     <Compile Include="Base\BacnetPropertyReference.cs" />
     <Compile Include="Base\BacnetPropertyValue.cs" />
-    <Compile Include="Base\BacnetPropertyState.cs" />
     <Compile Include="Base\BacnetPtpDisconnectReasons.cs" />
     <Compile Include="Base\BacnetPtpFrameTypes.cs" />
     <Compile Include="Base\BacnetReadAccessResult.cs" />
@@ -139,10 +142,15 @@
     <Compile Include="Base\Enums\BacnetLimitEnable.cs" />
     <Compile Include="Base\Enums\BacnetNotifyTypes.cs" />
     <Compile Include="Base\Enums\BacnetCOVTypes.cs" />
+    <Compile Include="Base\IHasStatusFlags.cs" />
     <Compile Include="Helpers\BacnetValuesExtensions.cs" />
     <Compile Include="Helpers\StringFormatterExtension.cs" />
     <Compile Include="Base\BacnetBvlcV6Functions.cs" />
     <Compile Include="Base\BacnetBvlcV6Results.cs" />
+    <Compile Include="Serialize\Services\AlarmAndEventServices.cs" />
+    <Compile Include="Serialize\Services\FileAccessServices.cs" />
+    <Compile Include="Serialize\Services\ObjectAccessServices.cs" />
+    <Compile Include="Serialize\Services\RemoteDeviceManagementServices.cs" />
     <Compile Include="Transport\BacnetTransportBase.cs" />
     <Compile Include="Transport\IBacnetSerialTransport.cs" />
     <Compile Include="Transport\IBacnetTransport.cs" />
@@ -167,7 +175,6 @@
     <Compile Include="Serialize\MSTP.cs" />
     <Compile Include="Serialize\NPDU.cs" />
     <Compile Include="Serialize\PTP.cs" />
-    <Compile Include="Serialize\Services.cs" />
     <Compile Include="Storage\DeviceStorage.cs" />
     <Compile Include="Storage\Object.cs" />
     <Compile Include="Storage\Property.cs" />

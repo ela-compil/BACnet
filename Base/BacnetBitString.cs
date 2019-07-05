@@ -96,7 +96,8 @@ namespace System.IO.BACnet
 
         public bool Equals(BacnetBitString other)
         {
-            return BitsUsed == other.BitsUsed && Value.SequenceEqual(other.Value);
+            return BitsUsed == other.BitsUsed
+                   && (BitsUsed == 0 || Value.SequenceEqual(other.Value));
         }
 
         public override bool Equals(object obj)

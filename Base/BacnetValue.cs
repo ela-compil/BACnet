@@ -1,8 +1,10 @@
+using System.Collections;
 using System.Linq;
 
 namespace System.IO.BACnet
 {
-    public struct BacnetValue
+    // TODO you have been flagged for refactoring due to un-C#-iness
+    public struct BacnetValue : IEquatable<BacnetValue>
     {
         public BacnetApplicationTags Tag;
         public object Value;
@@ -87,6 +89,31 @@ namespace System.IO.BACnet
             var tmp = (byte[])Value;
             return tmp.Aggregate(string.Empty, (current, b) =>
                 current + b.ToString("X2"));
+        }
+
+        public bool Equals(BacnetValue other)
+        {
+            if (Tag != other.Tag)
+                return false;
+
+            return Value is IEnumerable enumerable && other.Value is IEnumerable otherEnumerable
+                ? enumerable.Cast<object>().SequenceEqual(otherEnumerable.Cast<object>())
+                : Equals(Value, other.Value);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            return obj is BacnetValue && Equals((BacnetValue) obj);
+        }
+
+        // TODO BUG FIXME fields used in GetHashCode MUST be immutable or you will break dictionaries & co
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return ((int) Tag * 397) ^ (Value != null ? Value.GetHashCode() : 0);
+            }
         }
     }
 }

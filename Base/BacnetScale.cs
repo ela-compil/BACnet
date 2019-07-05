@@ -51,7 +51,7 @@ namespace System.IO.BACnet
             else if (tagNumber == (byte)ValueType.INTEGER)
             {
                 len += tagLen;
-                len += ASN1.decode_unsigned(buffer, offset + len, lenValueType, out var oval);
+                len += ASN1.decode_unsigned(buffer, offset + len, lenValueType, out uint oval);
 
                 value = oval;
             }
