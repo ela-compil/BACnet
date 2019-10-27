@@ -13,7 +13,3 @@ You can get BACnet library by grabbing the latest [NuGet package](https://www.nu
 ## Getting Started
 
 [See examples](https://github.com/ela-compil/BACnet.Examples) to learn how to use this library.
-
-## Donate
-
-If you like this library, would like me to add something special for you or just motivate me to support it and keep investing my time, you can [use PayPal](https://www.paypal.me/JakubBartkowiak) to show your support :angel:
