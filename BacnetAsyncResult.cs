@@ -11,7 +11,7 @@ namespace System.IO.BACnet
         private readonly int _transmitLength;
         private readonly bool _waitForTransmit;
         private readonly TimeSpan _transmitTimeout;
-        private ManualResetEvent _waitHandle;
+        private ManualResetEvent _waitHandle = new ManualResetEvent(false);
 
         public bool Segmented { get; private set; }
         public byte[] Result { get; private set; }
@@ -48,7 +48,6 @@ namespace System.IO.BACnet
             _comm.OnReject += OnReject;
             _comm.OnSimpleAck += OnSimpleAck;
             _comm.OnSegment += OnSegment;
-            _waitHandle = new ManualResetEvent(false);
         }
 
         public BacnetAsyncResult Send()
