@@ -1984,7 +1984,7 @@ namespace System.IO.BACnet.Serialize
                 {
                     tagLen = decode_device_obj_property_ref(buffer, offset, maxOffset, out var v);
                     if (tagLen < 0) return -1;
-                    value.Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_PROPERTY_REFERENCE;
+                    value.Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_DEVICE_OBJECT_PROPERTY_REFERENCE;
                     value.Value = v;
                     return tagLen;
                 }
