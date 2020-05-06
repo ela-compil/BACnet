@@ -213,7 +213,7 @@ namespace System.IO.BACnet.Serialize
                 buffer.Add((byte)(sbyte)value);
             else if (value >= -32768 && value < 32768)
                 encode_signed16(buffer, (short)value);
-            else if (value > -8388608 && value < 8388608)
+            else if (value >= -8388608 && value < 8388608)
                 encode_signed24(buffer, value);
             else
                 encode_signed32(buffer, value);
@@ -1176,6 +1176,7 @@ namespace System.IO.BACnet.Serialize
         public static int decode_signed24(byte[] buffer, int offset, out int value)
         {
             value = (buffer[offset + 0] << 16) & 0x00ff0000;
+            value = (value & 0x80_00_00) != 0 ?  /*2's complement*/ value | (0xff << 24) : value;
             value |= (buffer[offset + 1] << 8) & 0x0000ff00;
             value |= buffer[offset + 2] & 0x000000ff;
             return 3;
@@ -1983,7 +1984,7 @@ namespace System.IO.BACnet.Serialize
                 {
                     tagLen = decode_device_obj_property_ref(buffer, offset, maxOffset, out var v);
                     if (tagLen < 0) return -1;
-                    value.Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_PROPERTY_REFERENCE;
+                    value.Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_DEVICE_OBJECT_PROPERTY_REFERENCE;
                     value.Value = v;
                     return tagLen;
                 }
