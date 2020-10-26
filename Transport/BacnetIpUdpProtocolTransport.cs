@@ -78,9 +78,9 @@ namespace System.IO.BACnet
                 {
                     _sharedConn = new UdpClient { ExclusiveAddressUse = false };
                     _sharedConn.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-                    _sharedConn.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
                     var ep = new IPEndPoint(IPAddress.Any, SharedPort);
                     if (!string.IsNullOrEmpty(_localEndpoint)) ep = new IPEndPoint(IPAddress.Parse(_localEndpoint), SharedPort);
+                    DisableConnReset(_sharedConn);
                     _sharedConn.Client.Bind(ep);
                     _sharedConn.DontFragment = _dontFragment;
                     Log.Info($"Binded shared {ep} using UDP");
@@ -105,7 +105,7 @@ namespace System.IO.BACnet
                         EnableBroadcast = true
                     };
 
-                    _exclusiveConn.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
+                    DisableConnReset(_exclusiveConn);
                 }
             }
             else
@@ -113,7 +113,7 @@ namespace System.IO.BACnet
                 var ep = new IPEndPoint(IPAddress.Any, SharedPort);
                 if (!string.IsNullOrEmpty(_localEndpoint)) ep = new IPEndPoint(IPAddress.Parse(_localEndpoint), SharedPort);
                 _exclusiveConn = new UdpClient { ExclusiveAddressUse = true };
-                _exclusiveConn.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
+                DisableConnReset(_exclusiveConn);
                 _exclusiveConn.Client.Bind(ep);
                 _exclusiveConn.DontFragment = _dontFragment;
                 _exclusiveConn.EnableBroadcast = true;
@@ -121,6 +121,29 @@ namespace System.IO.BACnet
             }
 
             Bvlc = new BVLC(this);
+        }
+
+        /// <summary>	
+        ///   Done to prevent exceptions in Socket.BeginReceive()	
+        /// </summary>	
+        /// <remarks>	
+        ///   http://microsoft.public.win32.programmer.networks.narkive.com/RlxW2V6m/udp-comms-and-connection-reset-problem	
+        /// </remarks>	
+        private static void DisableConnReset(UdpClient client)
+        {
+            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+            {
+                const uint IOC_IN = 0x80000000;
+                const uint IOC_VENDOR = 0x18000000;
+                const uint SIO_UDP_CONNRESET = IOC_IN | IOC_VENDOR | 12;
+
+                client?.Client.IOControl(unchecked((int)SIO_UDP_CONNRESET),
+                    new[] { System.Convert.ToByte(false) }, null);
+            }
+            else
+            {
+                client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
+            }
         }
 
         protected void Close()
