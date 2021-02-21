@@ -707,7 +707,8 @@ namespace System.IO.BACnet.Serialize
             if (ASN1.decode_is_context_tag(buffer, offset + len, 0))
             {
                 len += ASN1.decode_tag_number_and_value(buffer, offset + len, out _, out lenValue);
-                len += ASN1.decode_enumerated(buffer, offset + len, lenValue, out monitoredProperty.propertyIdentifier);
+                len += ASN1.decode_enumerated(buffer, offset + len, lenValue, out decodedValue);
+                monitoredProperty.propertyIdentifier = decodedValue;
             }
             else
                 return -1;
@@ -730,7 +731,7 @@ namespace System.IO.BACnet.Serialize
             /* a tag number of 4 is not extended so only one octet */
             len++;
             /* tag 5 - covIncrement - optional */
-            if (ASN1.decode_is_context_tag(buffer, offset + len, 5))
+            if (len < apduLen && ASN1.decode_is_context_tag(buffer, offset + len, 5))
             {
                 len += ASN1.decode_tag_number_and_value(buffer, offset + len, out _, out lenValue);
                 len += ASN1.decode_real(buffer, offset + len, out covIncrement);
