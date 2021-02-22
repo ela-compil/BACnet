@@ -1,4 +1,4 @@
-﻿/**************************************************************************
+/**************************************************************************
 *                           MIT License
 * 
 * Copyright (C) 2014 Morten Kvistgaard <mk@pch-engineering.dk>
@@ -1156,8 +1156,19 @@ namespace System.IO.BACnet
             return false;
         }
 
-        // Fc
+        // Read range by postion
         public IAsyncResult BeginReadRangeRequest(BacnetAddress adr, BacnetObjectId objectId, uint idxBegin, uint quantity, bool waitForTransmit, byte invokeId = 0)
+        {
+            return BeginReadRangeRequestCore(adr, objectId, BacnetReadRangeRequestTypes.RR_BY_POSITION, DateTime.Now, idxBegin, quantity, waitForTransmit, invokeId);
+        }
+
+        // Read range by start time
+        public IAsyncResult BeginReadRangeRequest(BacnetAddress adr, BacnetObjectId objectId, DateTime readFrom, uint quantity, bool waitForTransmit, byte invokeId = 0)
+        {
+            return BeginReadRangeRequestCore(adr, objectId, BacnetReadRangeRequestTypes.RR_BY_TIME, DateTime.Now, 0, quantity, waitForTransmit, invokeId);
+        }
+
+        private IAsyncResult BeginReadRangeRequestCore(BacnetAddress adr, BacnetObjectId objectId, BacnetReadRangeRequestTypes bacnetReadRangeRequestTypes, DateTime readFrom, uint idxBegin, uint quantity, bool waitForTransmit, byte invokeId = 0)
         {
             Log.Debug("Sending ReadRangeRequest");
             if (invokeId == 0)
@@ -1167,7 +1178,7 @@ namespace System.IO.BACnet
             var buffer = GetEncodeBuffer(Transport.HeaderLength);
             NPDU.Encode(buffer, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource);
             APDU.EncodeConfirmedServiceRequest(buffer, PduConfirmedServiceRequest(), BacnetConfirmedServices.SERVICE_CONFIRMED_READ_RANGE, MaxSegments, Transport.MaxAdpuLength, invokeId);
-            Services.EncodeReadRange(buffer, objectId, (uint)BacnetPropertyIds.PROP_LOG_BUFFER, ASN1.BACNET_ARRAY_ALL, BacnetReadRangeRequestTypes.RR_BY_POSITION, idxBegin, DateTime.Now, (int)quantity);
+            Services.EncodeReadRange(buffer, objectId, (uint)BacnetPropertyIds.PROP_LOG_BUFFER, ASN1.BACNET_ARRAY_ALL, bacnetReadRangeRequestTypes, idxBegin, readFrom, (int)quantity);
             //send
             var ret = new BacnetAsyncResult(this, adr, invokeId, buffer.buffer, buffer.offset - Transport.HeaderLength, waitForTransmit, TransmitTimeout);
             ret.Resend();
@@ -1360,8 +1371,8 @@ namespace System.IO.BACnet
         public IAsyncResult BeginReadPropertyRequest(BacnetAddress address, BacnetObjectId objectId, BacnetPropertyIds propertyId, bool waitForTransmit, byte invokeId = 0, uint arrayIndex = ASN1.BACNET_ARRAY_ALL)
         {
             Log.Debug($"Sending ReadPropertyRequest {objectId} {propertyId}");
-            if(invokeId == 0)
-                invokeId = unchecked (_invokeId++);
+            if (invokeId == 0)
+                invokeId = unchecked(_invokeId++);
 
             var buffer = GetEncodeBuffer(Transport.HeaderLength);
             NPDU.Encode(buffer, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, address.RoutedSource);
