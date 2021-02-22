@@ -1208,11 +1208,38 @@ namespace System.IO.BACnet
             res.Dispose();
         }
 
+
+
         // Fc
+        public bool ReadRangeRequest(BacnetAddress adr, BacnetObjectId objectId, DateTime readFrom, ref uint quantity, out byte[] range, byte invokeId = 0)
+        {
+            return ReadRangeRequestCore(BacnetReadRangeRequestTypes.RR_BY_TIME, adr, objectId, 0, readFrom, ref quantity, out range, invokeId);
+        }
         public bool ReadRangeRequest(BacnetAddress adr, BacnetObjectId objectId, uint idxBegin, ref uint quantity, out byte[] range, byte invokeId = 0)
         {
+            return ReadRangeRequestCore(BacnetReadRangeRequestTypes.RR_BY_POSITION, adr, objectId, idxBegin, DateTime.Now, ref quantity, out range, invokeId);
+        }
+
+        public bool ReadRangeRequestCore(BacnetReadRangeRequestTypes requestType, BacnetAddress adr, BacnetObjectId objectId, uint idxBegin, DateTime readFrom, ref uint quantity, out byte[] range, byte invokeId = 0)
+        {
+            Func<BacnetAsyncResult> getResult;
+            uint quantityCopy = quantity;
+            switch (requestType)
+            {
+                case BacnetReadRangeRequestTypes.RR_BY_TIME:
+                    getResult = () => (BacnetAsyncResult)BeginReadRangeRequest(adr, objectId, readFrom, quantityCopy, true, invokeId);
+                    break;
+
+                case BacnetReadRangeRequestTypes.RR_BY_POSITION:
+                    getResult = () => (BacnetAsyncResult)BeginReadRangeRequest(adr, objectId, idxBegin, quantityCopy, true, invokeId);
+                    break;
+
+                default:
+                    throw new NotImplementedException($"BacnetReadRangeRequestTypes-Type {requestType} not supported in {nameof(ReadRangeRequestCore)}!");
+            }
+
             range = null;
-            using (var result = (BacnetAsyncResult)BeginReadRangeRequest(adr, objectId, idxBegin, quantity, true, invokeId))
+            using (var result = getResult())
             {
                 for (var r = 0; r < _retries; r++)
                 {
@@ -2590,5 +2617,6 @@ namespace System.IO.BACnet
         {
             Transport.Dispose();
         }
+
     }
 }
