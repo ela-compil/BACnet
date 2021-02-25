@@ -1184,7 +1184,6 @@ namespace System.IO.BACnet
             ret.Resend();
 
             return ret;
-
         }
 
         // Fc
@@ -1208,8 +1207,6 @@ namespace System.IO.BACnet
             res.Dispose();
         }
 
-
-
         // Fc
         public bool ReadRangeRequest(BacnetAddress adr, BacnetObjectId objectId, DateTime readFrom, ref uint quantity, out byte[] range, byte invokeId = 0)
         {
@@ -1222,16 +1219,16 @@ namespace System.IO.BACnet
 
         private bool ReadRangeRequestCore(BacnetReadRangeRequestTypes requestType, BacnetAddress adr, BacnetObjectId objectId, uint idxBegin, DateTime readFrom, ref uint quantity, out byte[] range, byte invokeId = 0)
         {
-            Func<BacnetAsyncResult> getResult;
+            Func<IAsyncResult> getResult;
             uint quantityCopy = quantity;
             switch (requestType)
             {
                 case BacnetReadRangeRequestTypes.RR_BY_TIME:
-                    getResult = () => (BacnetAsyncResult)BeginReadRangeRequest(adr, objectId, readFrom, quantityCopy, true, invokeId);
+                    getResult = () => BeginReadRangeRequest(adr, objectId, readFrom, quantityCopy, true, invokeId);
                     break;
 
                 case BacnetReadRangeRequestTypes.RR_BY_POSITION:
-                    getResult = () => (BacnetAsyncResult)BeginReadRangeRequest(adr, objectId, idxBegin, quantityCopy, true, invokeId);
+                    getResult = () => BeginReadRangeRequest(adr, objectId, idxBegin, quantityCopy, true, invokeId);
                     break;
 
                 default:
@@ -1239,7 +1236,7 @@ namespace System.IO.BACnet
             }
 
             range = null;
-            using (var result = getResult())
+            using (var result = getResult() as BacnetAsyncResult)
             {
                 for (var r = 0; r < _retries; r++)
                 {
@@ -2617,6 +2614,5 @@ namespace System.IO.BACnet
         {
             Transport.Dispose();
         }
-
     }
 }
