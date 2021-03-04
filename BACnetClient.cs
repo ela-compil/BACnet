@@ -1165,7 +1165,7 @@ namespace System.IO.BACnet
         // Read range by start time
         public IAsyncResult BeginReadRangeRequest(BacnetAddress adr, BacnetObjectId objectId, DateTime readFrom, uint quantity, bool waitForTransmit, byte invokeId = 0)
         {
-            return BeginReadRangeRequestCore(adr, objectId, BacnetReadRangeRequestTypes.RR_BY_TIME, DateTime.Now, 0, quantity, waitForTransmit, invokeId);
+            return BeginReadRangeRequestCore(adr, objectId, BacnetReadRangeRequestTypes.RR_BY_TIME, DateTime.Now, 1, quantity, waitForTransmit, invokeId);
         }
 
         private IAsyncResult BeginReadRangeRequestCore(BacnetAddress adr, BacnetObjectId objectId, BacnetReadRangeRequestTypes bacnetReadRangeRequestTypes, DateTime readFrom, uint idxBegin, uint quantity, bool waitForTransmit, byte invokeId = 0)
@@ -1210,7 +1210,7 @@ namespace System.IO.BACnet
         // Fc
         public bool ReadRangeRequest(BacnetAddress adr, BacnetObjectId objectId, DateTime readFrom, ref uint quantity, out byte[] range, byte invokeId = 0)
         {
-            return ReadRangeRequestCore(BacnetReadRangeRequestTypes.RR_BY_TIME, adr, objectId, 0, readFrom, ref quantity, out range, invokeId);
+            return ReadRangeRequestCore(BacnetReadRangeRequestTypes.RR_BY_TIME, adr, objectId, 1, readFrom, ref quantity, out range, invokeId);
         }
         public bool ReadRangeRequest(BacnetAddress adr, BacnetObjectId objectId, uint idxBegin, ref uint quantity, out byte[] range, byte invokeId = 0)
         {
