@@ -14,6 +14,9 @@ namespace System.IO.BACnet
         public bool Ack_Required;
         public BacnetBitString evenType;
 
+        // DAL - i didn't change the constructors since it would have been an API break
+        public bool confirmedNotify;
+
         public DeviceReportingRecipient(BacnetValue v0, BacnetValue v1, BacnetValue v2, BacnetValue v3, BacnetValue v4, BacnetValue v5, BacnetValue v6)
         {
             Id = new BacnetObjectId();
@@ -36,6 +39,7 @@ namespace System.IO.BACnet
             processIdentifier = (uint)v4.Value;
             Ack_Required = (bool)v5.Value;
             evenType = (BacnetBitString)v6.Value;
+            confirmedNotify = false;
         }
 
         public DeviceReportingRecipient(BacnetBitString weekofDay, DateTime fromTime, DateTime toTime, BacnetObjectId id, uint processIdentifier, bool ackRequired, BacnetBitString evenType)
@@ -49,6 +53,7 @@ namespace System.IO.BACnet
             this.processIdentifier = processIdentifier;
             Ack_Required = ackRequired;
             this.evenType = evenType;
+            confirmedNotify = false;
         }
 
         public DeviceReportingRecipient(BacnetBitString weekofDay, DateTime fromTime, DateTime toTime, BacnetAddress adr, uint processIdentifier, bool ackRequired, BacnetBitString evenType)
@@ -61,6 +66,7 @@ namespace System.IO.BACnet
             this.processIdentifier = processIdentifier;
             Ack_Required = ackRequired;
             this.evenType = evenType;
+            confirmedNotify = false;
         }
 
         public void Encode(EncodeBuffer buffer)

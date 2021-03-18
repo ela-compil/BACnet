@@ -15,6 +15,9 @@ namespace System.IO.BACnet
         // Modif FC
         public BacnetAddress RoutedSource = null;
 
+        // DAL
+        public BacnetAddress RoutedDestination = null;
+
         public BacnetAddress(BacnetAddressTypes addressType, ushort network = 0, byte[] address = null)
         {
             type = addressType;

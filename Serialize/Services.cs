@@ -197,6 +197,44 @@ namespace System.IO.BACnet.Serialize
             ASN1.encode_context_character_string(buffer, 4, ackSource);
             ASN1.bacapp_encode_context_timestamp(buffer, 5, ackTimeStamp);
         }
+        // DAL
+        public static int DecodeAlarmAcknowledge(byte[] buffer, int offset, int apduLen, out uint ackProcessIdentifier, out BacnetObjectId eventObjectIdentifier, out uint eventStateAcked, out string ackSource, out BacnetGenericTime eventTimeStamp, out BacnetGenericTime ackTimeStamp)
+        {
+            eventTimeStamp = default(BacnetGenericTime);
+            ackTimeStamp = default(BacnetGenericTime);
+            ackSource = null;
+            var len = 0;
+            len += ASN1.decode_context_unsigned(buffer, offset + len, 0, out ackProcessIdentifier);
+            ushort type;
+            len += ASN1.decode_context_object_id(buffer, offset + len, 1, out type, out eventObjectIdentifier.instance);
+            eventObjectIdentifier.type = (BacnetObjectTypes)type;
+            len += ASN1.decode_context_enumerated(buffer, offset + len, 2, out eventStateAcked);
+            if (ASN1.decode_is_context_tag(buffer, offset + len, 3))
+            {
+                len += 1; // opening Tag 3
+                len += ASN1.decode_application_date(buffer, offset + len, out var date);
+                len += ASN1.decode_application_time(buffer, offset + len, out var time);
+                eventTimeStamp.Time = new DateTime(date.Year, date.Month, date.Day, time.Hour, time.Minute,
+                    time.Second, time.Millisecond);
+
+                len += 1; // closing tag 3
+            }
+            else
+                return -1;
+            len += ASN1.decode_context_character_string(buffer, offset + len, 256, 4, out ackSource);
+            if (ASN1.decode_is_context_tag(buffer, offset + len, 5))
+            {
+                len += 1; // opening Tag 5
+                len += ASN1.decode_application_date(buffer, offset + len, out var date);
+                len += ASN1.decode_application_time(buffer, offset + len, out var time);
+                ackTimeStamp.Time = new DateTime(date.Year, date.Month, date.Day, time.Hour, time.Minute,
+                    time.Second, time.Millisecond);
+                len += 1; // closing tag 5
+            }
+            else
+                return -1;
+            return len;
+        }
 
         public static void EncodeAtomicReadFile(EncodeBuffer buffer, bool isStream, BacnetObjectId objectId, int position, uint count)
         {
@@ -1128,15 +1166,6 @@ namespace System.IO.BACnet.Serialize
             EncodeEventNotifyData(buffer, data);
         }
 
-        public static void EncodeAlarmSummary(EncodeBuffer buffer, BacnetObjectId objectIdentifier, uint alarmState, BacnetBitString acknowledgedTransitions)
-        {
-            /* tag 0 - Object Identifier */
-            ASN1.encode_application_object_id(buffer, objectIdentifier.type, objectIdentifier.instance);
-            /* tag 1 - Alarm State */
-            ASN1.encode_application_enumerated(buffer, alarmState);
-            /* tag 2 - Acknowledged Transitions */
-            ASN1.encode_application_bitstring(buffer, acknowledgedTransitions);
-        }
 
         // FChaxel
         public static int DecodeAlarmSummaryOrEvent(byte[] buffer, int offset, int apduLen, bool getEvent, ref IList<BacnetGetEventInformationData> alarms, out bool moreEvent)
@@ -1203,6 +1232,18 @@ namespace System.IO.BACnet.Serialize
             else
                 moreEvent = false;
 
+            return len;
+        }
+        // DAL
+        public static int DecodeAlarmSummaryOrEventRequest(byte[] buffer, int offset, int apduLen, bool getEvent, ref BacnetObjectId id)
+        {
+            var len = 0;
+            // object id may be there for get event info, but it is optional
+            if (getEvent && apduLen != 0)
+            {
+                len++; // past opening tag 0
+                len += ASN1.decode_object_id(buffer, offset + len, out id.type, out id.instance);
+            }
             return len;
         }
 
