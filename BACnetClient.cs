@@ -260,7 +260,9 @@ namespace System.IO.BACnet
                         OnWritePropertyRequest(this, address, invokeId, objectId, value, maxSegments);
                     else
                     {
-                        ErrorResponse(address, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
+                        // DAL
+                        SendAbort(address, invokeId, BacnetAbortReason.OTHER);
+                        //ErrorResponse(address, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
                         //SendConfirmedServiceReject(adr, invokeId, BacnetRejectReason.OTHER); 
                         Log.Warn("Couldn't decode DecodeWriteProperty");
                     }
@@ -271,7 +273,9 @@ namespace System.IO.BACnet
                         OnReadPropertyMultipleRequest(this, address, invokeId, properties, maxSegments);
                     else
                     {
-                        ErrorResponse(address, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
+                        // DAL
+                        SendAbort(address, invokeId, BacnetAbortReason.OTHER);
+                        //ErrorResponse(address, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
                         Log.Warn("Couldn't decode DecodeReadPropertyMultiple");
                     }
                 }
@@ -281,7 +285,9 @@ namespace System.IO.BACnet
                         OnWritePropertyMultipleRequest(this, address, invokeId, objectId, values, maxSegments);
                     else
                     {
-                        ErrorResponse(address, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
+                        // DAL
+                        SendAbort(address, invokeId, BacnetAbortReason.OTHER);
+                        //ErrorResponse(address, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
                         Log.Warn("Couldn't decode DecodeWritePropertyMultiple");
                     }
                 }
@@ -291,7 +297,9 @@ namespace System.IO.BACnet
                         OnCOVNotification(this, address, invokeId, subscriberProcessIdentifier, initiatingDeviceIdentifier, monitoredObjectIdentifier, timeRemaining, true, values, maxSegments);
                     else
                     {
-                        ErrorResponse(address, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
+                        // DAL
+                        SendAbort(address, invokeId, BacnetAbortReason.OTHER);
+                        //ErrorResponse(address, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
                         Log.Warn("Couldn't decode COVNotify");
                     }
                 }
@@ -301,7 +309,9 @@ namespace System.IO.BACnet
                         OnAtomicWriteFileRequest(this, address, invokeId, isStream, objectId, position, blockCount, blocks, counts, maxSegments);
                     else
                     {
-                        ErrorResponse(address, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
+                        // DAL
+                        SendAbort(address, invokeId, BacnetAbortReason.OTHER);
+                        //ErrorResponse(address, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
                         Log.Warn("Couldn't decode AtomicWriteFile");
                     }
                 }
@@ -311,7 +321,9 @@ namespace System.IO.BACnet
                         OnAtomicReadFileRequest(this, address, invokeId, isStream, objectId, position, count, maxSegments);
                     else
                     {
-                        ErrorResponse(address, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
+                        // DAL
+                        SendAbort(address, invokeId, BacnetAbortReason.OTHER);
+                        //ErrorResponse(address, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
                         Log.Warn("Couldn't decode AtomicReadFile");
                     }
                 }
@@ -321,7 +333,9 @@ namespace System.IO.BACnet
                         OnSubscribeCOV(this, address, invokeId, subscriberProcessIdentifier, monitoredObjectIdentifier, cancellationRequest, issueConfirmedNotifications, lifetime, maxSegments);
                     else
                     {
-                        ErrorResponse(address, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
+                        // DAL
+                        SendAbort(address, invokeId, BacnetAbortReason.OTHER);
+                        //ErrorResponse(address, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
                         Log.Warn("Couldn't decode SubscribeCOV");
                     }
                 }
@@ -331,7 +345,9 @@ namespace System.IO.BACnet
                         OnSubscribeCOVProperty(this, address, invokeId, subscriberProcessIdentifier, monitoredObjectIdentifier, monitoredProperty, cancellationRequest, issueConfirmedNotifications, lifetime, covIncrement, maxSegments);
                     else
                     {
-                        ErrorResponse(address, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
+                        // DAL
+                        SendAbort(address, invokeId, BacnetAbortReason.OTHER);
+                        //ErrorResponse(address, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
                         Log.Warn("Couldn't decode SubscribeCOVProperty");
                     }
                 }
@@ -341,7 +357,9 @@ namespace System.IO.BACnet
                         OnDeviceCommunicationControl(this, address, invokeId, timeDuration, enableDisable, password, maxSegments);
                     else
                     {
-                        ErrorResponse(address, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
+                        // DAL
+                        SendAbort(address, invokeId, BacnetAbortReason.OTHER);
+                        //ErrorResponse(address, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
                         Log.Warn("Couldn't decode DeviceCommunicationControl");
                     }
                 }
@@ -351,7 +369,9 @@ namespace System.IO.BACnet
                         OnReinitializedDevice(this, address, invokeId, state, password, maxSegments);
                     else
                     {
-                        ErrorResponse(address, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
+                        // DAL
+                        SendAbort(address, invokeId, BacnetAbortReason.OTHER);
+                        //ErrorResponse(address, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
                         Log.Warn("Couldn't decode ReinitializeDevice");
                     }
                 }
@@ -363,7 +383,9 @@ namespace System.IO.BACnet
                     }
                     else
                     {
-                        ErrorResponse(address, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
+                        // DAL
+                        SendAbort(address, invokeId, BacnetAbortReason.OTHER);
+                        //ErrorResponse(address, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
                         Log.Warn("Couldn't decode Event/Alarm Notification");
                     }
                 }
@@ -373,7 +395,9 @@ namespace System.IO.BACnet
                         OnReadRange(this, address, invokeId, objectId, property, requestType, position, time, count, maxSegments);
                     else
                     {
-                        ErrorResponse(address, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
+                                                // DAL
+                        SendAbort(address, invokeId, BacnetAbortReason.OTHER);
+                        //ErrorResponse(address, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
                         Log.Warn("Couldn't decode ReadRange");
                     }
                 }
@@ -383,7 +407,9 @@ namespace System.IO.BACnet
                         OnCreateObjectRequest(this, address, invokeId, objectId, values, maxSegments);
                     else
                     {
-                        ErrorResponse(address, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
+                        // DAL
+                        SendAbort(address, invokeId, BacnetAbortReason.OTHER);
+                        //ErrorResponse(address, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
                         Log.Warn("Couldn't decode CreateObject");
                     }
                 }
@@ -393,7 +419,9 @@ namespace System.IO.BACnet
                         OnDeleteObjectRequest(this, address, invokeId, objectId, maxSegments);
                     else
                     {
-                        ErrorResponse(address, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
+                        // DAL
+                        SendAbort(address, invokeId, BacnetAbortReason.OTHER);
+                        //ErrorResponse(address, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
                         Log.Warn("Couldn't decode DecodeDeleteObject");
                     }
                 }
@@ -408,7 +436,9 @@ namespace System.IO.BACnet
                     }
                     else
                     {
-                        ErrorResponse(address, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
+                        // DAL
+                        SendAbort(address, invokeId, BacnetAbortReason.OTHER);
+                        //ErrorResponse(address, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
                         Log.Warn("Couldn't decode GetAlarmSummary");
                     }
                 }
@@ -423,7 +453,9 @@ namespace System.IO.BACnet
                     }
                     else
                     {
-                        ErrorResponse(address, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
+                        // DAL
+                        SendAbort(address, invokeId, BacnetAbortReason.OTHER);
+                        //ErrorResponse(address, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
                         Log.Warn("Couldn't decode GetEventInformation");
                     }
                 }
@@ -436,19 +468,24 @@ namespace System.IO.BACnet
                     }
                     else
                     {
-                        ErrorResponse(address, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
+                        // DAL
+                        SendAbort(address, invokeId, BacnetAbortReason.OTHER);
+                        //ErrorResponse(address, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
                         Log.Warn("Couldn't decode AlarmAcknowledge");
                     }
                 }
                 else
                 {
-                    ErrorResponse(address, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_REJECT_UNRECOGNIZED_SERVICE);
+                    // DAL
+                    SendConfirmedServiceReject(address, invokeId, BacnetRejectReason.RECOGNIZED_SERVICE); // should be unrecognized but this is the way it was spelled..
                     Log.Warn($"Confirmed service not handled: {service}");
                 }
             }
             catch (Exception ex)
             {
-                ErrorResponse(address, service, invokeId, BacnetErrorClasses.ERROR_CLASS_DEVICE, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
+                // DAL
+                SendAbort(address, invokeId, BacnetAbortReason.OTHER);
+                //ErrorResponse(address, service, invokeId, BacnetErrorClasses.ERROR_CLASS_DEVICE, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
                 Log.Error("Error in ProcessConfirmedServiceRequest", ex);
             }
         }
@@ -1128,14 +1165,26 @@ namespace System.IO.BACnet
             Transport.Send(b.buffer, Transport.HeaderLength, b.offset - Transport.HeaderLength, adr, false, 0);
         }
 
-        public void SendConfirmedServiceReject(BacnetAddress adr, byte invokeId, BacnetRejectReason reason, BacnetAddress source = null)
+        public void SendConfirmedServiceReject(BacnetAddress adr, byte invokeId, BacnetRejectReason reason)
         {
             Log.Debug($"Sending Service reject: {reason}");
 
             var b = GetEncodeBuffer(Transport.HeaderLength);
 
-            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, adr, source);
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, adr.RoutedSource, adr.RoutedDestination);
             APDU.EncodeError(b, BacnetPduTypes.PDU_TYPE_REJECT, (BacnetConfirmedServices)reason, invokeId);
+            Transport.Send(b.buffer, Transport.HeaderLength, b.offset - Transport.HeaderLength, adr, false, 0);
+        }
+
+        public void SendAbort(BacnetAddress adr, byte invokeId, BacnetAbortReason reason)
+        {
+            // DAL
+            Log.Debug($"Sending Service reject: {reason}");
+
+            var b = GetEncodeBuffer(Transport.HeaderLength);
+
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, adr.RoutedSource, adr.RoutedDestination);
+            APDU.EncodeError(b, BacnetPduTypes.PDU_TYPE_ABORT, (BacnetConfirmedServices)reason, invokeId);
             Transport.Send(b.buffer, Transport.HeaderLength, b.offset - Transport.HeaderLength, adr, false, 0);
         }
 
@@ -2310,17 +2359,18 @@ namespace System.IO.BACnet
             res.Dispose();
         }
         // DAL
-        // the reason for making more_events nullable is on the off chance that some day someone needs to 
-        // support the old GetAlarmSummary responses.   Then they can just set more_events to null to 
-        // signify that is what should be used without breaking the api.
-        public void GetEventInformationResponse(BacnetAddress adr, byte invoke_id, Segmentation segmentation, BacnetGetEventInformationData[] data, bool? more_events)
+        public void GetEventInformationResponse(BacnetAddress adr, bool getEvent, byte invoke_id, Segmentation segmentation, BacnetGetEventInformationData[] data, bool more_events)
         {
+            // 'getEvent' is not currently used.   Can be used if ever implementing GetAlarmSummary.
             // response could be segmented
+            // but if you don't want it segmented (which would be normal usage)
+            // you have to compute the message data and the 'more' flag
+            // outside this function.
             HandleSegmentationResponse(adr, invoke_id, segmentation, (o) =>
             {
                 SendComplexAck(adr, invoke_id, segmentation, BacnetConfirmedServices.SERVICE_CONFIRMED_GET_EVENT_INFORMATION, (b) =>
                 {
-                    Services.EncodeGetEventInformationAcknowledge(b, data, more_events.Value);
+                    Services.EncodeGetEventInformationAcknowledge(b, data, more_events);
                 });
             });
         }
@@ -2701,7 +2751,9 @@ namespace System.IO.BACnet
                 if (segmentation == null)
                 {
                     Log.Info("Segmenation denied");
-                    ErrorResponse(adr, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_APDU_TOO_LONG);
+                    // DAL
+                    SendAbort(adr, invokeId, BacnetAbortReason.APDU_TOO_LONG);
+                    //ErrorResponse(adr, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_APDU_TOO_LONG);
                     buffer.result = EncodeResult.Good;     //don't continue the segmentation
                     return;
                 }
@@ -2712,7 +2764,9 @@ namespace System.IO.BACnet
                     if (segmentation.max_segments != 0xFF && segmentation.buffer.offset > segmentation.max_segments * (GetMaxApdu() - 5))      //5 is adpu header
                     {
                         Log.Info("Too much segmenation");
-                        ErrorResponse(adr, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_APDU_TOO_LONG);
+                        // DAL
+                        SendAbort(adr, invokeId, BacnetAbortReason.APDU_TOO_LONG);
+                        //ErrorResponse(adr, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_APDU_TOO_LONG);
                         buffer.result = EncodeResult.Good;     //don't continue the segmentation
                         return;
                     }
