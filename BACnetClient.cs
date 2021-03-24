@@ -208,7 +208,7 @@ namespace System.IO.BACnet
         public event CreateObjectRequestHandler OnCreateObjectRequest;
         public delegate void DeleteObjectRequestHandler(BacnetClient sender, BacnetAddress adr, byte invokeId, BacnetObjectId objectId, BacnetMaxSegments maxSegments);
         public event DeleteObjectRequestHandler OnDeleteObjectRequest;
-        public delegate void GetAlarmSummaryOrEventInformationRequestHandler(BacnetClient sender, BacnetAddress adr, byte invokeId, bool getEvent, BacnetObjectId objectId, BacnetMaxSegments max_segments);
+        public delegate void GetAlarmSummaryOrEventInformationRequestHandler(BacnetClient sender, BacnetAddress adr, byte invokeId, bool getEvent, BacnetObjectId objectId, BacnetMaxAdpu maxApdu, BacnetMaxSegments max_segments);
         public event GetAlarmSummaryOrEventInformationRequestHandler OnGetAlarmSummaryOrEventInformation;
         public delegate void AlarmAcknowledgeRequestHandler(BacnetClient sender, BacnetAddress adr, byte invokeId, uint ackProcessIdentifier, BacnetObjectId eventObjectIdentifier, uint eventStateAcked, string ackSource, BacnetGenericTime eventTimeStamp, BacnetGenericTime ackTimeStamp);
         public event AlarmAcknowledgeRequestHandler OnAlarmAcknowledge;
@@ -432,7 +432,7 @@ namespace System.IO.BACnet
                     objectId.Type = BacnetObjectTypes.MAX_BACNET_OBJECT_TYPE;
                     if (Services.DecodeAlarmSummaryOrEventRequest(buffer, offset, length, false, ref objectId) >= 0)
                     {
-                        OnGetAlarmSummaryOrEventInformation(this, address, invokeId, false, objectId, maxSegments);
+                        OnGetAlarmSummaryOrEventInformation(this, address, invokeId, false, objectId, maxAdpu, maxSegments);
                     }
                     else
                     {
@@ -449,7 +449,7 @@ namespace System.IO.BACnet
                     objectId.Type = BacnetObjectTypes.MAX_BACNET_OBJECT_TYPE;
                     if (Services.DecodeAlarmSummaryOrEventRequest(buffer, offset, length, true, ref objectId) >= 0)
                     {
-                        OnGetAlarmSummaryOrEventInformation(this, address, invokeId, true, objectId, maxSegments);
+                        OnGetAlarmSummaryOrEventInformation(this, address, invokeId, true, objectId, maxAdpu, maxSegments);
                     }
                     else
                     {
@@ -981,6 +981,7 @@ namespace System.IO.BACnet
                     break;
                 default:
                     /* An unrecognized message is bad; send an error response. */
+                    OnUnrecognizedNetworkMessage?.Invoke(this, adr, npduFunction, buffer, offset, messageLength);
                     break;
             }
         }
@@ -1201,10 +1202,16 @@ namespace System.IO.BACnet
             Transport.Send(buffer.buffer, Transport.HeaderLength, buffer.offset - Transport.HeaderLength, adr, false, 0);
         }
 
+
         public int GetMaxApdu()
         {
+            return GetMaxApdu(Transport.MaxAdpuLength);
+        }
+        // DAL
+        public int GetMaxApdu(BacnetMaxAdpu apduLength)
+        {
             int maxAPDU;
-            switch (Transport.MaxAdpuLength)
+            switch (apduLength)
             {
                 case BacnetMaxAdpu.MAX_APDU1476:
                     maxAPDU = 1476;
@@ -1520,7 +1527,7 @@ namespace System.IO.BACnet
             {
                 for (var r = 0; r < _retries; r++)
                 {
-
+                    if (result.WaitForDone(Timeout))
                     {
                         EndSendConfirmedEventNotificationRequest(result, out var ex);
                         if (ex != null)
@@ -2359,7 +2366,7 @@ namespace System.IO.BACnet
             res.Dispose();
         }
         // DAL
-        public void GetEventInformationResponse(BacnetAddress adr, bool getEvent, byte invoke_id, Segmentation segmentation, BacnetGetEventInformationData[] data, bool more_events)
+        public void GetAlarmSummaryOrEventInformationResponse(BacnetAddress adr, bool getEvent, byte invoke_id, Segmentation segmentation, BacnetGetEventInformationData[] data, bool more_events)
         {
             // 'getEvent' is not currently used.   Can be used if ever implementing GetAlarmSummary.
             // response could be segmented
@@ -2750,9 +2757,9 @@ namespace System.IO.BACnet
                 //client doesn't support segments
                 if (segmentation == null)
                 {
-                    Log.Info("Segmenation denied");
+                    Log.Info("Segmentation denied");
                     // DAL
-                    SendAbort(adr, invokeId, BacnetAbortReason.APDU_TOO_LONG);
+                    SendAbort(adr, invokeId, BacnetAbortReason.SEGMENTATION_NOT_SUPPORTED);
                     //ErrorResponse(adr, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_APDU_TOO_LONG);
                     buffer.result = EncodeResult.Good;     //don't continue the segmentation
                     return;
