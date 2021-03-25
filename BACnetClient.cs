@@ -874,7 +874,7 @@ namespace System.IO.BACnet
         }
 
         // DAL
-        public void SendNetworkMessage(BacnetAddress adr, byte[] buffer, BacnetNetworkMessageTypes messageType, ushort vendorId)
+        public void SendNetworkMessage(BacnetAddress adr, byte[] buffer, int bufLen, BacnetNetworkMessageTypes messageType, ushort vendorId)
         {
             if (adr == null)
             {
@@ -882,7 +882,7 @@ namespace System.IO.BACnet
             }
             var b = GetEncodeBuffer(Transport.HeaderLength);
             NPDU.Encode(b, BacnetNpduControls.NetworkLayerMessage, adr, null, 255, messageType, vendorId);
-            b.Add(buffer, buffer.Length);
+            b.Add(buffer, bufLen);
             Transport.Send(b.buffer, Transport.HeaderLength, b.offset - Transport.HeaderLength, adr, false, 0);
         }
         public void SendIAmRouterToNetwork(ushort[] networks, ushort vendorId)
@@ -892,7 +892,7 @@ namespace System.IO.BACnet
             {
                 ASN1.encode_unsigned16(b, networks[i]);
             }
-            SendNetworkMessage(null, b.buffer, BacnetNetworkMessageTypes.NETWORK_MESSAGE_I_AM_ROUTER_TO_NETWORK, vendorId);
+            SendNetworkMessage(null, b.buffer, b.offset, BacnetNetworkMessageTypes.NETWORK_MESSAGE_I_AM_ROUTER_TO_NETWORK, vendorId);
         }
 
         public void SendInitializeRoutingTableAck(BacnetAddress adr, ushort[] networks, ushort vendorId)
@@ -905,7 +905,7 @@ namespace System.IO.BACnet
                     ASN1.encode_unsigned16(b, networks[i]);
                 }
             }
-            SendNetworkMessage(adr, b.buffer, BacnetNetworkMessageTypes.NETWORK_MESSAGE_INIT_RT_TABLE_ACK, vendorId);
+            SendNetworkMessage(adr, b.buffer, b.offset, BacnetNetworkMessageTypes.NETWORK_MESSAGE_INIT_RT_TABLE_ACK, vendorId);
         }
         public void SendRejectToNetwork(BacnetAddress adr, ushort[] networks, ushort vendorId)
         {
@@ -915,7 +915,7 @@ namespace System.IO.BACnet
             {
                 ASN1.encode_unsigned16(b, networks[i]);
             }
-            SendNetworkMessage(adr, b.buffer, BacnetNetworkMessageTypes.NETWORK_MESSAGE_REJECT_MESSAGE_TO_NETWORK, vendorId);
+            SendNetworkMessage(adr, b.buffer, b.offset, BacnetNetworkMessageTypes.NETWORK_MESSAGE_REJECT_MESSAGE_TO_NETWORK, vendorId);
         }
         public delegate void NetworkMessageHandler(BacnetClient sender, BacnetAddress adr, BacnetNpduControls npduFunction, BacnetNetworkMessageTypes npduMessageType, byte[] buffer, int offset, int messageLength);
         public event NetworkMessageHandler OnNetworkMessage;
@@ -1011,7 +1011,7 @@ namespace System.IO.BACnet
                 offset += npduLen;
                 msgLength -= npduLen;
 
-                if (msgLength <= 0)
+                if (msgLength < 0) // could be 0 for an already parsed
                     return;
 
                 if (npduFunction.HasFlag(BacnetNpduControls.NetworkLayerMessage))
@@ -1021,6 +1021,9 @@ namespace System.IO.BACnet
                     ProcessNetworkMessage(remoteAddress, npduFunction, npduMessageType, buffer, offset, msgLength);
                     return; 
                 }
+
+                if (msgLength <= 0)
+                    return;
 
                 var apduType = APDU.GetDecodedType(buffer, offset);
                 ProcessApdu(remoteAddress, apduType, buffer, offset, msgLength);
