@@ -211,25 +211,25 @@ namespace System.IO.BACnet.Serialize
             len += ASN1.decode_context_enumerated(buffer, offset + len, 2, out eventStateAcked);
             if (ASN1.decode_is_context_tag(buffer, offset + len, 3))
             {
-                len += 1; // opening Tag 3
+                len += 2; // opening Tag 3 then 2
                 len += ASN1.decode_application_date(buffer, offset + len, out var date);
                 len += ASN1.decode_application_time(buffer, offset + len, out var time);
                 eventTimeStamp.Time = new DateTime(date.Year, date.Month, date.Day, time.Hour, time.Minute,
                     time.Second, time.Millisecond);
 
-                len += 1; // closing tag 3
+                len += 2; // closing tag 2 then 3
             }
             else
                 return -1;
             len += ASN1.decode_context_character_string(buffer, offset + len, 256, 4, out ackSource);
             if (ASN1.decode_is_context_tag(buffer, offset + len, 5))
             {
-                len += 1; // opening Tag 5
+                len += 2; // opening Tag 5 then 2
                 len += ASN1.decode_application_date(buffer, offset + len, out var date);
                 len += ASN1.decode_application_time(buffer, offset + len, out var time);
                 ackTimeStamp.Time = new DateTime(date.Year, date.Month, date.Day, time.Hour, time.Minute,
                     time.Second, time.Millisecond);
-                len += 1; // closing tag 5
+                len += 2; // closing tag 2 then 5
             }
             else
                 return -1;
