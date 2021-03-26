@@ -59,7 +59,7 @@
                 {
                     vendorId = (ushort)((buffer[offset++] << 8) | (buffer[offset++] << 0));
                 }
-                //DAL
+                //DAL - this originally made no sense as the higher level code would just ignore network messages
 //                else if (networkMsgType == BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK)
 //                    offset += 2;  // Don't care about destination network adress
             }

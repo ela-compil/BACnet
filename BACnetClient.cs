@@ -353,6 +353,7 @@ namespace System.IO.BACnet
                 }
                 else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_DEVICE_COMMUNICATION_CONTROL && OnDeviceCommunicationControl != null)
                 {
+                    // DAL
                     if (Services.DecodeDeviceCommunicationControl(buffer, offset, length, out var timeDuration, out var enableDisable, out var password) >= 0)
                         OnDeviceCommunicationControl(this, address, invokeId, timeDuration, enableDisable, password, maxSegments);
                     else
@@ -365,6 +366,7 @@ namespace System.IO.BACnet
                 }
                 else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_REINITIALIZE_DEVICE && OnReinitializedDevice != null)
                 {
+                    // DAL
                     if (Services.DecodeReinitializeDevice(buffer, offset, length, out var state, out var password) >= 0)
                         OnReinitializedDevice(this, address, invokeId, state, password, maxSegments);
                     else
@@ -395,7 +397,7 @@ namespace System.IO.BACnet
                         OnReadRange(this, address, invokeId, objectId, property, requestType, position, time, count, maxSegments);
                     else
                     {
-                                                // DAL
+                        // DAL
                         SendAbort(address, invokeId, BacnetAbortReason.OTHER);
                         //ErrorResponse(address, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
                         Log.Warn("Couldn't decode ReadRange");
@@ -427,7 +429,10 @@ namespace System.IO.BACnet
                 }
                 else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_GET_ALARM_SUMMARY && OnGetAlarmSummaryOrEventInformation != null)
                 {
-                    // DAL
+                    // DAL -- added the core code required but since I couldn't test it we just reject this service
+                    // rejecting it shouldn't be too bad a thing since GetAlarmSummary has been retired anyway...
+                    // if someone needs it they can uncomment the related code and test.
+#if false
                     BacnetObjectId objectId = default(BacnetObjectId);
                     objectId.Type = BacnetObjectTypes.MAX_BACNET_OBJECT_TYPE;
                     if (Services.DecodeAlarmSummaryOrEventRequest(buffer, offset, length, false, ref objectId) >= 0)
@@ -441,6 +446,9 @@ namespace System.IO.BACnet
                         //ErrorResponse(address, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
                         Log.Warn("Couldn't decode GetAlarmSummary");
                     }
+#else
+                    SendConfirmedServiceReject(address, invokeId, BacnetRejectReason.RECOGNIZED_SERVICE); // should be unrecognized but this is the way it was spelled..
+#endif
                 }
                 else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_GET_EVENT_INFORMATION && OnGetAlarmSummaryOrEventInformation != null)
                 {
