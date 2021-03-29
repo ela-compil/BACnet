@@ -882,7 +882,7 @@ namespace System.IO.BACnet
         }
 
         // DAL
-        public void SendNetworkMessage(BacnetAddress adr, byte[] buffer, int bufLen, BacnetNetworkMessageTypes messageType, ushort vendorId)
+        public void SendNetworkMessage(BacnetAddress adr, byte[] buffer, int bufLen, BacnetNetworkMessageTypes messageType, ushort vendorId = 0)
         {
             if (adr == null)
             {
@@ -893,17 +893,17 @@ namespace System.IO.BACnet
             b.Add(buffer, bufLen);
             Transport.Send(b.buffer, Transport.HeaderLength, b.offset - Transport.HeaderLength, adr, false, 0);
         }
-        public void SendIAmRouterToNetwork(ushort[] networks, ushort vendorId)
+        public void SendIAmRouterToNetwork(ushort[] networks)
         {
             var b = GetEncodeBuffer(0);
             for (int i = 0; i < networks.Length; i++)
             {
                 ASN1.encode_unsigned16(b, networks[i]);
             }
-            SendNetworkMessage(null, b.buffer, b.offset, BacnetNetworkMessageTypes.NETWORK_MESSAGE_I_AM_ROUTER_TO_NETWORK, vendorId);
+            SendNetworkMessage(null, b.buffer, b.offset, BacnetNetworkMessageTypes.NETWORK_MESSAGE_I_AM_ROUTER_TO_NETWORK);
         }
 
-        public void SendInitializeRoutingTableAck(BacnetAddress adr, ushort[] networks, ushort vendorId)
+        public void SendInitializeRoutingTableAck(BacnetAddress adr, ushort[] networks)
         {
             var b = GetEncodeBuffer(0);
             if (networks != null)
@@ -913,9 +913,9 @@ namespace System.IO.BACnet
                     ASN1.encode_unsigned16(b, networks[i]);
                 }
             }
-            SendNetworkMessage(adr, b.buffer, b.offset, BacnetNetworkMessageTypes.NETWORK_MESSAGE_INIT_RT_TABLE_ACK, vendorId);
+            SendNetworkMessage(adr, b.buffer, b.offset, BacnetNetworkMessageTypes.NETWORK_MESSAGE_INIT_RT_TABLE_ACK);
         }
-        public void SendRejectToNetwork(BacnetAddress adr, ushort[] networks, ushort vendorId)
+        public void SendRejectToNetwork(BacnetAddress adr, ushort[] networks)
         {
             var b = GetEncodeBuffer(0);
             /* Sending our DNET doesn't make a lot of sense, does it? */
@@ -923,7 +923,7 @@ namespace System.IO.BACnet
             {
                 ASN1.encode_unsigned16(b, networks[i]);
             }
-            SendNetworkMessage(adr, b.buffer, b.offset, BacnetNetworkMessageTypes.NETWORK_MESSAGE_REJECT_MESSAGE_TO_NETWORK, vendorId);
+            SendNetworkMessage(adr, b.buffer, b.offset, BacnetNetworkMessageTypes.NETWORK_MESSAGE_REJECT_MESSAGE_TO_NETWORK);
         }
         public delegate void NetworkMessageHandler(BacnetClient sender, BacnetAddress adr, BacnetNpduControls npduFunction, BacnetNetworkMessageTypes npduMessageType, byte[] buffer, int offset, int messageLength);
         public event NetworkMessageHandler OnNetworkMessage;
@@ -1152,7 +1152,7 @@ namespace System.IO.BACnet
         }
 
         // ReSharper disable once InconsistentNaming
-        public void IHave(BacnetObjectId deviceId, BacnetObjectId objId, string objName, BacnetAddress source)
+        public void IHave(BacnetObjectId deviceId, BacnetObjectId objId, string objName, BacnetAddress source = null)
         {
             Log.Debug($"Broadcasting IHave {objName} {objId}");
 
