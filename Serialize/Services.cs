@@ -1166,6 +1166,15 @@ namespace System.IO.BACnet.Serialize
             EncodeEventNotifyData(buffer, data);
         }
 
+		public static void EncodeAlarmSummary(EncodeBuffer buffer, BacnetObjectId objectIdentifier, uint alarmState, BacnetBitString acknowledgedTransitions)
+        {
+            /* tag 0 - Object Identifier */
+            ASN1.encode_application_object_id(buffer, objectIdentifier.type, objectIdentifier.instance);
+            /* tag 1 - Alarm State */
+            ASN1.encode_application_enumerated(buffer, alarmState);
+            /* tag 2 - Acknowledged Transitions */
+            ASN1.encode_application_bitstring(buffer, acknowledgedTransitions);
+        }
 
         // FChaxel
         public static int DecodeAlarmSummaryOrEvent(byte[] buffer, int offset, int apduLen, bool getEvent, ref IList<BacnetGetEventInformationData> alarms, out bool moreEvent)
