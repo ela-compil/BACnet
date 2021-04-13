@@ -118,18 +118,11 @@
             {
                 buffer.buffer[buffer.offset++] = (byte)((source.net & 0xFF00) >> 8);
                 buffer.buffer[buffer.offset++] = (byte)((source.net & 0x00FF) >> 0);
-                // Modif FC
-                // DAL this used to encode the destination address, which is clearly wrong...
-                if (source.net == 0xFFFF)
-                    buffer.buffer[buffer.offset++] = 0;
-                else
+                buffer.buffer[buffer.offset++] = (byte)source.adr.Length;
+                if (source.adr.Length > 0)
                 {
-                    buffer.buffer[buffer.offset++] = (byte)source.adr.Length;
-                    if (source.adr.Length > 0)
-                    {
-                        foreach (var t in source.adr)
-                            buffer.buffer[buffer.offset++] = t;
-                    }
+                    foreach (var t in source.adr)
+                        buffer.buffer[buffer.offset++] = t;
                 }
             }
 
