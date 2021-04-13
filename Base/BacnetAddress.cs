@@ -15,6 +15,9 @@ namespace System.IO.BACnet
         // Modif FC
         public BacnetAddress RoutedSource = null;
 
+        // DAL
+        public BacnetAddress RoutedDestination = null;
+
         public BacnetAddress(BacnetAddressTypes addressType, ushort network = 0, byte[] address = null)
         {
             type = addressType;
@@ -57,7 +60,9 @@ namespace System.IO.BACnet
 
         public override int GetHashCode()
         {
-            return adr.GetHashCode();
+            // DAL this was originally broken...
+            var str = Convert.ToBase64String(adr);
+            return str.GetHashCode();
         }
 
         public override string ToString()
@@ -148,10 +153,17 @@ namespace System.IO.BACnet
             if (RoutedSource == null && d.RoutedSource != null)
                 return false;
 
-            if (d.RoutedSource==null&&RoutedSource == null)
-                return true;
+            // DAL
+            if (RoutedDestination == null && d.RoutedDestination != null)
+                return false;
 
-            return RoutedSource?.Equals(d.RoutedSource) ?? false;
+            if (d.RoutedSource==null&&RoutedSource == null &&
+                d.RoutedDestination == null && RoutedDestination == null)
+                    return true;
+
+            bool rv = RoutedSource?.Equals(d.RoutedSource) ?? false;
+            rv |= RoutedDestination?.Equals(d.RoutedDestination) ?? false;
+            return rv;
         }
 
         // checked if device is routed by curent equipement
@@ -180,6 +192,9 @@ namespace System.IO.BACnet
 
             if (RoutedSource != null)
                 hash += $":{RoutedSource.FullHashString()}";
+
+            if (RoutedDestination != null)
+                hash += $":{RoutedDestination.FullHashString()}";
 
             return hash;
         }

@@ -59,8 +59,9 @@
                 {
                     vendorId = (ushort)((buffer[offset++] << 8) | (buffer[offset++] << 0));
                 }
-                else if (networkMsgType == BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK)
-                    offset += 2;  // Don't care about destination network adress
+                //DAL - this originally made no sense as the higher level code would just ignore network messages
+//                else if (networkMsgType == BacnetNetworkMessageTypes.NETWORK_MESSAGE_WHO_IS_ROUTER_TO_NETWORK)
+//                    offset += 2;  // Don't care about destination network adress
             }
 
             if (buffer[orgOffset + 0] != BACNET_PROTOCOL_VERSION)
@@ -117,17 +118,11 @@
             {
                 buffer.buffer[buffer.offset++] = (byte)((source.net & 0xFF00) >> 8);
                 buffer.buffer[buffer.offset++] = (byte)((source.net & 0x00FF) >> 0);
-                // Modif FC
-                if (destination.net == 0xFFFF)
-                    buffer.buffer[buffer.offset++] = 0;
-                else
+                buffer.buffer[buffer.offset++] = (byte)source.adr.Length;
+                if (source.adr.Length > 0)
                 {
-                    buffer.buffer[buffer.offset++] = (byte)destination.adr.Length;
-                    if (destination.adr.Length > 0)
-                    {
-                        foreach (var t in destination.adr)
-                            buffer.buffer[buffer.offset++] = t;
-                    }
+                    foreach (var t in source.adr)
+                        buffer.buffer[buffer.offset++] = t;
                 }
             }
 

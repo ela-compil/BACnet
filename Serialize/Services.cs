@@ -197,6 +197,44 @@ namespace System.IO.BACnet.Serialize
             ASN1.encode_context_character_string(buffer, 4, ackSource);
             ASN1.bacapp_encode_context_timestamp(buffer, 5, ackTimeStamp);
         }
+        // DAL
+        public static int DecodeAlarmAcknowledge(byte[] buffer, int offset, int apduLen, out uint ackProcessIdentifier, out BacnetObjectId eventObjectIdentifier, out uint eventStateAcked, out string ackSource, out BacnetGenericTime eventTimeStamp, out BacnetGenericTime ackTimeStamp)
+        {
+            eventTimeStamp = default(BacnetGenericTime);
+            ackTimeStamp = default(BacnetGenericTime);
+            ackSource = null;
+            var len = 0;
+            len += ASN1.decode_context_unsigned(buffer, offset + len, 0, out ackProcessIdentifier);
+            ushort type;
+            len += ASN1.decode_context_object_id(buffer, offset + len, 1, out type, out eventObjectIdentifier.instance);
+            eventObjectIdentifier.type = (BacnetObjectTypes)type;
+            len += ASN1.decode_context_enumerated(buffer, offset + len, 2, out eventStateAcked);
+            if (ASN1.decode_is_context_tag(buffer, offset + len, 3))
+            {
+                len += 2; // opening Tag 3 then 2
+                len += ASN1.decode_application_date(buffer, offset + len, out var date);
+                len += ASN1.decode_application_time(buffer, offset + len, out var time);
+                eventTimeStamp.Time = new DateTime(date.Year, date.Month, date.Day, time.Hour, time.Minute,
+                    time.Second, time.Millisecond);
+
+                len += 2; // closing tag 2 then 3
+            }
+            else
+                return -1;
+            len += ASN1.decode_context_character_string(buffer, offset + len, 256, 4, out ackSource);
+            if (ASN1.decode_is_context_tag(buffer, offset + len, 5))
+            {
+                len += 2; // opening Tag 5 then 2
+                len += ASN1.decode_application_date(buffer, offset + len, out var date);
+                len += ASN1.decode_application_time(buffer, offset + len, out var time);
+                ackTimeStamp.Time = new DateTime(date.Year, date.Month, date.Day, time.Hour, time.Minute,
+                    time.Second, time.Millisecond);
+                len += 2; // closing tag 2 then 5
+            }
+            else
+                return -1;
+            return len;
+        }
 
         public static void EncodeAtomicReadFile(EncodeBuffer buffer, bool isStream, BacnetObjectId objectId, int position, uint count)
         {
@@ -1203,6 +1241,18 @@ namespace System.IO.BACnet.Serialize
             else
                 moreEvent = false;
 
+            return len;
+        }
+        // DAL
+        public static int DecodeAlarmSummaryOrEventRequest(byte[] buffer, int offset, int apduLen, bool getEvent, ref BacnetObjectId id)
+        {
+            var len = 0;
+            // object id may be there for get event info, but it is optional
+            if (getEvent && apduLen != 0)
+            {
+                len++; // past opening tag 0
+                len += ASN1.decode_object_id(buffer, offset + len, out id.type, out id.instance);
+            }
             return len;
         }
 
