@@ -1166,7 +1166,7 @@ namespace System.IO.BACnet.Serialize
             EncodeEventNotifyData(buffer, data);
         }
 
-		public static void EncodeAlarmSummary(EncodeBuffer buffer, BacnetObjectId objectIdentifier, uint alarmState, BacnetBitString acknowledgedTransitions)
+        public static void EncodeAlarmSummary(EncodeBuffer buffer, BacnetObjectId objectIdentifier, uint alarmState, BacnetBitString acknowledgedTransitions)
         {
             /* tag 0 - Object Identifier */
             ASN1.encode_application_object_id(buffer, objectIdentifier.type, objectIdentifier.instance);
