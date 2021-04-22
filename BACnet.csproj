@@ -58,6 +58,7 @@
     <Compile Include="Base\BacnetAddressTypes.cs" />
     <Compile Include="Base\BacnetApplicationTags.cs" />
     <Compile Include="Base\BacnetBinaryPv.cs" />
+    <Compile Include="Base\BacnetDailySchedule.cs" />
     <Compile Include="Base\BacnetProgramError.cs" />
     <Compile Include="Base\BacnetProgramRequest.cs" />
     <Compile Include="Base\BacnetProgramState.cs" />
@@ -100,6 +101,7 @@
     <Compile Include="Base\BacnetReliability.cs" />
     <Compile Include="Base\BacnetServicesSupported.cs" />
     <Compile Include="Base\BacnetStatusFlags.cs" />
+    <Compile Include="Base\BacnetTimeValue.cs" />
     <Compile Include="Base\BacnetUnconfirmedServices.cs" />
     <Compile Include="Base\BacnetTimestampTags.cs" />
     <Compile Include="Base\BacnetTrendLogValueType.cs" />
