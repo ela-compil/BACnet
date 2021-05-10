@@ -77,7 +77,7 @@ namespace System.IO.BACnet.Serialize
             ASN1.encode_application_character_string(buffer, objectName);
         }
 
-        public static void EncodeWhoHasBroadcast(EncodeBuffer buffer, int lowLimit, int highLimit, BacnetObjectId objectId, string objectName)
+        public static void EncodeWhoHasBroadcast(EncodeBuffer buffer, int lowLimit, int highLimit, BacnetObjectId? objectId, string objectName)
         {
             /* optional limits - must be used as a pair */
             if (lowLimit >= 0 && lowLimit <= ASN1.BACNET_MAX_INSTANCE && highLimit >= 0 && highLimit <= ASN1.BACNET_MAX_INSTANCE)
@@ -85,13 +85,13 @@ namespace System.IO.BACnet.Serialize
                 ASN1.encode_context_unsigned(buffer, 0, (uint)lowLimit);
                 ASN1.encode_context_unsigned(buffer, 1, (uint)highLimit);
             }
-            if (!string.IsNullOrEmpty(objectName))
+            if (objectId != null)
             {
-                ASN1.encode_context_character_string(buffer, 3, objectName);
+                ASN1.encode_context_object_id(buffer, 2, objectId.Value.type, objectId.Value.instance);
             }
             else
             {
-                ASN1.encode_context_object_id(buffer, 2, objectId.type, objectId.instance);
+                ASN1.encode_context_character_string(buffer, 3, objectName);
             }
         }
 
@@ -148,13 +148,13 @@ namespace System.IO.BACnet.Serialize
         }
 
         // Added by thamersalek
-        public static int DecodeWhoHasBroadcast(byte[] buffer, int offset, int apduLen, out int lowLimit, out int highLimit, out BacnetObjectId objId, out string objName)
+        public static int DecodeWhoHasBroadcast(byte[] buffer, int offset, int apduLen, out int lowLimit, out int highLimit, out BacnetObjectId? objId, out string objName)
         {
             var len = 0;
             uint decodedValue;
 
             objName = null;
-            objId = new BacnetObjectId(BacnetObjectTypes.OBJECT_BINARY_OUTPUT, 0x3FFFFF);
+            objId = null;
             lowLimit = -1;
             highLimit = -1;
 

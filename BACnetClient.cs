@@ -500,7 +500,7 @@ namespace System.IO.BACnet
 
         public delegate void UnconfirmedServiceRequestHandler(BacnetClient sender, BacnetAddress adr, BacnetPduTypes type, BacnetUnconfirmedServices service, byte[] buffer, int offset, int length);
         public event UnconfirmedServiceRequestHandler OnUnconfirmedServiceRequest;
-        public delegate void WhoHasHandler(BacnetClient sender, BacnetAddress adr, int lowLimit, int highLimit, BacnetObjectId objId, string objName);
+        public delegate void WhoHasHandler(BacnetClient sender, BacnetAddress adr, int lowLimit, int highLimit, BacnetObjectId? objId, string objName);
         public event WhoHasHandler OnWhoHas;
         public delegate void IamHandler(BacnetClient sender, BacnetAddress adr, uint deviceId, uint maxAPDU, BacnetSegmentations segmentation, ushort vendorId);
         public event IamHandler OnIam;
@@ -1151,6 +1151,36 @@ namespace System.IO.BACnet
             Transport.Send(b.buffer, Transport.HeaderLength, b.offset - Transport.HeaderLength, receiver, false, 0);
         }
 
+        public void WhoHas(BacnetObjectId objId, int lowLimit = -1, int highLimit = -1, BacnetAddress receiver = null, BacnetAddress source = null)
+        {
+            WhoHasCore(objId, null, lowLimit, highLimit, receiver, source);
+        }
+
+        public void WhoHas(string objName, int lowLimit = -1, int highLimit = -1, BacnetAddress receiver = null, BacnetAddress source = null)
+        {
+            WhoHasCore(null, objName, lowLimit, highLimit, receiver, source);
+        }
+
+        private void WhoHasCore(BacnetObjectId? objId, string objName, int lowLimit, int highLimit, BacnetAddress receiver, BacnetAddress source)
+        {
+            if (receiver == null)
+            {
+                receiver = Transport.GetBroadcastAddress();
+                Log.Debug($"Broadcasting WhoHas {objId?.ToString() ?? objName}");
+            }
+            else
+            {
+                Log.Debug($"Sending WhoHas {objId?.ToString() ?? objName} to {receiver}");
+            }
+
+            var b = GetEncodeBuffer(Transport.HeaderLength);
+            NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, receiver, source);
+            APDU.EncodeUnconfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_WHO_HAS);
+            Services.EncodeWhoHasBroadcast(b, lowLimit, highLimit, objId, objName);
+
+            Transport.Send(b.buffer, Transport.HeaderLength, b.offset - Transport.HeaderLength, receiver, false, 0);
+        }
+
         // ReSharper disable once InconsistentNaming
         public void IHave(BacnetObjectId deviceId, BacnetObjectId objId, string objName, BacnetAddress source = null)
         {
@@ -1163,7 +1193,6 @@ namespace System.IO.BACnet
             Services.EncodeIhaveBroadcast(b, deviceId, objId, objName);
 
             Transport.Send(b.buffer, Transport.HeaderLength, b.offset - Transport.HeaderLength, broadcast, false, 0);
-
         }
 
         public void SendUnconfirmedEventNotification(BacnetAddress adr, BacnetEventNotificationData eventData, BacnetAddress source = null)
