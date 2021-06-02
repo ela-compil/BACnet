@@ -158,12 +158,19 @@ namespace System.IO.BACnet
         /// </remarks>
         private static void DisableConnReset(UdpClient client)
         {
-            const uint IOC_IN = 0x80000000;
-            const uint IOC_VENDOR = 0x18000000;
-            const uint SIO_UDP_CONNRESET = IOC_IN | IOC_VENDOR | 12;
+            if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+            {
+                const uint IOC_IN = 0x80000000;
+                const uint IOC_VENDOR = 0x18000000;
+                const uint SIO_UDP_CONNRESET = IOC_IN | IOC_VENDOR | 12;
 
-            client?.Client.IOControl(unchecked((int)SIO_UDP_CONNRESET),
-                new[] { System.Convert.ToByte(false) }, null);
+                client?.Client.IOControl(unchecked((int)SIO_UDP_CONNRESET),
+                    new[] { System.Convert.ToByte(false) }, null);
+            }
+            else
+            {
+                client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
+            }
         }
 
         protected void Close()
