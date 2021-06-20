@@ -1,10 +1,26 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>net40;netstandard2.0</TargetFrameworks>
+    <Company>Ela-compil sp. z o. o.</Company>
+    <Authors>Ela-compil and contributors</Authors>
+    <Product>BACnet</Product>
+    <Copyright>Copyright (c) Ela-compil sp. z o. o.</Copyright>
+    <Description>BACnet protocol library for .NET</Description>
     <OutputType>Library</OutputType>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RootNamespace>System.IO.BACnet</RootNamespace>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <PackageTags>bacnet;btl;automation</PackageTags>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/ela-compil/BACnet</RepositoryUrl>
+    <PackageIcon>logo.png</PackageIcon>
+    <PackageIconUrl>https://raw.githubusercontent.com/ela-compil/BACnet/master/logo.png</PackageIconUrl>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="logo.png" Pack="true" Visible="false" PackagePath="" />
+  </ItemGroup>
 
   <!-- Vendor Packages -->
   <ItemGroup>
