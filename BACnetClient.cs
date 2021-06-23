@@ -1452,16 +1452,28 @@ namespace System.IO.BACnet
             var res = (BacnetAsyncResult)result;
             itemCount = 0;
             trendbuffer = null;
-
+            var timeout = 40 * 1000;
             ex = res.Error;
-            if (ex == null && !res.WaitForDone(40 * 1000))
-                ex = new Exception("Wait Timeout");
+
+            if (ex == null && !res.WaitForDone(timeout))
+            {
+                ex = new TimeoutException($"Wait timeout at {nameof(EndReadRangeRequest)} after {timeout} ms");
+            }
 
             if (ex == null)
             {
-                itemCount = Services.DecodeReadRangeAcknowledge(res.Result, 0, res.Result.Length, out trendbuffer);
-                if (itemCount == 0)
-                    ex = new Exception("Decode");
+                try
+                {
+                    itemCount = Services.DecodeReadRangeAcknowledge(res.Result, 0, res.Result.Length, out trendbuffer);
+                    if (itemCount == 0)
+                    {
+                        trendbuffer = new byte[0];
+                    }
+                }
+                catch (Exception exception)
+                {
+                    ex = exception;
+                }
             }
 
             res.Dispose();
