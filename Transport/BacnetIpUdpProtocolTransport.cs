@@ -167,10 +167,6 @@ namespace System.IO.BACnet
                 client?.Client.IOControl(unchecked((int)SIO_UDP_CONNRESET),
                     new[] { System.Convert.ToByte(false) }, null);
             }
-            else
-            {
-                client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true);
-            }
         }
 
         protected void Close()
