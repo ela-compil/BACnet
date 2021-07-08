@@ -19,13 +19,13 @@ namespace System.IO.BACnet
         private object any_value;
         /* } */
 
-        public BacnetBitString statusFlags;
+        public BacnetStatusFlags statusFlags;
 
-        public BacnetLogRecord(BacnetTrendLogValueType type, object value, DateTime stamp, uint status)
+        public BacnetLogRecord(BacnetTrendLogValueType type, object value, DateTime timestamp, BacnetStatusFlags status)
         {
             this.type = type;
-            timestamp = stamp;
-            statusFlags = BacnetBitString.ConvertFromInt(status);
+            this.timestamp = timestamp;
+            statusFlags = status;
             any_value = null;
             Value = value;
         }
