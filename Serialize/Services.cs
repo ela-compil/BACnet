@@ -990,6 +990,13 @@ namespace System.IO.BACnet.Serialize
                             len += ASN1.decode_context_unsigned(buffer, offset + len, 2, out eventData.unsignedRange_exceededLimit);
                             break;
 
+                        case BacnetEventTypes.EVENT_EXTENDED:
+                            len += ASN1.decode_context_unsigned(buffer, offset + len, 0, out eventData.extended_vendorId);
+                            len += ASN1.decode_context_unsigned(buffer, offset + len, 1, out eventData.extended_eventType);
+                            // Missing decoding of extended Parameters - a sequence of primitive or constructed values
+                            // whose content and interpretation is specific to the proprietary event algorithm.
+                            break;
+
                         default:
                             return -1;
                     }

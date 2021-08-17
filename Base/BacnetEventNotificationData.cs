@@ -80,6 +80,11 @@ namespace System.IO.BACnet
         public uint unsignedRange_exceedingValue;
         public BacnetBitString unsignedRange_statusFlags;
         public uint unsignedRange_exceededLimit;
+        /*
+         ** EVENT_EXTENDED
+         */
+        public uint extended_vendorId;
+        public uint extended_eventType;
 
         public override string ToString()
         {
@@ -122,6 +127,9 @@ namespace System.IO.BACnet
                 case BacnetEventTypes.EVENT_UNSIGNED_RANGE:
                     return $"exceedingValue: {unsignedRange_exceedingValue}, statusFlags: {unsignedRange_statusFlags}, "
                            + $"exceededLimit: {unsignedRange_exceededLimit}";
+
+                case BacnetEventTypes.EVENT_EXTENDED:
+                    return $"vendorId: {extended_vendorId}, extendedEventType: {extended_eventType}";
 
                 default:
                     return null;
