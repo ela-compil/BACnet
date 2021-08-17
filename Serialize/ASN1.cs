@@ -202,7 +202,7 @@ namespace System.IO.BACnet.Serialize
             encode_bacnet_enumerated(buffer, value);
         }
 
-        public static void encode_bacnet_signed(EncodeBuffer buffer, int value)
+        public static void encode_bacnet_signed(EncodeBuffer buffer, long value)
         {
             /* don't encode the leading X'FF' or X'00' of the two's compliment.
                That is, the first octet of any multi-octet encoded value shall
@@ -213,10 +213,12 @@ namespace System.IO.BACnet.Serialize
                 buffer.Add((byte)(sbyte)value);
             else if (value >= -32768 && value < 32768)
                 encode_signed16(buffer, (short)value);
-            else if (value > -8388608 && value < 8388608)
-                encode_signed24(buffer, value);
+            else if (value > -8388607 && value < 8388608)
+                encode_signed24(buffer, (int)value);
+            else if (value > -2147483648 && value < 2147483648)
+                encode_signed32(buffer, (int)value);
             else
-                encode_signed32(buffer, value);
+                encode_signed64(buffer, value);
         }
 
         public static void encode_octetString(EncodeBuffer buffer, byte[] octetString, int octetOffset, int octetCount)
@@ -844,6 +846,19 @@ namespace System.IO.BACnet.Serialize
 
         public static void encode_signed32(EncodeBuffer buffer, int value)
         {
+            buffer.Add((byte)((value & 0xff000000) >> 24));
+            buffer.Add((byte)((value & 0x00ff0000) >> 16));
+            buffer.Add((byte)((value & 0x0000ff00) >> 8));
+            buffer.Add((byte)((value & 0x000000ff) >> 0));
+        }
+
+        public static void encode_signed64(EncodeBuffer buffer, long value)
+        {
+            buffer.Add((byte)(value >> 56));
+            buffer.Add((byte)((value & 0xff000000000000) >> 48));
+            buffer.Add((byte)((value & 0xff0000000000) >> 40));
+            buffer.Add((byte)((value & 0xff00000000) >> 32));
+
             buffer.Add((byte)((value & 0xff000000) >> 24));
             buffer.Add((byte)((value & 0x00ff0000) >> 16));
             buffer.Add((byte)((value & 0x0000ff00) >> 8));
