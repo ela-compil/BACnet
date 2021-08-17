@@ -1178,6 +1178,7 @@ namespace System.IO.BACnet.Serialize
             value = (buffer[offset + 0] << 16) & 0x00ff0000;
             value |= (buffer[offset + 1] << 8) & 0x0000ff00;
             value |= buffer[offset + 2] & 0x000000ff;
+            if ((value & 0x800000) != 0) value |= 0xff << 24; // set sign
             return 3;
         }
 
