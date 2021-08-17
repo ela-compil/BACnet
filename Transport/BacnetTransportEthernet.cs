@@ -62,7 +62,7 @@ namespace System.IO.BACnet
 
         public override BacnetAddress GetBroadcastAddress()
         {
-            return new BacnetAddress(BacnetAddressTypes.Ethernet, "FF-FF-FF-FF-FF-FF");
+            return new BacnetAddress(BacnetAddressTypes.Ethernet, "FF-FF-FF-FF-FF-FF", 65535);
         }
 
         public override void Start()
