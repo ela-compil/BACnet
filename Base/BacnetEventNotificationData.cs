@@ -85,6 +85,7 @@ namespace System.IO.BACnet
          */
         public uint extended_vendorId;
         public uint extended_eventType;
+        public object[] extended_parameters;
 
         public override string ToString()
         {
@@ -129,7 +130,7 @@ namespace System.IO.BACnet
                            + $"exceededLimit: {unsignedRange_exceededLimit}";
 
                 case BacnetEventTypes.EVENT_EXTENDED:
-                    return $"vendorId: {extended_vendorId}, extendedEventType: {extended_eventType}";
+                    return $"vendorId: {extended_vendorId}, extendedEventType: {extended_eventType}, parameters: [{extended_parameters?.Length ?? 0}]";
 
                 default:
                     return null;

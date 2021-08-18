@@ -993,8 +993,45 @@ namespace System.IO.BACnet.Serialize
                         case BacnetEventTypes.EVENT_EXTENDED:
                             len += ASN1.decode_context_unsigned(buffer, offset + len, 0, out eventData.extended_vendorId);
                             len += ASN1.decode_context_unsigned(buffer, offset + len, 1, out eventData.extended_eventType);
-                            // Missing decoding of extended Parameters - a sequence of primitive or constructed values
-                            // whose content and interpretation is specific to the proprietary event algorithm.
+                            if (!ASN1.decode_is_opening_tag_number(buffer, offset + len, 2))
+                                return -1;
+
+                            len++;
+                            eventData.extended_parameters = new object[0];
+
+                            while (!ASN1.decode_is_closing_tag_number(buffer, offset + len, 2))
+                            {
+                                var paramCount = eventData.extended_parameters.Length + 1;
+                                Array.Resize(ref eventData.extended_parameters, paramCount);
+
+                                len += ASN1.decode_tag_number_and_value(buffer, offset + len, out var tagNumber, out lenValue);
+
+                                switch ((BacnetApplicationTags)tagNumber)
+                                {
+                                    case BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED:
+                                        len += ASN1.decode_enumerated(buffer, offset + len, lenValue, out var enumeratedValue);
+                                        eventData.extended_parameters[paramCount - 1] = enumeratedValue;
+                                        break;
+
+                                    case BacnetApplicationTags.BACNET_APPLICATION_TAG_BIT_STRING:
+                                        len += ASN1.decode_bitstring(buffer, offset + len, lenValue, out var bitStringValue);
+                                        eventData.extended_parameters[paramCount - 1]  = bitStringValue;
+                                        break;
+
+                                    case BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT:
+                                        len += ASN1.decode_unsigned(buffer, offset + len, lenValue, out var unsignedValue);
+                                        eventData.extended_parameters[paramCount - 1]  = unsignedValue;
+                                        break;
+
+                                    default:
+                                        var octetStringValue = new byte[lenValue];
+                                        len += ASN1.decode_octet_string(buffer, offset + len, apduLen, octetStringValue, 0, lenValue);
+                                        eventData.extended_parameters[paramCount - 1] = octetStringValue;
+                                        break;
+                                }
+                            }
+
+                            len++;
                             break;
 
                         default:

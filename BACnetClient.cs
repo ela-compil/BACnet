@@ -388,7 +388,7 @@ namespace System.IO.BACnet
                         // DAL
                         SendAbort(address, invokeId, BacnetAbortReason.OTHER);
                         //ErrorResponse(address, service, invokeId, BacnetErrorClasses.ERROR_CLASS_SERVICES, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
-                        Log.Warn("Couldn't decode Event/Alarm Notification");
+                        Log.Warn("Couldn't decode confirmed Event/Alarm Notification");
                     }
                 }
                 else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_READ_RANGE && OnReadRange != null)
@@ -567,7 +567,7 @@ namespace System.IO.BACnet
                     if (Services.DecodeEventNotifyData(buffer, offset, length, out var eventData) >= 0)
                         OnEventNotify(this, address, 0, eventData, false);
                     else
-                        Log.Warn("Couldn't decode Event/Alarm Notification");
+                        Log.Warn("Couldn't decode unconfirmed Event/Alarm Notification");
                 }
                 else
                 {
