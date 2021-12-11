@@ -2560,7 +2560,7 @@ public class Services
                     break;
 
                 case BacnetTrendLogValueType.TL_TYPE_BOOL:
-                    records[curveNumber].Value = buffer[offset + len] > 0 ? true : false;
+                    records[curveNumber].Value = buffer[offset + len] > 0;
                     len++;
                     break;
 
