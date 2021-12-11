@@ -2370,7 +2370,7 @@ public class ASN1
     {
         if (!decode_is_opening_tag_number(buffer, offset, tagNumber))
         {
-            value = default(BacnetPropertyState);
+            value = default;
             return -1;
         }
 
@@ -2388,7 +2388,7 @@ public class ASN1
 
     public static int decode_property_state(byte[] buffer, int offset, out BacnetPropertyState value)
     {
-        value = default(BacnetPropertyState);
+        value = default;
 
         var len = decode_tag_number_and_value(buffer, offset, out value.tag, out uint lenValueType);
         if (len == -1)
@@ -2460,7 +2460,7 @@ public class ASN1
     {
         if (!decode_is_context_tag(buffer, offset, tagNumber) || decode_is_closing_tag(buffer, offset))
         {
-            value = default(TEnum);
+            value = default;
             return -1;
         }
 

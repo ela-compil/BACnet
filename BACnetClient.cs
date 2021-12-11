@@ -444,7 +444,7 @@ public class BacnetClient : IDisposable
             else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_GET_EVENT_INFORMATION && OnGetAlarmSummaryOrEventInformation != null)
             {
                 // DAL
-                BacnetObjectId objectId = default(BacnetObjectId);
+                BacnetObjectId objectId = default;
                 objectId.Type = BacnetObjectTypes.MAX_BACNET_OBJECT_TYPE;
                 if (Services.DecodeAlarmSummaryOrEventRequest(buffer, offset, length, true, ref objectId) >= 0)
                 {

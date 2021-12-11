@@ -198,8 +198,8 @@ public class Services
     // DAL
     public static int DecodeAlarmAcknowledge(byte[] buffer, int offset, int apduLen, out uint ackProcessIdentifier, out BacnetObjectId eventObjectIdentifier, out uint eventStateAcked, out string ackSource, out BacnetGenericTime eventTimeStamp, out BacnetGenericTime ackTimeStamp)
     {
-        eventTimeStamp = default(BacnetGenericTime);
-        ackTimeStamp = default(BacnetGenericTime);
+        eventTimeStamp = default;
+        ackTimeStamp = default;
         ackSource = null;
         var len = 0;
         len += ASN1.decode_context_unsigned(buffer, offset + len, 0, out ackProcessIdentifier);
