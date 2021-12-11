@@ -394,8 +394,8 @@ public class DeviceStorage
     public void Save(string path)
     {
         var s = new XmlSerializer(typeof(DeviceStorage));
-        using (var fs = new FileStream(path, FileMode.Create, FileAccess.Write))
-            s.Serialize(fs, this);
+        using var fs = new FileStream(path, FileMode.Create, FileAccess.Write);
+        s.Serialize(fs, this);
     }
 
     /// <summary>
