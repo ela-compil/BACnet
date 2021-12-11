@@ -136,7 +136,7 @@ public class BacnetAddress : ASN1.IEncode
 
     public override bool Equals(object obj)
     {
-        if (!(obj is BacnetAddress)) return false;
+        if (obj is not BacnetAddress) return false;
         var d = (BacnetAddress)obj;
         if (adr == null && d.adr == null) return true;
         if (adr == null || d.adr == null) return false;

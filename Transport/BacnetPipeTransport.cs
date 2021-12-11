@@ -62,7 +62,7 @@ public class BacnetPipeTransport : IBacnetSerialTransport
 
     public override bool Equals(object obj)
     {
-        if (!(obj is BacnetPipeTransport)) return false;
+        if (obj is not BacnetPipeTransport) return false;
         var a = (BacnetPipeTransport)obj;
         return Name.Equals(a.Name);
     }
@@ -114,11 +114,8 @@ public class BacnetPipeTransport : IBacnetSerialTransport
 
     private bool WaitForConnection(int timeoutMs)
     {
-        if (_conn.IsConnected)
-            return true;
-
-        if (!(_conn is NamedPipeServerStream))
-            return true;
+        if (_conn.IsConnected) return true;
+        if (_conn is not NamedPipeServerStream) return true;
 
         var server = (NamedPipeServerStream)_conn;
 

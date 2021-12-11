@@ -20,9 +20,9 @@ public struct DeviceReportingRecipient : ASN1.IEncode
         WeekofDay = (BacnetBitString)v0.Value;
         fromTime = (DateTime)v1.Value;
         toTime = (DateTime)v2.Value;
-        if (v3.Value is BacnetObjectId)
+        if (v3.Value is BacnetObjectId id)
         {
-            Id = (BacnetObjectId)v3.Value;
+            Id = id;
         }
         else
         {

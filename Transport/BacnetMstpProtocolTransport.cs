@@ -173,7 +173,7 @@ public class BacnetMstpProtocolTransport : BacnetTransportBase
 
     public override bool Equals(object obj)
     {
-        if (!(obj is BacnetMstpProtocolTransport)) return false;
+        if (obj is not BacnetMstpProtocolTransport) return false;
         var a = (BacnetMstpProtocolTransport)obj;
         return _port.Equals(a._port);
     }

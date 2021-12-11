@@ -77,7 +77,7 @@ public class BacnetPtpProtocolTransport : BacnetTransportBase
 
     public override bool Equals(object obj)
     {
-        if (!(obj is BacnetPtpProtocolTransport)) return false;
+        if (obj is not BacnetPtpProtocolTransport) return false;
         var a = (BacnetPtpProtocolTransport)obj;
         return _port.Equals(a._port);
     }
