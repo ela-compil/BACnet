@@ -15,12 +15,12 @@ public class BVLC
     public const BacnetMaxAdpu BVLC_MAX_APDU = BacnetMaxAdpu.MAX_APDU1476;
 
     // Two lists for optional BBMD activity
-    readonly List<KeyValuePair<IPEndPoint, DateTime>> _foreignDevices = new List<KeyValuePair<IPEndPoint, DateTime>>();
-    private readonly List<KeyValuePair<IPEndPoint, IPAddress>> _bbmds = new List<KeyValuePair<IPEndPoint, IPAddress>>();
+    readonly List<KeyValuePair<IPEndPoint, DateTime>> _foreignDevices = new();
+    private readonly List<KeyValuePair<IPEndPoint, IPAddress>> _bbmds = new();
 
     // Contains the rules to accept FRD based on the IP adress
     // If empty it's equal to *.*.*.*, everyone allows
-    private readonly List<Regex> _autorizedFdr = new List<Regex>();
+    private readonly List<Regex> _autorizedFdr = new();
 
     public ILog Log { get; set; } = LogManager.GetLogger<BVLC>();
 

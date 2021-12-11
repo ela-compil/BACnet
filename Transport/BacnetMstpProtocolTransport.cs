@@ -66,10 +66,10 @@ public class BacnetMstpProtocolTransport : BacnetTransportBase
     private byte _ps;
 
     private MessageFrame _reply;
-    private readonly ManualResetEvent _replyMutex = new ManualResetEvent(false);
+    private readonly ManualResetEvent _replyMutex = new(false);
     private byte _replySource;
     private const byte RetryToken = 1;
-    private readonly LinkedList<MessageFrame> _sendQueue = new LinkedList<MessageFrame>();
+    private readonly LinkedList<MessageFrame> _sendQueue = new();
     private bool _soleMaster;
     private byte _tokenCount;
     private Thread _transmitThread;

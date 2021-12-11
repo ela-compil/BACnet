@@ -9,7 +9,7 @@ public class BacnetPtpProtocolTransport : BacnetTransportBase
     public const int T_FRAME_ABORT = 2000;
     private bool _isConnected;
     private readonly bool _isServer;
-    private readonly ManualResetEvent _maySend = new ManualResetEvent(false);
+    private readonly ManualResetEvent _maySend = new(false);
     private IBacnetSerialTransport _port;
     private bool _sequenceCounter;
     private Thread _thread;

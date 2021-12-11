@@ -10,15 +10,13 @@ public class BVLCV6
     public const BacnetMaxAdpu BVLC_MAX_APDU = BacnetMaxAdpu.MAX_APDU1476;
     // Contains the rules to accept FRD based on the IP adress
     // If empty it's equal to * , everyone allows
-    private readonly List<Regex> _autorizedFDR = new List<Regex>();
+    private readonly List<Regex> _autorizedFDR = new();
 
     private bool _bbmdFdServiceActivated;
-    private readonly List<IPEndPoint> _bbmds = new List<IPEndPoint>();
+    private readonly List<IPEndPoint> _bbmds = new();
     private readonly BacnetAddress _broadcastAdd;
     // Two lists for optional BBMD activity
-    private readonly List<KeyValuePair<IPEndPoint, DateTime>> _foreignDevices =
-        new List<KeyValuePair<IPEndPoint, DateTime>>();
-
+    private readonly List<KeyValuePair<IPEndPoint, DateTime>> _foreignDevices = new();
     private readonly BacnetIpV6UdpProtocolTransport _myTransport;
     public bool RandomVmac;
 

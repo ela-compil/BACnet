@@ -35,16 +35,16 @@ public class BacnetClient : IDisposable
     private int _retries;
     private byte _invokeId;
 
-    private readonly LastSegmentAck _lastSegmentAck = new LastSegmentAck();
+    private readonly LastSegmentAck _lastSegmentAck = new();
     private uint _writepriority;
 
     /// <summary>
     /// Dictionary of List of Tuples with sequence-number and byte[] per invoke-id
     /// TODO: invoke-id should be PER (remote) DEVICE!
     /// </summary>
-    private Dictionary<byte, List<Tuple<byte, byte[]>>> _segmentsPerInvokeId = new Dictionary<byte, List<Tuple<byte, byte[]>>>();
-    private Dictionary<byte, object> _locksPerInvokeId = new Dictionary<byte, object>();
-    private Dictionary<byte, byte> _expectedSegmentsPerInvokeId = new Dictionary<byte, byte>();
+    private Dictionary<byte, List<Tuple<byte, byte[]>>> _segmentsPerInvokeId = new();
+    private Dictionary<byte, object> _locksPerInvokeId = new();
+    private Dictionary<byte, byte> _expectedSegmentsPerInvokeId = new();
 
     public const int DEFAULT_UDP_PORT = 0xBAC0;
     public const int DEFAULT_TIMEOUT = 1000;
@@ -94,8 +94,8 @@ public class BacnetClient : IDisposable
 
     private class LastSegmentAck
     {
-        private readonly ManualResetEvent _wait = new ManualResetEvent(false);
-        private readonly object _lockObject = new object();
+        private readonly ManualResetEvent _wait = new(false);
+        private readonly object _lockObject = new();
         private BacnetAddress _address;
         private byte _invokeId;
 
