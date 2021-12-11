@@ -1,8 +1,7 @@
-﻿namespace System.IO.BACnet
+﻿namespace System.IO.BACnet;
+
+public enum BacnetFileAccessMethod
 {
-    public enum BacnetFileAccessMethod
-    {
-        RECORD_ACCESS = 0,
-        STREAM_ACCESS = 1
-    }
+    RECORD_ACCESS = 0,
+    STREAM_ACCESS = 1
 }

@@ -1,14 +1,13 @@
-namespace System.IO.BACnet
+namespace System.IO.BACnet;
+
+public enum BacnetAddressTypes
 {
-    public enum BacnetAddressTypes
-    {
-        None,
-        IP,
-        MSTP,
-        Ethernet,
-        ArcNet,
-        LonTalk,
-        PTP,
-        IPV6
-    }
+    None,
+    IP,
+    MSTP,
+    Ethernet,
+    ArcNet,
+    LonTalk,
+    PTP,
+    IPV6
 }

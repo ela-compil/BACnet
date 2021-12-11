@@ -1,75 +1,74 @@
-namespace System.IO.BACnet
+namespace System.IO.BACnet;
+
+public class BacnetSerialPortTransport : IBacnetSerialTransport
 {
-    public class BacnetSerialPortTransport : IBacnetSerialTransport
+    private readonly string _portName;
+    private readonly SerialPort _port;
+
+    public int BytesToRead => _port?.BytesToRead ?? 0;
+
+    public BacnetSerialPortTransport(string portName, int baudRate)
     {
-        private readonly string _portName;
-        private readonly SerialPort _port;
+        _portName = portName;
+        _port = new SerialPort(_portName, baudRate, Parity.None, 8, StopBits.One);
+    }
 
-        public int BytesToRead => _port?.BytesToRead ?? 0;
+    public override bool Equals(object obj)
+    {
+        if (!(obj is BacnetSerialPortTransport))
+            return false;
 
-        public BacnetSerialPortTransport(string portName, int baudRate)
+        var a = (BacnetSerialPortTransport)obj;
+        return _portName.Equals(a._portName);
+    }
+
+    public override int GetHashCode()
+    {
+        return _portName.GetHashCode();
+    }
+
+    public override string ToString()
+    {
+        return _portName;
+    }
+
+    public void Open()
+    {
+        _port.Open();
+    }
+
+    public void Write(byte[] buffer, int offset, int length)
+    {
+        _port?.Write(buffer, offset, length);
+    }
+
+    public int Read(byte[] buffer, int offset, int length, int timeoutMs)
+    {
+        if (_port == null) return 0;
+        _port.ReadTimeout = timeoutMs;
+
+        try
         {
-            _portName = portName;
-            _port = new SerialPort(_portName, baudRate, Parity.None, 8, StopBits.One);
+            var rx = _port.Read(buffer, offset, length);
+            return rx;
         }
-
-        public override bool Equals(object obj)
+        catch (TimeoutException)
         {
-            if (!(obj is BacnetSerialPortTransport))
-                return false;
-
-            var a = (BacnetSerialPortTransport)obj;
-            return _portName.Equals(a._portName);
+            return -BacnetMstpProtocolTransport.ETIMEDOUT;
         }
-
-        public override int GetHashCode()
+        catch (Exception)
         {
-            return _portName.GetHashCode();
+            return -1;
         }
+    }
 
-        public override string ToString()
-        {
-            return _portName;
-        }
+    public void Close()
+    {
+        _port?.Close();
+    }
 
-        public void Open()
-        {
-            _port.Open();
-        }
-
-        public void Write(byte[] buffer, int offset, int length)
-        {
-            _port?.Write(buffer, offset, length);
-        }
-
-        public int Read(byte[] buffer, int offset, int length, int timeoutMs)
-        {
-            if (_port == null) return 0;
-            _port.ReadTimeout = timeoutMs;
-
-            try
-            {
-                var rx = _port.Read(buffer, offset, length);
-                return rx;
-            }
-            catch (TimeoutException)
-            {
-                return -BacnetMstpProtocolTransport.ETIMEDOUT;
-            }
-            catch (Exception)
-            {
-                return -1;
-            }
-        }
-
-        public void Close()
-        {
-            _port?.Close();
-        }
-
-        public void Dispose()
-        {
-            Close();
-        }
+    public void Dispose()
+    {
+        Close();
     }
 }

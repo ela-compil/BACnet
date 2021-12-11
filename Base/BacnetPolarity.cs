@@ -1,8 +1,7 @@
-namespace System.IO.BACnet
+namespace System.IO.BACnet;
+
+public enum BacnetPolarity : byte
 {
-    public enum BacnetPolarity : byte
-    {
-        POLARITY_NORMAL = 0,
-        POLARITY_REVERSE = 1
-    }
+    POLARITY_NORMAL = 0,
+    POLARITY_REVERSE = 1
 }
