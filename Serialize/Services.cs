@@ -203,8 +203,7 @@ public class Services
         ackSource = null;
         var len = 0;
         len += ASN1.decode_context_unsigned(buffer, offset + len, 0, out ackProcessIdentifier);
-        ushort type;
-        len += ASN1.decode_context_object_id(buffer, offset + len, 1, out type, out eventObjectIdentifier.instance);
+        len += ASN1.decode_context_object_id(buffer, offset + len, 1, out ushort type, out eventObjectIdentifier.instance);
         eventObjectIdentifier.type = (BacnetObjectTypes)type;
         len += ASN1.decode_context_enumerated(buffer, offset + len, 2, out eventStateAcked);
         if (ASN1.decode_is_context_tag(buffer, offset + len, 3))

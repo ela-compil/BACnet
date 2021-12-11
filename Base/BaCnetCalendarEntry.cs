@@ -40,8 +40,7 @@ public struct BACnetCalendarEntry : ASN1.IEncode, ASN1.IDecode
 
         while (true)
         {
-            byte tagNumber;
-            len += ASN1.decode_tag_number(buffer, offset + len, out tagNumber);
+            len += ASN1.decode_tag_number(buffer, offset + len, out byte tagNumber);
 
             switch (tagNumber)
             {

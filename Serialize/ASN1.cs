@@ -1991,8 +1991,7 @@ public class ASN1
             }
             if (objectType == BacnetObjectTypes.OBJECT_GROUP && propertyId == BacnetPropertyIds.PROP_PRESENT_VALUE)
             {
-                BacnetReadAccessResult v;
-                tagLen = decode_read_access_result(address, buffer, offset, maxOffset, out v);
+                tagLen = decode_read_access_result(address, buffer, offset, maxOffset, out BacnetReadAccessResult v);
                 if (tagLen < 0) return -1;
                 value.Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_READ_ACCESS_RESULT;
                 value.Value = v;

@@ -88,9 +88,7 @@ public class DeviceStorage
 
     public int ReadPropertyValue(BacnetObjectId objectId, BacnetPropertyIds propertyId)
     {
-        IList<BacnetValue> value;
-
-        if (ReadProperty(objectId, propertyId, Serialize.ASN1.BACNET_ARRAY_ALL, out value) != ErrorCodes.Good)
+        if (ReadProperty(objectId, propertyId, Serialize.ASN1.BACNET_ARRAY_ALL, out IList<BacnetValue> value) != ErrorCodes.Good)
             return 0;
 
         if (value == null || value.Count < 1)
@@ -110,9 +108,7 @@ public class DeviceStorage
         //overrides
         if (ReadOverride != null)
         {
-            ErrorCodes status;
-            bool handled;
-            ReadOverride(objectId, propertyId, arrayIndex, out value, out status, out handled);
+            ReadOverride(objectId, propertyId, arrayIndex, out value, out ErrorCodes status, out bool handled);
             if (handled)
                 return status;
         }
@@ -210,10 +206,8 @@ public class DeviceStorage
 
     public void WritePropertyValue(BacnetObjectId objectId, BacnetPropertyIds propertyId, int value)
     {
-        IList<BacnetValue> readValues;
-
         //get existing type
-        if (ReadProperty(objectId, propertyId, Serialize.ASN1.BACNET_ARRAY_ALL, out readValues) != ErrorCodes.Good)
+        if (ReadProperty(objectId, propertyId, Serialize.ASN1.BACNET_ARRAY_ALL, out IList<BacnetValue> readValues) != ErrorCodes.Good)
             return;
 
         if (readValues == null || readValues.Count == 0)
@@ -235,9 +229,7 @@ public class DeviceStorage
         //overrides
         if (WriteOverride != null)
         {
-            bool handled;
-            ErrorCodes status;
-            WriteOverride(objectId, propertyId, arrayIndex, value, out status, out handled);
+            WriteOverride(objectId, propertyId, arrayIndex, value, out ErrorCodes status, out bool handled);
             if (handled)
                 return status;
         }

@@ -144,8 +144,7 @@ public class BVLCV6
         // Broadcast if required
         if (toGlobalBroadcast)
         {
-            IPEndPoint ep;
-            BacnetIpV6UdpProtocolTransport.Convert(_broadcastAdd, out ep);
+            BacnetIpV6UdpProtocolTransport.Convert(_broadcastAdd, out IPEndPoint ep);
             _myTransport.Send(b, msgLength + 18, ep);
         }
     }
@@ -197,8 +196,7 @@ public class BVLCV6
     // quite the same frame as the previous one
     private void SendAddressResolutionRequest(byte[] vMacDest)
     {
-        IPEndPoint ep;
-        BacnetIpV6UdpProtocolTransport.Convert(_broadcastAdd, out ep);
+        BacnetIpV6UdpProtocolTransport.Convert(_broadcastAdd, out IPEndPoint ep);
 
         var b = new byte[10];
         First7BytesHeaderEncode(b, BacnetBvlcV6Functions.BVLC_ADDRESS_RESOLUTION, 10);
@@ -310,8 +308,7 @@ public class BVLCV6
                                                       // unicast mode and not by the way of the multicast address
                                                       // If not, it's not really a big problem, devices on the local net will 
                                                       // receive two times the message (after all it's just WhoIs, Iam, ...)
-                        IPEndPoint ep;
-                        BacnetIpV6UdpProtocolTransport.Convert(_broadcastAdd, out ep);
+                        BacnetIpV6UdpProtocolTransport.Convert(_broadcastAdd, out IPEndPoint ep);
                         _myTransport.Send(buffer, msgLength, ep);
                     }
                 }

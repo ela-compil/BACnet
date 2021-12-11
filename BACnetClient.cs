@@ -1683,11 +1683,9 @@ public class BacnetClient : IDisposable
     public Task<IList<BacnetValue>> ReadPropertyAsync(BacnetAddress address, BacnetObjectId objectId,
         BacnetPropertyIds propertyId, byte invokeId = 0, uint arrayIndex = ASN1.BACNET_ARRAY_ALL)
     {
-        IList<BacnetValue> result;
-
         return Task<IList<BacnetValue>>.Factory.StartNew(() =>
         {
-            if (!ReadPropertyRequest(address, objectId, propertyId, out result, invokeId, arrayIndex))
+            if (!ReadPropertyRequest(address, objectId, propertyId, out IList<BacnetValue> result, invokeId, arrayIndex))
                 throw new Exception($"Failed to read property {propertyId} of {objectId} from {address}");
 
             return result;
