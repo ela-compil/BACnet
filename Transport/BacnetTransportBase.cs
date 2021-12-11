@@ -1,6 +1,4 @@
-﻿using Common.Logging;
-
-namespace System.IO.BACnet
+﻿namespace System.IO.BACnet
 {
     public abstract class BacnetTransportBase : IBacnetTransport
     {

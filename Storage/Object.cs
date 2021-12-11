@@ -1,5 +1,3 @@
-using System.Xml.Serialization;
-
 namespace System.IO.BACnet.Storage
 {
     [Serializable]

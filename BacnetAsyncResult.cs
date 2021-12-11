@@ -1,5 +1,3 @@
-using System.Threading;
-
 namespace System.IO.BACnet
 {
     public class BacnetAsyncResult : IAsyncResult, IDisposable

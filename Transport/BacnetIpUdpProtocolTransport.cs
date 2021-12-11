@@ -24,14 +24,6 @@
 *
 *********************************************************************/
 
-using System.Text;
-using System.IO.BACnet.Serialize;
-using System.Linq;
-using System.Net;
-using System.Net.NetworkInformation;
-using System.Net.Sockets;
-using System.Threading;
-
 namespace System.IO.BACnet
 {
     /// <summary>

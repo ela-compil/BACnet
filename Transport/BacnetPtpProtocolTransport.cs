@@ -1,8 +1,3 @@
-using System.Collections.Generic;
-using System.IO.BACnet.Serialize;
-using System.Text;
-using System.Threading;
-
 namespace System.IO.BACnet
 {
     /// <summary>

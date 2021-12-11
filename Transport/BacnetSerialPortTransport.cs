@@ -1,5 +1,3 @@
-using System.IO.Ports;
-
 namespace System.IO.BACnet
 {
     public class BacnetSerialPortTransport : IBacnetSerialTransport

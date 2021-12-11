@@ -1,6 +1,3 @@
-using System.Globalization;
-using System.IO.BACnet.Serialize;
-
 namespace System.IO.BACnet
 {
     public struct BacnetweekNDay : ASN1.IEncode, ASN1.IDecode

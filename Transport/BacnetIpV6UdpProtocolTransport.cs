@@ -24,10 +24,6 @@
 *
 *********************************************************************/
 
-using System.Net;
-using System.Net.Sockets;
-using System.Threading;
-
 // based on Addendum 135-2012aj-4
 
 namespace System.IO.BACnet

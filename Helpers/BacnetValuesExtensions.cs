@@ -1,8 +1,4 @@
-﻿using System.Collections.Generic;
-using System.IO.BACnet.Serialize;
-using System.Linq;
-
-namespace System.IO.BACnet.Helpers
+﻿namespace System.IO.BACnet.Helpers
 {
     public static class BacnetValuesExtensions
     {

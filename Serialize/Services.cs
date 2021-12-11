@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace System.IO.BACnet.Serialize
+﻿namespace System.IO.BACnet.Serialize
 {
     public class Services
     {

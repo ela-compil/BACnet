@@ -1,8 +1,3 @@
-using System.Collections.Generic;
-using System.IO.Pipes;
-using System.Runtime.InteropServices;
-using Common.Logging;
-
 namespace System.IO.BACnet
 {
     public class BacnetPipeTransport : IBacnetSerialTransport

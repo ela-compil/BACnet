@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.IO.BACnet.Serialize;
-
-namespace System.IO.BACnet
+﻿namespace System.IO.BACnet
 {
     public struct BACnetCalendarEntry : ASN1.IEncode, ASN1.IDecode
     {

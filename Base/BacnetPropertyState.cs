@@ -1,5 +1,3 @@
-using System.IO.BACnet.Base;
-
 namespace System.IO.BACnet
 {
     public struct BacnetPropertyState

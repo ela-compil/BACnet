@@ -1,6 +1,4 @@
-﻿using System.IO.BACnet.Serialize;
-
-namespace System.IO.BACnet
+﻿namespace System.IO.BACnet
 {
     public struct BacnetBitString
     {

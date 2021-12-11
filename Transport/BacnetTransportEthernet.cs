@@ -28,13 +28,6 @@
 *
 *********************************************************************/
 
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using PacketDotNet;
-using SharpPcap;
-using SharpPcap.LibPcap;
-
 namespace System.IO.BACnet
 {
     // A reference to PacketDotNet.dll & SharpPcap.dll should be made

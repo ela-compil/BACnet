@@ -1,5 +1,3 @@
-using System.Linq;
-
 namespace System.IO.BACnet
 {
     public struct BacnetValue

@@ -1,9 +1,4 @@
-﻿using System.IO.BACnet.Serialize;
-using System.Linq;
-using System.Net;
-using System.Net.NetworkInformation;
-
-namespace System.IO.BACnet
+﻿namespace System.IO.BACnet
 {
     public class BacnetAddress : ASN1.IEncode
     {

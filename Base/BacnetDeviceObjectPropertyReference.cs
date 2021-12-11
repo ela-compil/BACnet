@@ -1,6 +1,3 @@
-using System.IO.BACnet.Serialize;
-using System.Linq;
-
 namespace System.IO.BACnet
 {
     public struct BacnetDeviceObjectPropertyReference : ASN1.IEncode

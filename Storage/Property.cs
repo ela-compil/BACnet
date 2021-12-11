@@ -1,8 +1,3 @@
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Xml.Serialization;
-
 namespace System.IO.BACnet.Storage
 {
     [Serializable]

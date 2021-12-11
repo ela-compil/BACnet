@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Text;
-
-namespace System.IO.BACnet.Serialize
+﻿namespace System.IO.BACnet.Serialize
 {
     public class ASN1
     {

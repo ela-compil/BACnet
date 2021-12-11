@@ -1,10 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Net;
-using System.Text;
-using System.Text.RegularExpressions;
-using Common.Logging;
-
-namespace System.IO.BACnet.Serialize
+﻿namespace System.IO.BACnet.Serialize
 {
     // Special thanks to VTS tool (BBMD services not activated but programmed !) and Steve Karg stack
     public class BVLC

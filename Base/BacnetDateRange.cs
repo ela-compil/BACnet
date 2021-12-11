@@ -1,5 +1,3 @@
-using System.IO.BACnet.Serialize;
-
 namespace System.IO.BACnet
 {
     public struct BacnetDateRange : ASN1.IEncode, ASN1.IDecode
