@@ -38,12 +38,12 @@ public struct BacnetweekNDay : ASN1.IEncode, ASN1.IDecode
 
     public override string ToString()
     {
-        var ret = wday != 255 ? GetDayName(wday) : "Every days";
+        string ret = wday != 255 ? GetDayName(wday) : "Every days";
 
         if (month != 255)
-            ret = ret + " on " + CultureInfo.CurrentCulture.DateTimeFormat.MonthNames[month - 1];
+            ret += " on " + CultureInfo.CurrentCulture.DateTimeFormat.MonthNames[month - 1];
         else
-            ret = ret + " on every month";
+            ret += " on every month";
 
         return ret;
     }

@@ -96,18 +96,18 @@ public struct BacnetDate : ASN1.IEncode, ASN1.IDecode
         if (day != 255)
             ret = ret + day + "/";
         else
-            ret = ret + "**/";
+            ret += "**/";
 
         switch (month)
         {
             case 13:
-                ret = ret + "odd/";
+                ret += "odd/";
                 break;
             case 14:
-                ret = ret + "even/";
+                ret += "even/";
                 break;
             case 255:
-                ret = ret + "**/";
+                ret += "**/";
                 break;
             default:
                 ret = ret + month + "/";
@@ -116,9 +116,9 @@ public struct BacnetDate : ASN1.IEncode, ASN1.IDecode
 
 
         if (year != 255)
-            ret = ret + (year + 1900);
+            ret += year + 1900;
         else
-            ret = ret + "****";
+            ret += "****";
 
         return ret;
     }

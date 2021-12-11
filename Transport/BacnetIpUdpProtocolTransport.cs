@@ -429,7 +429,7 @@ public class BacnetIpUdpProtocolTransport : BacnetTransportBase
 
     public override BacnetAddress GetBroadcastAddress()
     {
-        return _broadcastAddress ?? (_broadcastAddress = _GetBroadcastAddress());
+        return _broadcastAddress ??= _GetBroadcastAddress();
     }
 
     public override void Dispose()

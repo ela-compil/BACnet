@@ -46,7 +46,7 @@ public struct BacnetDateRange : ASN1.IEncode, ASN1.IDecode
         if (endDate.day != 255)
             ret = ret + " to " + endDate;
         else
-            ret = ret + " to **/**/**";
+            ret += " to **/**/**";
 
         return ret;
     }

@@ -13,7 +13,7 @@ public struct BacnetBitString
         var ret = "";
         for (var i = 0; i < bits_used; i++)
         {
-            ret = ret + ((value[i / 8] & (1 << (i % 8))) > 0 ? "1" : "0");
+            ret += ((value[i / 8] & (1 << (i % 8))) > 0 ? "1" : "0");
         }
         return ret;
     }
