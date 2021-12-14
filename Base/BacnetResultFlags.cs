@@ -1,11 +1,10 @@
-namespace System.IO.BACnet
+namespace System.IO.BACnet;
+
+[Flags]
+public enum BacnetResultFlags
 {
-    [Flags]
-    public enum BacnetResultFlags
-    {
-        NONE = 0,
-        FIRST_ITEM = 1,
-        LAST_ITEM = 2,
-        MORE_ITEMS = 4,
-    }
+    NONE = 0,
+    FIRST_ITEM = 1,
+    LAST_ITEM = 2,
+    MORE_ITEMS = 4,
 }

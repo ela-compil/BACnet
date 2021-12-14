@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net40;netstandard2.0</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
+    <TargetFrameworks>net48;netstandard2.0</TargetFrameworks>
     <Company>Ela-compil sp. z o. o.</Company>
     <Authors>Ela-compil and contributors</Authors>
     <Product>BACnet</Product>
@@ -17,7 +18,7 @@
     <PackageIcon>logo.png</PackageIcon>
     <PackageIconUrl>https://raw.githubusercontent.com/ela-compil/BACnet/master/logo.png</PackageIconUrl>
   </PropertyGroup>
-
+  
   <ItemGroup>
     <None Include="logo.png" Pack="true" Visible="false" PackagePath="" />
   </ItemGroup>
@@ -25,16 +26,15 @@
   <!-- Vendor Packages -->
   <ItemGroup>
     <PackageReference Include="Common.Logging" Version="3.4.1" />
-    <PackageReference Include="Common.Logging.Core" Version="3.4.1" />
   </ItemGroup>
 
-  <!-- Microsoft Packages targeting .net framework v4.0 -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net40'">
+  <!-- Microsoft Packages targeting .net framework v4.8 -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
 
-  <!-- Vendor Packages targeting .net framework v4.0 -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net40'">
+  <!-- Vendor Packages targeting .net framework v4.8 -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
     <PackageReference Include="PacketDotNet" Version="0.13.0" />
     <PackageReference Include="SharpPcap" Version="4.2.0" />
   </ItemGroup>

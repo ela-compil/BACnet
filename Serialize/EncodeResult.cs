@@ -1,9 +1,8 @@
-﻿namespace System.IO.BACnet.Serialize
+﻿namespace System.IO.BACnet.Serialize;
+
+[Flags]
+public enum EncodeResult
 {
-    [Flags]
-    public enum EncodeResult
-    {
-        Good = 0,
-        NotEnoughBuffer = 1
-    }
+    Good = 0,
+    NotEnoughBuffer = 1
 }
