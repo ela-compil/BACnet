@@ -4,11 +4,11 @@
 [![NuGet version](https://badge.fury.io/nu/bacnet.svg)](https://www.nuget.org/packages/BACnet)
 [![Donate](https://img.shields.io/badge/%24-donate-ff00ff.svg)](https://www.paypal.me/JakubBartkowiak)
 
-This library was originaly developed by Morten Kvistgaard with a lot of contribution from F. Chaxel. It is used as core library in [YABE (Yet Another BACnet Explore)](https://sourceforge.net/projects/yetanotherbacnetexplorer/). It has been forked here from SourceForge SVN source, splitted into separate repositories and made available to download from Nuget.
+This library was originally developed by Morten Kvistgaard with a lot of contributions from F. Chaxel. It is used as a core library in [YABE (Yet Another BACnet Explorer)](https://sourceforge.net/projects/yetanotherbacnetexplorer/). It has been forked here from the SourceForge SVN source, splitted into separate repositories and made available to download via NuGet.
 
-## How to use
+## How to use it
 
-You can get BACnet library by grabbing the latest [NuGet package](https://www.nuget.org/packages/BACnet).
+You can get it by grabbing the latest [NuGet package](https://www.nuget.org/packages/BACnet).
 
 ## Getting Started
 
