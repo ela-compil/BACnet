@@ -220,6 +220,12 @@ public class DeviceStorage
             });
     }
 
+
+    public void WriteProperty(BacnetObjectId objectId, BacnetPropertyIds propertyId, BacnetValue value)
+    {
+        WriteProperty(objectId, propertyId, Serialize.ASN1.BACNET_ARRAY_ALL, new[] { value });
+    }
+
     public ErrorCodes WriteProperty(BacnetObjectId objectId, BacnetPropertyIds propertyId, uint arrayIndex, IList<BacnetValue> value, bool addIfNotExits = false)
     {
         //wildcard device_id
@@ -315,7 +321,7 @@ public class DeviceStorage
             // If PROP_OUT_OF_SERVICE=True, value is accepted as is : http://www.bacnetwiki.com/wiki/index.php?title=Priority_Array                 
             if ((bool)outOfService.BacnetValue[0].Value && propertyId == BacnetPropertyIds.PROP_PRESENT_VALUE)
             {
-                presentvalue.BacnetValue = new BacnetValue[1] { value };
+                WriteProperty(objectId, BacnetPropertyIds.PROP_PRESENT_VALUE, value);
                 return ErrorCodes.Good;
             }
 
@@ -352,7 +358,7 @@ public class DeviceStorage
                     if (valueArray[i].Value == null)
                         continue;
 
-                    presentvalue.BacnetValue = new[] { valueArray[i] };
+                    WriteProperty(objectId, BacnetPropertyIds.PROP_PRESENT_VALUE, valueArray[i]);
                     done = true;
                     break;
                 }
@@ -360,7 +366,7 @@ public class DeviceStorage
                 if (done == false)  // Nothing in the array : PROP_PRESENT_VALUE = PROP_RELINQUISH_DEFAULT
                 {
                     var defaultValue = relinquish.BacnetValue;
-                    presentvalue.BacnetValue = defaultValue;
+                    WriteProperty(objectId, BacnetPropertyIds.PROP_PRESENT_VALUE, defaultValue[0]);
                 }
             }
         }
