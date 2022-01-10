@@ -477,7 +477,7 @@ public class BacnetClient : IDisposable
             {
                 // DAL
                 SendConfirmedServiceReject(address, invokeId, BacnetRejectReason.RECOGNIZED_SERVICE); // should be unrecognized but this is the way it was spelled..
-                Log.Warn($"Confirmed service not handled: {service}");
+                Log.Debug($"Confirmed service not handled: {service}");
             }
         }
         catch (Exception ex)
@@ -562,7 +562,7 @@ public class BacnetClient : IDisposable
             }
             else
             {
-                Log.Warn($"Unconfirmed service not handled: {service}");
+                Log.Debug($"Unconfirmed service not handled: {service}");
                 // SendUnConfirmedServiceReject(adr); ? exists ?
             }
         }
