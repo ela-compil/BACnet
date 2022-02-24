@@ -371,8 +371,8 @@ public class BacnetIpUdpProtocolTransport : BacnetTransportBase
             .Where(a => a.Address.AddressFamily == AddressFamily.InterNetwork)
             .ToArray();
 
-        return unicastAddresses.Length == 1
-            ? unicastAddresses.Single()
+        return unicastAddresses.Length >= 1
+            ? unicastAddresses.First()
             : null;
     }
 
