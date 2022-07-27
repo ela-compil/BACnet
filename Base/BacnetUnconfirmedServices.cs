@@ -14,10 +14,15 @@ public enum BacnetUnconfirmedServices : byte
     SERVICE_UNCONFIRMED_UTC_TIME_SYNCHRONIZATION = 9,
     /* addendum 2010-aa */
     SERVICE_UNCONFIRMED_WRITE_GROUP = 10,
+    /* addendum 2012-aq */
+    SERVICE_UNCONFIRMED_COV_NOTIFICATION_MULTIPLE = 11,
+    /* addendum 2016-bz */
+    SERVICE_UNCONFIRMED_WHO_AM_I = 13,
+    SERVICE_UNCONFIRMED_YOU_ARE = 14,
     /* Other services to be added as they are defined. */
     /* All choice values in this production are reserved */
     /* for definition by ASHRAE. */
     /* Proprietary extensions are made by using the */
     /* UnconfirmedPrivateTransfer service. See Clause 23. */
-    MAX_BACNET_UNCONFIRMED_SERVICE = 11,
+    MAX_BACNET_UNCONFIRMED_SERVICE = 15
 };

@@ -58,6 +58,15 @@ public enum BacnetObjectTypes : uint
     OBJECT_CHANNEL = 53,                /* Addendum 2010-aa */
     OBJECT_LIGHTING_OUTPUT = 54,        /* Addendum 2010-i */
     OBJECT_BINARY_LIGHTING_OUTPUT = 55, /* Addendum 135-2012az */
+    OBJECT_NETWORK_PORT = 56,           /* Addendum 135-2012az */
+    OBJECT_ELEVATOR_GROUP = 57,         /* Addendum 135-2012aq */
+    OBJECT_ESCALATOR = 58,              /* Addendum 135-2012aq */
+    OBJECT_LIFT = 59,                   /* Addendum 135-2012aq */
+    OBJECT_STAGING = 60,                /* Addendum 135-2016bd */
+    OBJECT_AUDIT_LOG = 61,              /* Addendum 135-2016bi */
+    OBJECT_AUDIT_REPORTER = 62,         /* Addendum 135-2016bi */
+    OBJECT_COLOR = 63,                  /* Addendum 135-2020ca */
+    OBJECT_COLOR_TEMPERATURE = 64,      /* Addendum 135-2020ca */
 
     /* Enumerated values 0-127 are reserved for definition by ASHRAE. */
     /* Enumerated values 128-1023 may be used by others subject to  */

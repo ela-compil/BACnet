@@ -288,5 +288,28 @@ public enum BacnetUnitsId
     UNITS_JOULES_PER_CUBIC_METER = 251,
     UNITS_MOLE_PERCENT = 252,
     UNITS_PASCAL_SECONDS = 253,
-    UNITS_MILLION_STANDARD_CUBIC_FEET_PER_MINUTE = 254
+    UNITS_MILLION_STANDARD_CUBIC_FEET_PER_MINUTE = 254,
+    UNITS_RESERVED_RANGE_MAX = 255,
+    /* Enumerated values 256-47807 may be used by others
+       subject to the procedures and constraints described in Clause 23. */
+    UNITS_PROPRIETARY_RANGE_MIN = 256,
+    UNITS_PROPRIETARY_RANGE_MAX = 47807,
+    /* Enumerated values 47808-49999 are reserved for definition by ASHRAE. */
+    UNITS_RESERVED_RANGE_MIN2 = 47808,
+    UNITS_STANDARD_CUBIC_FEET_PER_DAY = 47808,
+    UNITS_MILLION_STANDARD_CUBIC_FEET_PER_DAY = 47809,
+    UNITS_THOUSAND_CUBIC_FEET_PER_DAY = 47810,
+    UNITS_THOUSAND_STANDARD_CUBIC_FEET_PER_DAY = 47811,
+    UNITS_POUNDS_MASS_PER_DAY = 47812,
+    /* 47813 - NOT USED */
+    UNITS_MILLIREMS = 47814,
+    UNITS_MILLIREMS_PER_HOUR = 47815,
+    UNITS_RESERVED_RANGE_MAX2 = 49999,
+    UNITS_PROPRIETARY_RANGE_MIN2 = 50000,
+    /* Enumerated values 50000-65535 may be used by others
+       subject to the procedures and constraints described in Clause 23. */
+    /* do the proprietary range inside of enum so that
+       compilers will allocate adequate sized datatype for enum
+       which is used to store decoding */
+    UNITS_PROPRIETARY_RANGE_MAX2 = 65535
 }
