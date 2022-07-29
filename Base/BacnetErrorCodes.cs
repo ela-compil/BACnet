@@ -233,7 +233,7 @@ public enum BacnetErrorCodes
     ERROR_CODE_CERTIFICATE_REVOKED = 203,
     ERROR_CODE_UNKNOWN_SECURITY_KEY = 204,
     ERROR_CODE_REFERENCED_PORT_IN_ERROR = 205,
-    MAX_BACNET_ERROR_CODE = 205,
+    MAX_BACNET_ERROR_CODE = 206,
     ERROR_CODE_RESERVED_MAX = 255,
     /* Enumerated values 0-255 are reserved for definition by ASHRAE. */
     /* Enumerated values 256-65535 may be used by others subject to */
