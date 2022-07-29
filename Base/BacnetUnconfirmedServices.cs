@@ -16,6 +16,8 @@ public enum BacnetUnconfirmedServices : byte
     SERVICE_UNCONFIRMED_WRITE_GROUP = 10,
     /* addendum 2012-aq */
     SERVICE_UNCONFIRMED_COV_NOTIFICATION_MULTIPLE = 11,
+    /* addendum 2016-bi */
+    SERVICE_UNCONFIRMED_AUDIT_NOTIFICATION = 12,
     /* addendum 2016-bz */
     SERVICE_UNCONFIRMED_WHO_AM_I = 13,
     SERVICE_UNCONFIRMED_YOU_ARE = 14,
