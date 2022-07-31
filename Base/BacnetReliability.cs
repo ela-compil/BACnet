@@ -22,4 +22,6 @@ public enum BacnetReliability : uint
     /* do the max range inside of enum so that
        compilers will allocate adequate sized datatype for enum
        which is used to store decoding */
+    RELIABILITY_PROPRIETARY_MIN = 64,
+    RELIABILITY_PROPRIETARY_MAX = 65535
 }
