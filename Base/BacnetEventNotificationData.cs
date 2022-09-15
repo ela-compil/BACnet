@@ -39,9 +39,10 @@ public struct BacnetEventNotificationData
     public BacnetBitString changeOfValue_statusFlags;
     /*
      ** EVENT_COMMAND_FAILURE
-     **
-     ** Not Supported!
      */
+    public uint commandFailure_commandValue;
+    public BacnetBitString commandFailure_statusFlags;
+    public uint commandFailure_feedbackValue;
     /*
      ** EVENT_FLOATING_LIMIT
      */
