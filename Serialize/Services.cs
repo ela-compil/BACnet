@@ -961,6 +961,7 @@ public class Services
                             return -1;
 
                         len++;
+                        len += ASN1.decode_tag_number_and_value(buffer, offset + len, out _, out lenValue);
                         len += ASN1.decode_enumerated(buffer, offset + len, lenValue, out eventData.commandFailure_commandValue);
 
                         if (!ASN1.decode_is_closing_tag_number(buffer, offset + len, 0))
@@ -973,6 +974,7 @@ public class Services
                             return -1;
                         
                         len++;
+                        len += ASN1.decode_tag_number_and_value(buffer, offset + len, out _, out lenValue);
                         len += ASN1.decode_enumerated(buffer, offset + len, lenValue, out eventData.commandFailure_feedbackValue);
 
                         if (!ASN1.decode_is_closing_tag_number(buffer, offset + len, 2))
