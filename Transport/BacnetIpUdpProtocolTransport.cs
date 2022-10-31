@@ -100,7 +100,7 @@ public class BacnetIpUdpProtocolTransport : BacnetTransportBase
                 if (!string.IsNullOrEmpty(_localEndpoint)) ep = new IPEndPoint(IPAddress.Parse(_localEndpoint), SharedPort);
                 DisableConnReset(_sharedConn);
                 _sharedConn.Client.Bind(ep);
-                _sharedConn.DontFragment = _dontFragment;
+                this.SetDontFragment(_sharedConn, _dontFragment);
                 Log.Info($"Binded shared {ep} using UDP");
             }
             /* This is our own exclusive port. We'll recieve everything sent to this. */
@@ -120,10 +120,9 @@ public class BacnetIpUdpProtocolTransport : BacnetTransportBase
                 // minutes ... yes it's like this at least on several systems
                 _exclusiveConn = new UdpClient(ep)
                 {
-                    DontFragment = _dontFragment,
                     EnableBroadcast = true
                 };
-
+                this.SetDontFragment(_exclusiveConn, _dontFragment);
                 DisableConnReset(_exclusiveConn);
             }
         }
@@ -134,12 +133,32 @@ public class BacnetIpUdpProtocolTransport : BacnetTransportBase
             _exclusiveConn = new UdpClient { ExclusiveAddressUse = true };
             DisableConnReset(_exclusiveConn);
             _exclusiveConn.Client.Bind(ep);
-            _exclusiveConn.DontFragment = _dontFragment;
+            this.SetDontFragment(_exclusiveConn, _dontFragment);
             _exclusiveConn.EnableBroadcast = true;
             Log.Info($"Binded exclusively to {ep} using UDP");
         }
 
         Bvlc = new BVLC(this);
+    }
+
+    /// <summary>
+    ///   Prevent exception on setting Don't Fragment on OSX
+    /// </summary>
+    /// <remarks>
+    ///   https://github.com/dotnet/runtime/issues/27653
+    /// </remarks>
+    /// <param name="client"></param>
+    /// <param name="dontFragment"></param>
+    private void SetDontFragment(UdpClient client, bool dontFragment)
+    {
+        try
+        {
+            client.DontFragment = dontFragment;
+        }
+        catch (SocketException e)
+        {
+            this.Log.WarnFormat("Unable to set DontFragment: {0}", e.Message);
+        }
     }
 
     /// <summary>
