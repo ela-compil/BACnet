@@ -2058,7 +2058,12 @@ public class ASN1
                 tagLen = decode_tag_number_and_value(buffer, offset + len, out var subTagNumber, out lenValueType);
                 if (tagLen < 0) return -1;
 
-                if (lenValueType == 0)
+                // DAL need to check explicitly for an opening tag, because,
+                // lenValueType could also be zero for example if we are parsing
+                // an empty octect string, or an integer value of zero
+                // The former happens when parsing the BACnetAddress within a RecipientList
+                // if the BACnetAddress has a broadcast MAC address
+                if (IS_OPENING_TAG(buffer[offset + len]))
                 {
                     len += tagLen;
                     tagLen = bacapp_decode_application_data(address, buffer, offset + len, maxOffset,
