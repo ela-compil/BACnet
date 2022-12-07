@@ -1,6 +1,6 @@
 namespace System.IO.BACnet;
 
-public class BacnetAsyncResult : IAsyncResult, IDisposable
+public class BacnetAsyncResult : IDisposable
 {
     private BacnetClient _comm;
     private readonly byte _waitInvokeId;
