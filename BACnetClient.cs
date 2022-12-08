@@ -1679,16 +1679,27 @@ public class BacnetClient : IDisposable
         return ReadPropertyAsync(address, objectId, propertyId, invokeId, arrayIndex);
     }
 
-    public Task<IList<BacnetValue>> ReadPropertyAsync(BacnetAddress address, BacnetObjectId objectId,
+    public async Task<IList<BacnetValue>> ReadPropertyAsync(BacnetAddress address, BacnetObjectId objectId,
         BacnetPropertyIds propertyId, byte invokeId = 0, uint arrayIndex = ASN1.BACNET_ARRAY_ALL)
     {
-        return Task<IList<BacnetValue>>.Factory.StartNew(() =>
+        using (var result = BeginReadPropertyRequest(address, objectId, propertyId, true, invokeId, arrayIndex))
         {
-            if (!ReadPropertyRequest(address, objectId, propertyId, out IList<BacnetValue> result, invokeId, arrayIndex))
-                throw new Exception($"Failed to read property {propertyId} of {objectId} from {address}");
+            for (var r = 0; r < _retries; r++)
+            {
+                var buffer = await result.GetResultOrTimeout(Timeout);
+                if (buffer != null)
+                {
+                    EndReadPropertyRequest(result, out var valueList, out var ex);
+                    if (ex != null)
+                        throw ex;
 
-            return result;
-        });
+                    return valueList;
+                }
+                if (r < Retries - 1)
+                    result.Resend();
+            }
+        }
+        throw new Exception($"Failed to read property {propertyId} of {objectId} from {address}");
     }
 
     public BacnetAsyncResult BeginReadPropertyRequest(BacnetAddress address, BacnetObjectId objectId, BacnetPropertyIds propertyId, bool waitForTransmit, byte invokeId = 0, uint arrayIndex = ASN1.BACNET_ARRAY_ALL)
