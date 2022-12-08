@@ -1,6 +1,6 @@
 namespace System.IO.BACnet;
 
-public class BacnetAsyncResult : IAsyncResult, IDisposable
+public class BacnetAsyncResult : IDisposable
 {
     private BacnetClient _comm;
     private readonly byte _waitInvokeId;
@@ -9,24 +9,20 @@ public class BacnetAsyncResult : IAsyncResult, IDisposable
     private readonly int _transmitLength;
     private readonly bool _waitForTransmit;
     private readonly int _transmitTimeout;
-    private ManualResetEvent _waitHandle;
-
-    public bool Segmented { get; private set; }
-    public byte[] Result { get; private set; }
-    public object AsyncState { get; set; }
-    public bool CompletedSynchronously { get; private set; }
-    public WaitHandle AsyncWaitHandle => _waitHandle;
-    public bool IsCompleted => _waitHandle.WaitOne(0);
     public BacnetAddress Address { get; }
+
+    private TaskCompletionSource<byte[]> _tcs = new();
+    public Task<byte[]> GetResult() => _tcs.Task;
+
+    public byte[] Result => this.GetResult().GetAwaiter().GetResult();
 
     public Exception Error
     {
         get => _error;
-        set
+        private set
         {
             _error = value;
-            CompletedSynchronously = true;
-            _waitHandle.Set();
+            _tcs.SetException(value);
         }
     }
 
@@ -44,12 +40,30 @@ public class BacnetAsyncResult : IAsyncResult, IDisposable
         _comm.OnAbort += OnAbort;
         _comm.OnReject += OnReject;
         _comm.OnSimpleAck += OnSimpleAck;
-        _comm.OnSegment += OnSegment;
-        _waitHandle = new ManualResetEvent(false);
+    }
+
+    public async Task<byte[]> GetResultOrTimeout(int timeoutMs)
+    {
+        var task = this.GetResult();
+        using var source = new CancellationTokenSource();
+        if (task == await Task.WhenAny(task, Task.Delay(timeoutMs, source.Token)))
+        {
+            source.Cancel();
+            return await task;
+        }
+
+        return null;
+    }
+
+    public bool WaitForDone(int timeoutMs)
+    {
+        var result = this.GetResultOrTimeout(timeoutMs).GetAwaiter().GetResult();
+        return result != null;
     }
 
     public void Resend()
     {
+        _tcs = new TaskCompletionSource<byte[]>();
         try
         {
             if (_comm.Transport.Send(_transmitBuffer, _comm.Transport.HeaderLength, _transmitLength, Address, _waitForTransmit, _transmitTimeout) < 0)
@@ -63,21 +77,13 @@ public class BacnetAsyncResult : IAsyncResult, IDisposable
         }
     }
 
-    private void OnSegment(BacnetClient sender, BacnetAddress adr, BacnetPduTypes type, BacnetConfirmedServices service, byte invokeId, BacnetMaxSegments maxSegments, BacnetMaxAdpu maxAdpu, byte sequenceNumber, byte[] buffer, int offset, int length)
-    {
-        if (invokeId != _waitInvokeId)
-            return;
-
-        Segmented = true;
-        _waitHandle.Set();
-    }
-
     private void OnSimpleAck(BacnetClient sender, BacnetAddress adr, BacnetPduTypes type, BacnetConfirmedServices service, byte invokeId, byte[] data, int dataOffset, int dataLength)
     {
         if (invokeId != _waitInvokeId)
             return;
 
-        _waitHandle.Set();
+        // TODO: Should this be null?
+        _tcs.SetResult(data);
     }
 
     private void OnAbort(BacnetClient sender, BacnetAddress adr, BacnetPduTypes type, byte invokeId, BacnetAbortReason reason, byte[] buffer, int offset, int length)
@@ -109,30 +115,12 @@ public class BacnetAsyncResult : IAsyncResult, IDisposable
         if (invokeId != _waitInvokeId)
             return;
 
-        Segmented = false;
-        Result = new byte[length];
+        var result = new byte[length];
 
         if (length > 0)
-            Array.Copy(buffer, offset, Result, 0, length);
+            Array.Copy(buffer, offset, result, 0, length);
 
-        //notify waiter even if segmented
-        _waitHandle.Set();
-    }
-
-    /// <summary>
-    /// Will continue waiting until all segments are recieved
-    /// </summary>
-    public bool WaitForDone(int timeout)
-    {
-        while (true)
-        {
-            if (!AsyncWaitHandle.WaitOne(timeout))
-                return false;
-            if (Segmented)
-                _waitHandle.Reset();
-            else
-                return true;
-        }
+        _tcs.SetResult(result);
     }
 
     public void Dispose()
@@ -144,14 +132,7 @@ public class BacnetAsyncResult : IAsyncResult, IDisposable
             _comm.OnAbort -= OnAbort;
             _comm.OnReject -= OnReject;
             _comm.OnSimpleAck -= OnSimpleAck;
-            _comm.OnSegment -= OnSegment;
             _comm = null;
-        }
-
-        if (_waitHandle != null)
-        {
-            _waitHandle.Dispose();
-            _waitHandle = null;
         }
     }
 }
