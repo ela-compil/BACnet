@@ -956,6 +956,33 @@ public class Services
                         len += ASN1.decode_context_bitstring(buffer, offset + len, 0, out eventData.changeOfValue_statusFlags);
                         break;
 
+                    case BacnetEventTypes.EVENT_COMMAND_FAILURE:
+                        if (!ASN1.decode_is_opening_tag_number(buffer, offset + len, 0))
+                            return -1;
+
+                        len++;
+                        len += ASN1.decode_tag_number_and_value(buffer, offset + len, out _, out lenValue);
+                        len += ASN1.decode_enumerated(buffer, offset + len, lenValue, out eventData.commandFailure_commandValue);
+
+                        if (!ASN1.decode_is_closing_tag_number(buffer, offset + len, 0))
+                            return -1;
+
+                        len++;
+                        len += ASN1.decode_context_bitstring(buffer, offset + len, 1, out eventData.commandFailure_statusFlags);
+
+                        if (!ASN1.decode_is_opening_tag_number(buffer, offset + len, 2))
+                            return -1;
+                        
+                        len++;
+                        len += ASN1.decode_tag_number_and_value(buffer, offset + len, out _, out lenValue);
+                        len += ASN1.decode_enumerated(buffer, offset + len, lenValue, out eventData.commandFailure_feedbackValue);
+
+                        if (!ASN1.decode_is_closing_tag_number(buffer, offset + len, 2))
+                            return -1;
+
+                        len++;
+                        break;
+
                     case BacnetEventTypes.EVENT_FLOATING_LIMIT:
                         len += ASN1.decode_context_real(buffer, offset + len, 0, out eventData.floatingLimit_referenceValue);
                         len += ASN1.decode_context_bitstring(buffer, offset + len, 1, out eventData.floatingLimit_statusFlags);
