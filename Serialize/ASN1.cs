@@ -2358,7 +2358,7 @@ public class ASN1
             return -1;
         len += decode_unsigned(buffer, offset + len, lenValueType, out value.TimeRemaining);
 
-        if (len < apduLen && IS_OPENING_TAG(buffer[offset + len]))
+        if (len < apduLen && !IS_CLOSING_TAG(buffer[offset + len]))
         {
             decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValueType);
             if (tagNumber != 4)
