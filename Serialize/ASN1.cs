@@ -2403,6 +2403,7 @@ public class ASN1
         {
             case BacnetPropertyState.BacnetPropertyStateTypes.BOOLEAN_VALUE:
                 value.state.boolean_value = lenValueType == 1;
+                sectionLength++;
                 break;
 
             case BacnetPropertyState.BacnetPropertyStateTypes.BINARY_VALUE:
