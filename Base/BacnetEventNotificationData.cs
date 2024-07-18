@@ -87,12 +87,19 @@ public struct BacnetEventNotificationData
     public uint extended_vendorId;
     public uint extended_eventType;
     public object[] extended_parameters;
+    /*
+     ** EVENT_CHANGE_OF_RELIABILITY
+     */
+    public BacnetReliability changeOfReliability_reliability;
+    public BacnetBitString changeOfReliability_statusFlags;
+    public BacnetPropertyValue[] changeOfReliability_propertyValues;
 
     public override string ToString()
     {
         return $"initiatingObject: {initiatingObjectIdentifier}, eventObject: {eventObjectIdentifier}, "
              + $"eventType: {eventType}, notifyType: {notifyType}, timeStamp: {timeStamp}, "
-             + $"fromState: {fromState}, toState: {toState}, {GetEventDetails() ?? "no details"}";
+             + $"fromState: {fromState}, toState: {toState}"
+             + (notifyType != BacnetNotifyTypes.NOTIFY_ACK_NOTIFICATION ? $", {GetEventDetails()}" : "");
     }
 
     private string GetEventDetails()
@@ -133,8 +140,12 @@ public struct BacnetEventNotificationData
             case BacnetEventTypes.EVENT_EXTENDED:
                 return $"vendorId: {extended_vendorId}, extendedEventType: {extended_eventType}, parameters: [{extended_parameters?.Length ?? 0}]";
 
+            case BacnetEventTypes.EVENT_CHANGE_OF_RELIABILITY:
+                var properties = string.Join(", ", changeOfReliability_propertyValues?.Select(p => $"{p.property}"));
+                return $"reliability: {changeOfReliability_reliability}, statusFlags: {changeOfReliability_statusFlags}, properties: [{properties}]";
+
             default:
-                return null;
+                return "no details";
         }
     }
 };
