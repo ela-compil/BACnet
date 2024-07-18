@@ -613,8 +613,11 @@ public class BacnetClient : IDisposable
     {
         try
         {
-            if (Services.DecodeError(buffer, offset, length, out var errorClass, out var errorCode) < 0)
+            if (Services.DecodeError(buffer, offset, out var errorClass, out var errorCode) < 0)
+            {
                 Log.Warn("Couldn't decode received Error");
+                return;
+            }
 
             Log.Debug($"Received Error {errorClass} {errorCode}");
             OnError?.Invoke(this, adr, type, service, invokeId, errorClass, errorCode, buffer, offset, length);

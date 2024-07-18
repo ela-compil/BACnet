@@ -2500,22 +2500,37 @@ public class Services
         return len;
     }
 
-    public static void EncodeError(EncodeBuffer buffer, BacnetErrorClasses errorClass, BacnetErrorCodes errorCode)
+    public static void EncodeError(EncodeBuffer buffer, BacnetErrorClasses errorClass, BacnetErrorCodes errorCode, byte tagNumber = 0)
     {
+        ASN1.encode_opening_tag(buffer, tagNumber);
         ASN1.encode_application_enumerated(buffer, (uint)errorClass);
         ASN1.encode_application_enumerated(buffer, (uint)errorCode);
+        ASN1.encode_closing_tag(buffer, tagNumber);
     }
 
-    public static int DecodeError(byte[] buffer, int offset, int length, out BacnetErrorClasses errorClass, out BacnetErrorCodes errorCode)
+    public static int DecodeError(byte[] buffer, int offset, out BacnetErrorClasses errorClass, out BacnetErrorCodes errorCode)
     {
         var orgOffset = offset;
+        errorClass = default;
+        errorCode = default;
+
+        if (ASN1.decode_is_opening_tag(buffer, offset))
+            offset += ASN1.decode_tag_number(buffer, offset, out _);
+
+        if (!ASN1.decode_is_application_tag(buffer, offset, BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED))
+            return -1;
 
         offset += ASN1.decode_tag_number_and_value(buffer, offset, out _, out var lenValueType);
-        /* FIXME: we could validate that the tag is enumerated... */
         offset += ASN1.decode_enumerated(buffer, offset, lenValueType, out errorClass);
+
+        if (!ASN1.decode_is_application_tag(buffer, offset, BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED))
+            return -1;
+
         offset += ASN1.decode_tag_number_and_value(buffer, offset, out _, out lenValueType);
-        /* FIXME: we could validate that the tag is enumerated... */
         offset += ASN1.decode_enumerated(buffer, offset, lenValueType, out errorCode);
+
+        if (buffer.Length > offset && ASN1.decode_is_closing_tag(buffer, offset))
+            offset += ASN1.decode_tag_number(buffer, offset, out _);
 
         return offset - orgOffset;
     }
@@ -2534,10 +2549,8 @@ public class Services
             if (record.type == BacnetTrendLogValueType.TL_TYPE_ERROR)
             {
                 ASN1.encode_opening_tag(buffer, 1);
-                ASN1.encode_opening_tag(buffer, 8);
                 var err = record.GetValue<BacnetError>();
-                EncodeError(buffer, err.error_class, err.error_code);
-                ASN1.encode_closing_tag(buffer, 8);
+                EncodeError(buffer, err.error_class, err.error_code, 8);
                 ASN1.encode_closing_tag(buffer, 1);
                 return;
             }
@@ -2659,9 +2672,8 @@ public class Services
                     break;
 
                 case BacnetTrendLogValueType.TL_TYPE_ERROR:
-                    len += DecodeError(buffer, offset + len, length, out var errclass, out var errcode);
+                    len += DecodeError(buffer, offset + len, out var errclass, out var errcode);
                     records[curveNumber].Value = new BacnetError(errclass, errcode);
-                    len++; // Closing Tag 8
                     break;
 
                 case BacnetTrendLogValueType.TL_TYPE_NULL:

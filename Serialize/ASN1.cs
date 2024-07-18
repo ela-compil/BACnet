@@ -1222,6 +1222,11 @@ public class ASN1
         return (x & 0x8) == 0x8;
     }
 
+    public static bool IS_APPLICATION_TAG(byte x)
+    {
+        return !IS_CONTEXT_SPECIFIC(x);
+    }
+
     public static bool IS_OPENING_TAG(byte x)
     {
         return (x & 0x07) == 6;
@@ -2151,6 +2156,12 @@ public class ASN1
     {
         decode_tag_number(buffer, offset, out var myTagNumber);
         return IS_CONTEXT_SPECIFIC(buffer[offset]) && myTagNumber == tagNumber;
+    }
+
+    public static bool decode_is_application_tag(byte[] buffer, int offset, BacnetApplicationTags tagNumber)
+    {
+        decode_tag_number(buffer, offset, out var myTagNumber);
+        return IS_APPLICATION_TAG(buffer[offset]) && myTagNumber == (byte)tagNumber;
     }
 
     public static bool decode_is_opening_tag_number(byte[] buffer, int offset, byte tagNumber)
