@@ -2021,7 +2021,7 @@ public class ASN1
                 value.Value = v;
                 return tagLen;
             }
-            if (propertyId == BacnetPropertyIds.PROP_EVENT_TIME_STAMPS)
+            if (propertyId == BacnetPropertyIds.PROP_EVENT_TIME_STAMPS || propertyId == BacnetPropertyIds.PROP_TIME_OF_DEVICE_RESTART)
             {
                 decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValueType);
                 len++; // skip Tag
