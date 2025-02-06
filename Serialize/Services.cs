@@ -913,7 +913,11 @@ public class Services
                     return -1;
 
                 len += ASN1.decode_tag_number(buffer, offset + len, out _);
-                if (!ASN1.decode_is_opening_tag_number(buffer, offset + len, (byte)eventData.eventType))
+                var eventTagNumber = eventData.eventType < BacnetEventTypes.EVENT_PROPRIETARY_MIN
+                        ? eventData.eventType /* standard event types */
+                        : BacnetEventTypes.EVENT_COMPLEX_EVENT_TYPE /* proprietary event types */;
+
+                if (!ASN1.decode_is_opening_tag_number(buffer, offset + len, (byte)eventTagNumber))
                     return -1;
 
                 len += ASN1.decode_tag_number(buffer, offset + len, out _);
@@ -1107,10 +1111,19 @@ public class Services
                         break;
 
                     default:
+                        if (eventData.eventType >= BacnetEventTypes.EVENT_PROPRIETARY_MIN)
+                        {
+                            // we can't decode proprietary event data so we skip it
+                            while (!ASN1.decode_is_closing_tag_number(buffer, offset + len, (byte)eventTagNumber))
+                                len++;
+
+                            break;
+                        }
+
                         return -1;
                 }
 
-                if (!ASN1.decode_is_closing_tag_number(buffer, offset + len, (byte)eventData.eventType))
+                if (!ASN1.decode_is_closing_tag_number(buffer, offset + len, (byte)eventTagNumber))
                     return -1;
 
                 len += ASN1.decode_tag_number(buffer, offset + len, out _);
