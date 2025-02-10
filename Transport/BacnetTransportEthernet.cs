@@ -28,6 +28,8 @@
 *
 *********************************************************************/
 
+using SharpPcap;
+
 namespace System.IO.BACnet;
 
 // A reference to PacketDotNet.dll & SharpPcap.dll should be made
@@ -123,7 +125,11 @@ internal class BacnetEthernetProtocolTransport : BacnetTransportBase
             try
             {
                 var device = devices.FirstOrDefault(dev => dev.Interface.FriendlyName == _deviceName);
+#if NET48 || NETSTANDARD2_0_OR_GREATER
                 device?.Open(DeviceMode.Normal, 1000); // 1000 ms read timeout
+#elif NET7_0_OR_GREATER
+                device?.Open(DeviceModes.None, 1000); // 1000 ms read timeout
+#endif
                 return device;
             }
             catch
@@ -133,7 +139,11 @@ internal class BacnetEthernetProtocolTransport : BacnetTransportBase
         }
         foreach (var device in devices)
         {
+#if NET48 || NETSTANDARD2_0_OR_GREATER
             device.Open(DeviceMode.Normal, 1000); // 1000 ms read timeout
+#elif NET7_0_OR_GREATER
+            device.Open(DeviceModes.None, 1000); // 1000 ms read timeout
+#endif
             if (device.LinkType == LinkLayers.Ethernet
                 && device.Interface.MacAddress != null)
                 return device;
@@ -150,11 +160,22 @@ internal class BacnetEthernetProtocolTransport : BacnetTransportBase
         {
             try
             {
-                var packet = _device.GetNextPacket();
+#if NET48 || NETSTANDARD2_0_OR_GREATER
+                RawCapture packet = null;
+                packet = _device.GetNextPacket();
+#elif NET7_0_OR_GREATER
+                PacketCapture packet;
+                _ = _device.GetNextPacket(out packet);
+#endif
+
+#if NET48 || NETSTANDARD2_0_OR_GREATER
                 if (packet != null)
                     OnPacketArrival(packet);
                 else
                     Thread.Sleep(10); // NonBlockingMode, we need to slow the overhead
+#elif NET7_0_OR_GREATER
+                OnPacketArrival(packet);
+#endif
             }
             catch
             {
@@ -184,7 +205,11 @@ internal class BacnetEthernetProtocolTransport : BacnetTransportBase
         return b;
     }
 
+#if NET48 || NETSTANDARD2_0_OR_GREATER
     private void OnPacketArrival(RawCapture packet)
+#elif NET7_0_OR_GREATER
+    private void OnPacketArrival(PacketCapture packet)
+#endif
     {
         // don't process any packet too short to not be valid
         if (packet.Data.Length <= 17)
@@ -194,14 +219,22 @@ internal class BacnetEthernetProtocolTransport : BacnetTransportBase
         var offset = 0;
 
         // Got frames send by me, not for me, not broadcast
+#if NET48 || NETSTANDARD2_0_OR_GREATER
         var dest = Mac(buffer, offset);
+#elif NET7_0_OR_GREATER
+        var dest = Mac(buffer.ToArray(), offset);
+#endif
         if (!_isOutboundPacket(dest, 0) && dest[0] != 255)
             return;
 
         offset += 6;
 
         // source address
+#if NET48 || NETSTANDARD2_0_OR_GREATER
         var bacSource = new BacnetAddress(BacnetAddressTypes.Ethernet, 0, Mac(buffer, offset));
+#elif NET7_0_OR_GREATER
+        var bacSource = new BacnetAddress(BacnetAddressTypes.Ethernet, 0, Mac(buffer.ToArray(), offset));
+#endif
         offset += 6;
 
         // len
@@ -218,7 +251,10 @@ internal class BacnetEthernetProtocolTransport : BacnetTransportBase
         // don't process non-BACnet packets
         if (dsap != 0x82 || ssap != 0x82 || control != 0x03)
             return;
-
+#if NET48 || NETSTANDARD2_0_OR_GREATER
         InvokeMessageRecieved(buffer, HeaderLength, length, bacSource);
+#elif NET7_0_OR_GREATER
+        InvokeMessageRecieved(buffer.ToArray(), HeaderLength, length, bacSource);
+#endif
     }
 }

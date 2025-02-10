@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <LangVersion>latest</LangVersion>
-    <TargetFrameworks>net48;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>net48;netstandard2.0;net7.0</TargetFrameworks>
     <Company>Ela-compil sp. z o. o.</Company>
     <Authors>Ela-compil and contributors</Authors>
     <Product>BACnet</Product>
@@ -48,6 +48,13 @@
   <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <PackageReference Include="PacketDotNet" Version="0.19.3" />
     <PackageReference Include="SharpPcap" Version="4.5.0" />
+  </ItemGroup>
+
+  <!-- Vendor Packages targeting .net 7.0 -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net7.0'">
+    <PackageReference Include="PacketDotNet" Version="1.4.7" />
+    <PackageReference Include="SharpPcap" Version="6.2.5" />
+	<PackageReference Include="System.IO.Ports" Version="7.0.0" />
   </ItemGroup>
 
 </Project>
