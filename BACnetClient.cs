@@ -768,7 +768,7 @@ public class BacnetClient : IDisposable
 
     private void ProcessApdu(BacnetAddress adr, BacnetPduTypes type, byte[] buffer, int offset, int length)
     {
-        switch (type & BacnetPduTypes.PDU_TYPE_MASK)
+		switch (type & BacnetPduTypes.PDU_TYPE_MASK)
         {
             case BacnetPduTypes.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST:
                 {
@@ -1711,26 +1711,29 @@ public class BacnetClient : IDisposable
 
     public void EndReadPropertyRequest(IAsyncResult result, out IList<BacnetValue> valueList, out Exception ex)
     {
-        var res = (BacnetAsyncResult)result;
-        ex = res.Error;
-        if (ex == null && !res.WaitForDone(Timeout))
-            ex = new Exception("Wait Timeout");
+	    var res = (BacnetAsyncResult) result;
 
-        if (ex == null)
-        {
+	    ex = null;
+	    if (!res.WaitForDone(Timeout))
+		    ex = new Exception("Wait Timeout");
+
+	    if (ex == null)
+		    ex = res.Error;
+
+	    if (ex == null)
+	    {
             //decode
-            if (Services.DecodeReadPropertyAcknowledge(res.Address, res.Result, 0, res.Result.Length, out _, out _, out valueList) < 0)
-                ex = new Exception("Decode");
-        }
-        else
-        {
-            valueList = null;
-        }
+		    if (Services.DecodeReadPropertyAcknowledge(res.Address, res.Result, 0, res.Result.Length, out _, out _, out valueList) < 0)
+			    ex = new Exception("Decode");
+	    }
+	    else
+	    {
+		    valueList = null;
+	    }
 
-        res.Dispose();
+	    res.Dispose();
     }
-
-    public bool WritePropertyRequest(BacnetAddress adr, BacnetObjectId objectId, BacnetPropertyIds propertyId, IEnumerable<BacnetValue> valueList, byte invokeId = 0)
+	public bool WritePropertyRequest(BacnetAddress adr, BacnetObjectId objectId, BacnetPropertyIds propertyId, IEnumerable<BacnetValue> valueList, byte invokeId = 0)
     {
         using (var result = (BacnetAsyncResult)BeginWritePropertyRequest(adr, objectId, propertyId, valueList, true, invokeId))
         {
