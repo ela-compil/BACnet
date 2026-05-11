@@ -97,7 +97,6 @@ public class BacnetIpUdpProtocolTransport : BacnetTransportBase
                 _sharedConn = new UdpClient { ExclusiveAddressUse = false };
                 _sharedConn.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                 var ep = new IPEndPoint(IPAddress.Any, SharedPort);
-                if (!string.IsNullOrEmpty(_localEndpoint)) ep = new IPEndPoint(IPAddress.Parse(_localEndpoint), SharedPort);
                 DisableConnReset(_sharedConn);
                 _sharedConn.Client.Bind(ep);
                 SetDontFragment(_sharedConn, _dontFragment);
@@ -109,8 +108,9 @@ public class BacnetIpUdpProtocolTransport : BacnetTransportBase
             {
                 var ep = new IPEndPoint(IPAddress.Any, ExclusivePort);
                 if (!string.IsNullOrEmpty(_localEndpoint)) ep = new IPEndPoint(IPAddress.Parse(_localEndpoint), ExclusivePort);
-                _exclusiveConn = new UdpClient(ep);
-
+                _exclusiveConn = new UdpClient { ExclusiveAddressUse = false };
+                _exclusiveConn.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                _exclusiveConn.Client.Bind(ep);
                 // Gets the Endpoint : the assigned Udp port number in fact
                 ep = (IPEndPoint)_exclusiveConn.Client.LocalEndPoint;
                 // closes the socket
@@ -118,10 +118,10 @@ public class BacnetIpUdpProtocolTransport : BacnetTransportBase
                 // Re-opens it with the freeed port number, to be sure it's a real active/server socket
                 // which cannot be disarmed for listen by .NET for incoming call after a few inactivity
                 // minutes ... yes it's like this at least on several systems
-                _exclusiveConn = new UdpClient(ep)
-                {
-                    EnableBroadcast = true
-                };
+                _exclusiveConn = new UdpClient { ExclusiveAddressUse = false };
+                _exclusiveConn.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                _exclusiveConn.EnableBroadcast = true;
+                _exclusiveConn.Client.Bind(ep);
                 SetDontFragment(_exclusiveConn, _dontFragment);
                 DisableConnReset(_exclusiveConn);
             }
