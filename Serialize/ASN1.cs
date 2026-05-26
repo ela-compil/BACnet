@@ -1075,6 +1075,102 @@ public class ASN1
         return len;
     }
 
+    public static int decode_write_access_specification(BacnetAddress address, byte[] buffer, int offset, int apdu_len, out BacnetWriteAccessSpecification value)
+    {
+        var len = 0;
+
+        value = new BacnetWriteAccessSpecification();
+
+        /* Tag 0: Object ID */
+        if (!decode_is_context_tag(buffer, offset + len, 0))
+            return -1;
+        len++;
+        len += decode_object_id(buffer, offset + len, out value.objectIdentifier.type,
+            out value.objectIdentifier.instance);
+
+        /* Tag 1: sequence of WriteAccessSpecification */
+        if (!decode_is_opening_tag_number(buffer, offset + len, 1))
+            return -1;
+        len++; /* opening tag is only one octet */
+
+        /* properties */
+        var propertyIdAndValues = new List<BacnetPropertyValue>();
+        while (apdu_len - len > 1 && !decode_is_closing_tag_number(buffer, offset + len, 1))
+        {
+            var p_ref = new BacnetPropertyValue();
+
+            /* Tag 0: propertyIdentifier */
+            if (!IS_CONTEXT_SPECIFIC(buffer[offset + len]))
+                return -1;
+
+            len += decode_tag_number_and_value(buffer, offset + len, out var tagNumber, out var lenValue_type);
+            if (tagNumber != 0)
+                return -1;
+
+            /* Should be at least the unsigned value + 1 tag left */
+            if (len + lenValue_type >= apdu_len)
+                return -1;
+            len += decode_enumerated(buffer, offset + len, lenValue_type, out p_ref.property.propertyIdentifier);
+            /* Assume most probable outcome */
+            p_ref.property.propertyArrayIndex = BACNET_ARRAY_ALL;
+            /* Tag 1: Optional propertyArrayIndex */
+            if (IS_CONTEXT_SPECIFIC(buffer[offset + len]) && !IS_CLOSING_TAG(buffer[offset + len]))
+            {
+                var tmp = decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValue_type);
+                if (tagNumber == 1)
+                {
+                    len += tmp;
+                    /* Should be at least the unsigned array index + 1 tag left */
+                    if (len + lenValue_type >= apdu_len)
+                        return -1;
+                    len += decode_unsigned(buffer, offset + len, lenValue_type, out p_ref.property.propertyArrayIndex);
+                }
+            }
+
+            /* Tag 2: propertyValue */
+            len += decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValue_type);
+            if (tagNumber != 2 || !decode_is_opening_tag(buffer, offset + len - 1))
+                return -1;
+
+            var bValues = new List<BacnetValue>();
+            while (!decode_is_closing_tag(buffer, offset + len))
+            {
+                var l = bacapp_decode_application_data(address, buffer, offset + len, apdu_len + offset,
+                    value.objectIdentifier.type, (BacnetPropertyIds)p_ref.property.propertyIdentifier, out var bValue);
+                if (l <= 0) return -1;
+                len += l;
+                bValues.Add(bValue);
+            }
+            len++; /* closing tag 2 */
+            p_ref.value = bValues;
+
+            /* Tag 3: Optional priority */
+            p_ref.priority = (byte)BACNET_NO_PRIORITY;
+            if (IS_CONTEXT_SPECIFIC(buffer[offset + len]) && !IS_CLOSING_TAG(buffer[offset + len]))
+            {
+                var tmp = decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValue_type);
+                if (tagNumber == 3)
+                {
+                    len += tmp;
+                    /* Should be at least the unsigned priority + 1 tag left */
+                    if (len + lenValue_type >= apdu_len)
+                        return -1;
+                    len += decode_unsigned(buffer, offset + len, lenValue_type, out var priority);
+                    p_ref.priority = (byte)priority;
+                }
+            }
+            propertyIdAndValues.Add(p_ref);
+        }
+
+        /* closing tag */
+        if (!decode_is_closing_tag_number(buffer, offset + len, 1))
+            return -1;
+        len++;
+
+        value.propertyValues = propertyIdAndValues;
+        return len;
+    }
+
     public static int decode_device_obj_property_ref(byte[] buffer, int offset, int apdu_len, out BacnetDeviceObjectPropertyReference value)
     {
         var len = 0;
