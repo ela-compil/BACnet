@@ -2397,91 +2397,21 @@ public class Services
         ASN1.encode_application_object_id(buffer, objectId.type, objectId.instance);
     }
 
-    public static int DecodeWritePropertyMultiple(BacnetAddress address, byte[] buffer, int offset, int apduLen, out BacnetObjectId objectId, out ICollection<BacnetPropertyValue> valuesRefs)
+    public static int DecodeWritePropertyMultiple(BacnetAddress address, byte[] buffer, int offset, int apduLen, out ICollection<BacnetWriteAccessSpecification> properties)
     {
         var len = 0;
-        objectId = new BacnetObjectId();
-        valuesRefs = null;
+        var values = new List<BacnetWriteAccessSpecification>();
+        properties = null;
 
-        /* Context tag 0 - Object ID */
-        len += ASN1.decode_tag_number_and_value(buffer, offset + len, out var tagNumber, out var lenValue);
-        if (tagNumber == 0 && apduLen > len)
+        while (apduLen - len > 0)
         {
-            apduLen -= len;
-            if (apduLen >= 4)
-            {
-                len += ASN1.decode_object_id(buffer, offset + len, out objectId.type, out objectId.instance);
-            }
-            else
-                return -1;
-        }
-        else
-            return -1;
-
-        /* Tag 1: sequence of WriteAccessSpecification */
-        if (!ASN1.decode_is_opening_tag_number(buffer, offset + len, 1))
-            return -1;
-        len++;
-
-        var _values = new LinkedList<BacnetPropertyValue>();
-        while (apduLen - len > 1)
-        {
-            var newEntry = new BacnetPropertyValue();
-
-            /* tag 0 - Property Identifier */
-            len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValue);
-            uint propertyId;
-            if (tagNumber == 0)
-                len += ASN1.decode_enumerated(buffer, offset + len, lenValue, out propertyId);
-            else
-                return -1;
-
-            /* tag 1 - Property Array Index - optional */
-            var ulVal = ASN1.BACNET_ARRAY_ALL;
-            len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValue);
-            if (tagNumber == 1)
-            {
-                len += ASN1.decode_unsigned(buffer, offset + len, lenValue, out ulVal);
-                len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValue);
-            }
-            newEntry.property = new BacnetPropertyReference(propertyId, ulVal);
-
-            /* tag 2 - Property Value */
-            if (tagNumber == 2 && ASN1.decode_is_opening_tag(buffer, offset + len - 1))
-            {
-                var values = new List<BacnetValue>();
-                while (!ASN1.decode_is_closing_tag(buffer, offset + len))
-                {
-                    var l = ASN1.bacapp_decode_application_data(address, buffer, offset + len, apduLen + offset, objectId.type, (BacnetPropertyIds)propertyId, out var value);
-                    if (l <= 0) return -1;
-                    len += l;
-                    values.Add(value);
-                }
-                len++;
-                newEntry.value = values;
-            }
-            else
-                return -1;
-
-            /* tag 3 - Priority - optional */
-            ulVal = ASN1.BACNET_NO_PRIORITY;
-            len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValue);
-            if (tagNumber == 3)
-                len += ASN1.decode_unsigned(buffer, offset + len, lenValue, out ulVal);
-            else
-                len--;
-            newEntry.priority = (byte)ulVal;
-
-            _values.AddLast(newEntry);
+            var tmp = ASN1.decode_write_access_specification(address, buffer, offset + len, apduLen - len, out var value);
+            if (tmp < 0) return -1;
+            len += tmp;
+            values.Add(value);
         }
 
-        /* Closing tag 1 - List of Properties */
-        if (!ASN1.decode_is_closing_tag_number(buffer, offset + len, 1))
-            return -1;
-        len++;
-
-        valuesRefs = _values;
-
+        properties = values;
         return len;
     }
 

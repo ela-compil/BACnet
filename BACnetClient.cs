@@ -179,7 +179,7 @@ public class BacnetClient : IDisposable
     public event ReadPropertyMultipleRequestHandler OnReadPropertyMultipleRequest;
     public delegate void WritePropertyRequestHandler(BacnetClient sender, BacnetAddress adr, byte invokeId, BacnetObjectId objectId, BacnetPropertyValue value, BacnetMaxSegments maxSegments);
     public event WritePropertyRequestHandler OnWritePropertyRequest;
-    public delegate void WritePropertyMultipleRequestHandler(BacnetClient sender, BacnetAddress adr, byte invokeId, BacnetObjectId objectId, ICollection<BacnetPropertyValue> values, BacnetMaxSegments maxSegments);
+    public delegate void WritePropertyMultipleRequestHandler(BacnetClient sender, BacnetAddress adr, byte invokeId, ICollection<BacnetWriteAccessSpecification> properties, BacnetMaxSegments maxSegments);
     public event WritePropertyMultipleRequestHandler OnWritePropertyMultipleRequest;
     public delegate void AtomicWriteFileRequestHandler(BacnetClient sender, BacnetAddress adr, byte invokeId, bool isStream, BacnetObjectId objectId, int position, uint blockCount, byte[][] blocks, int[] counts, BacnetMaxSegments maxSegments);
     public event AtomicWriteFileRequestHandler OnAtomicWriteFileRequest;
@@ -274,8 +274,8 @@ public class BacnetClient : IDisposable
             }
             else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_WRITE_PROP_MULTIPLE && OnWritePropertyMultipleRequest != null)
             {
-                if (Services.DecodeWritePropertyMultiple(address, buffer, offset, length, out var objectId, out var values) >= 0)
-                    OnWritePropertyMultipleRequest(this, address, invokeId, objectId, values, maxSegments);
+                if (Services.DecodeWritePropertyMultiple(address, buffer, offset, length, out var properties) >= 0)
+                    OnWritePropertyMultipleRequest(this, address, invokeId, properties, maxSegments);
                 else
                 {
                     // DAL
