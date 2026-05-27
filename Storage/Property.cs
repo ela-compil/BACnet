@@ -68,9 +68,14 @@ public class Property
             case BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED:
                 return new BacnetValue(type, uint.Parse(value));
             case BacnetApplicationTags.BACNET_APPLICATION_TAG_DATE:
-                return new BacnetValue(type, DateTime.Parse(value));
+                // Format: yyyy/MM/dd (bacnet-stack compatible)
+                return new BacnetValue(type, DateTime.ParseExact(value, "yyyy/MM/dd", CultureInfo.InvariantCulture));
             case BacnetApplicationTags.BACNET_APPLICATION_TAG_TIME:
-                return new BacnetValue(type, DateTime.Parse(value));
+                // Format: HH:mm:ss.hh where hh = hundredths (0-99) (bacnet-stack compatible)
+                return new BacnetValue(type, DateTime.ParseExact(value, "HH:mm:ss.ff", CultureInfo.InvariantCulture));
+            case BacnetApplicationTags.BACNET_APPLICATION_TAG_DATETIME:
+                // Format: yyyy/MM/dd-HH:mm:ss.hh where hh = hundredths (0-99) (bacnet-stack compatible)
+                return new BacnetValue(type, DateTime.ParseExact(value, "yyyy/MM/dd-HH:mm:ss.ff", CultureInfo.InvariantCulture));
             case BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID:
                 return new BacnetValue(type, BacnetObjectId.Parse(value));
             case BacnetApplicationTags.BACNET_APPLICATION_TAG_READ_ACCESS_SPECIFICATION:
@@ -104,6 +109,17 @@ public class Property
                         : string.Join(";", ((BacnetValue[])value.Value)
                             .Select(v => SerializeValue(v, v.Tag)));
                 }
+            case BacnetApplicationTags.BACNET_APPLICATION_TAG_DATE:
+                // Format: yyyy/MM/dd (bacnet-stack compatible)
+                return ((DateTime)value.Value).ToString("yyyy/MM/dd", CultureInfo.InvariantCulture);
+            case BacnetApplicationTags.BACNET_APPLICATION_TAG_TIME:
+                // Format: HH:mm:ss.hh where hh = hundredths (0-99) (bacnet-stack compatible)
+                return ((DateTime)value.Value).ToString("HH:mm:ss.", CultureInfo.InvariantCulture)
+                    + (((DateTime)value.Value).Millisecond / 10).ToString("D2", CultureInfo.InvariantCulture);
+            case BacnetApplicationTags.BACNET_APPLICATION_TAG_DATETIME:
+                // Format: yyyy/MM/dd-HH:mm:ss.hh where hh = hundredths (0-99) (bacnet-stack compatible)
+                return ((DateTime)value.Value).ToString("yyyy/MM/dd-HH:mm:ss.", CultureInfo.InvariantCulture)
+                    + (((DateTime)value.Value).Millisecond / 10).ToString("D2", CultureInfo.InvariantCulture);
             default:
                 return value.Value.ToString();
         }
