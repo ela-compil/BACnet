@@ -1545,10 +1545,7 @@ public class BacnetClient : IDisposable
     public void EndSubscribeCOVRequest(IAsyncResult result, out Exception ex)
     {
         var res = (BacnetAsyncResult)result;
-        ex = res.Error;
-        if (ex == null && !res.WaitForDone(Timeout))
-            ex = new Exception("Wait Timeout");
-
+        ex = res.WaitForDone(Timeout) ? res.Error : new Exception("Wait Timeout");
         res.Dispose();
     }
 
