@@ -1,0 +1,33 @@
+name: build
+
+on:
+  push:
+    branches: [ "master", "v4" ]
+  pull_request:
+    branches: [ "master", "v4" ]
+
+jobs:
+  build:
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, windows-latest ]
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 10.0.x
+    - name: Restore dependencies
+      run: dotnet restore
+    # net48 only builds on Windows (needs the .NET Framework targeting pack),
+    # so on Linux we build the netstandard2.0 target only.
+    - name: Build (Windows - all target frameworks)
+      if: runner.os == 'Windows'
+      run: dotnet build --no-restore -c Release
+    - name: Build (Linux - netstandard2.0)
+      if: runner.os == 'Linux'
+      run: dotnet build BACnet.csproj --no-restore -c Release -f netstandard2.0
