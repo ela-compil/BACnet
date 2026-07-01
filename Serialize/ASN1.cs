@@ -212,7 +212,7 @@ public class ASN1
             encode_signed16(buffer, (short)value);
         else if (value > -8388607 && value < 8388608)
             encode_signed24(buffer, (int)value);
-        else if (value > -2147483648 && value < 2147483648)
+        else if (value >= -2147483648 && value < 2147483648)
             encode_signed32(buffer, (int)value);
         else
             encode_signed64(buffer, value);
