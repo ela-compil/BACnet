@@ -31,3 +31,6 @@ jobs:
     - name: Build (Linux - netstandard2.0)
       if: runner.os == 'Linux'
       run: dotnet build BACnet.csproj --no-restore -c Release -f netstandard2.0
+    # The test project targets net8.0, so it runs on both OSes.
+    - name: Test
+      run: dotnet test Tests/BACnet.Tests.csproj -c Release
