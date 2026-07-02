@@ -16,13 +16,15 @@ jobs:
         os: [ ubuntu-latest, windows-latest ]
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 0 # MinVer needs full history + tags to compute the version
     - name: Setup .NET
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v5
       with:
-        dotnet-version: 10.0.x
+        dotnet-version: |
+          8.0.x
+          10.0.x
     - name: Restore dependencies
       run: dotnet restore
     # net48 only builds on Windows (needs the .NET Framework targeting pack),
@@ -35,4 +37,13 @@ jobs:
       run: dotnet build BACnet.csproj --no-restore -c Release -f netstandard2.0
     # The test project targets net8.0, so it runs on both OSes.
     - name: Test
-      run: dotnet test Tests/BACnet.Tests.csproj -c Release
+      run: dotnet test Tests/BACnet.Tests.csproj -c Release --collect:"XPlat Code Coverage" --results-directory coverage
+    # Render a coverage table into the run's Summary tab (Linux only, to avoid a duplicate).
+    - name: Coverage summary
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        dotnet tool install -g dotnet-reportgenerator-globaltool
+        export PATH="$PATH:$HOME/.dotnet/tools"
+        reportgenerator -reports:"coverage/**/coverage.cobertura.xml" -targetdir:coverage-report -reporttypes:MarkdownSummaryGithub
+        cat coverage-report/SummaryGithub.md >> "$GITHUB_STEP_SUMMARY"
