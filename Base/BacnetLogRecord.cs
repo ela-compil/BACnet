@@ -19,13 +19,13 @@ public struct BacnetLogRecord
     private object any_value;
     /* } */
 
-    public BacnetBitString statusFlags;
+    public BacnetStatusFlags statusFlags;
 
-    public BacnetLogRecord(BacnetTrendLogValueType type, object value, DateTime stamp, uint status)
+    public BacnetLogRecord(BacnetTrendLogValueType type, object value, DateTime stamp, BacnetStatusFlags status)
     {
         this.type = type;
         timestamp = stamp;
-        statusFlags = BacnetBitString.ConvertFromInt(status);
+        statusFlags = status;
         any_value = null;
         Value = value;
     }
