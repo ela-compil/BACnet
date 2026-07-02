@@ -1462,6 +1462,11 @@ public class Services
     {
         ASN1.encode_context_unsigned(buffer, 0, vendorID);
         ASN1.encode_context_unsigned(buffer, 1, serviceNumber);
+
+        // The result block is optional; omit it (rather than NRE / emit an empty [2]) when absent.
+        if (data == null || data.Length == 0)
+            return;
+
         ASN1.encode_opening_tag(buffer, 2);
         buffer.Add(data, data.Length);
         ASN1.encode_closing_tag(buffer, 2);
@@ -2541,13 +2546,12 @@ public class Services
             ASN1.encode_closing_tag(buffer, 1);
         }
 
-        /* Tag 2: status (BACnetStatusFlags is a fixed 4-bit string) */
+        /* Tag 2: status - a fixed 4-bit context-tagged BACnetStatusFlags bitstring (matches the
+           decode side, which reads a context-tagged bitstring, and ASHRAE 135 Annex F.3.8). */
         var recordStatusFlags = BacnetBitString.ConvertFromInt((uint)record.statusFlags, 4);
         if (recordStatusFlags.bits_used > 0)
         {
-            ASN1.encode_opening_tag(buffer, 2);
-            ASN1.encode_application_bitstring(buffer, recordStatusFlags);
-            ASN1.encode_closing_tag(buffer, 2);
+            ASN1.encode_context_bitstring(buffer, 2, recordStatusFlags);
         }
     }
 
