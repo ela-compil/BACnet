@@ -38,8 +38,10 @@ public class BacnetAddress : ASN1.IEncode
                     ? ushort.Parse(addressParts[1])
                     : (ushort)0xBAC0);
 
+                // Array.Reverse (in place) rather than the LINQ Reverse().ToArray(): on net8/net10
+                // byte[].Reverse() binds to the span-based, void-returning overload (first-class spans).
                 if (BitConverter.IsLittleEndian)
-                    portBytes = portBytes.Reverse().ToArray();
+                    Array.Reverse(portBytes);
 
                 Array.Copy(portBytes, 0, adr, addressBytes.Length, portBytes.Length);
                 break;

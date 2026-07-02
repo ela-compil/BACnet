@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net48;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>net48;netstandard2.0;net8.0;net10.0</TargetFrameworks>
     <!-- The core project lives at the repo root; sibling projects sit in their own
          folders, so keep those folders out of this project's default globs. -->
     <DefaultItemExcludes>$(DefaultItemExcludes);Tests\**</DefaultItemExcludes>
@@ -31,21 +31,15 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
 
-  <!-- Vendor Packages targeting .net framework v4.8 -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+  <!-- pcap stack for the Ethernet transport (all targets; versions vary per TFM via CPM). -->
+  <ItemGroup>
     <PackageReference Include="PacketDotNet" />
     <PackageReference Include="SharpPcap" />
   </ItemGroup>
 
-  <!-- Microsoft Packages targeting .net standard 2.0 -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+  <!-- System.IO.Ports for the serial transports: from the BCL on net48, a package elsewhere. -->
+  <ItemGroup Condition="'$(TargetFramework)' != 'net48'">
     <PackageReference Include="System.IO.Ports" />
-  </ItemGroup>
-
-  <!-- Vendor Packages targeting .net standard 2.0 -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-    <PackageReference Include="PacketDotNet" />
-    <PackageReference Include="SharpPcap" />
   </ItemGroup>
 
 </Project>
