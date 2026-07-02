@@ -2541,11 +2541,12 @@ public class Services
             ASN1.encode_closing_tag(buffer, 1);
         }
 
-        /* Tag 2: status */
-        if (record.statusFlags.bits_used > 0)
+        /* Tag 2: status (BACnetStatusFlags is a fixed 4-bit string) */
+        var recordStatusFlags = BacnetBitString.ConvertFromInt((uint)record.statusFlags, 4);
+        if (recordStatusFlags.bits_used > 0)
         {
             ASN1.encode_opening_tag(buffer, 2);
-            ASN1.encode_application_bitstring(buffer, record.statusFlags);
+            ASN1.encode_application_bitstring(buffer, recordStatusFlags);
             ASN1.encode_closing_tag(buffer, 2);
         }
     }
@@ -2656,7 +2657,8 @@ public class Services
             return len;
 
         len += l;
-        len += ASN1.decode_bitstring(buffer, offset + len, 2, out var statusFlags);
+        len += ASN1.decode_bitstring(buffer, offset + len, 2, out var statusFlagsBits);
+        var statusFlags = (BacnetStatusFlags)statusFlagsBits.ConvertToInt();
 
         //set status to all returns
         for (var curveNumber = 0; curveNumber < nCurves; curveNumber++)
