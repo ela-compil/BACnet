@@ -1,5 +1,14 @@
 namespace System.IO.BACnet;
 
+/// <summary>
+/// Tracks a single outstanding confirmed request and correlates the reply to it.
+/// Per ASHRAE 135 (20.1.2.6) the invoke-id is source-device-unique — unique across all of this
+/// device's outstanding requests — and is the value used to "associate the response ... with the
+/// original request". Replies are therefore matched by invoke-id alone; the transport source
+/// address is intentionally not compared, because a conformant reply routed via a BACnet
+/// router/BBMD arrives with the router's address (not the addressed device's), and a strict
+/// address check would wrongly drop it (issues #141, #149).
+/// </summary>
 public class BacnetAsyncResult : IAsyncResult, IDisposable
 {
     private BacnetClient _comm;
@@ -66,7 +75,7 @@ public class BacnetAsyncResult : IAsyncResult, IDisposable
 
     private void OnSegment(BacnetClient sender, BacnetAddress adr, BacnetPduTypes type, BacnetConfirmedServices service, byte invokeId, BacnetMaxSegments maxSegments, BacnetMaxAdpu maxAdpu, byte sequenceNumber, byte[] buffer, int offset, int length)
     {
-        if (invokeId != _waitInvokeId || !adr.Equals(_address))
+        if (invokeId != _waitInvokeId)
             return;
 
         Segmented = true;
@@ -75,7 +84,7 @@ public class BacnetAsyncResult : IAsyncResult, IDisposable
 
     private void OnSimpleAck(BacnetClient sender, BacnetAddress adr, BacnetPduTypes type, BacnetConfirmedServices service, byte invokeId, byte[] data, int dataOffset, int dataLength)
     {
-        if (invokeId != _waitInvokeId || !adr.Equals(_address))
+        if (invokeId != _waitInvokeId)
             return;
 
         _waitHandle.Set();
@@ -83,7 +92,7 @@ public class BacnetAsyncResult : IAsyncResult, IDisposable
 
     private void OnAbort(BacnetClient sender, BacnetAddress adr, BacnetPduTypes type, byte invokeId, BacnetAbortReason reason, byte[] buffer, int offset, int length)
     {
-        if (invokeId != _waitInvokeId || !adr.Equals(_address))
+        if (invokeId != _waitInvokeId)
             return;
 
         Error = new Exception($"Abort from device, reason: {reason}");
@@ -91,7 +100,7 @@ public class BacnetAsyncResult : IAsyncResult, IDisposable
 
     private void OnReject(BacnetClient sender, BacnetAddress adr, BacnetPduTypes type, byte invokeId, BacnetRejectReason reason, byte[] buffer, int offset, int length)
     {
-        if (invokeId != _waitInvokeId || !adr.Equals(_address))
+        if (invokeId != _waitInvokeId)
             return;
 
         Error = new Exception($"Reject from device, reason: {reason}");
@@ -99,7 +108,7 @@ public class BacnetAsyncResult : IAsyncResult, IDisposable
 
     private void OnError(BacnetClient sender, BacnetAddress adr, BacnetPduTypes type, BacnetConfirmedServices service, byte invokeId, BacnetErrorClasses errorClass, BacnetErrorCodes errorCode, byte[] buffer, int offset, int length)
     {
-        if (invokeId != _waitInvokeId || !adr.Equals(_address))
+        if (invokeId != _waitInvokeId)
             return;
 
         Error = new Exception($"Error from device: {errorClass} - {errorCode}");
@@ -107,7 +116,7 @@ public class BacnetAsyncResult : IAsyncResult, IDisposable
 
     private void OnComplexAck(BacnetClient sender, BacnetAddress adr, BacnetPduTypes type, BacnetConfirmedServices service, byte invokeId, byte[] buffer, int offset, int length)
     {
-        if (invokeId != _waitInvokeId || !adr.Equals(_address))
+        if (invokeId != _waitInvokeId)
             return;
 
         Segmented = false;
