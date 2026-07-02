@@ -1,4 +1,5 @@
-﻿global using Common.Logging;
+﻿global using Microsoft.Extensions.Logging;
+global using Microsoft.Extensions.Logging.Abstractions;
 global using System.Collections.Generic;
 global using System.Globalization;
 global using System.IO.BACnet.Base;

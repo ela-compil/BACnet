@@ -21,14 +21,19 @@
 
   <!-- Package versions are centralised in Directory.Packages.props (CPM). -->
 
-  <!-- Vendor Packages -->
+  <!-- Logging abstraction (Microsoft.Extensions.Logging); providers are the consumer's choice. -->
   <ItemGroup>
-    <PackageReference Include="Common.Logging" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
   </ItemGroup>
 
-  <!-- Microsoft Packages targeting .net framework v4.8 -->
+  <!-- Microsoft.CSharp = the 'dynamic' runtime binder. A framework reference on net48, part of the
+       shared framework on net8/net10, but a package on netstandard2.0 (it used to arrive transitively
+       via Common.Logging). -->
   <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
     <Reference Include="Microsoft.CSharp" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageReference Include="Microsoft.CSharp" />
   </ItemGroup>
 
   <!-- The native transports now live in their own optional packages, so the core carries no native

@@ -100,7 +100,7 @@ public class BacnetIpUdpProtocolTransport : BacnetTransportBase
                 DisableConnReset(_sharedConn);
                 _sharedConn.Client.Bind(ep);
                 SetDontFragment(_sharedConn, _dontFragment);
-                Log.Info($"Binded shared {ep} using UDP");
+                Log.LogInformation($"Binded shared {ep} using UDP");
             }
             /* This is our own exclusive port. We'll recieve everything sent to this. */
             /* So this is how we'll present our selves to the world */
@@ -135,7 +135,7 @@ public class BacnetIpUdpProtocolTransport : BacnetTransportBase
             _exclusiveConn.Client.Bind(ep);
             SetDontFragment(_exclusiveConn, _dontFragment);
             _exclusiveConn.EnableBroadcast = true;
-            Log.Info($"Binded exclusively to {ep} using UDP");
+            Log.LogInformation($"Binded exclusively to {ep} using UDP");
         }
 
         Bvlc = new BVLC(this);
@@ -164,7 +164,7 @@ public class BacnetIpUdpProtocolTransport : BacnetTransportBase
         }
         catch (SocketException e)
         {
-            Log.WarnFormat("Unable to set DontFragment", e);
+            Log.LogWarning(e, "Unable to set DontFragment");
         }
     }
 
@@ -235,7 +235,7 @@ public class BacnetIpUdpProtocolTransport : BacnetTransportBase
                         }
                         catch (Exception ex)
                         {
-                            transport.Log.Error($"Failed to restart data receive. {ex}");
+                            transport.Log.LogError($"Failed to restart data receive. {ex}");
                         }
                     }, (this, connection));
                 }
@@ -251,7 +251,7 @@ public class BacnetIpUdpProtocolTransport : BacnetTransportBase
 
             if (receivedLength < BVLC.BVLC_HEADER_LENGTH)
             {
-                Log.Warn($"Some garbage data got in: {ConvertToHex(receiveBuffer)}");
+                Log.LogWarning($"Some garbage data got in: {ConvertToHex(receiveBuffer)}");
                 return;
             }
 
@@ -260,7 +260,7 @@ public class BacnetIpUdpProtocolTransport : BacnetTransportBase
 
             if (headerLength == -1)
             {
-                Log.Warn($"Unknow BVLC Header in: {ConvertToHex(receiveBuffer)}");
+                Log.LogWarning($"Unknow BVLC Header in: {ConvertToHex(receiveBuffer)}");
                 return;
             }
 
@@ -269,7 +269,7 @@ public class BacnetIpUdpProtocolTransport : BacnetTransportBase
                 case BacnetBvlcFunctions.BVLC_RESULT:
                     // response to BVLC_REGISTER_FOREIGN_DEVICE, could be BVLC_DISTRIBUTE_BROADCAST_TO_NETWORK
                     // but we are not a BBMD, we don't care
-                    Log.Debug("Receive Register as Foreign Device Response");
+                    Log.LogDebug("Receive Register as Foreign Device Response");
                     break;
 
                 case BacnetBvlcFunctions.BVLC_FORWARDED_NPDU:
@@ -287,13 +287,13 @@ public class BacnetIpUdpProtocolTransport : BacnetTransportBase
                 function != BacnetBvlcFunctions.BVLC_ORIGINAL_BROADCAST_NPDU &&
                 function != BacnetBvlcFunctions.BVLC_FORWARDED_NPDU)
             {
-                Log.Debug($"{function} - ignoring");
+                Log.LogDebug($"{function} - ignoring");
                 return;
             }
 
             if (receivedLength <= headerLength)
             {
-                Log.Warn($"Missing data, only header received: {ConvertToHex(receiveBuffer)}");
+                Log.LogWarning($"Missing data, only header received: {ConvertToHex(receiveBuffer)}");
                 return;
             }
 
@@ -301,14 +301,14 @@ public class BacnetIpUdpProtocolTransport : BacnetTransportBase
         }
         catch (ObjectDisposedException)
         {
-            Log.Debug("Connection has been disposed");
+            Log.LogDebug("Connection has been disposed");
         }
         catch (Exception e)
         {
             if (connection.Client == null || _disposing)
                 return;
 
-            Log.Error("Exception in OnRecieveData", e);
+            Log.LogError(e, "Exception in OnRecieveData");
         }
     }
 
