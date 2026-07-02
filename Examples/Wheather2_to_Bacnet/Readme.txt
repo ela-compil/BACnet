@@ -14,7 +14,7 @@
 *
 *********************************************************************/
 
-This program (windows service or console) gets current weather data
+This program (a console application) gets current weather data
 from Weatherapi Internet Webservice and 'sends' them on Bacnet.
 
 You must first creates a user account into https://www.weatherapi.com/
@@ -32,11 +32,8 @@ On an old Win32 only PC, removes Wow6432Node from the .reg file entry :
 
 This .reg file should be registered by a double click.
 
-To use it as a console application just run the application.
-
-To register the Windows service : in an admin console type :
-	installutil.exe Wheather2_to_Bacnet.exe
-installutil is located on Windows\Microsoft.NET\Framework\V4xxxx
+To run it, just start the application. It is a console app; the original Windows-service
+hosting (installutil) was removed in the .NET 8 migration.
 
 then start manually the service or reboot the pc
 
