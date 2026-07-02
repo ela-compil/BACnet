@@ -2860,7 +2860,10 @@ public class BacnetClient : IDisposable
         {
             SendComplexAck(adr, invokeId, segmentation, BacnetConfirmedServices.SERVICE_CONFIRMED_READ_RANGE, b =>
             {
-                Services.EncodeReadRangeAcknowledge(b, objectId, property.propertyIdentifier, property.propertyArrayIndex, BacnetBitString.ConvertFromInt((uint)status), itemCount, applicationData, requestType, firstSequenceNo);
+                // BACnetResultFlags is a fixed 3-bit BIT STRING {firstItem, lastItem, moreItems}; pass the
+                // width explicitly so all-false (or high-bit-clear) flags still encode three bits instead of
+                // an empty bitstring (reported by @BennoMeijer, PR #15).
+                Services.EncodeReadRangeAcknowledge(b, objectId, property.propertyIdentifier, property.propertyArrayIndex, BacnetBitString.ConvertFromInt((uint)status, 3), itemCount, applicationData, requestType, firstSequenceNo);
             });
         });
     }
