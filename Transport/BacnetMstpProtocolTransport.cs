@@ -213,7 +213,7 @@ public class BacnetMstpProtocolTransport : BacnetTransportBase
             _port.Write(frame.Data, 0, tx);
         }
         frame.SendMutex.Set();
-        Log.Debug($"{frame.FrameType} {frame.DestinationAddress:X2}");
+        Log.LogDebug($"{frame.FrameType} {frame.DestinationAddress:X2}");
     }
 
     private void RemoveCurrentMessage(int msgLength)
@@ -351,7 +351,7 @@ public class BacnetMstpProtocolTransport : BacnetTransportBase
                         }
                         catch (Exception ex)
                         {
-                            Log.Error("Exception in MessageRecieved event", ex);
+                            Log.LogError(ex, "Exception in MessageRecieved event");
                         }
                     }
 
@@ -483,7 +483,7 @@ public class BacnetMstpProtocolTransport : BacnetTransportBase
                                 }
                                 catch (Exception ex)
                                 {
-                                    Log.Error("Exception in MessageRecieved event", ex);
+                                    Log.LogError(ex, "Exception in MessageRecieved event");
                                 }
                                 if (frameType == BacnetMstpFrameTypes.FRAME_TYPE_BACNET_DATA_EXPECTING_REPLY)
                                 {
@@ -511,15 +511,15 @@ public class BacnetMstpProtocolTransport : BacnetTransportBase
             }
             else if (status == GetMessageStatus.ConnectionClose)
             {
-                Log.Debug("No connection");
+                Log.LogDebug("No connection");
             }
             else if (status == GetMessageStatus.ConnectionError)
             {
-                Log.Debug("Connection Error");
+                Log.LogDebug("Connection Error");
             }
             else
             {
-                Log.Debug("Garbage");
+                Log.LogDebug("Garbage");
             }
         }
 
@@ -557,7 +557,7 @@ public class BacnetMstpProtocolTransport : BacnetTransportBase
 
             while (_port != null)
             {
-                Log.Debug(stateChange);
+                Log.LogDebug("{StateChange}", stateChange);
 
                 switch (stateChange)
                 {
@@ -606,11 +606,11 @@ public class BacnetMstpProtocolTransport : BacnetTransportBase
                         break;
                 }
             }
-            Log.Debug("MSTP thread is closing down");
+            Log.LogDebug("MSTP thread is closing down");
         }
         catch (Exception ex)
         {
-            Log.Error("Exception in MSTP thread", ex);
+            Log.LogError(ex, "Exception in MSTP thread");
         }
 
         IsRunning = false;
@@ -630,7 +630,7 @@ public class BacnetMstpProtocolTransport : BacnetTransportBase
             //move back
             Array.Copy(_localBuffer, i, _localBuffer, 0, _localOffset - i);
             _localOffset -= i;
-            Log.Debug("Garbage");
+            Log.LogDebug("Garbage");
             return;
         }
 
@@ -641,7 +641,7 @@ public class BacnetMstpProtocolTransport : BacnetTransportBase
             {
                 _localBuffer[0] = MSTP.MSTP_PREAMBLE1;
                 _localOffset = 1;
-                Log.Debug("Garbage");
+                Log.LogDebug("Garbage");
             }
             return;
         }
@@ -650,7 +650,7 @@ public class BacnetMstpProtocolTransport : BacnetTransportBase
         if (_localOffset > 0)
         {
             _localOffset = 0;
-            Log.Debug("Garbage");
+            Log.LogDebug("Garbage");
         }
     }
 
@@ -780,7 +780,7 @@ public class BacnetMstpProtocolTransport : BacnetTransportBase
                 o => { FrameRecieved(this, frameTypeCopy, destinationAddressCopy, sourceAddressCopy, msgLengthCopy); }, null);
         }
 
-        Log.Debug($"{frameType} {destinationAddress:X2}");
+        Log.LogDebug($"{frameType} {destinationAddress:X2}");
 
         //done
         return GetMessageStatus.Good;

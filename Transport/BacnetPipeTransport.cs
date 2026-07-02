@@ -23,8 +23,8 @@ public class BacnetPipeTransport : IBacnetSerialTransport
             }
             catch (Exception ex)
             {
-                var log = LogManager.GetLogger<BacnetPipeTransport>();
-                log.Warn("Exception in AvailablePorts", ex);
+                var log = BacnetLogging.CreateLogger<BacnetPipeTransport>();
+                log.LogWarning(ex, "Exception in AvailablePorts");
                 return InteropAvailablePorts;
             }
         }

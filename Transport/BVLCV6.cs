@@ -21,7 +21,7 @@ public class BVLCV6
     public bool RandomVmac;
 
     public byte[] VMAC = new byte[3];
-    public ILog Log { get; set; } = LogManager.GetLogger<BVLCV6>();
+    public ILogger Log { get; set; } = BacnetLogging.CreateLogger<BVLCV6>();
 
     public BVLCV6(BacnetIpV6UdpProtocolTransport transport, int vMac)
     {
@@ -89,7 +89,7 @@ public class BVLCV6
                 return;
             }
 
-            Log.Info($"Rejected FDR registration, IP : {sender.Address}");
+            Log.LogInformation($"Rejected FDR registration, IP : {sender.Address}");
         }
     }
 

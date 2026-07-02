@@ -2,7 +2,7 @@
 
 public abstract class BacnetTransportBase : IBacnetTransport
 {
-    public ILog Log { get; set; }
+    public ILogger Log { get; set; }
     public int HeaderLength { get; protected set; }
     public int MaxBufferLength { get; protected set; }
     public BacnetAddressTypes Type { get; protected set; }
@@ -11,7 +11,7 @@ public abstract class BacnetTransportBase : IBacnetTransport
 
     protected BacnetTransportBase()
     {
-        Log = LogManager.GetLogger(GetType());
+        Log = BacnetLogging.CreateLogger(GetType());
     }
 
     public abstract void Start();
