@@ -1,0 +1,17 @@
+<Project>
+
+  <!-- Chain to the repo-root Directory.Build.props, then add example-common settings. -->
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <!-- Examples are illustrative; keep them lenient and self-documenting. -->
+    <Nullable>disable</Nullable>
+    <NoWarn>$(NoWarn);CS0168;CS0219;CS0649</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(MSBuildThisFileDirectory)..\BACnet.csproj" />
+  </ItemGroup>
+
+</Project>

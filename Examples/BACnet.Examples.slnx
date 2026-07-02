@@ -1,0 +1,17 @@
+<Solution>
+  <Project Path="../BACnet.csproj" />
+  <Project Path="AnotherStorageImplementation/AnotherStorageImplementation.csproj" />
+  <Project Path="Bacnet.Room.Simulator/Bacnet.Room.Simulator.csproj" />
+  <Project Path="BacnetToDatabase/BacnetToDatabase.csproj" />
+  <Project Path="BasicAdviseCOV/BasicAdviseCOV.csproj" />
+  <Project Path="BasicAlarmListener/BasicAlarmListener.csproj" />
+  <Project Path="BasicReadWrite/BasicReadWrite.csproj" />
+  <Project Path="BasicServer/BasicServer.csproj" />
+  <Project Path="BasicServerTstLowEnd/BasicServerTstLowEnd.csproj" />
+  <Project Path="DemoBBMD/DemoBBMD.csproj" />
+  <Project Path="MultipleDevices/MultipleDevices.csproj" />
+  <Project Path="ObjectBrowseSample/ObjectBrowseSample.csproj" />
+  <Project Path="RaspberryNetCore/RaspberryNetCore.csproj" />
+  <Project Path="RaspberrySample/RaspberrySample.csproj" />
+  <Project Path="Wheather2_to_Bacnet/Wheather2_to_Bacnet.csproj" />
+</Solution>
