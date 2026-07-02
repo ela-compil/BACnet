@@ -7,17 +7,11 @@
     <OutputType>Library</OutputType>
     <RootNamespace>System.IO.BACnet</RootNamespace>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
-    <!-- Package metadata shared across the repo lives in Directory.Build.props; only the
-         core-package-specific bits stay here. -->
-    <Description>BACnet protocol library for .NET</Description>
-    <PackageTags>bacnet;btl;automation</PackageTags>
-    <PackageIcon>logo.png</PackageIcon>
-    <PackageIconUrl>https://raw.githubusercontent.com/ela-compil/BACnet/master/logo.png</PackageIconUrl>
+    <!-- Package metadata shared across the repo lives in Directory.Build.props (incl. the icon);
+         only the core-package-specific bits stay here. -->
+    <Description>BACnet protocol library for .NET - a pure-managed BACnet/IP stack (the engine behind YABE).</Description>
+    <PackageTags>bacnet;btl;automation;building;iot</PackageTags>
   </PropertyGroup>
-  
-  <ItemGroup>
-    <None Include="logo.png" Pack="true" Visible="false" PackagePath="" />
-  </ItemGroup>
 
   <!-- Package versions are centralised in Directory.Packages.props (CPM). -->
 

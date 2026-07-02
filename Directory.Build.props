@@ -7,12 +7,23 @@
 
     <!-- Organisation-wide package metadata -->
     <Company>Ela-compil sp. z o. o.</Company>
-    <Authors>Ela-compil and contributors</Authors>
+    <Authors>Morten Kvistgaard, F. Chaxel, Ela-compil sp. z o. o. and contributors</Authors>
     <Product>BACnet</Product>
-    <Copyright>Copyright (c) Ela-compil sp. z o. o.</Copyright>
+    <Copyright>Copyright (c) 2014 Yabe project; (c) 2017-2026 Ela-compil sp. z o. o. and contributors</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/ela-compil/BACnet</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/ela-compil/BACnet</RepositoryUrl>
+    <PackageIcon>logo.png</PackageIcon>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <!-- Deterministic, reproducible, debuggable packages: Source Link + symbol packages. -->
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
 
     <!-- Packing is a release-time concern handled by the CI pack/publish workflow (Phase 9),
          not every local build. -->
@@ -29,6 +40,13 @@
 
   <ItemGroup>
     <PackageReference Include="MinVer" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="all" />
+  </ItemGroup>
+
+  <!-- Pack the shared icon + README into every package. -->
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)logo.png" Pack="true" PackagePath="" Visible="false" />
+    <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="" Visible="false" />
   </ItemGroup>
 
 </Project>
