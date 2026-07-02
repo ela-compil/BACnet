@@ -399,9 +399,16 @@ public class BacnetIpUdpProtocolTransport : BacnetTransportBase
             .Where(a => a.Address.AddressFamily == AddressFamily.InterNetwork)
             .ToArray();
 
-        return unicastAddresses.Length == 1
-            ? unicastAddresses.Single()
-            : null;
+        if (unicastAddresses.Length == 1)
+            return unicastAddresses.Single();
+
+        // Zero or several candidate interfaces: the broadcast interface is ambiguous.
+        // Fail loudly instead of silently broadcasting to 255.255.255.255 or an arbitrary
+        // NIC — the caller must pass localEndpointIp to select the interface to use.
+        throw new InvalidOperationException(
+            $"Cannot determine the BACnet/IP broadcast address automatically: found {unicastAddresses.Length} " +
+            $"candidate IPv4 interface(s) [{string.Join(", ", unicastAddresses.Select(a => a.Address.ToString()))}]. " +
+            "Specify localEndpointIp in the BacnetIpUdpProtocolTransport constructor to select the interface.");
     }
 
     // A lot of problems on Mono (Raspberry) to get the correct broadcast @
