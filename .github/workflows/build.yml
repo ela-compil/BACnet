@@ -32,6 +32,10 @@ jobs:
     - name: Build (Windows - all target frameworks)
       if: runner.os == 'Windows'
       run: dotnet build --no-restore -c Release
+    # The examples live in their own solution; two are net8.0-windows WinForms, so they build on Windows only.
+    - name: Build examples (Windows)
+      if: runner.os == 'Windows'
+      run: dotnet build Examples/BACnet.Examples.slnx -c Release
     - name: Build (Linux - netstandard2.0)
       if: runner.os == 'Linux'
       run: dotnet build BACnet.csproj --no-restore -c Release -f netstandard2.0

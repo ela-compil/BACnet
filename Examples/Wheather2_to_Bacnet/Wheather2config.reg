@@ -1,0 +1,8 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Weather2_to_Bacnet]
+"BacnetDeviceId"="12345"
+"Lang"="fr"
+"UserAccessKey"="xxxxxxxxxxx"
+"Latitude"="48.658"
+"Longitude"="6.151"

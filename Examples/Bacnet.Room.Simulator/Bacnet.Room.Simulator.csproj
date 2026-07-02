@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Management" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="DeviceStorage.xml" LogicalName="Bacnet.Room.Simulator.DeviceStorage.xml" />
+    <EmbeddedResource Include="DeviceStorageUs.xml" LogicalName="Bacnet.Room.Simulator.DeviceStorageUs.xml" />
+  </ItemGroup>
+</Project>

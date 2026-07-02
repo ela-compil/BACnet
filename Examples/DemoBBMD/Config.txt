@@ -1,0 +1,9 @@
+﻿// BBMD Peer List
+// IP ; Mask ; Port in decimal
+// for IPV6 Mask is not used but must be present : put ::1 for instance
+//		2a01:f347:ea97:6a2e:c4:1d24:714a:3de3;::1;47808
+// One entry per line
+// first char must be / for comment
+// No blank line
+172.20.54.222;255.255.255.255;47808
+192.168.0.12;255.255.255.255;47808
