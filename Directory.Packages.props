@@ -1,0 +1,32 @@
+<Project>
+
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <!-- Core dependencies -->
+  <ItemGroup>
+    <PackageVersion Include="Common.Logging" Version="3.4.1" />
+  </ItemGroup>
+
+  <!-- pcap / serial stack. Versions differ per target framework; this whole group leaves the
+       core when the native transports are split into BACnet.Ethernet / BACnet.Serial (Phase 6). -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+    <PackageVersion Include="PacketDotNet" Version="0.13.0" />
+    <PackageVersion Include="SharpPcap" Version="4.2.0" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+    <PackageVersion Include="PacketDotNet" Version="0.19.3" />
+    <PackageVersion Include="SharpPcap" Version="4.5.0" />
+    <PackageVersion Include="System.IO.Ports" Version="5.0.1" />
+  </ItemGroup>
+
+  <!-- Test dependencies -->
+  <ItemGroup>
+    <PackageVersion Include="coverlet.collector" Version="10.0.1" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.7.0" />
+    <PackageVersion Include="xunit.runner.visualstudio" Version="3.1.5" />
+    <PackageVersion Include="xunit.v3" Version="3.2.2" />
+  </ItemGroup>
+
+</Project>
