@@ -9,18 +9,16 @@
     <PackageVersion Include="Common.Logging" Version="3.4.1" />
   </ItemGroup>
 
-  <!-- pcap stack for the BACnet.Ethernet package. SharpPcap 6.x targets netstandard2.0 + net8.0
-       (so a single version serves net48/ns2.0/net8/net10) and, unlike 4.x, no longer depends on the
-       vulnerable log4net — which is what let us pull it out of the core and close #112. -->
+  <!-- pcap stack for the BACnet.Ethernet package (net48/net8.0/net10.0). SharpPcap 6.x, unlike the
+       4.x line, no longer depends on the vulnerable log4net — which is what let us pull it out of the
+       core and close #112. A single version serves every Ethernet target framework. -->
   <ItemGroup>
     <PackageVersion Include="PacketDotNet" Version="1.4.8" />
     <PackageVersion Include="SharpPcap" Version="6.3.1" />
   </ItemGroup>
 
-  <!-- System.IO.Ports: in the BCL for net48; a NuGet package everywhere else, versioned per runtime. -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-    <PackageVersion Include="System.IO.Ports" Version="5.0.1" />
-  </ItemGroup>
+  <!-- System.IO.Ports for the BACnet.Serial package (physical serial port). In the BCL on net48;
+       a NuGet package on net8/net10, versioned per runtime. -->
   <ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
     <PackageVersion Include="System.IO.Ports" Version="8.0.0" />
   </ItemGroup>

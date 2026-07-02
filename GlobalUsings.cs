@@ -4,7 +4,6 @@ global using System.Globalization;
 global using System.IO.BACnet.Base;
 global using System.IO.BACnet.Serialize;
 global using System.IO.Pipes;
-global using System.IO.Ports;
 global using System.Linq;
 global using System.Net;
 global using System.Net.NetworkInformation;
