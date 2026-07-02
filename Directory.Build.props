@@ -16,6 +16,7 @@
     <RepositoryUrl>https://github.com/ela-compil/BACnet</RepositoryUrl>
     <PackageIcon>logo.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageReleaseNotes>See the changelog: https://github.com/ela-compil/BACnet/blob/master/CHANGELOG.md</PackageReleaseNotes>
 
     <!-- Deterministic, reproducible, debuggable packages: Source Link + symbol packages. -->
     <PublishRepositoryUrl>true</PublishRepositoryUrl>

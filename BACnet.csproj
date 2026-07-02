@@ -9,6 +9,7 @@
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <!-- Package metadata shared across the repo lives in Directory.Build.props (incl. the icon);
          only the core-package-specific bits stay here. -->
+    <Title>BACnet .NET protocol stack</Title>
     <Description>BACnet protocol library for .NET - a pure-managed BACnet/IP stack (the engine behind YABE).</Description>
     <PackageTags>bacnet;btl;automation;building;iot</PackageTags>
   </PropertyGroup>
