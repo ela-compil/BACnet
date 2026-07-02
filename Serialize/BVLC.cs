@@ -360,7 +360,7 @@ public class BVLC
 
                     for (var i = 0; i < nbEntries; i++)
                     {
-                        long add = BitConverter.ToInt32(buffer, 4 + i * 10);
+                        long add = BitConverter.ToUInt32(buffer, 4 + i * 10);
 
                         Array.Reverse(buffer, 8 + i * 10, 2);
                         var port = BitConverter.ToUInt16(buffer, 8 + i * 10);
@@ -390,7 +390,7 @@ public class BVLC
 
                     for (var i = 0; i < nbEntries; i++)
                     {
-                        long add = BitConverter.ToInt32(buffer, 4 + i * 10);
+                        long add = BitConverter.ToUInt32(buffer, 4 + i * 10);
 
                         Array.Reverse(buffer, 8 + i * 10, 2);
                         var port = BitConverter.ToUInt16(buffer, 8 + i * 10);
