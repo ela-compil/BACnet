@@ -687,6 +687,15 @@ public class ASN1
 
     public static void encode_bacnet_time(EncodeBuffer buffer, DateTime value)
     {
+        if (value == new DateTime(1, 1, 1)) // 'Time any' wildcard, same sentinel encode_bacnet_date uses
+        {
+            buffer.Add(0xFF);
+            buffer.Add(0xFF);
+            buffer.Add(0xFF);
+            buffer.Add(0xFF);
+            return;
+        }
+
         buffer.Add((byte)value.Hour);
         buffer.Add((byte)value.Minute);
         buffer.Add((byte)value.Second);
