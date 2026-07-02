@@ -9,7 +9,7 @@
     <Company>Ela-compil sp. z o.o.</Company>
     <Authors>Morten Kvistgaard, F. Chaxel, Ela-compil sp. z o.o. and contributors</Authors>
     <Product>BACnet</Product>
-    <Copyright>Copyright (c) 2014 Yabe project; (c) 2017-2026 Ela-compil sp. z o.o. and contributors</Copyright>
+    <Copyright>Copyright (c) 2017-2026 Ela-compil sp. z o.o. and contributors</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/ela-compil/BACnet</PackageProjectUrl>
     <RepositoryType>git</RepositoryType>
