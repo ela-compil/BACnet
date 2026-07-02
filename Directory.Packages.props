@@ -9,16 +9,27 @@
     <PackageVersion Include="Common.Logging" Version="3.4.1" />
   </ItemGroup>
 
-  <!-- pcap / serial stack. Versions differ per target framework; this whole group leaves the
+  <!-- pcap stack. net48 pins the old API-compatible builds; every newer target shares the
+       netstandard2.0-compatible builds (consumable by net8/net10). This whole stack leaves the
        core when the native transports are split into BACnet.Ethernet / BACnet.Serial (Phase 6). -->
   <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
     <PackageVersion Include="PacketDotNet" Version="0.13.0" />
     <PackageVersion Include="SharpPcap" Version="4.2.0" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+  <ItemGroup Condition="'$(TargetFramework)' != 'net48'">
     <PackageVersion Include="PacketDotNet" Version="0.19.3" />
     <PackageVersion Include="SharpPcap" Version="4.5.0" />
+  </ItemGroup>
+
+  <!-- System.IO.Ports: in the BCL for net48; a NuGet package everywhere else, versioned per runtime. -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
     <PackageVersion Include="System.IO.Ports" Version="5.0.1" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
+    <PackageVersion Include="System.IO.Ports" Version="8.0.0" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
+    <PackageVersion Include="System.IO.Ports" Version="10.0.0" />
   </ItemGroup>
 
   <!-- Test dependencies -->

@@ -151,16 +151,20 @@ public class BacnetIpUdpProtocolTransport : BacnetTransportBase
     /// <param name="dontFragment"></param>
     private void SetDontFragment(UdpClient client, bool dontFragment)
     {
-        if (Environment.OSVersion.Platform != PlatformID.MacOSX)
+        // Setting DontFragment throws on macOS (dotnet/runtime#27653). The old guard tested
+        // Environment.OSVersion.Platform against PlatformID.MacOSX, but modern .NET reports Unix
+        // (never MacOSX) there, so it never actually skipped macOS. RuntimeInformation detects the
+        // OS correctly on .NET Framework and .NET Core alike.
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            return;
+
+        try
         {
-            try
-            {
-                client.DontFragment = dontFragment;
-            }
-            catch (SocketException e)
-            {
-                Log.WarnFormat("Unable to set DontFragment", e);
-            }
+            client.DontFragment = dontFragment;
+        }
+        catch (SocketException e)
+        {
+            Log.WarnFormat("Unable to set DontFragment", e);
         }
     }
 
@@ -172,15 +176,18 @@ public class BacnetIpUdpProtocolTransport : BacnetTransportBase
     /// </remarks>
     private static void DisableConnReset(UdpClient client)
     {
-        if (Environment.OSVersion.Platform == PlatformID.Win32NT)
-        {
-            const uint IOC_IN = 0x80000000;
-            const uint IOC_VENDOR = 0x18000000;
-            const uint SIO_UDP_CONNRESET = IOC_IN | IOC_VENDOR | 12;
+        // SIO_UDP_CONNRESET is a Windows-only ioctl. RuntimeInformation.IsOSPlatform is the modern,
+        // analyzer-recognised guard (silences CA1416 when targeting net8/net10) and is correct on
+        // both .NET Framework and .NET Core, unlike Environment.OSVersion.Platform.
+        if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            return;
 
-            client?.Client.IOControl(unchecked((int)SIO_UDP_CONNRESET),
-                new[] { System.Convert.ToByte(false) }, null);
-        }
+        const uint IOC_IN = 0x80000000;
+        const uint IOC_VENDOR = 0x18000000;
+        const uint SIO_UDP_CONNRESET = IOC_IN | IOC_VENDOR | 12;
+
+        client?.Client.IOControl(unchecked((int)SIO_UDP_CONNRESET),
+            new[] { System.Convert.ToByte(false) }, null);
     }
 
     protected void Close()
