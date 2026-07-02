@@ -6,6 +6,18 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
+    ignore:
+      # Keep the library's runtime dependency floors low: a library forcing a new major of these
+      # ubiquitous packages would push that major onto every consumer's graph. Take majors here
+      # deliberately, not automatically (minor/patch updates are still proposed).
+      - dependency-name: "Microsoft.Extensions.Logging"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "Microsoft.Extensions.Logging.Abstractions"
+        update-types: ["version-update:semver-major"]
+      # System.IO.Ports is pinned per-TFM to match the runtime major (net8 -> 8.x, net10 -> 10.x);
+      # a cross-major bump on the net8 pin would force .NET 8 consumers onto System.IO.Ports 10.x.
+      - dependency-name: "System.IO.Ports"
+        update-types: ["version-update:semver-major"]
 
   # GitHub Actions used by the build/release workflows.
   - package-ecosystem: "github-actions"
