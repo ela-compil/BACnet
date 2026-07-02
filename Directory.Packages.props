@@ -20,7 +20,7 @@
 
   <!-- Core dependencies -->
   <ItemGroup>
-    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
+    <PackageVersion Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.3" />
     <PackageVersion Include="Microsoft.CSharp" Version="4.7.0" />
   </ItemGroup>
 
