@@ -30,12 +30,10 @@
 
 namespace System.IO.BACnet;
 
-// A reference to PacketDotNet.dll & SharpPcap.dll should be made
-// in order to use this code
-// This class is not in the file BacnetTransport.cs to avoid integration 
-// of two dll when Bacnet/Ethernet is not used
+// This transport lives in its own package (BACnet.Ethernet) so the SharpPcap / PacketDotNet
+// native dependencies stay out of the pure-managed core package.
 
-internal class BacnetEthernetProtocolTransport : BacnetTransportBase
+public class BacnetEthernetProtocolTransport : BacnetTransportBase
 {
     private LibPcapLiveDevice _device;
     private byte[] _deviceMac; // Mac of the device
@@ -97,7 +95,8 @@ internal class BacnetEthernetProtocolTransport : BacnetTransportBase
 
         lock (_device)
         {
-            _device.SendPacket(buffer, dataLength + HeaderLength);
+            // SharpPcap 6.x: send the exact frame length via the span overload.
+            _device.SendPacket(buffer.AsSpan(0, dataLength + HeaderLength));
         }
 
         return dataLength + HeaderLength;
@@ -123,7 +122,7 @@ internal class BacnetEthernetProtocolTransport : BacnetTransportBase
             try
             {
                 var device = devices.FirstOrDefault(dev => dev.Interface.FriendlyName == _deviceName);
-                device?.Open(DeviceMode.Normal, 1000); // 1000 ms read timeout
+                device?.Open(DeviceModes.None, 1000); // 1000 ms read timeout
                 return device;
             }
             catch
@@ -133,7 +132,7 @@ internal class BacnetEthernetProtocolTransport : BacnetTransportBase
         }
         foreach (var device in devices)
         {
-            device.Open(DeviceMode.Normal, 1000); // 1000 ms read timeout
+            device.Open(DeviceModes.None, 1000); // 1000 ms read timeout
             if (device.LinkType == LinkLayers.Ethernet
                 && device.Interface.MacAddress != null)
                 return device;
@@ -150,8 +149,9 @@ internal class BacnetEthernetProtocolTransport : BacnetTransportBase
         {
             try
             {
-                var packet = _device.GetNextPacket();
-                if (packet != null)
+                // SharpPcap 6.x: GetNextPacket fills a PacketCapture and returns a status code
+                // (the old nullable-RawCapture return was removed).
+                if (_device.GetNextPacket(out var packet) == GetPacketStatus.PacketRead)
                     OnPacketArrival(packet);
                 else
                     Thread.Sleep(10); // NonBlockingMode, we need to slow the overhead
@@ -184,13 +184,17 @@ internal class BacnetEthernetProtocolTransport : BacnetTransportBase
         return b;
     }
 
-    private void OnPacketArrival(RawCapture packet)
+    private void OnPacketArrival(PacketCapture packet)
     {
+        // SharpPcap 6.x exposes the frame as a ReadOnlySpan<byte>; materialise it once so the
+        // existing array-based parsing (indexing + Buffer.BlockCopy) works unchanged.
+        var data = packet.Data;
+
         // don't process any packet too short to not be valid
-        if (packet.Data.Length <= 17)
+        if (data.Length <= 17)
             return;
 
-        var buffer = packet.Data;
+        var buffer = data.ToArray();
         var offset = 0;
 
         // Got frames send by me, not for me, not broadcast
