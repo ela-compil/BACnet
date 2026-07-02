@@ -1,0 +1,52 @@
+name: release
+
+# Fires only on a version tag push (e.g. v4.0.0 / v4.0.0-rc.1). MinVer turns the tag into the
+# package version. Build the tag ritual: `git tag v4.0.0 && git push origin v4.0.0`.
+on:
+  push:
+    tags: [ 'v*' ]
+
+permissions:
+  contents: read
+  id-token: write   # nuget.org Trusted Publishing (OIDC) — no stored API key
+  packages: write   # GitHub Packages — uses the automatic GITHUB_TOKEN
+
+jobs:
+  release:
+    # windows-latest so the net48 target packs (it needs the .NET Framework targeting pack).
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # MinVer needs full history + tags to compute the version
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+      - name: Restore
+        run: dotnet restore
+      - name: Build
+        run: dotnet build --no-restore -c Release
+      - name: Test
+        run: dotnet test Tests/BACnet.Tests.csproj --no-build -c Release
+      - name: Pack
+        run: dotnet pack --no-build -c Release -o artifacts
+
+      # 1) GitHub Packages — authenticated by the automatic GITHUB_TOKEN.
+      - name: Publish to GitHub Packages
+        run: dotnet nuget push "artifacts/*.nupkg" --source https://nuget.pkg.github.com/ela-compil/index.json --api-key ${{ secrets.GITHUB_TOKEN }} --skip-duplicate
+
+      # 2) nuget.org — Trusted Publishing: exchange the GitHub OIDC token for a short-lived key
+      #    (valid 1 hour), requested immediately before the push. Configure the trusted publishing
+      #    policy on nuget.org (owner: ela-compil, repo: BACnet, workflow: release.yml). NUGET_USER
+      #    is a repository *variable* (not a secret) holding your nuget.org profile name, which is
+      #    public info — set it under Settings > Secrets and variables > Actions > Variables.
+      - name: NuGet login (OIDC -> temporary API key)
+        uses: NuGet/login@v1
+        id: nuget-login
+        with:
+          user: ${{ vars.NUGET_USER }}
+      - name: Publish to nuget.org
+        run: dotnet nuget push "artifacts/*.nupkg" --source https://api.nuget.org/v3/index.json --api-key ${{ steps.nuget-login.outputs.NUGET_API_KEY }} --skip-duplicate
