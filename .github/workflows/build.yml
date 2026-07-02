@@ -16,13 +16,15 @@ jobs:
         os: [ ubuntu-latest, windows-latest ]
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
       with:
         fetch-depth: 0 # MinVer needs full history + tags to compute the version
     - name: Setup .NET
-      uses: actions/setup-dotnet@v4
+      uses: actions/setup-dotnet@v5
       with:
-        dotnet-version: 10.0.x
+        dotnet-version: |
+          8.0.x
+          10.0.x
     - name: Restore dependencies
       run: dotnet restore
     # net48 only builds on Windows (needs the .NET Framework targeting pack),
@@ -35,4 +37,10 @@ jobs:
       run: dotnet build BACnet.csproj --no-restore -c Release -f netstandard2.0
     # The test project targets net8.0, so it runs on both OSes.
     - name: Test
-      run: dotnet test Tests/BACnet.Tests.csproj -c Release
+      run: dotnet test Tests/BACnet.Tests.csproj -c Release --collect:"XPlat Code Coverage" --results-directory coverage
+    - name: Upload coverage
+      uses: actions/upload-artifact@v7
+      with:
+        name: coverage-${{ matrix.os }}
+        path: coverage/**/coverage.cobertura.xml
+        if-no-files-found: ignore
