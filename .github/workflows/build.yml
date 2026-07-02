@@ -38,9 +38,12 @@ jobs:
     # The test project targets net8.0, so it runs on both OSes.
     - name: Test
       run: dotnet test Tests/BACnet.Tests.csproj -c Release --collect:"XPlat Code Coverage" --results-directory coverage
-    - name: Upload coverage
-      uses: actions/upload-artifact@v7
-      with:
-        name: coverage-${{ matrix.os }}
-        path: coverage/**/coverage.cobertura.xml
-        if-no-files-found: ignore
+    # Render a coverage table into the run's Summary tab (Linux only, to avoid a duplicate).
+    - name: Coverage summary
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        dotnet tool install -g dotnet-reportgenerator-globaltool
+        export PATH="$PATH:$HOME/.dotnet/tools"
+        reportgenerator -reports:"coverage/**/coverage.cobertura.xml" -targetdir:coverage-report -reporttypes:MarkdownSummaryGithub
+        cat coverage-report/SummaryGithub.md >> "$GITHUB_STEP_SUMMARY"
