@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Reads its config from the Windows registry; reuses the BaCSharp model. -->
+    <PackageReference Include="Microsoft.Win32.Registry" />
+    <ProjectReference Include="..\AnotherStorageImplementation\AnotherStorageImplementation.csproj" />
+  </ItemGroup>
+</Project>
