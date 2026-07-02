@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="BACnet.csproj" />
+  <Project Path="Ethernet/BACnet.Ethernet.csproj" />
+  <Project Path="Logging/BACnet.Logging.CommonLogging.csproj" />
+  <Project Path="Serial/BACnet.Serial.csproj" />
+  <Project Path="Tests/BACnet.Tests.csproj" />
+</Solution>
