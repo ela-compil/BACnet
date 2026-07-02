@@ -22,7 +22,7 @@ public class BVLC
     // If empty it's equal to *.*.*.*, everyone allows
     private readonly List<Regex> _autorizedFdr = new();
 
-    public ILog Log { get; set; } = LogManager.GetLogger<BVLC>();
+    public ILogger Log { get; set; } = BacnetLogging.CreateLogger<BVLC>();
 
     public BVLC(BacnetIpUdpProtocolTransport transport)
     {
@@ -84,7 +84,7 @@ public class BVLC
                     return;
                 }
             }
-            Log.Info($"Rejected FDR registration, IP : {sender.Address}");
+            Log.LogInformation($"Rejected FDR registration, IP : {sender.Address}");
         }
     }
 

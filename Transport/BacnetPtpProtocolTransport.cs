@@ -42,7 +42,7 @@ public class BacnetPtpProtocolTransport : BacnetTransportBase
         if (!_maySend.WaitOne(timeout))
             return -BacnetMstpProtocolTransport.ETIMEDOUT;
 
-        Log.Debug(frameType);
+        Log.LogDebug("{FrameType}", frameType);
 
         //send
         SendWithXonXoff(buffer, offset - HeaderLength, fullLength);
@@ -91,7 +91,7 @@ public class BacnetPtpProtocolTransport : BacnetTransportBase
 
     private void SendGreeting()
     {
-        Log.Debug("Sending Greeting");
+        Log.LogDebug("Sending Greeting");
         byte[] greeting = { PTP.PTP_GREETING_PREAMBLE1, PTP.PTP_GREETING_PREAMBLE2, 0x43, 0x6E, 0x65, 0x74, 0x0D }; // BACnet\n
         _port.Write(greeting, 0, greeting.Length);
     }
@@ -182,11 +182,11 @@ public class BacnetPtpProtocolTransport : BacnetTransportBase
             ////wait for greeting
             //if (!WaitForGreeting(-1))
             //{
-            //    Log.Debug("Garbage Greeting");
+            //    Log.LogDebug("Garbage Greeting");
             //    return false;
             //}
             //if (StateLogging)
-            //    Log.Debug("Got Greeting");
+            //    Log.LogDebug("Got Greeting");
 
             ////request connection
             //SendFrame(BacnetPtpFrameTypes.FRAME_TYPE_CONNECT_REQUEST);
@@ -215,7 +215,7 @@ public class BacnetPtpProtocolTransport : BacnetTransportBase
             //move back
             Array.Copy(buffer, i, buffer, 0, length - i);
             length -= i;
-            Log.Debug("Garbage");
+            Log.LogDebug("Garbage");
             return;
         }
 
@@ -225,7 +225,7 @@ public class BacnetPtpProtocolTransport : BacnetTransportBase
         {
             buffer[0] = buffer[length - 1];
             length = 1;
-            Log.Debug("Garbage");
+            Log.LogDebug("Garbage");
             return;
         }
 
@@ -234,7 +234,7 @@ public class BacnetPtpProtocolTransport : BacnetTransportBase
             return;
 
         length = 0;
-        Log.Debug("Garbage");
+        Log.LogDebug("Garbage");
     }
 
     private static void RemoveXonOff(byte[] buffer, int offset, ref int maxOffset, ref bool complimentNext)
@@ -291,7 +291,7 @@ public class BacnetPtpProtocolTransport : BacnetTransportBase
         if (buffer == null) buffer = new byte[fullLength];
         PTP.Encode(buffer, 0, frameType, msgLength);
 
-        Log.Debug(frameType);
+        Log.LogDebug("{FrameType}", frameType);
 
         //send
         SendWithXonXoff(buffer, 0, fullLength);
@@ -375,7 +375,7 @@ public class BacnetPtpProtocolTransport : BacnetTransportBase
             if (IsGreeting(buffer, 0, offset))
             {
                 frameType = BacnetPtpFrameTypes.FRAME_TYPE_GREETING;
-                Log.Debug(frameType);
+                Log.LogDebug("{FrameType}", frameType);
                 return BacnetMstpProtocolTransport.GetMessageStatus.Good;
             }
             //drop message
@@ -430,7 +430,7 @@ public class BacnetPtpProtocolTransport : BacnetTransportBase
             }
         }
 
-        Log.Debug(frameType);
+        Log.LogDebug("{FrameType}", frameType);
 
         //done
         return BacnetMstpProtocolTransport.GetMessageStatus.Good;
@@ -462,16 +462,16 @@ public class BacnetPtpProtocolTransport : BacnetTransportBase
                 {
                     case BacnetMstpProtocolTransport.GetMessageStatus.ConnectionClose:
                     case BacnetMstpProtocolTransport.GetMessageStatus.ConnectionError:
-                        Log.Warn("Connection disturbance");
+                        Log.LogWarning("Connection disturbance");
                         Reconnect();
                         break;
 
                     case BacnetMstpProtocolTransport.GetMessageStatus.DecodeError:
-                        Log.Warn("PTP decode error");
+                        Log.LogWarning("PTP decode error");
                         break;
 
                     case BacnetMstpProtocolTransport.GetMessageStatus.SubTimeout:
-                        Log.Warn("PTP frame abort");
+                        Log.LogWarning("PTP frame abort");
                         break;
 
                     case BacnetMstpProtocolTransport.GetMessageStatus.Timeout:
@@ -574,7 +574,7 @@ public class BacnetPtpProtocolTransport : BacnetTransportBase
                                 if (msgLength > 0)
                                     reason = (BacnetPtpDisconnectReasons)buffer[PTP.PTP_HEADER_LENGTH];
                                 SendFrame(BacnetPtpFrameTypes.FRAME_TYPE_DISCONNECT_RESPONSE);
-                                Log.Debug($"Disconnect requested: {reason}");
+                                Log.LogDebug($"Disconnect requested: {reason}");
                                 Reconnect();
                                 break;
 
@@ -594,11 +594,11 @@ public class BacnetPtpProtocolTransport : BacnetTransportBase
                         break;
                 }
             }
-            Log.Debug("PTP thread is closing down");
+            Log.LogDebug("PTP thread is closing down");
         }
         catch (Exception ex)
         {
-            Log.Error($"Exception in PTP thread", ex);
+            Log.LogError(ex, $"Exception in PTP thread");
         }
     }
 }

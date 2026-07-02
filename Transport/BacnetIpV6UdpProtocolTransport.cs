@@ -235,7 +235,7 @@ public class BacnetIpV6UdpProtocolTransport : BacnetTransportBase
                 Convert(ep, out var remoteAddress);
                 if (rx < BVLCV6.BVLC_HEADER_LENGTH - 3)
                 {
-                    Log.Warn("Some garbage data got in");
+                    Log.LogWarning("Some garbage data got in");
                 }
                 else
                 {
@@ -247,14 +247,14 @@ public class BacnetIpV6UdpProtocolTransport : BacnetTransportBase
                         case 0:
                             return;
                         case -1:
-                            Log.Debug("Unknow BVLC Header");
+                            Log.LogDebug("Unknow BVLC Header");
                             return;
                     }
 
                     // response to BVLC_REGISTER_FOREIGN_DEVICE (could be BVLC_DISTRIBUTE_BROADCAST_TO_NETWORK ... but we are not a BBMD, don't care)
                     if (function == BacnetBvlcV6Functions.BVLC_RESULT)
                     {
-                        Log.Debug("Receive Register as Foreign Device Response");
+                        Log.LogDebug("Receive Register as Foreign Device Response");
                     }
 
                     // a BVLC_FORWARDED_NPDU frame by a BBMD, change the remote_address to the original one (stored in the BVLC header) 
@@ -275,7 +275,7 @@ public class BacnetIpV6UdpProtocolTransport : BacnetTransportBase
             }
             catch (Exception ex)
             {
-                Log.Error("Exception in udp recieve", ex);
+                Log.LogError(ex, "Exception in udp recieve");
             }
             finally
             {
@@ -288,7 +288,7 @@ public class BacnetIpV6UdpProtocolTransport : BacnetTransportBase
             //restart data receive
             if (conn.Client != null)
             {
-                Log.Error("Exception in Ip OnRecieveData", ex);
+                Log.LogError(ex, "Exception in Ip OnRecieveData");
                 conn.BeginReceive(OnReceiveData, conn);
             }
         }
