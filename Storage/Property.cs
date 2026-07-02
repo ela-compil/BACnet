@@ -89,9 +89,13 @@ public class Property
             case BacnetApplicationTags.BACNET_APPLICATION_TAG_NULL:
                 return value.ToString(); // Modif FC
             case BacnetApplicationTags.BACNET_APPLICATION_TAG_REAL:
-                return ((float)value.Value).ToString(CultureInfo.InvariantCulture);
+                // Convert.ToSingle handles a value boxed as any numeric type (avoids an
+                // InvalidCastException when e.g. a double is boxed under a REAL tag).
+                return Convert.ToSingle(value.Value, CultureInfo.InvariantCulture).ToString(CultureInfo.InvariantCulture);
             case BacnetApplicationTags.BACNET_APPLICATION_TAG_DOUBLE:
-                return ((double)value.Value).ToString(CultureInfo.InvariantCulture);
+                return Convert.ToDouble(value.Value, CultureInfo.InvariantCulture).ToString(CultureInfo.InvariantCulture);
+            case BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT:
+                return Convert.ToUInt32(value.Value, CultureInfo.InvariantCulture).ToString(CultureInfo.InvariantCulture);
             case BacnetApplicationTags.BACNET_APPLICATION_TAG_OCTET_STRING:
                 return Convert.ToBase64String((byte[])value.Value);
             case BacnetApplicationTags.BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC_DECODED:
