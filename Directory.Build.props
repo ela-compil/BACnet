@@ -15,12 +15,20 @@
     <RepositoryUrl>https://github.com/ela-compil/BACnet</RepositoryUrl>
 
     <!-- Packing is a release-time concern handled by the CI pack/publish workflow (Phase 9),
-         not every local build. MinVer-based versioning is wired in Phase 8. -->
+         not every local build. -->
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 
-    <!-- Pin AssemblyVersion to major-only so net48 consumers avoid binding-redirect churn on every
-         release; the package/file versions float (MinVer, Phase 8). -->
+    <!-- Versioning is tag-driven via MinVer: the git tag IS the package/file version. Release tags
+         are v-prefixed (e.g. v4.0.0); MinimumMajorMinor floors untagged builds at 4.0.0-alpha.0.<height>
+         until the first v4 tag. AssemblyVersion stays pinned major-only so net48 consumers avoid
+         binding-redirect churn on every release. -->
     <AssemblyVersion>4.0.0.0</AssemblyVersion>
+    <MinVerTagPrefix>v</MinVerTagPrefix>
+    <MinVerMinimumMajorMinor>4.0</MinVerMinimumMajorMinor>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MinVer" PrivateAssets="all" />
+  </ItemGroup>
 
 </Project>
