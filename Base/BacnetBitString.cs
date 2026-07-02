@@ -80,12 +80,15 @@ public struct BacnetBitString
             : 0;
     }
 
-    public static BacnetBitString ConvertFromInt(uint value)
+    public static BacnetBitString ConvertFromInt(uint value, byte? bitsUsed = null)
     {
         return new BacnetBitString
         {
             value = BitConverter.GetBytes(value),
-            bits_used = (byte)Math.Ceiling(Math.Log(value, 2))
+            // Significant bits = floor(log2(value)) + 1. Math.Ceiling(log2) was wrong for exact
+            // powers of two (4 -> 2 instead of 3) and for value 1. Callers that know the fixed width
+            // (e.g. the 4-bit BACnetStatusFlags) can pass it explicitly.
+            bits_used = bitsUsed ?? (byte)(Math.Log(value, 2) + 1)
         };
     }
 };
