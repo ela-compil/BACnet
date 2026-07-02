@@ -57,9 +57,17 @@ BacnetLogging.Factory = LoggerFactory.Create(b => b.AddNLog());
 BacnetLogging.Factory = LoggerFactory.Create(b => b.AddLog4Net("log4net.config"));
 ```
 
-> **Already using `Common.Logging`?** An optional `BACnet.Logging.CommonLogging` bridge package
-> (forwarding `ILogger` to `Common.Logging`) will let you keep your existing sinks with a couple of
-> lines. Until then, the log4net/Serilog/NLog providers above cover most setups.
+### Keeping your existing Common.Logging setup
+
+If your application already uses `Common.Logging`, add the optional **`BACnet.Logging.CommonLogging`**
+package. It routes BACnet's `Microsoft.Extensions.Logging` output back through `Common.Logging`, so your
+existing configuration and sinks keep working with one line:
+
+```csharp
+using Microsoft.Extensions.Logging;
+
+BacnetLogging.Factory = LoggerFactory.Create(b => b.AddCommonLogging());
+```
 
 ## Native transports are now separate packages
 
