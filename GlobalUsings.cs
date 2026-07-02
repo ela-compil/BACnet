@@ -1,7 +1,4 @@
 ﻿global using Common.Logging;
-global using PacketDotNet;
-global using SharpPcap;
-global using SharpPcap.LibPcap;
 global using System.Collections.Generic;
 global using System.Globalization;
 global using System.IO.BACnet.Base;
