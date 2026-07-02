@@ -25,11 +25,8 @@ public class BacnetPtpProtocolTransport : BacnetTransportBase
         MaxBufferLength = 502;
         MaxAdpuLength = PTP.PTP_MAX_APDU;
     }
-
-    public BacnetPtpProtocolTransport(string portName, int baudRate, bool isServer)
-        : this(new BacnetSerialPortTransport(portName, baudRate), isServer)
-    {
-    }
+    // The (portName, baudRate, isServer) convenience ctor moved to SerialTransport.Ptp(...) in the
+    // optional BACnet.Serial package, so the core no longer depends on System.IO.Ports.
 
     public override int Send(byte[] buffer, int offset, int dataLength, BacnetAddress address, bool waitForTransmission,
         int timeout)

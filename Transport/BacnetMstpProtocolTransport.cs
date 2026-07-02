@@ -92,12 +92,8 @@ public class BacnetMstpProtocolTransport : BacnetTransportBase
         _localBuffer = new byte[MaxBufferLength];
         _port = transport;
     }
-
-    public BacnetMstpProtocolTransport(string portName, int baudRate, short sourceAddress = -1,
-        byte maxMaster = 127, byte maxInfoFrames = 1)
-        : this(new BacnetSerialPortTransport(portName, baudRate), sourceAddress, maxMaster, maxInfoFrames)
-    {
-    }
+    // The (portName, baudRate, ...) convenience ctor moved to SerialTransport.Mstp(...) in the
+    // optional BACnet.Serial package, so the core no longer depends on System.IO.Ports.
 
     public override void Start()
     {
