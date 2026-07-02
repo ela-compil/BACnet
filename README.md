@@ -4,11 +4,13 @@
 [![NuGet](https://img.shields.io/nuget/v/BACnet.svg?label=BACnet)](https://www.nuget.org/packages/BACnet)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-A BACnet protocol stack for .NET — the engine behind [YABE (Yet Another BACnet Explorer)](https://sourceforge.net/projects/yetanotherbacnetexplorer/).
+A standalone BACnet protocol stack for .NET.
 
-This library was originally developed by **Morten Kvistgaard** with significant contributions from
-**F. Chaxel**, **Steve Karg**, and the [BACnet Stack (in C)](https://sourceforge.net/projects/bacnet/).
-It was split from the YABE SourceForge SVN into this repository and published on NuGet.
+The stack was originally developed by **Morten Kvistgaard** — with significant contributions from
+**F. Chaxel**, **Steve Karg**, and the [BACnet Stack (in C)](https://sourceforge.net/projects/bacnet/) —
+as part of [YABE (Yet Another BACnet Explorer)](https://sourceforge.net/projects/yetanotherbacnetexplorer/).
+This repository was **forked from the YABE SourceForge SVN** and is maintained here as an independent
+library on NuGet; it is a separate codebase from YABE (YABE keeps its own copy of the stack).
 
 ## Packages
 
