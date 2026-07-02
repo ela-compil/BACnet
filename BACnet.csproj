@@ -3,7 +3,7 @@
     <TargetFrameworks>net48;netstandard2.0;net8.0;net10.0</TargetFrameworks>
     <!-- The core project lives at the repo root; sibling projects sit in their own
          folders, so keep those folders out of this project's default globs. -->
-    <DefaultItemExcludes>$(DefaultItemExcludes);Tests\**;Ethernet\**;Serial\**</DefaultItemExcludes>
+    <DefaultItemExcludes>$(DefaultItemExcludes);Tests\**;Ethernet\**;Serial\**;Logging\**</DefaultItemExcludes>
     <OutputType>Library</OutputType>
     <RootNamespace>System.IO.BACnet</RootNamespace>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>

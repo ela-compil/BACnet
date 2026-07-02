@@ -10,6 +10,12 @@
     <PackageVersion Include="Microsoft.CSharp" Version="4.7.0" />
   </ItemGroup>
 
+  <!-- BACnet.Logging.CommonLogging bridge package (optional MEL -> Common.Logging adapter). -->
+  <ItemGroup>
+    <PackageVersion Include="Microsoft.Extensions.Logging" Version="8.0.1" />
+    <PackageVersion Include="Common.Logging" Version="3.4.1" />
+  </ItemGroup>
+
   <!-- pcap stack for the BACnet.Ethernet package (net48/net8.0/net10.0). SharpPcap 6.x, unlike the
        4.x line, no longer depends on the vulnerable log4net — which is what let us pull it out of the
        core and close #112. A single version serves every Ethernet target framework. -->
