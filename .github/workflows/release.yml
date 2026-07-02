@@ -34,21 +34,13 @@ jobs:
       - name: Pack
         run: dotnet pack --no-build -c Release -o artifacts
 
-      # 1) GitHub Packages — authenticated by the automatic GITHUB_TOKEN.
-      #    `dotnet nuget push` does not expand wildcards, so enumerate the packages. GitHub Packages
-      #    does not accept symbol (.snupkg) packages, so skip symbols here (they go to nuget.org).
-      - name: Publish to GitHub Packages
-        shell: pwsh
-        run: |
-          Get-ChildItem artifacts/*.nupkg | ForEach-Object {
-            dotnet nuget push $_.FullName --source https://nuget.pkg.github.com/ela-compil/index.json --api-key ${{ secrets.GITHUB_TOKEN }} --skip-duplicate --no-symbols
-          }
-
-      # 2) nuget.org — Trusted Publishing: exchange the GitHub OIDC token for a short-lived key
-      #    (valid 1 hour), requested immediately before the push. Configure the trusted publishing
+      # 1) nuget.org (primary) — Trusted Publishing: exchange the GitHub OIDC token for a short-lived
+      #    key (valid 1 hour), requested immediately before the push. Configure the trusted publishing
       #    policy on nuget.org (owner: ela-compil, repo: BACnet, workflow: release.yml). NUGET_USER
       #    is a repository *variable* (not a secret) holding your nuget.org profile name, which is
       #    public info — set it under Settings > Secrets and variables > Actions > Variables.
+      #    `dotnet nuget push` does not expand wildcards, so enumerate the packages (.snupkg symbols
+      #    are pushed alongside each .nupkg automatically).
       - name: NuGet login (OIDC -> temporary API key)
         uses: NuGet/login@v1
         id: nuget-login
@@ -59,4 +51,13 @@ jobs:
         run: |
           Get-ChildItem artifacts/*.nupkg | ForEach-Object {
             dotnet nuget push $_.FullName --source https://api.nuget.org/v3/index.json --api-key ${{ steps.nuget-login.outputs.NUGET_API_KEY }} --skip-duplicate
+          }
+
+      # 2) GitHub Packages — authenticated by the automatic GITHUB_TOKEN. GitHub Packages does not
+      #    accept symbol (.snupkg) packages, so skip symbols here (they went to nuget.org above).
+      - name: Publish to GitHub Packages
+        shell: pwsh
+        run: |
+          Get-ChildItem artifacts/*.nupkg | ForEach-Object {
+            dotnet nuget push $_.FullName --source https://nuget.pkg.github.com/ela-compil/index.json --api-key ${{ secrets.GITHUB_TOKEN }} --skip-duplicate --no-symbols
           }
