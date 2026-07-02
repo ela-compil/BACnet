@@ -2,7 +2,7 @@
 
 [![build](https://github.com/ela-compil/BACnet/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/ela-compil/BACnet/actions/workflows/build.yml)
 [![NuGet](https://img.shields.io/nuget/v/BACnet.svg?label=BACnet)](https://www.nuget.org/packages/BACnet)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/ela-compil/BACnet/blob/master/LICENSE)
 
 A standalone BACnet protocol stack for .NET.
 
@@ -55,7 +55,7 @@ client.Start();
 client.WhoIs();
 ```
 
-The [`Examples/`](Examples/) folder has runnable samples — basic read/write, a device/server,
+The [`Examples/`](https://github.com/ela-compil/BACnet/tree/master/Examples) folder has runnable samples — basic read/write, a device/server,
 COV subscription, alarm/event handling, BBMD, a serial device, and more.
 
 ## Logging
@@ -74,7 +74,7 @@ Console, Serilog, NLog, and log4net all work via their MEL providers. If you alr
 
 ## Upgrading from 3.x to 4.0
 
-4.0 has a few breaking changes — see [`MIGRATION.md`](MIGRATION.md) for details:
+4.0 has a few breaking changes — see [`MIGRATION.md`](https://github.com/ela-compil/BACnet/blob/master/MIGRATION.md) for details:
 
 - **Logging** moved from `Common.Logging` to `Microsoft.Extensions.Logging` (the `Log` property is now `ILogger`).
 - **Native transports** split into optional packages: pcap → `BACnet.Ethernet`, serial → `BACnet.Serial`.
@@ -87,4 +87,4 @@ Releases are also published to GitHub Packages. To restore from there, add the s
 
 ## Contributing
 
-See [`CONTRIBUTING.md`](CONTRIBUTING.md). Licensed under the [MIT License](LICENSE).
+See [`CONTRIBUTING.md`](https://github.com/ela-compil/BACnet/blob/master/CONTRIBUTING.md). Licensed under the [MIT License](https://github.com/ela-compil/BACnet/blob/master/LICENSE).

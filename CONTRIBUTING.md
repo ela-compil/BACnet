@@ -9,8 +9,10 @@ dotnet build BACnet.slnx -c Release
 dotnet test  BACnet.slnx -c Release
 ```
 
-The whole solution builds on Windows; on Linux/macOS the `net48` target and the two WinForms
-examples are skipped. The examples build as their own solution (`Examples/BACnet.Examples.slnx`).
+On Windows the whole solution builds (all target frameworks, plus the two WinForms examples). On
+Linux/macOS, build a cross-platform target instead — e.g. `dotnet build BACnet.csproj -f net8.0` —
+since the `net48` target and the WinForms examples are Windows-only. The examples build as their own
+solution (`Examples/BACnet.Examples.slnx`).
 
 Package versions are centralised in `Directory.Packages.props` (Central Package Management) — add or
 bump versions there, not in individual `.csproj` files.
