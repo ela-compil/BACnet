@@ -35,8 +35,14 @@ jobs:
         run: dotnet pack --no-build -c Release -o artifacts
 
       # 1) GitHub Packages — authenticated by the automatic GITHUB_TOKEN.
+      #    `dotnet nuget push` does not expand wildcards, so enumerate the packages. GitHub Packages
+      #    does not accept symbol (.snupkg) packages, so skip symbols here (they go to nuget.org).
       - name: Publish to GitHub Packages
-        run: dotnet nuget push "artifacts/*.nupkg" --source https://nuget.pkg.github.com/ela-compil/index.json --api-key ${{ secrets.GITHUB_TOKEN }} --skip-duplicate
+        shell: pwsh
+        run: |
+          Get-ChildItem artifacts/*.nupkg | ForEach-Object {
+            dotnet nuget push $_.FullName --source https://nuget.pkg.github.com/ela-compil/index.json --api-key ${{ secrets.GITHUB_TOKEN }} --skip-duplicate --no-symbols
+          }
 
       # 2) nuget.org — Trusted Publishing: exchange the GitHub OIDC token for a short-lived key
       #    (valid 1 hour), requested immediately before the push. Configure the trusted publishing
@@ -49,4 +55,8 @@ jobs:
         with:
           user: ${{ vars.NUGET_USER }}
       - name: Publish to nuget.org
-        run: dotnet nuget push "artifacts/*.nupkg" --source https://api.nuget.org/v3/index.json --api-key ${{ steps.nuget-login.outputs.NUGET_API_KEY }} --skip-duplicate
+        shell: pwsh
+        run: |
+          Get-ChildItem artifacts/*.nupkg | ForEach-Object {
+            dotnet nuget push $_.FullName --source https://api.nuget.org/v3/index.json --api-key ${{ steps.nuget-login.outputs.NUGET_API_KEY }} --skip-duplicate
+          }
