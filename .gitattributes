@@ -1,0 +1,16 @@
+# Normalize all text files to LF in the repository and on checkout.
+# Keeps line endings deterministic across contributors and platforms.
+* text=auto eol=lf
+
+# Binary files — never touch their contents.
+*.png binary
+*.ico binary
+*.gif binary
+*.jpg binary
+*.jpeg binary
+*.dll binary
+*.exe binary
+*.pdb binary
+*.snk binary
+*.pdf binary
+*.zip binary
