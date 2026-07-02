@@ -26,7 +26,7 @@
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
 
-    <!-- Packing is a release-time concern handled by the CI pack/publish workflow (Phase 9),
+    <!-- Packing is a release-time concern handled by the CI pack/publish workflow,
          not every local build. -->
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 

@@ -1,9 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <!-- net48 is deferred until Phase 6 removes the PacketDotNet/old-log4net chain from
-         the core (issue #112): that transitive System.* downgrade only breaks the net48
-         graph. The encode/decode tests are framework-agnostic, so no coverage is lost. -->
+    <!-- The encode/decode tests are framework-agnostic, so net8.0 alone gives full coverage. -->
     <TargetFramework>net8.0</TargetFramework>
     <OutputType>Exe</OutputType>
     <IsPackable>false</IsPackable>
