@@ -2,6 +2,7 @@
   <PropertyGroup>
     <TargetFrameworks>net48;netstandard2.0;net8.0;net10.0</TargetFrameworks>
     <RootNamespace>System.IO.BACnet.Logging</RootNamespace>
+    <Title>BACnet Common.Logging bridge</Title>
     <Description>Optional Microsoft.Extensions.Logging provider that forwards to Common.Logging, so applications still using Common.Logging can keep their existing sinks after upgrading BACnet to the MEL-based 4.0.</Description>
     <PackageTags>bacnet;logging;common.logging;microsoft.extensions.logging</PackageTags>
   </PropertyGroup>

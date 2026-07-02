@@ -1,6 +1,8 @@
 The MIT License (MIT)
 
-Copyright (c) 2014 Yabe project
+Copyright (c) 2014 Yabe project (original BACnet .NET stack by Morten Kvistgaard,
+with contributions from F. Chaxel, Steve Karg, and the BACnet Stack in C)
+Copyright (c) 2017-2026 Ela-compil sp. z o.o. and contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
