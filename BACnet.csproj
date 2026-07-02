@@ -3,7 +3,7 @@
     <TargetFrameworks>net48;netstandard2.0;net8.0;net10.0</TargetFrameworks>
     <!-- The core project lives at the repo root; sibling projects sit in their own
          folders, so keep those folders out of this project's default globs. -->
-    <DefaultItemExcludes>$(DefaultItemExcludes);Tests\**</DefaultItemExcludes>
+    <DefaultItemExcludes>$(DefaultItemExcludes);Tests\**;Ethernet\**</DefaultItemExcludes>
     <OutputType>Library</OutputType>
     <RootNamespace>System.IO.BACnet</RootNamespace>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
@@ -31,11 +31,8 @@
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
 
-  <!-- pcap stack for the Ethernet transport (all targets; versions vary per TFM via CPM). -->
-  <ItemGroup>
-    <PackageReference Include="PacketDotNet" />
-    <PackageReference Include="SharpPcap" />
-  </ItemGroup>
+  <!-- The pcap-based Ethernet transport now lives in the BACnet.Ethernet package, so the core
+       carries no native SharpPcap/PacketDotNet dependency (issue #112). -->
 
   <!-- System.IO.Ports for the serial transports: from the BCL on net48, a package elsewhere. -->
   <ItemGroup Condition="'$(TargetFramework)' != 'net48'">

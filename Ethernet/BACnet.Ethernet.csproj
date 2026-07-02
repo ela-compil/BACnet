@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- Concrete runtimes only (no netstandard2.0): the pcap dependencies require native libpcap
+         and PacketDotNet ships net472/net8.0/net9.0 assets but no netstandard2.0 build. The core
+         package still targets netstandard2.0 for broad managed compatibility. -->
+    <TargetFrameworks>net48;net8.0;net10.0</TargetFrameworks>
+    <RootNamespace>System.IO.BACnet</RootNamespace>
+    <Description>pcap-based BACnet/Ethernet (ISO 8802-3) transport for the BACnet library. Optional add-on that keeps the native SharpPcap/PacketDotNet dependencies out of the core package.</Description>
+    <PackageTags>bacnet;ethernet;pcap</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BACnet.csproj" />
+  </ItemGroup>
+
+  <!-- Package versions are centralised in Directory.Packages.props (CPM). -->
+  <ItemGroup>
+    <PackageReference Include="PacketDotNet" />
+    <PackageReference Include="SharpPcap" />
+  </ItemGroup>
+
+</Project>
