@@ -13,6 +13,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Ethernet", "Ethernet", "{90
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BACnet.Ethernet", "Ethernet\BACnet.Ethernet.csproj", "{39192C6F-92D6-465A-BADB-C59ACDF11778}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Serial", "Serial", "{62465088-94FB-4296-3B39-28B7C5CFDD3E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BACnet.Serial", "Serial\BACnet.Serial.csproj", "{C708ED87-62A0-470C-9444-C5DF1BAEA613}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -59,6 +63,18 @@ Global
 		{39192C6F-92D6-465A-BADB-C59ACDF11778}.Release|x64.Build.0 = Release|Any CPU
 		{39192C6F-92D6-465A-BADB-C59ACDF11778}.Release|x86.ActiveCfg = Release|Any CPU
 		{39192C6F-92D6-465A-BADB-C59ACDF11778}.Release|x86.Build.0 = Release|Any CPU
+		{C708ED87-62A0-470C-9444-C5DF1BAEA613}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C708ED87-62A0-470C-9444-C5DF1BAEA613}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C708ED87-62A0-470C-9444-C5DF1BAEA613}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C708ED87-62A0-470C-9444-C5DF1BAEA613}.Debug|x64.Build.0 = Debug|Any CPU
+		{C708ED87-62A0-470C-9444-C5DF1BAEA613}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C708ED87-62A0-470C-9444-C5DF1BAEA613}.Debug|x86.Build.0 = Debug|Any CPU
+		{C708ED87-62A0-470C-9444-C5DF1BAEA613}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C708ED87-62A0-470C-9444-C5DF1BAEA613}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C708ED87-62A0-470C-9444-C5DF1BAEA613}.Release|x64.ActiveCfg = Release|Any CPU
+		{C708ED87-62A0-470C-9444-C5DF1BAEA613}.Release|x64.Build.0 = Release|Any CPU
+		{C708ED87-62A0-470C-9444-C5DF1BAEA613}.Release|x86.ActiveCfg = Release|Any CPU
+		{C708ED87-62A0-470C-9444-C5DF1BAEA613}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -66,6 +82,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{4FC9C156-8A29-4A1C-B163-06BEDE79BAD9} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
 		{39192C6F-92D6-465A-BADB-C59ACDF11778} = {901B5B8A-C2FF-A745-7AB2-6FEEEE001F18}
+		{C708ED87-62A0-470C-9444-C5DF1BAEA613} = {62465088-94FB-4296-3B39-28B7C5CFDD3E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4BD775C7-0626-4B2B-969B-285F36768D4D}

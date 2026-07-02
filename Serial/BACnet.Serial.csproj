@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <!-- Concrete runtimes only: a serial port is an OS resource. net48 gets SerialPort from the BCL;
+         net8/net10 pull the System.IO.Ports package. The core stays netstandard2.0-compatible. -->
+    <TargetFrameworks>net48;net8.0;net10.0</TargetFrameworks>
+    <RootNamespace>System.IO.BACnet</RootNamespace>
+    <Description>Physical serial-port (System.IO.Ports) transport for the BACnet library, used to drive the MS/TP and PTP protocols over a COM port. Optional add-on that keeps System.IO.Ports out of the core package.</Description>
+    <PackageTags>bacnet;mstp;ptp;serial</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BACnet.csproj" />
+  </ItemGroup>
+
+  <!-- System.IO.Ports is in the BCL on net48; a package on net8/net10 (versions in CPM). -->
+  <ItemGroup Condition="'$(TargetFramework)' != 'net48'">
+    <PackageReference Include="System.IO.Ports" />
+  </ItemGroup>
+
+</Project>
