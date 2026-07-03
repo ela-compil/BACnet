@@ -12,8 +12,9 @@ A standalone BACnet protocol stack for .NET.
 The stack was originally developed by **Morten Kvistgaard** — with significant contributions from
 **F. Chaxel**, **Steve Karg**, and the [BACnet Stack (in C)](https://sourceforge.net/projects/bacnet/) —
 as part of [YABE (Yet Another BACnet Explorer)](https://sourceforge.net/projects/yetanotherbacnetexplorer/).
-This repository was **forked from the YABE SourceForge SVN** and is maintained here as an independent
-library on NuGet; it is a separate codebase from YABE (YABE keeps its own copy of the stack).
+This repository was **forked from the YABE SourceForge SVN** and is maintained here by
+**Jakub Bartkowiak** and the **Ela-compil** team as an independent library on NuGet; it is a separate
+codebase from YABE (YABE keeps its own copy of the stack).
 
 ## Packages
 
