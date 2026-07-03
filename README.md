@@ -48,7 +48,7 @@ dotnet add package BACnet.Serial
 
 ## Getting started
 
-A minimal Who-Is / read a property over BACnet/IP:
+A minimal Who-Is device discovery over BACnet/IP:
 
 ```csharp
 using System.IO.BACnet;
@@ -59,6 +59,10 @@ client.OnIam += (sender, adr, deviceId, maxApdu, seg, vendorId)
 client.Start();
 client.WhoIs();
 ```
+
+> On a host with several network interfaces (e.g. Hyper-V/WSL/Docker virtual adapters), tell the
+> transport which one to bind by passing its IP — otherwise it throws an error listing the candidates:
+> `new BacnetIpUdpProtocolTransport(0xBAC0, localEndpointIp: "192.168.1.50")`.
 
 The [`Examples/`](https://github.com/ela-compil/BACnet/tree/master/Examples) folder has runnable samples — basic read/write, a device/server,
 COV subscription, alarm/event handling, BBMD, a serial device, and more.
