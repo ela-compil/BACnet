@@ -253,13 +253,24 @@ namespace BaCSharp
             // look for the related notification class object
             NotificationClass nc=(NotificationClass)Mydevice.FindBacnetObject(new BacnetObjectId(BacnetObjectTypes.OBJECT_NOTIFICATION_CLASS,m_PROP_NOTIFICATION_CLASS));
   
-            if (nc!=null)
+            if (nc != null)
+            {
+                // An analog high/low-limit alarm is an Out_Of_Range event; report the present value
+                // and the limit that was crossed.
+                bool high = toState == (int)BacnetEventStates.EVENT_STATE_HIGH_LIMIT
+                         || fromState == (uint)BacnetEventStates.EVENT_STATE_HIGH_LIMIT;
+
                 nc.SendIntrinsectEvent(
                     m_PROP_OBJECT_IDENTIFIER,
                     (BacnetNotifyTypes)m_PROP_NOTIFY_TYPE,
-                    BacnetEventTypes.EVENT_CHANGE_OF_VALUE,
+                    BacnetEventTypes.EVENT_OUT_OF_RANGE,
                     (BacnetEventStates)fromState,
-                    (BacnetEventStates)toState);
+                    (BacnetEventStates)toState,
+                    Convert.ToSingle(m_PROP_PRESENT_VALUE),
+                    m_PROP_STATUS_FLAGS,
+                    Convert.ToSingle(m_PROP_DEADBAND),
+                    Convert.ToSingle(high ? m_PROP_HIGH_LIMIT : m_PROP_LOW_LIMIT));
+            }
         }
     }
 }
