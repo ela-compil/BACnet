@@ -127,3 +127,11 @@ independent library on NuGet; it is a separate codebase from YABE (YABE keeps it
 ## License
 
 [MIT](https://github.com/ela-compil/BACnet/blob/master/LICENSE).
+
+## Trademarks
+
+"BACnet" and the BACnet logo are registered trademarks of [ASHRAE](https://www.ashrae.org/) (the
+American Society of Heating, Refrigerating and Air-Conditioning Engineers, Inc.). This project is an
+independent, community-maintained implementation of the BACnet protocol; it is not affiliated with,
+endorsed by, or sponsored by ASHRAE or BACnet International. The name and logo are used only to
+identify the protocol this library implements.
