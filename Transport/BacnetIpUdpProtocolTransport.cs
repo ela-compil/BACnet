@@ -43,6 +43,21 @@ public class BacnetIpUdpProtocolTransport : BacnetTransportBase
     public int SharedPort { get; }
     public int ExclusivePort { get; }
 
+    private int _receiveBufferSize = 1024 * 1024; // 1 MB
+
+    /// <summary>
+    /// UDP receive buffer size (SO_RCVBUF) in bytes, defaulting to 1 MB. A larger buffer lets the OS
+    /// hold a bigger burst of incoming messages before it starts dropping packets. It may be changed
+    /// at any time — including after <see cref="Start"/> — and is applied to the live socket(s)
+    /// immediately. On Linux the effective value is capped by net.core.rmem_max (raise that via
+    /// sysctl to go higher); the getter returns the requested value, not the OS-adjusted one.
+    /// </summary>
+    public int ReceiveBufferSize
+    {
+        get => _receiveBufferSize;
+        set { _receiveBufferSize = value; ApplyReceiveBufferSize(); }
+    }
+
     // Give 0.0.0.0:xxxx if the socket is open with System.Net.IPAddress.Any
     // Today only used by _GetBroadcastAddress method & the bvlc layer class in BBMD mode
     // Some more complex solutions could avoid this, that's why this property is virtual
@@ -138,7 +153,17 @@ public class BacnetIpUdpProtocolTransport : BacnetTransportBase
             Log.LogInformation($"Binded exclusively to {ep} using UDP");
         }
 
+        ApplyReceiveBufferSize();
+
         Bvlc = new BVLC(this);
+    }
+
+    private void ApplyReceiveBufferSize()
+    {
+        // SO_RCVBUF can be set on an already-bound socket. Over-requesting is clamped (Linux) or
+        // honored (Windows), never fatal - but guard anyway for constrained platforms.
+        try { if (_sharedConn != null) _sharedConn.Client.ReceiveBufferSize = _receiveBufferSize; } catch { }
+        try { if (_exclusiveConn != null) _exclusiveConn.Client.ReceiveBufferSize = _receiveBufferSize; } catch { }
     }
 
     /// <summary>
