@@ -105,6 +105,7 @@ Console, Serilog, NLog, and log4net all work via their MEL providers. If you alr
 - **Interface selection is explicit when the host has multiple network interfaces.** In that case
   `BacnetIpUdpProtocolTransport` no longer picks one for you — `Start()` throws and lists the
   candidates. Pass the interface IP: `new BacnetIpUdpProtocolTransport(0xBAC0, localEndpointIp: "192.168.1.50")`.
+- **Renamed** the misspelled enum member `BacnetRejectReason.RECOGNIZED_SERVICE` to `UNRECOGNIZED_SERVICE` (value unchanged).
 
 ## GitHub Packages
 
