@@ -440,7 +440,7 @@ public class BacnetClient : IDisposable
                         Log.LogWarning("Couldn't decode GetAlarmSummary");
                     }
 #else
-                SendConfirmedServiceReject(address, invokeId, BacnetRejectReason.RECOGNIZED_SERVICE); // should be unrecognized but this is the way it was spelled..
+                SendConfirmedServiceReject(address, invokeId, BacnetRejectReason.UNRECOGNIZED_SERVICE);
 #endif
             }
             else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_GET_EVENT_INFORMATION && OnGetAlarmSummaryOrEventInformation != null)
@@ -478,7 +478,7 @@ public class BacnetClient : IDisposable
             else
             {
                 // DAL
-                SendConfirmedServiceReject(address, invokeId, BacnetRejectReason.RECOGNIZED_SERVICE); // should be unrecognized but this is the way it was spelled..
+                SendConfirmedServiceReject(address, invokeId, BacnetRejectReason.UNRECOGNIZED_SERVICE);
                 Log.LogDebug($"Confirmed service not handled: {service}");
             }
         }

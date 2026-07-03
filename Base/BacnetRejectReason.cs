@@ -80,5 +80,5 @@ public enum BacnetRejectReason : byte
     /// Generated in response to a confirmed request APDU in which the Service Choice
     /// field specifies an unknown or unsupported service
     /// </summary>
-    RECOGNIZED_SERVICE = 9
+    UNRECOGNIZED_SERVICE = 9
 }
