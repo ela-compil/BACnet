@@ -1,7 +1,7 @@
 # .NET library for BACnet
 
 [![build](https://github.com/ela-compil/BACnet/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/ela-compil/BACnet/actions/workflows/build.yml)
-[![NuGet](https://img.shields.io/nuget/v/BACnet.svg?label=BACnet)](https://www.nuget.org/packages/BACnet)
+[![NuGet](https://img.shields.io/nuget/vpre/BACnet.svg?label=BACnet)](https://www.nuget.org/packages/BACnet)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/ela-compil/BACnet/blob/master/LICENSE)
 
 A standalone BACnet protocol stack for .NET.
@@ -14,12 +14,14 @@ library on NuGet; it is a separate codebase from YABE (YABE keeps its own copy o
 
 ## Packages
 
-| Package | Description |
-|---------|-------------|
-| [![NuGet](https://img.shields.io/nuget/v/BACnet.svg?label=BACnet)](https://www.nuget.org/packages/BACnet) | Core stack — pure-managed BACnet/IP, MS/TP & PTP protocol, encode/decode. No native dependencies. |
-| [![NuGet](https://img.shields.io/nuget/v/BACnet.Ethernet.svg?label=BACnet.Ethernet)](https://www.nuget.org/packages/BACnet.Ethernet) | pcap-based BACnet/Ethernet (ISO 8802-3) transport (SharpPcap / PacketDotNet). |
-| [![NuGet](https://img.shields.io/nuget/v/BACnet.Serial.svg?label=BACnet.Serial)](https://www.nuget.org/packages/BACnet.Serial) | Physical serial-port transport (`System.IO.Ports`) for MS/TP and PTP. |
-| [![NuGet](https://img.shields.io/nuget/v/BACnet.Logging.CommonLogging.svg?label=BACnet.Logging.CommonLogging)](https://www.nuget.org/packages/BACnet.Logging.CommonLogging) | Optional bridge to route the stack's logs to `Common.Logging`. |
+- **[BACnet](https://www.nuget.org/packages/BACnet)** [![NuGet](https://img.shields.io/nuget/vpre/BACnet.svg?label=nuget)](https://www.nuget.org/packages/BACnet)  
+  Core stack — pure-managed BACnet/IP, MS/TP & PTP protocol, encode/decode. No native dependencies.
+- **[BACnet.Ethernet](https://www.nuget.org/packages/BACnet.Ethernet)** [![NuGet](https://img.shields.io/nuget/vpre/BACnet.Ethernet.svg?label=nuget)](https://www.nuget.org/packages/BACnet.Ethernet)  
+  pcap-based BACnet/Ethernet (ISO 8802-3) transport (SharpPcap / PacketDotNet).
+- **[BACnet.Serial](https://www.nuget.org/packages/BACnet.Serial)** [![NuGet](https://img.shields.io/nuget/vpre/BACnet.Serial.svg?label=nuget)](https://www.nuget.org/packages/BACnet.Serial)  
+  Physical serial-port transport (`System.IO.Ports`) for MS/TP and PTP.
+- **[BACnet.Logging.CommonLogging](https://www.nuget.org/packages/BACnet.Logging.CommonLogging)** [![NuGet](https://img.shields.io/nuget/vpre/BACnet.Logging.CommonLogging.svg?label=nuget)](https://www.nuget.org/packages/BACnet.Logging.CommonLogging)  
+  Optional bridge to route the stack's logs to `Common.Logging`.
 
 ## Supported target frameworks
 
