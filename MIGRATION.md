@@ -91,3 +91,20 @@ The `(portName, baudRate, …)` convenience constructors on `BacnetMstpProtocolT
 
 The core still contains the MS/TP and PTP protocol logic and the `IBacnetSerialTransport` abstraction;
 only the physical `SerialPort` implementation moved.
+
+## Network interface must be explicit when a host has multiple interfaces
+
+In 3.x, `BacnetIpUdpProtocolTransport` silently picked a network interface for you when the machine
+had more than one. That guess was frequently wrong — binding the BACnet/IP broadcast to a virtual
+adapter (Hyper-V, WSL, Docker, a VPN) instead of the real LAN — and the failure was easy to miss.
+
+4.0 stops guessing. When several candidate IPv4 interfaces are present and you have not said which to
+use, `Start()` now throws an `InvalidOperationException` listing the candidates rather than binding to
+the wrong one. Hosts with a single interface are unaffected.
+
+Select the interface by passing its local IP to the constructor:
+
+```diff
+- var transport = new BacnetIpUdpProtocolTransport(0xBAC0);
++ var transport = new BacnetIpUdpProtocolTransport(0xBAC0, localEndpointIp: "192.168.1.50");
+```
