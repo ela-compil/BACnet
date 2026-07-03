@@ -1,6 +1,6 @@
-<img src="https://raw.githubusercontent.com/ela-compil/BACnet/master/logo.png" alt="BACnet logo" align="right" width="130" />
-
 # .NET library for BACnet
+
+<img src="https://raw.githubusercontent.com/ela-compil/BACnet/master/logo.png" alt="BACnet logo" align="right" width="130" />
 
 [![build](https://github.com/ela-compil/BACnet/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/ela-compil/BACnet/actions/workflows/build.yml)
 [![NuGet](https://img.shields.io/nuget/vpre/BACnet.svg?label=BACnet)](https://www.nuget.org/packages/BACnet)
@@ -111,10 +111,6 @@ Console, Serilog, NLog, and log4net all work via their MEL providers. If you alr
 Releases are also published to GitHub Packages. To restore from there, add the source
 `https://nuget.pkg.github.com/ela-compil/index.json` (a GitHub PAT with `read:packages` is required).
 
-## Contributing
-
-See [`CONTRIBUTING.md`](https://github.com/ela-compil/BACnet/blob/master/CONTRIBUTING.md).
-
 ## Credits & history
 
 The stack was originally developed by **Morten Kvistgaard** — with significant contributions from
@@ -123,10 +119,6 @@ as part of [YABE (Yet Another BACnet Explorer)](https://sourceforge.net/projects
 This repository was **forked from the YABE SourceForge SVN** and is maintained here by
 [**Jakub Bartkowiak**](https://github.com/gralin) and the [**Ela-compil**](https://ela.pl) team as an
 independent library on NuGet; it is a separate codebase from YABE (YABE keeps its own copy of the stack).
-
-## License
-
-[MIT](https://github.com/ela-compil/BACnet/blob/master/LICENSE).
 
 ## Trademarks
 
