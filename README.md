@@ -1,3 +1,5 @@
+<img src="https://raw.githubusercontent.com/ela-compil/BACnet/master/logo.png" alt="BACnet logo" align="right" width="130" />
+
 # .NET library for BACnet
 
 [![build](https://github.com/ela-compil/BACnet/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/ela-compil/BACnet/actions/workflows/build.yml)
