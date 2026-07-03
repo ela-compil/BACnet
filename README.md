@@ -4,6 +4,7 @@
 
 [![build](https://github.com/ela-compil/BACnet/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/ela-compil/BACnet/actions/workflows/build.yml)
 [![NuGet](https://img.shields.io/nuget/vpre/BACnet.svg?label=BACnet)](https://www.nuget.org/packages/BACnet)
+[![Downloads](https://img.shields.io/nuget/dt/BACnet.svg?label=downloads)](https://www.nuget.org/packages/BACnet)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/ela-compil/BACnet/blob/master/LICENSE)
 
 A standalone BACnet protocol stack for .NET.
