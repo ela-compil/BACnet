@@ -54,10 +54,15 @@ A minimal Who-Is device discovery over BACnet/IP:
 using System.IO.BACnet;
 
 var client = new BacnetClient(new BacnetIpUdpProtocolTransport(0xBAC0));
+
 client.OnIam += (sender, adr, deviceId, maxApdu, seg, vendorId)
     => Console.WriteLine($"Found device {deviceId} at {adr}");
+
 client.Start();
+
 client.WhoIs();
+
+Console.ReadLine();
 ```
 
 > On a host with several network interfaces (e.g. Hyper-V/WSL/Docker virtual adapters), tell the
