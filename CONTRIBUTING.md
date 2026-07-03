@@ -30,6 +30,7 @@ Short, imperative subject with a type prefix:
 - `fix:` a bug fix
 - `new:` a new feature (additive)
 - `chore:` / `ci:` / `test:` tooling, CI, tests
+- `example:` a change scoped to the Examples/ folder
 - append **`!`** for a breaking change, e.g. `new!: …`
 
 ## Versioning & releases
