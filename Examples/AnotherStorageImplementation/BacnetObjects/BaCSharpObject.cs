@@ -198,6 +198,36 @@ namespace BaCSharp
 
             return propVal;
         }
+
+        // Property_List (BACnetPropertyIdentifier 371): the identifiers of every property this
+        // object supports, except the four the standard requires to be omitted (Object_Identifier,
+        // Object_Name, Object_Type and Property_List itself). It is computed by reflecting over the
+        // object's PROP_* properties and get2_ computed properties, so every object inherits it for
+        // free — the read path picks up this get2_ method automatically. See issue #83.
+        public virtual IList<BacnetValue> get2_PROP_PROPERTY_LIST()
+        {
+            var excluded = new HashSet<string>
+            {
+                "PROP_OBJECT_IDENTIFIER", "PROP_OBJECT_NAME",
+                "PROP_OBJECT_TYPE", "PROP_PROPERTY_LIST"
+            };
+
+            var names = GetType().GetProperties().Select(p => p.Name)
+                .Concat(GetType().GetMethods()
+                    .Where(m => m.Name.StartsWith("get2_"))
+                    .Select(m => m.Name.Substring("get2_".Length)))
+                .Distinct();
+
+            var list = new List<BacnetValue>();
+            foreach (var name in names)
+                if (name.StartsWith("PROP_") && !excluded.Contains(name)
+                    && Enum.TryParse(name, out BacnetPropertyIds id))
+                    list.Add(new BacnetValue(
+                        BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED, (uint)id));
+
+            return list;
+        }
+
         public ErrorCodes ReadPropertyValue(BacnetPropertyReference PropRef, out IList<BacnetValue> propVal)
         {
             propVal = null;
