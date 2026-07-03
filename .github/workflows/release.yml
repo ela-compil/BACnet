@@ -7,7 +7,7 @@ on:
     tags: [ 'v*' ]
 
 permissions:
-  contents: read
+  contents: write   # create the GitHub Release for the pushed tag
   id-token: write   # nuget.org Trusted Publishing (OIDC) — no stored API key
   packages: write   # GitHub Packages — uses the automatic GITHUB_TOKEN
 
@@ -61,3 +61,16 @@ jobs:
           Get-ChildItem artifacts/*.nupkg | ForEach-Object {
             dotnet nuget push $_.FullName --source https://nuget.pkg.github.com/ela-compil/index.json --api-key ${{ secrets.GITHUB_TOKEN }} --skip-duplicate --no-symbols
           }
+
+      # 3) GitHub Release — publish a release for the tag with auto-generated notes (GitHub attaches
+      #    the source archives automatically; the packages live on nuget.org / GitHub Packages). Tags
+      #    with a pre-release suffix (e.g. -beta.1 / -rc.1) are flagged as prereleases so they are not
+      #    shown as the "Latest" release.
+      - name: Create GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $tag = '${{ github.ref_name }}'
+          $flags = if ($tag -match '-') { @('--prerelease') } else { @() }
+          gh release create $tag --title $tag --generate-notes @flags
