@@ -120,7 +120,9 @@ namespace BaCSharp
                     BacnetNotifyTypes notifyType,
                     BacnetEventTypes evenType,
                     BacnetEventStates fromstate,
-                    BacnetEventStates tostate)
+                    BacnetEventStates tostate,
+                    float exceedingValue = 0, BacnetBitString statusFlags = default,
+                    float deadband = 0, float exceededLimit = 0)
         {
 
             if ((m_PROP_RECIPIENT_LIST == null) || (m_PROP_RECIPIENT_LIST.Count == 0))
@@ -136,6 +138,16 @@ namespace BaCSharp
             bacnetEvent.fromState = fromstate;
             bacnetEvent.notifyType = notifyType;
             bacnetEvent.eventType = evenType;
+
+            // Event-specific payload. This sample raises analog limit alarms (Out_Of_Range);
+            // the encoder needs these fields filled for that event type.
+            if (evenType == BacnetEventTypes.EVENT_OUT_OF_RANGE)
+            {
+                bacnetEvent.outOfRange_exceedingValue = exceedingValue;
+                bacnetEvent.outOfRange_statusFlags = statusFlags;
+                bacnetEvent.outOfRange_deadband = deadband;
+                bacnetEvent.outOfRange_exceededLimit = exceededLimit;
+            }
 
             BacnetGenericTime timeStamp = new BacnetGenericTime();
             timeStamp.Tag = BacnetTimestampTags.TIME_STAMP_DATETIME;
@@ -201,8 +213,17 @@ namespace BaCSharp
                     {
                         lock (bacnetEventlock)
                         {
-                            bacnetEvent.processIdentifier = processIdentifier;
-                            recipient.Value.Key.SendUnconfirmedEventNotification(recipient.Value.Value, bacnetEvent);
+                            try
+                            {
+                                bacnetEvent.processIdentifier = processIdentifier;
+                                recipient.Value.Key.SendUnconfirmedEventNotification(recipient.Value.Value, bacnetEvent);
+                            }
+                            catch (Exception ex)
+                            {
+                                // This runs on a thread-pool thread: an unhandled exception would take
+                                // down the whole device, so log and carry on.
+                                System.Diagnostics.Trace.TraceError("Failed to send event notification: " + ex.Message);
+                            }
                         }
 
                     }, null);

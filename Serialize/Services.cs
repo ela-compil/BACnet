@@ -1221,7 +1221,7 @@ public class Services
                                 break;
 
                             default:
-                                throw new Exception("Hmm?");
+                                throw new NotImplementedException($"changeOfValue_tag {data.changeOfValue_tag} is not supported for EVENT_CHANGE_OF_VALUE");
                         }
 
                         ASN1.encode_closing_tag(buffer, 0);
