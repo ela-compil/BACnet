@@ -93,6 +93,9 @@ Console, Serilog, NLog, and log4net all work via their MEL providers. If you alr
 - **Logging** moved from `Common.Logging` to `Microsoft.Extensions.Logging` (the `Log` property is now `ILogger`).
 - **Native transports** split into optional packages: pcap → `BACnet.Ethernet`, serial → `BACnet.Serial`.
   The MS/TP and PTP protocols stay in the core; use `SerialTransport.Mstp(...)` / `.Ptp(...)` from `BACnet.Serial`.
+- **Interface selection is explicit on multi-homed hosts.** When more than one network interface is
+  present, `BacnetIpUdpProtocolTransport` no longer picks one for you — `Start()` throws and lists the
+  candidates. Pass the interface IP: `new BacnetIpUdpProtocolTransport(0xBAC0, localEndpointIp: "192.168.1.50")`.
 
 ## GitHub Packages
 
