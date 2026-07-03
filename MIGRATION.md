@@ -92,7 +92,7 @@ The `(portName, baudRate, …)` convenience constructors on `BacnetMstpProtocolT
 The core still contains the MS/TP and PTP protocol logic and the `IBacnetSerialTransport` abstraction;
 only the physical `SerialPort` implementation moved.
 
-## Network interface must be explicit on multi-homed hosts
+## Network interface must be explicit when a host has multiple interfaces
 
 In 3.x, `BacnetIpUdpProtocolTransport` silently picked a network interface for you when the machine
 had more than one. That guess was frequently wrong — binding the BACnet/IP broadcast to a virtual
