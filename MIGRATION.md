@@ -92,6 +92,21 @@ The `(portName, baudRate, …)` convenience constructors on `BacnetMstpProtocolT
 The core still contains the MS/TP and PTP protocol logic and the `IBacnetSerialTransport` abstraction;
 only the physical `SerialPort` implementation moved.
 
+### Publishing `BACnet.Serial` for Linux / Raspberry Pi
+
+On the modern targets (`net8.0`/`net10.0`), `BACnet.Serial` pulls the `System.IO.Ports` package, which
+ships a platform-specific native library alongside its managed assembly. When you publish for a
+non-Windows target — a Raspberry Pi being the common case — that native library is only deployed if the
+publish knows which platform it targets. Publish with an explicit Runtime Identifier so it is included:
+
+```sh
+dotnet publish --runtime linux-arm64   # 64-bit Raspberry Pi OS
+dotnet publish --runtime linux-arm     # 32-bit Raspberry Pi OS
+```
+
+Without a Runtime Identifier (most often with `--self-contained` or single-file publishes) the native
+part is missing and opening a port throws at runtime.
+
 ## Network interface must be explicit when a host has multiple interfaces
 
 In 3.x, `BacnetIpUdpProtocolTransport` silently picked a network interface for you when the machine
