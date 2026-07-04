@@ -37,6 +37,9 @@ See [MIGRATION.md](MIGRATION.md) for upgrade guidance.
 - Segmented responses now respect the requester's max-APDU-length-accepted (ASHRAE 135 §5.2.1.2). The
   value is captured automatically when `GetSegmentBuffer` is called inside a request event handler, or
   can be passed explicitly via the new `GetSegmentBuffer(maxSegments, requesterMaxAdpu)` overload.
+- Segmented ComplexACKs no longer set the reserved `SERVER` bit in the PDU type octet
+  (ASHRAE 135 §20.1.5 reserves bits 1-0 as zero; strict peers could discard such frames). This aligns
+  the wire format with YABE and bacnet-stack.
 - OS detection in the UDP transport now uses `RuntimeInformation.IsOSPlatform`, fixing `DontFragment` on
   macOS (#91) and making the Windows-only `SIO_UDP_CONNRESET` guard analyzer-clean.
 - Response correlation matches by invoke-id per ASHRAE 135 §20.1.2.6 (#141, #149).

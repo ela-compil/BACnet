@@ -2740,7 +2740,9 @@ public class BacnetClient : IDisposable
         // below must use the same clamped value on every segment.
         maxApdu = Math.Min(maxApdu, buffer.buffer.Length - buffer.offset);
         buffer.max_offset = buffer.offset + maxApdu;
-        var apduHeader = APDU.EncodeComplexAck(buffer, BacnetPduTypes.PDU_TYPE_COMPLEX_ACK | (isSegmented ? BacnetPduTypes.SEGMENTED_MESSAGE | BacnetPduTypes.SERVER : 0) | (moreFollows ? BacnetPduTypes.MORE_FOLLOWS : 0), service, invokeId, segmentation?.sequence_number ?? 0, segmentation?.window_size ?? 0);
+        // note: no SERVER flag - bits 1-0 of a ComplexACK type octet are
+        // reserved-zero (135 §20.1.5); the server flag only exists in SegmentACK
+        var apduHeader = APDU.EncodeComplexAck(buffer, BacnetPduTypes.PDU_TYPE_COMPLEX_ACK | (isSegmented ? BacnetPduTypes.SEGMENTED_MESSAGE : 0) | (moreFollows ? BacnetPduTypes.MORE_FOLLOWS : 0), service, invokeId, segmentation?.sequence_number ?? 0, segmentation?.window_size ?? 0);
         buffer.min_limit = (maxApdu - apduHeader) * (segmentation?.sequence_number ?? 0);
 
         return buffer;

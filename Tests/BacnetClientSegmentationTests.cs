@@ -72,6 +72,9 @@ public class BacnetClientSegmentationTests
 
             var type = (BacnetPduTypes)frame[npduLen];
             Assert.True((type & BacnetPduTypes.SEGMENTED_MESSAGE) > 0, "every frame should be a segment");
+            // bits 1-0 of a ComplexACK type octet are reserved and must be 0
+            // (135 §20.1.5) - the SERVER flag belongs to SegmentACK only
+            Assert.Equal(0, (byte)type & 0x03);
             Assert.Equal(expectedSequence, frame[npduLen + 2]);
             expectedSequence++;
 
