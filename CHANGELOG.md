@@ -36,6 +36,11 @@ See [MIGRATION.md](MIGRATION.md) for upgrade guidance.
 - OS detection in the UDP transport now uses `RuntimeInformation.IsOSPlatform`, fixing `DontFragment` on
   macOS (#91) and making the Windows-only `SIO_UDP_CONNRESET` guard analyzer-clean.
 - Response correlation matches by invoke-id per ASHRAE 135 §20.1.2.6 (#141, #149).
+- `ErrorResponse` sends the Error PDU with the plain §20.1.7 encoding again: since 3.x the error
+  class/code pair was wrapped in spurious context tags, so foreign stacks mis-decoded every error this
+  library returned (the tolerant decoder hid it from same-stack round-trips) (#199). Context wrapping
+  is now explicit at the call sites whose ASN.1 requires it (private-transfer error-type `[0]`,
+  trend-log failure log-datum `[8]`).
 - Multi-object `WritePropertyMultiple` decoding (#158), DATE/TIME/DATETIME culture-invariant
   serialization (#159), float/double property serialization (#143), and several encoder fixes surfaced
   by the Annex F vectors (wildcard time, private-transfer ack, log-record status flags).
