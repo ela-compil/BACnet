@@ -63,14 +63,21 @@ public class BacnetIpUdpProtocolTransport : BacnetTransportBase
     // Some more complex solutions could avoid this, that's why this property is virtual
     public virtual IPEndPoint LocalEndPoint => (IPEndPoint)_exclusiveConn.Client.LocalEndPoint;
 
+    /// <param name="maxApdu">
+    /// Largest APDU this endpoint sends and advertises (in I-Am and confirmed
+    /// request headers). The default <see cref="BVLC.BVLC_MAX_APDU"/> (1476)
+    /// predates UDP/IP overhead, so full-size frames exceed a 1500-byte MTU
+    /// and get IP-fragmented; pass <see cref="BacnetMaxAdpu.MAX_APDU1024"/> to
+    /// keep every frame, including segmented responses, below the MTU.
+    /// </param>
     public BacnetIpUdpProtocolTransport(int port, bool useExclusivePort = false, bool dontFragment = false,
-        int maxPayload = 1472, string localEndpointIp = "")
+        int maxPayload = 1472, string localEndpointIp = "", BacnetMaxAdpu maxApdu = BVLC.BVLC_MAX_APDU)
     {
         SharedPort = port;
         MaxBufferLength = maxPayload;
         Type = BacnetAddressTypes.IP;
         HeaderLength = BVLC.BVLC_HEADER_LENGTH;
-        MaxAdpuLength = BVLC.BVLC_MAX_APDU;
+        MaxAdpuLength = maxApdu;
 
         _exclusivePort = useExclusivePort;
         _dontFragment = dontFragment;
@@ -78,8 +85,8 @@ public class BacnetIpUdpProtocolTransport : BacnetTransportBase
     }
 
     public BacnetIpUdpProtocolTransport(int sharedPort, int exclusivePort, bool dontFragment = false,
-        int maxPayload = 1472, string localEndpointIp = "")
-        : this(sharedPort, false, dontFragment, maxPayload, localEndpointIp)
+        int maxPayload = 1472, string localEndpointIp = "", BacnetMaxAdpu maxApdu = BVLC.BVLC_MAX_APDU)
+        : this(sharedPort, false, dontFragment, maxPayload, localEndpointIp, maxApdu)
     {
         ExclusivePort = exclusivePort;
     }
