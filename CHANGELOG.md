@@ -24,6 +24,9 @@ See [MIGRATION.md](MIGRATION.md) for upgrade guidance.
 - CI: multi-OS build matrix; tag-triggered publish to both nuget.org (Trusted Publishing) and GitHub Packages.
 - Runnable sample projects moved in-repo under `Examples/` and built in CI.
 - ASHRAE 135 Annex F golden-vector encode/decode tests.
+- PrivateTransfer send/receive support in `BacnetClient` (#154): `PrivateTransferRequest`,
+  `SendUnconfirmedPrivateTransfer`, the `OnPrivateTransfer` event, and the
+  `PrivateTransferResponse` / `PrivateTransferErrorResponse` replies (ASHRAE 135 clauses 16.2/16.3).
 
 ### Changed
 - The core package is now pure-managed with no native dependencies (closes the pcap → log4net chain, #112).
