@@ -33,6 +33,13 @@ See [MIGRATION.md](MIGRATION.md) for upgrade guidance.
 - SharpPcap bumped 4.x → 6.x in `BACnet.Ethernet` (drops the vulnerable transitive log4net).
 
 ### Fixed
+- Segmented responses no longer crash with an `IndexOutOfRangeException` when the APDU limit exceeds
+  the transport payload buffer (the default `maxPayload: 1472` vs the 1476-byte B/IP APDU): the segment
+  encoder clamps its window to the physical buffer and `EncodeBuffer` reports `NotEnoughBuffer` instead
+  of writing out of bounds.
+- Segmented responses now respect the requester's max-APDU-length-accepted (ASHRAE 135 §5.2.1.2). The
+  value is captured automatically when `GetSegmentBuffer` is called inside a request event handler, or
+  can be passed explicitly via the new `GetSegmentBuffer(maxSegments, requesterMaxAdpu)` overload.
 - OS detection in the UDP transport now uses `RuntimeInformation.IsOSPlatform`, fixing `DontFragment` on
   macOS (#91) and making the Windows-only `SIO_UDP_CONNRESET` guard analyzer-clean.
 - Response correlation matches by invoke-id per ASHRAE 135 §20.1.2.6 (#141, #149).

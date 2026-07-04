@@ -46,7 +46,15 @@ public class EncodeBuffer
         if (offset < max_offset)
         {
             if (serialize_counter >= min_limit)
-                buffer[offset] = b;
+            {
+                // max_offset may have been raised beyond the physical buffer
+                // (e.g. a segment window larger than the transport payload):
+                // flag it instead of throwing IndexOutOfRangeException
+                if (offset < buffer.Length)
+                    buffer[offset] = b;
+                else
+                    result |= EncodeResult.NotEnoughBuffer;
+            }
         }
         else
         {

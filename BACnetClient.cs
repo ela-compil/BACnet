@@ -92,6 +92,13 @@ public class BacnetClient : IDisposable
         public byte window_size;
         public byte max_segments;
         // ReSharper restore InconsistentNaming
+
+        /// <summary>
+        /// Max-APDU-length-accepted advertised by the requester whose request
+        /// this response answers. Segments are sized to fit it (135 §5.2.1.2);
+        /// null means unknown and only our own transport limit applies.
+        /// </summary>
+        public BacnetMaxAdpu? RequesterMaxAdpu { get; set; }
     }
 
     private class LastSegmentAck
@@ -206,11 +213,24 @@ public class BacnetClient : IDisposable
     public delegate void AlarmAcknowledgeRequestHandler(BacnetClient sender, BacnetAddress adr, byte invokeId, uint ackProcessIdentifier, BacnetObjectId eventObjectIdentifier, uint eventStateAcked, string ackSource, BacnetGenericTime eventTimeStamp, BacnetGenericTime ackTimeStamp);
     public event AlarmAcknowledgeRequestHandler OnAlarmAcknowledge;
 
+    /// <summary>
+    /// Requester's max-APDU-length-accepted of the confirmed request currently
+    /// being dispatched on this thread, so that GetSegmentBuffer() called from
+    /// inside a request event handler picks it up without every handler
+    /// delegate having to carry the value (135 §5.2.1.2: responses must not
+    /// exceed the requester's max APDU). Thread-static because requests from
+    /// different peers are dispatched concurrently.
+    /// </summary>
+    [ThreadStatic]
+    private static BacnetMaxAdpu? _currentRequestMaxAdpu;
+
     protected void ProcessConfirmedServiceRequest(BacnetAddress address, BacnetPduTypes type, BacnetConfirmedServices service, BacnetMaxSegments maxSegments, BacnetMaxAdpu maxAdpu, byte invokeId, byte[] buffer, int offset, int length)
     {
         try
         {
             Log.LogDebug($"ConfirmedServiceRequest {service}");
+
+            _currentRequestMaxAdpu = maxAdpu;
 
             raw_buffer = buffer;
             raw_length = length;
@@ -498,6 +518,10 @@ public class BacnetClient : IDisposable
             SendAbort(address, invokeId, BacnetAbortReason.OTHER);
             //ErrorResponse(address, service, invokeId, BacnetErrorClasses.ERROR_CLASS_DEVICE, BacnetErrorCodes.ERROR_CODE_ABORT_OTHER);
             Log.LogError(ex, "Error in ProcessConfirmedServiceRequest");
+        }
+        finally
+        {
+            _currentRequestMaxAdpu = null;
         }
     }
 
@@ -2754,6 +2778,13 @@ public class BacnetClient : IDisposable
 
     public Segmentation GetSegmentBuffer(BacnetMaxSegments maxSegments)
     {
+        // when called from inside a confirmed-request event handler (the usual
+        // pattern), pick up that request's max-APDU-length-accepted
+        return GetSegmentBuffer(maxSegments, _currentRequestMaxAdpu);
+    }
+
+    public Segmentation GetSegmentBuffer(BacnetMaxSegments maxSegments, BacnetMaxAdpu? requesterMaxAdpu)
+    {
         if (maxSegments == BacnetMaxSegments.MAX_SEG0)
             return null;
 
@@ -2761,8 +2792,21 @@ public class BacnetClient : IDisposable
         {
             buffer = GetEncodeBuffer(Transport.HeaderLength),
             max_segments = GetSegmentsCount(maxSegments),
-            window_size = ProposedWindowSize
+            window_size = ProposedWindowSize,
+            RequesterMaxAdpu = requesterMaxAdpu
         };
+    }
+
+    /// <summary>
+    /// APDU size limit for a response: our own transport limit, capped by the
+    /// requester's max-APDU-length-accepted when known (135 §5.2.1.2).
+    /// </summary>
+    private int GetMaxApdu(Segmentation segmentation)
+    {
+        var maxApdu = GetMaxApdu();
+        if (segmentation?.RequesterMaxAdpu != null)
+            maxApdu = Math.Min(maxApdu, GetMaxApdu(segmentation.RequesterMaxAdpu.Value));
+        return maxApdu;
     }
 
     private EncodeBuffer EncodeSegmentHeader(BacnetAddress adr, byte invokeId, Segmentation segmentation, BacnetConfirmedServices service, bool moreFollows)
@@ -2782,9 +2826,15 @@ public class BacnetClient : IDisposable
         NPDU.Encode(buffer, BacnetNpduControls.PriorityNormalMessage, adr.RoutedSource, adr.RoutedDestination);
 
         //set segments limits
-        buffer.max_offset = buffer.offset + GetMaxApdu();
+        var maxApdu = GetMaxApdu(segmentation);
+        // never open an encode window past the physical buffer: the APDU limit
+        // can exceed the transport payload (e.g. 1476 vs the default 1472),
+        // which previously wrote out of bounds. The min_limit chunk arithmetic
+        // below must use the same clamped value on every segment.
+        maxApdu = Math.Min(maxApdu, buffer.buffer.Length - buffer.offset);
+        buffer.max_offset = buffer.offset + maxApdu;
         var apduHeader = APDU.EncodeComplexAck(buffer, BacnetPduTypes.PDU_TYPE_COMPLEX_ACK | (isSegmented ? BacnetPduTypes.SEGMENTED_MESSAGE | BacnetPduTypes.SERVER : 0) | (moreFollows ? BacnetPduTypes.MORE_FOLLOWS : 0), service, invokeId, segmentation?.sequence_number ?? 0, segmentation?.window_size ?? 0);
-        buffer.min_limit = (GetMaxApdu() - apduHeader) * (segmentation?.sequence_number ?? 0);
+        buffer.min_limit = (maxApdu - apduHeader) * (segmentation?.sequence_number ?? 0);
 
         return buffer;
     }
@@ -2897,7 +2947,7 @@ public class BacnetClient : IDisposable
             //first segment? validate max segments
             if (segmentation.sequence_number == 0)  //only validate first segment
             {
-                if (segmentation.max_segments != 0xFF && segmentation.buffer.offset > segmentation.max_segments * (GetMaxApdu() - 5))      //5 is adpu header
+                if (segmentation.max_segments != 0xFF && segmentation.buffer.offset > segmentation.max_segments * (GetMaxApdu(segmentation) - 5))      //5 is adpu header
                 {
                     Log.LogInformation("Too much segmenation");
                     // DAL
