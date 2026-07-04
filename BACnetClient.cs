@@ -1167,18 +1167,25 @@ public class BacnetClient : IDisposable
 
     public void Iam(uint deviceId, BacnetSegmentations segmentation = BacnetSegmentations.SEGMENTATION_BOTH, BacnetAddress receiver = null, BacnetAddress source = null)
     {
+        BacnetAddress npduDestination;
         if (receiver == null)
         {
             receiver = Transport.GetBroadcastAddress();
+            npduDestination = receiver;
             Log.LogDebug($"Broadcasting Iam {deviceId}");
         }
         else
         {
-            Log.LogDebug($"Sending Iam {deviceId} to {receiver}");
+            // answering a Who-Is that came through a BACnet router: the NPDU
+            // destination is the original source network/address while the
+            // frame itself goes back to the router that forwarded it, so the
+            // requester receives the I-Am as 135 §16.10.4 requires
+            npduDestination = receiver.RoutedSource ?? receiver;
+            Log.LogDebug($"Sending Iam {deviceId} to {receiver.ToString(false)}");
         }
 
         var b = GetEncodeBuffer(Transport.HeaderLength);
-        NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, receiver, source);
+        NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, npduDestination, source);
         APDU.EncodeUnconfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_I_AM);
         Services.EncodeIamBroadcast(b, deviceId, (uint)GetMaxApdu(), segmentation, VendorId);
 

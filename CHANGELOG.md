@@ -40,6 +40,10 @@ See [MIGRATION.md](MIGRATION.md) for upgrade guidance.
 - Segmented responses now respect the requester's max-APDU-length-accepted (ASHRAE 135 §5.2.1.2). The
   value is captured automatically when `GetSegmentBuffer` is called inside a request event handler, or
   can be passed explicitly via the new `GetSegmentBuffer(maxSegments, requesterMaxAdpu)` overload.
+- `Iam()` can now answer a Who-Is that arrived through a BACnet router: when the receiver address
+  carries a `RoutedSource`, the I-Am is NPDU-addressed to the original source network and sent back via
+  the router, so the requester receives it as ASHRAE 135 §16.10.4 requires (previously such replies
+  were mis-addressed and never reached the requester).
 - Segmented ComplexACKs no longer set the reserved `SERVER` bit in the PDU type octet
   (ASHRAE 135 §20.1.5 reserves bits 1-0 as zero; strict peers could discard such frames). This aligns
   the wire format with YABE and bacnet-stack.
