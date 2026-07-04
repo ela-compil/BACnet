@@ -1440,36 +1440,138 @@ public class Services
         ASN1.encode_context_object_id(buffer, 3, targetObject.type, targetObject.instance);
     }
 
-    public static void EncodePrivateTransferConfirmed(EncodeBuffer buffer, uint vendorID, uint serviceNumber, byte[] data)
+    private static void EncodePrivateTransferData(EncodeBuffer buffer, uint vendorId, uint serviceNumber, byte[] data)
     {
-        ASN1.encode_context_unsigned(buffer, 0, vendorID);
-        ASN1.encode_context_unsigned(buffer, 1, serviceNumber);
-        ASN1.encode_opening_tag(buffer, 2);
-        buffer.Add(data, data.Length);
-        ASN1.encode_closing_tag(buffer, 2);
-    }
-
-    public static void EncodePrivateTransferUnconfirmed(EncodeBuffer buffer, uint vendorID, uint serviceNumber, byte[] data)
-    {
-        ASN1.encode_context_unsigned(buffer, 0, vendorID);
-        ASN1.encode_context_unsigned(buffer, 1, serviceNumber);
-        ASN1.encode_opening_tag(buffer, 2);
-        buffer.Add(data, data.Length);
-        ASN1.encode_closing_tag(buffer, 2);
-    }
-
-    public static void EncodePrivateTransferAcknowledge(EncodeBuffer buffer, uint vendorID, uint serviceNumber, byte[] data)
-    {
-        ASN1.encode_context_unsigned(buffer, 0, vendorID);
+        ASN1.encode_context_unsigned(buffer, 0, vendorId);
         ASN1.encode_context_unsigned(buffer, 1, serviceNumber);
 
-        // The result block is optional; omit it (rather than NRE / emit an empty [2]) when absent.
         if (data == null || data.Length == 0)
             return;
 
         ASN1.encode_opening_tag(buffer, 2);
         buffer.Add(data, data.Length);
         ASN1.encode_closing_tag(buffer, 2);
+    }
+
+    public static void EncodePrivateTransferConfirmed(EncodeBuffer buffer, uint vendorId, uint serviceNumber, byte[] data)
+    {
+        EncodePrivateTransferData(buffer, vendorId, serviceNumber, data);
+    }
+
+    public static void EncodePrivateTransferUnconfirmed(EncodeBuffer buffer, uint vendorId, uint serviceNumber, byte[] data)
+    {
+        EncodePrivateTransferData(buffer, vendorId, serviceNumber, data);
+    }
+
+    public static void EncodePrivateTransferAcknowledge(EncodeBuffer buffer, uint vendorId, uint serviceNumber, byte[] data)
+    {
+        EncodePrivateTransferData(buffer, vendorId, serviceNumber, data);
+    }
+
+    public static int DecodePrivateTransfer(byte[] buffer, int offset, int apduLen, out uint vendorId, out uint serviceNumber, out byte[] data)
+    {
+        var len = 0;
+        uint lenValueType;
+
+        vendorId = 0;
+        serviceNumber = 0;
+        data = null;
+
+        /* Tag 0: vendor-id */
+        if (!ASN1.decode_is_context_tag(buffer, offset + len, 0))
+            return -1;
+        len += ASN1.decode_tag_number_and_value(buffer, offset + len, out _, out lenValueType);
+        len += ASN1.decode_unsigned(buffer, offset + len, lenValueType, out vendorId);
+
+        /* Tag 1: service-number */
+        if (!ASN1.decode_is_context_tag(buffer, offset + len, 1))
+            return -1;
+        len += ASN1.decode_tag_number_and_value(buffer, offset + len, out _, out lenValueType);
+        len += ASN1.decode_unsigned(buffer, offset + len, lenValueType, out serviceNumber);
+
+        /* Tag 2: service-parameters / result-block --optional--
+         * The content is opaque (ABSTRACT-SYNTAX.&Type, "a local matter"), so it cannot be parsed;
+         * being the last element of the production its closing tag is the last octet of the APDU. */
+        if (len >= apduLen)
+            return len;
+
+        if (!ASN1.decode_is_opening_tag_number(buffer, offset + len, 2))
+            return -1;
+        len++;
+
+        var dataLen = apduLen - len - 1;
+        if (dataLen < 0 || !ASN1.decode_is_closing_tag_number(buffer, offset + apduLen - 1, 2))
+            return -1;
+
+        data = new byte[dataLen];
+        Array.Copy(buffer, offset + len, data, 0, dataLen);
+
+        return apduLen;
+    }
+
+    public static void EncodePrivateTransferError(EncodeBuffer buffer, BacnetErrorClasses errorClass, BacnetErrorCodes errorCode, uint vendorId, uint serviceNumber, byte[] data)
+    {
+        /* Tag 0: error-type */
+        EncodeError(buffer, errorClass, errorCode);
+        ASN1.encode_context_unsigned(buffer, 1, vendorId);
+        ASN1.encode_context_unsigned(buffer, 2, serviceNumber);
+
+        /* error-parameters --optional-- */
+        if (data == null || data.Length == 0)
+            return;
+
+        ASN1.encode_opening_tag(buffer, 3);
+        buffer.Add(data, data.Length);
+        ASN1.encode_closing_tag(buffer, 3);
+    }
+
+    public static int DecodePrivateTransferError(byte[] buffer, int offset, int apduLen, out BacnetErrorClasses errorClass, out BacnetErrorCodes errorCode, out uint vendorId, out uint serviceNumber, out byte[] data)
+    {
+        var len = 0;
+        uint lenValueType;
+
+        errorClass = default;
+        errorCode = default;
+        vendorId = 0;
+        serviceNumber = 0;
+        data = null;
+
+        /* Tag 0: error-type */
+        if (!ASN1.decode_is_opening_tag_number(buffer, offset + len, 0))
+            return -1;
+        var errorLen = DecodeError(buffer, offset + len, out errorClass, out errorCode);
+        if (errorLen < 0)
+            return -1;
+        len += errorLen;
+
+        /* Tag 1: vendor-id */
+        if (!ASN1.decode_is_context_tag(buffer, offset + len, 1))
+            return -1;
+        len += ASN1.decode_tag_number_and_value(buffer, offset + len, out _, out lenValueType);
+        len += ASN1.decode_unsigned(buffer, offset + len, lenValueType, out vendorId);
+
+        /* Tag 2: service-number */
+        if (!ASN1.decode_is_context_tag(buffer, offset + len, 2))
+            return -1;
+        len += ASN1.decode_tag_number_and_value(buffer, offset + len, out _, out lenValueType);
+        len += ASN1.decode_unsigned(buffer, offset + len, lenValueType, out serviceNumber);
+
+        /* Tag 3: error-parameters --optional-- opaque, runs to the end of the APDU (see DecodePrivateTransfer) */
+        if (len >= apduLen)
+            return len;
+
+        if (!ASN1.decode_is_opening_tag_number(buffer, offset + len, 3))
+            return -1;
+        len++;
+
+        var dataLen = apduLen - len - 1;
+        if (dataLen < 0 || !ASN1.decode_is_closing_tag_number(buffer, offset + apduLen - 1, 3))
+            return -1;
+
+        data = new byte[dataLen];
+        Array.Copy(buffer, offset + len, data, 0, dataLen);
+
+        return apduLen;
     }
 
     public static void EncodeDeviceCommunicationControl(EncodeBuffer buffer, uint timeDuration, uint enableDisable, string password)

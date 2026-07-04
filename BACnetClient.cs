@@ -475,6 +475,16 @@ public class BacnetClient : IDisposable
                     Log.LogWarning("Couldn't decode AlarmAcknowledge");
                 }
             }
+            else if (service == BacnetConfirmedServices.SERVICE_CONFIRMED_PRIVATE_TRANSFER && OnPrivateTransfer != null)
+            {
+                if (Services.DecodePrivateTransfer(buffer, offset, length, out var vendorId, out var serviceNumber, out var serviceParameters) >= 0)
+                    OnPrivateTransfer(this, address, invokeId, vendorId, serviceNumber, serviceParameters, true, maxSegments);
+                else
+                {
+                    SendAbort(address, invokeId, BacnetAbortReason.OTHER);
+                    Log.LogWarning("Couldn't decode PrivateTransfer");
+                }
+            }
             else
             {
                 // DAL
@@ -505,6 +515,9 @@ public class BacnetClient : IDisposable
     //used by both 'confirmed' and 'unconfirmed' notify
     public delegate void COVNotificationHandler(BacnetClient sender, BacnetAddress adr, byte invokeId, uint subscriberProcessIdentifier, BacnetObjectId initiatingDeviceIdentifier, BacnetObjectId monitoredObjectIdentifier, uint timeRemaining, bool needConfirm, ICollection<BacnetPropertyValue> values, BacnetMaxSegments maxSegments);
     public event COVNotificationHandler OnCOVNotification;
+
+    public delegate void PrivateTransferHandler(BacnetClient sender, BacnetAddress adr, byte invokeId, uint vendorId, uint serviceNumber, byte[] serviceParameters, bool needConfirm, BacnetMaxSegments maxSegments);
+    public event PrivateTransferHandler OnPrivateTransfer;
 
     protected void ProcessUnconfirmedServiceRequest(BacnetAddress address, BacnetPduTypes type, BacnetUnconfirmedServices service, byte[] buffer, int offset, int length)
     {
@@ -561,6 +574,13 @@ public class BacnetClient : IDisposable
                     OnEventNotify(this, address, 0, eventData, false);
                 else
                     Log.LogWarning("Couldn't decode unconfirmed Event/Alarm Notification");
+            }
+            else if (service == BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_PRIVATE_TRANSFER && OnPrivateTransfer != null)
+            {
+                if (Services.DecodePrivateTransfer(buffer, offset, length, out var vendorId, out var serviceNumber, out var serviceParameters) >= 0)
+                    OnPrivateTransfer(this, address, 0, vendorId, serviceNumber, serviceParameters, false, BacnetMaxSegments.MAX_SEG0);
+                else
+                    Log.LogWarning("Couldn't decode unconfirmed PrivateTransfer");
             }
             else
             {
@@ -1193,6 +1213,17 @@ public class BacnetClient : IDisposable
         NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, adr, source);
         APDU.EncodeUnconfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_EVENT_NOTIFICATION);
         Services.EncodeEventNotifyUnconfirmed(b, eventData);
+        Transport.Send(b.buffer, Transport.HeaderLength, b.offset - Transport.HeaderLength, adr, false, 0);
+    }
+
+    public void SendUnconfirmedPrivateTransfer(BacnetAddress adr, uint vendorId, uint serviceNumber, byte[] serviceParameters = null, BacnetAddress source = null)
+    {
+        Log.LogDebug($"Sending UnconfirmedPrivateTransfer vendor {vendorId} service {serviceNumber}");
+
+        var b = GetEncodeBuffer(Transport.HeaderLength);
+        NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, adr, source);
+        APDU.EncodeUnconfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_PRIVATE_TRANSFER);
+        Services.EncodePrivateTransferUnconfirmed(b, vendorId, serviceNumber, serviceParameters);
         Transport.Send(b.buffer, Transport.HeaderLength, b.offset - Transport.HeaderLength, adr, false, 0);
     }
 
@@ -2320,6 +2351,68 @@ public class BacnetClient : IDisposable
         res.Dispose();
     }
 
+    public bool PrivateTransferRequest(BacnetAddress adr, uint vendorId, uint serviceNumber, byte[] serviceParameters, out byte[] resultBlock, byte invokeId = 0)
+    {
+        using (var result = (BacnetAsyncResult)BeginPrivateTransferRequest(adr, vendorId, serviceNumber, serviceParameters, true, invokeId))
+        {
+            for (var r = 0; r < _retries; r++)
+            {
+                if (result.WaitForDone(Timeout))
+                {
+                    EndPrivateTransferRequest(result, out _, out _, out resultBlock, out var ex);
+                    if (ex != null)
+                        throw ex;
+                    return true;
+                }
+                if (r < Retries - 1)
+                    result.Resend();
+            }
+        }
+        resultBlock = null;
+        return false;
+    }
+
+    public IAsyncResult BeginPrivateTransferRequest(BacnetAddress adr, uint vendorId, uint serviceNumber, byte[] serviceParameters, bool waitForTransmit, byte invokeId = 0)
+    {
+        Log.LogDebug($"Sending PrivateTransferRequest vendor {vendorId} service {serviceNumber}");
+        if (invokeId == 0)
+            invokeId = (byte)Interlocked.Increment(ref _invokeId);
+
+        var buffer = GetEncodeBuffer(Transport.HeaderLength);
+        NPDU.Encode(buffer, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource, adr.RoutedDestination);
+        APDU.EncodeConfirmedServiceRequest(buffer, PduConfirmedServiceRequest(), BacnetConfirmedServices.SERVICE_CONFIRMED_PRIVATE_TRANSFER, MaxSegments, Transport.MaxAdpuLength, invokeId);
+        Services.EncodePrivateTransferConfirmed(buffer, vendorId, serviceNumber, serviceParameters);
+
+        var ret = new BacnetAsyncResult(this, adr, invokeId, buffer.buffer, buffer.offset - Transport.HeaderLength, waitForTransmit, TransmitTimeout);
+        ret.Resend();
+
+        return ret;
+    }
+
+    public void EndPrivateTransferRequest(IAsyncResult result, out uint vendorId, out uint serviceNumber, out byte[] resultBlock, out Exception ex)
+    {
+        var res = (BacnetAsyncResult)result;
+
+        ex = null;
+        if (!res.WaitForDone(Timeout))
+            ex = new Exception("Wait Timeout");
+
+        if (ex == null)
+            ex = res.Error;
+
+        vendorId = 0;
+        serviceNumber = 0;
+        resultBlock = null;
+
+        if (ex == null)
+        {
+            if (Services.DecodePrivateTransfer(res.Result, 0, res.Result.Length, out vendorId, out serviceNumber, out resultBlock) < 0)
+                ex = new Exception("Decode");
+        }
+
+        res.Dispose();
+    }
+
     // FChaxel
     public bool GetAlarmSummaryOrEventRequest(BacnetAddress adr, bool getEvent, ref IList<BacnetGetEventInformationData> alarms, byte invokeId = 0)
     {
@@ -2887,6 +2980,17 @@ public class BacnetClient : IDisposable
         });
     }
 
+    public void PrivateTransferResponse(BacnetAddress adr, byte invokeId, Segmentation segmentation, uint vendorId, uint serviceNumber, byte[] resultBlock = null)
+    {
+        HandleSegmentationResponse(adr, invokeId, segmentation, o =>
+        {
+            SendComplexAck(adr, invokeId, segmentation, BacnetConfirmedServices.SERVICE_CONFIRMED_PRIVATE_TRANSFER, b =>
+            {
+                Services.EncodePrivateTransferAcknowledge(b, vendorId, serviceNumber, resultBlock);
+            });
+        });
+    }
+
     public void ErrorResponse(BacnetAddress adr, BacnetConfirmedServices service, byte invokeId, BacnetErrorClasses errorClass, BacnetErrorCodes errorCode)
     {
         Log.LogDebug($"Sending ErrorResponse for {service}: {errorCode}");
@@ -2894,6 +2998,16 @@ public class BacnetClient : IDisposable
         NPDU.Encode(buffer, BacnetNpduControls.PriorityNormalMessage, adr.RoutedSource, adr.RoutedDestination);
         APDU.EncodeError(buffer, BacnetPduTypes.PDU_TYPE_ERROR, service, invokeId);
         Services.EncodeError(buffer, errorClass, errorCode);
+        Transport.Send(buffer.buffer, Transport.HeaderLength, buffer.offset - Transport.HeaderLength, adr, false, 0);
+    }
+
+    public void PrivateTransferErrorResponse(BacnetAddress adr, byte invokeId, BacnetErrorClasses errorClass, BacnetErrorCodes errorCode, uint vendorId, uint serviceNumber, byte[] errorParameters = null)
+    {
+        Log.LogDebug($"Sending PrivateTransferErrorResponse: {errorCode}");
+        var buffer = GetEncodeBuffer(Transport.HeaderLength);
+        NPDU.Encode(buffer, BacnetNpduControls.PriorityNormalMessage, adr.RoutedSource, adr.RoutedDestination);
+        APDU.EncodeError(buffer, BacnetPduTypes.PDU_TYPE_ERROR, BacnetConfirmedServices.SERVICE_CONFIRMED_PRIVATE_TRANSFER, invokeId);
+        Services.EncodePrivateTransferError(buffer, errorClass, errorCode, vendorId, serviceNumber, errorParameters);
         Transport.Send(buffer.buffer, Transport.HeaderLength, buffer.offset - Transport.HeaderLength, adr, false, 0);
     }
 
