@@ -1512,7 +1512,7 @@ public class Services
     public static void EncodePrivateTransferError(EncodeBuffer buffer, BacnetErrorClasses errorClass, BacnetErrorCodes errorCode, uint vendorId, uint serviceNumber, byte[] data)
     {
         /* Tag 0: error-type */
-        EncodeError(buffer, errorClass, errorCode);
+        EncodeError(buffer, errorClass, errorCode, 0);
         ASN1.encode_context_unsigned(buffer, 1, vendorId);
         ASN1.encode_context_unsigned(buffer, 2, serviceNumber);
 
@@ -2550,12 +2550,22 @@ public class Services
         return len;
     }
 
-    public static void EncodeError(EncodeBuffer buffer, BacnetErrorClasses errorClass, BacnetErrorCodes errorCode, byte tagNumber = 0)
+    /// <summary>
+    /// Encode the 'Error' production (ASHRAE 135 clause 21): error-class and
+    /// error-code as two application-tagged enumerations. The plain form is
+    /// what the BACnet-Error-PDU carries (clause 20.1.7). Pass
+    /// <paramref name="tagNumber"/> only where a service's ASN.1 wraps the
+    /// Error in a context tag, e.g. ConfirmedPrivateTransfer-Error
+    /// 'error-type' [0] or the trend-log 'failure' log-datum [8].
+    /// </summary>
+    public static void EncodeError(EncodeBuffer buffer, BacnetErrorClasses errorClass, BacnetErrorCodes errorCode, byte? tagNumber = null)
     {
-        ASN1.encode_opening_tag(buffer, tagNumber);
+        if (tagNumber.HasValue)
+            ASN1.encode_opening_tag(buffer, tagNumber.Value);
         ASN1.encode_application_enumerated(buffer, (uint)errorClass);
         ASN1.encode_application_enumerated(buffer, (uint)errorCode);
-        ASN1.encode_closing_tag(buffer, tagNumber);
+        if (tagNumber.HasValue)
+            ASN1.encode_closing_tag(buffer, tagNumber.Value);
     }
 
     public static int DecodeError(byte[] buffer, int offset, out BacnetErrorClasses errorClass, out BacnetErrorCodes errorCode)
