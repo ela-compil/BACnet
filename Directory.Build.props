@@ -5,6 +5,12 @@
   <PropertyGroup>
     <LangVersion>latest</LangVersion>
 
+    <!-- Ship the XML documentation file inside every package so consumers get IntelliSense tooltips
+         for the doc-commented public API. CS1591 is silenced because the API is only partially
+         documented today; without this the existing /// comments never reach consumers at all. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+
     <!-- Organisation-wide package metadata -->
     <Company>Ela-compil sp. z o.o.</Company>
     <Authors>Morten Kvistgaard, F. Chaxel, Ela-compil sp. z o.o. and contributors</Authors>
@@ -29,6 +35,12 @@
     <!-- Packing is a release-time concern handled by the CI pack/publish workflow,
          not every local build. -->
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+
+    <!-- Package validation: run the SDK's compatibility checks at pack time. This catches missing
+         target-framework assets and any accidental public-API break across the multi-targeted
+         surface (net48/netstandard2.0/net8.0/net10.0). Baseline-against-a-previous-release checks
+         stay off until a stable v4 ships on nuget.org - set PackageValidationBaselineVersion then. -->
+    <EnablePackageValidation>true</EnablePackageValidation>
 
     <!-- Versioning is tag-driven via MinVer: the git tag IS the package/file version. Release tags
          are v-prefixed (e.g. v4.0.0); MinimumMajorMinor floors untagged builds at 4.0.0-alpha.0.<height>

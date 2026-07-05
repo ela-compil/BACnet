@@ -36,6 +36,11 @@ jobs:
     - name: Build examples (Windows)
       if: runner.os == 'Windows'
       run: dotnet build Examples/BACnet.Examples.slnx -c Release
+    # Pack on Windows (all target frameworks are present there) so EnablePackageValidation runs its
+    # cross-TFM compatibility checks on every PR, not only on a release tag.
+    - name: Pack (packaging + validation smoke test, Windows)
+      if: runner.os == 'Windows'
+      run: dotnet pack --no-build -c Release -o artifacts
     - name: Build (Linux - netstandard2.0)
       if: runner.os == 'Linux'
       run: dotnet build BACnet.csproj --no-restore -c Release -f netstandard2.0
