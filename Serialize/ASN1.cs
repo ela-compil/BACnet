@@ -495,10 +495,10 @@ public class ASN1
                         var oType = value.Value.GetType();
                         if (oType.IsGenericType && oType.GetGenericTypeDefinition() == typeof(List<>))
                         {
-                            // last chance to encode a List<object>
-                            var t = (List<object>)value.Value;
-                            foreach (var o in t)
-                                ((IEncode)o).Encode(buffer);
+                            // last chance to encode a list of encodable items (the cast via the
+                            // non-generic enumerator also accepts List<BacnetDailySchedule> etc.)
+                            foreach (IEncode o in (Collections.IEnumerable)value.Value)
+                                o.Encode(buffer);
                         }
                         else
                         {
@@ -2199,6 +2199,17 @@ public class ASN1
                 tagLen = v.Decode(buffer, offset, (uint)maxOffset);
                 if (tagLen < 0) return -1;
                 value.Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC_DECODED;
+                value.Value = v;
+                return tagLen;
+            }
+            if (propertyId == BacnetPropertyIds.PROP_WEEKLY_SCHEDULE)
+            {
+                // one BACnetDailySchedule per call: reading the whole BACnetARRAY[7] therefore
+                // yields seven values, matching how other arrays decode element-wise
+                var v = new BacnetDailySchedule();
+                tagLen = v.Decode(buffer, offset, (uint)maxOffset);
+                if (tagLen < 0) return -1;
+                value.Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_WEEKLY_SCHEDULE;
                 value.Value = v;
                 return tagLen;
             }
