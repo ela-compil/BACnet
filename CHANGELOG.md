@@ -59,6 +59,11 @@ See [MIGRATION.md](MIGRATION.md) for upgrade guidance.
   The same fix applies to `DecodeAlarmAcknowledge` (an ack echoes the event's timestamp choice) and
   the GetEventInformation timestamps; new `ASN1.bacapp_decode_timestamp` handles the full CHOICE and
   `BacnetGenericTime.Tag`/`Sequence` are now populated on decode.
+- Partially-wildcarded Date and Time values no longer throw during decode (#103): any octet may
+  individually be X'FF' (unspecified) and Date carries special values (odd/even month, last day —
+  ASHRAE 135 §20.2.12/§20.2.13). Wildcarded time components are clamped to zero and unrepresentable
+  dates degrade to `DateTime.MinValue`, matching YABE's behaviour; previously the exception was
+  swallowed upstream, e.g. silently dropping event notifications stamped with a wildcarded time.
 - All unconfirmed sends now address peers behind a BACnet router correctly (NPDU destination =
   the peer's network/MAC, frame to the fronting router — the same addressing the `Iam()` fix
   established): directed `WhoIs`/`WhoHas`, `SendUnconfirmedEventNotification`,

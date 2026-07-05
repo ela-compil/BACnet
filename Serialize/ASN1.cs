@@ -1681,9 +1681,18 @@ public class ASN1
         int wday = buffer[offset + 3];
 
         if (month == 0xFF && day == 0xFF && wday == 0xFF && year - 1900 == 0xFF)
+        {
             bdate = new DateTime(1, 1, 1);
+        }
         else
-            bdate = new DateTime(year, month, day);
+        {
+            // any field may also individually be X'FF' (unspecified), and month/day carry special
+            // values (13/14 = odd/even month, 32/33/34 = last/odd/even day - 135 20.2.12); none of
+            // those are representable in a DateTime, so degrade to the minimum date like the
+            // fully-wildcarded case instead of throwing
+            try { bdate = new DateTime(year, month, day); }
+            catch { bdate = new DateTime(1, 1, 1); }
+        }
 
         return 4;
     }
@@ -1709,7 +1718,12 @@ public class ASN1
         }
         else
         {
-            if (hundredths > 100) hundredths = 0; // sometimes set to 255
+            // any octet may individually be X'FF' (unspecified - 135 20.2.13): clamp wildcarded
+            // components to zero so the remaining specified fields survive instead of throwing
+            if (hour > 23) hour = 0;
+            if (min > 59) min = 0;
+            if (sec > 59) sec = 0;
+            if (hundredths > 99) hundredths = 0; // sometimes set to 255
             btime = new DateTime(1, 1, 1, hour, min, sec, hundredths * 10);
         }
         return 4;
