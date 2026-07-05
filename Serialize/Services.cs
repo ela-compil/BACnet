@@ -206,30 +206,17 @@ public class Services
         len += ASN1.decode_context_object_id(buffer, offset + len, 1, out ushort type, out eventObjectIdentifier.instance);
         eventObjectIdentifier.type = (BacnetObjectTypes)type;
         len += ASN1.decode_context_enumerated(buffer, offset + len, 2, out eventStateAcked);
-        if (ASN1.decode_is_context_tag(buffer, offset + len, 3))
-        {
-            len += 2; // opening Tag 3 then 2
-            len += ASN1.decode_application_date(buffer, offset + len, out var date);
-            len += ASN1.decode_application_time(buffer, offset + len, out var time);
-            eventTimeStamp.Time = new DateTime(date.Year, date.Month, date.Day, time.Hour, time.Minute,
-                time.Second, time.Millisecond);
-
-            len += 2; // closing tag 2 then 3
-        }
-        else
+        /* eventTimeStamp [3] echoes the BACnetTimeStamp CHOICE of the event being acknowledged,
+           so it is not necessarily a date+time */
+        var stampLen = ASN1.bacapp_decode_context_timestamp(buffer, offset + len, 3, out eventTimeStamp);
+        if (stampLen < 0)
             return -1;
+        len += stampLen;
         len += ASN1.decode_context_character_string(buffer, offset + len, 256, 4, out ackSource);
-        if (ASN1.decode_is_context_tag(buffer, offset + len, 5))
-        {
-            len += 2; // opening Tag 5 then 2
-            len += ASN1.decode_application_date(buffer, offset + len, out var date);
-            len += ASN1.decode_application_time(buffer, offset + len, out var time);
-            ackTimeStamp.Time = new DateTime(date.Year, date.Month, date.Day, time.Hour, time.Minute,
-                time.Second, time.Millisecond);
-            len += 2; // closing tag 2 then 5
-        }
-        else
+        stampLen = ASN1.bacapp_decode_context_timestamp(buffer, offset + len, 5, out ackTimeStamp);
+        if (stampLen < 0)
             return -1;
+        len += stampLen;
         return len;
     }
 
@@ -816,19 +803,14 @@ public class Services
         else
             return -1;
 
-        /*  tag 3 - timeStamp */
-        if (ASN1.decode_is_context_tag(buffer, offset + len, 3))
+        /* tag 3 - timeStamp: a BACnetTimeStamp CHOICE of time, sequence number or date+time
+           (devices without clocks commonly stamp their events with sequence numbers) */
         {
-            len += 2; // opening Tag 3 then 2
-            len += ASN1.decode_application_date(buffer, offset + len, out var date);
-            len += ASN1.decode_application_time(buffer, offset + len, out var time);
-            eventData.timeStamp.Time = new DateTime(date.Year, date.Month, date.Day, time.Hour, time.Minute,
-                time.Second, time.Millisecond);
-
-            len += 2; // closing tag 2 then 3
+            var stampLen = ASN1.bacapp_decode_context_timestamp(buffer, offset + len, 3, out eventData.timeStamp);
+            if (stampLen < 0)
+                return -1;
+            len += stampLen;
         }
-        else
-            return -1;
 
         /* tag 4 - noticicationClass */
         if (ASN1.decode_is_context_tag(buffer, offset + len, 4))
@@ -1331,18 +1313,23 @@ public class Services
 
                 for (var i = 0; i < 3; i++)
                 {
-                    len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValue); // opening tag
-
-                    if (tagNumber != (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_NULL)
+                    // each entry is a BACnetTimeStamp CHOICE (time, sequence number or date+time);
+                    // some devices send a Null for transitions that never happened
+                    if (ASN1.decode_is_application_tag(buffer, offset + len, BacnetApplicationTags.BACNET_APPLICATION_TAG_NULL))
                     {
-                        len += ASN1.decode_application_date(buffer, offset + len, out var date);
-                        len += ASN1.decode_application_time(buffer, offset + len, out var time);
-                        var timestamp = date.Date + time.TimeOfDay;
-                        value.eventTimeStamps[i] = new BacnetGenericTime(timestamp, BacnetTimestampTags.TIME_STAMP_DATETIME);
-                        len++; // closing tag
+                        len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValue);
+                        len += (int)lenValue;
                     }
                     else
-                        len += (int)lenValue;
+                    {
+                        var stampLength = ASN1.bacapp_decode_timestamp(buffer, offset + len, out value.eventTimeStamps[i]);
+                        if (stampLength < 0)
+                        {
+                            moreEvent = false;
+                            return -1;
+                        }
+                        len += stampLength;
+                    }
                 }
 
                 len++;  // closing Tag 3
