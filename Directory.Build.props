@@ -5,6 +5,12 @@
   <PropertyGroup>
     <LangVersion>latest</LangVersion>
 
+    <!-- Ship the XML documentation file inside every package so consumers get IntelliSense tooltips
+         for the doc-commented public API. CS1591 is silenced because the API is only partially
+         documented today; without this the existing /// comments never reach consumers at all. -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+
     <!-- Organisation-wide package metadata -->
     <Company>Ela-compil sp. z o.o.</Company>
     <Authors>Morten Kvistgaard, F. Chaxel, Ela-compil sp. z o.o. and contributors</Authors>
