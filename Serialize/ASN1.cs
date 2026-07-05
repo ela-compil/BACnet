@@ -799,6 +799,68 @@ public class ASN1
         }
     }
 
+    /// <summary>
+    /// Decode a BACnetTimeStamp CHOICE: time [0], sequenceNumber [1] or dateTime [2]
+    /// (the counterpart of <see cref="bacapp_encode_timestamp"/>).
+    /// </summary>
+    public static int bacapp_decode_timestamp(byte[] buffer, int offset, out BacnetGenericTime value)
+    {
+        value = default;
+
+        if (decode_is_context_tag(buffer, offset, 0)) /* time */
+        {
+            var len = decode_tag_number_and_value(buffer, offset, out _, out _);
+            len += decode_bacnet_time(buffer, offset + len, out var time);
+            value = new BacnetGenericTime(time, BacnetTimestampTags.TIME_STAMP_TIME);
+            return len;
+        }
+
+        if (decode_is_context_tag(buffer, offset, 1)) /* sequenceNumber */
+        {
+            var len = decode_tag_number_and_value(buffer, offset, out _, out var lenValue);
+            len += decode_unsigned(buffer, offset + len, lenValue, out uint sequence);
+            if (sequence > ushort.MaxValue)
+                return -1;
+            value = new BacnetGenericTime(default, BacnetTimestampTags.TIME_STAMP_SEQUENCE, (ushort)sequence);
+            return len;
+        }
+
+        if (decode_is_opening_tag_number(buffer, offset, 2)) /* dateTime */
+        {
+            var len = 1; /* opening tag 2 */
+            len += decode_application_date(buffer, offset + len, out var date);
+            len += decode_application_time(buffer, offset + len, out var time);
+            value = new BacnetGenericTime(
+                new DateTime(date.Year, date.Month, date.Day, time.Hour, time.Minute, time.Second, time.Millisecond),
+                BacnetTimestampTags.TIME_STAMP_DATETIME);
+            if (!decode_is_closing_tag_number(buffer, offset + len, 2))
+                return -1;
+            return len + 1; /* closing tag 2 */
+        }
+
+        return -1;
+    }
+
+    /// <summary>
+    /// Decode a context-wrapped BACnetTimeStamp, e.g. 'timeStamp [3]' of an event notification
+    /// or 'eventTimeStamp [3]' of an AcknowledgeAlarm.
+    /// </summary>
+    public static int bacapp_decode_context_timestamp(byte[] buffer, int offset, byte tagNumber, out BacnetGenericTime value)
+    {
+        value = default;
+
+        if (!decode_is_opening_tag_number(buffer, offset, tagNumber))
+            return -1;
+        var len = 1; /* opening tag */
+        var stampLen = bacapp_decode_timestamp(buffer, offset + len, out value);
+        if (stampLen < 0)
+            return -1;
+        len += stampLen;
+        if (!decode_is_closing_tag_number(buffer, offset + len, tagNumber))
+            return -1;
+        return len + 1; /* closing tag */
+    }
+
     public static void encode_application_character_string(EncodeBuffer buffer, string value)
     {
         var tmp = new EncodeBuffer();

@@ -53,6 +53,12 @@ See [MIGRATION.md](MIGRATION.md) for upgrade guidance.
 - OS detection in the UDP transport now uses `RuntimeInformation.IsOSPlatform`, fixing `DontFragment` on
   macOS (#91) and making the Windows-only `SIO_UDP_CONNRESET` guard analyzer-clean.
 - Response correlation matches by invoke-id per ASHRAE 135 §20.1.2.6 (#141, #149).
+- Event notifications stamped with a `time` or `sequenceNumber` BACnetTimeStamp are now decoded, so
+  `OnEventNotify` fires for them (#32, #67): the decoders assumed the `dateTime` choice only, making
+  notifications from devices without clocks (which commonly stamp with sequence numbers) invisible.
+  The same fix applies to `DecodeAlarmAcknowledge` (an ack echoes the event's timestamp choice) and
+  the GetEventInformation timestamps; new `ASN1.bacapp_decode_timestamp` handles the full CHOICE and
+  `BacnetGenericTime.Tag`/`Sequence` are now populated on decode.
 - All unconfirmed sends now address peers behind a BACnet router correctly (NPDU destination =
   the peer's network/MAC, frame to the fronting router — the same addressing the `Iam()` fix
   established): directed `WhoIs`/`WhoHas`, `SendUnconfirmedEventNotification`,
