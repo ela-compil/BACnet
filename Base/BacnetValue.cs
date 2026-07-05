@@ -45,6 +45,12 @@ public struct BacnetValue
             return BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_PROPERTY_REFERENCE;
         if (t == typeof(BacnetDailySchedule))
             return BacnetApplicationTags.BACNET_APPLICATION_TAG_WEEKLY_SCHEDULE;
+        if (t == typeof(BacnetCalendarEntry))
+            return BacnetApplicationTags.BACNET_APPLICATION_TAG_CALENDAR_ENTRY;
+        if (t == typeof(BacnetWeekNDay))
+            return BacnetApplicationTags.BACNET_APPLICATION_TAG_WEEKNDAY;
+        if (t == typeof(BacnetDateRange))
+            return BacnetApplicationTags.BACNET_APPLICATION_TAG_DATERANGE;
         if (t.IsEnum)
             return BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED;
 

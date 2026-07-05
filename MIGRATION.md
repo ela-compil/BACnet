@@ -123,3 +123,31 @@ Select the interface by passing its local IP to the constructor:
 - var transport = new BacnetIpUdpProtocolTransport(0xBAC0);
 + var transport = new BacnetIpUdpProtocolTransport(0xBAC0, localEndpointIp: "192.168.1.50");
 ```
+
+## Scheduling types are spec-shaped now
+
+4.0 adds first-class serialization for the Schedule and Calendar objects (Weekly_Schedule,
+Exception_Schedule, Date_List), which replaces two old types that did not match the standard:
+
+- **`BACnetCalendarEntry` → `BacnetCalendarEntry`.** The old struct held a `List<object> Entries`
+  bag of every entry in a Date_List. The new class models the standard's CHOICE: exactly one of
+  `Date`, `DateRange` or `WeekNDay` is set, and one instance represents one entry. Reading a
+  Calendar's `PROP_DATE_LIST` now returns **one `BacnetValue` per entry** (it used to be a single
+  value holding the whole list), each with `Tag = BACNET_APPLICATION_TAG_CALENDAR_ENTRY` and a
+  `BacnetCalendarEntry` in `Value`. The same list can be passed straight back to
+  `WritePropertyRequest`.
+
+- **`BacnetweekNDay` → `BacnetWeekNDay`.** The raw `month`/`week`/`wday` bytes became the
+  `BacnetMonthOptions`, `BacnetWeekOfMonthOptions` and `BacnetDayOfWeekOptions` enums, and
+  `IsAFittingDate` now implements the week-of-month octet (values 1-9) the old type ignored.
+  The byte-based constructor `(day, month, week)` keeps its shape.
+
+- **`BacnetDate.toDateTime()` → `ToDateTime()`**, which now returns the `new DateTime(1, 1, 1)`
+  wildcard sentinel for unrepresentable dates instead of `DateTime.Now`, and understands day 32
+  ("last day of the month").
+
+- Values decoded from `PROP_WEEKLY_SCHEDULE` and `PROP_EXCEPTION_SCHEDULE` now carry the dedicated
+  application tags (`..._WEEKLY_SCHEDULE`, `..._SPECIAL_EVENT`) and typed objects
+  (`BacnetDailySchedule`, `BacnetSpecialEvent`) instead of `..._CONTEXT_SPECIFIC_DECODED` with a
+  nested `BacnetValue[]` tree. Code that pattern-matched the old opaque shape must switch to the
+  typed objects — reading and writing schedules no longer needs any manual re-assembly.

@@ -15,6 +15,14 @@ public struct BacnetDate : ASN1.IEncode, ASN1.IDecode
         this.wday = wday;
     }
 
+    public BacnetDate(DateTime date)
+    {
+        year = (byte)(date.Year - 1900);
+        month = (byte)date.Month;
+        day = (byte)date.Day;
+        wday = (byte)(date.DayOfWeek == 0 ? 7 : (int)date.DayOfWeek);
+    }
+
     public void Encode(EncodeBuffer buffer)
     {
         buffer.Add(year);
@@ -46,9 +54,15 @@ public struct BacnetDate : ASN1.IEncode, ASN1.IDecode
         if (month == 14 && (date.Month & 1) == 1)
             return false;
 
-        if (date.Day != day && day != 255)
+        if (day == 32)
+        {
+            if (date.Day != DateTime.DaysInMonth(date.Year, date.Month))
+                return false;
+        }
+        else if (date.Day != day && day != 255)
+        {
             return false;
-        // day 32 todo
+        }
 
         if (wday == 255)
             return true;
@@ -62,17 +76,20 @@ public struct BacnetDate : ASN1.IEncode, ASN1.IDecode
         return false;
     }
 
-    public DateTime toDateTime() // Not every time possible, too much complex (any month, any year ...)
+    public DateTime ToDateTime() // not always possible (any month, any year, ...): those yield the wildcard sentinel
     {
         try
         {
-            return IsPeriodic
-                ? new DateTime(1, 1, 1)
+            if (IsPeriodic)
+                return new DateTime(1, 1, 1);
+
+            return day == 32 // last day of the month
+                ? new DateTime(year + 1900, month, DateTime.DaysInMonth(year + 1900, month))
                 : new DateTime(year + 1900, month, day);
         }
         catch
         {
-            return DateTime.Now; // or anything else why not !
+            return new DateTime(1, 1, 1);
         }
     }
 

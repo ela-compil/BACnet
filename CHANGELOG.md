@@ -16,6 +16,12 @@ See [MIGRATION.md](MIGRATION.md) for upgrade guidance.
 - **Native transports** moved out of the core into optional packages: the pcap-based Ethernet
   transport → **`BACnet.Ethernet`**, the physical serial port → **`BACnet.Serial`**. The MS/TP and PTP
   protocols remain in the core; wire a serial port with `SerialTransport.Mstp(...)` / `.Ptp(...)`.
+- **Scheduling types** replaced with spec-shaped ones (see MIGRATION.md): `BACnetCalendarEntry`
+  (a `List<object>` bag) → `BacnetCalendarEntry` (a real CHOICE, one entry per value),
+  `BacnetweekNDay` → `BacnetWeekNDay` (month/week-of-month/day-of-week enums, week-of-month
+  actually evaluated), `BacnetDate.toDateTime()` → `ToDateTime()`. Decoded `Date_List`,
+  `Weekly_Schedule` and `Exception_Schedule` values now carry dedicated application tags and typed
+  objects instead of the opaque `CONTEXT_SPECIFIC_DECODED` shapes.
 
 ### Added
 - Multi-targeting: `net48;netstandard2.0;net8.0;net10.0`.
@@ -30,6 +36,11 @@ See [MIGRATION.md](MIGRATION.md) for upgrade guidance.
 - PrivateTransfer send/receive support in `BacnetClient` (#154): `PrivateTransferRequest`,
   `SendUnconfirmedPrivateTransfer`, the `OnPrivateTransfer` event, and the
   `PrivateTransferResponse` / `PrivateTransferErrorResponse` replies (ASHRAE 135 clauses 16.2/16.3).
+- Full Schedule/Calendar (scheduling) serialization (#26, #131): `BacnetTimeValue`,
+  `BacnetDailySchedule`, `BacnetSpecialEvent` and the reworked `BacnetCalendarEntry` /
+  `BacnetWeekNDay` give `Weekly_Schedule`, `Exception_Schedule` and `Date_List` symmetric
+  encode/decode - values read from a device can be modified and written back as-is
+  (ASHRAE 135-2016 clauses 12.9 / 12.24 / 21).
 
 ### Changed
 - The core package is now pure-managed with no native dependencies (closes the pcap → log4net chain, #112).
