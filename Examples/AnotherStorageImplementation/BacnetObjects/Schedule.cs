@@ -330,8 +330,8 @@ namespace BaCSharp
             {
                 BacnetDeviceObjectPropertyReference reference = (BacnetDeviceObjectPropertyReference)obj;
 
-                // reference.deviceIndentifier.type is not set to OBJECT_DEVICE for local object reference
-                if (reference.deviceIndentifier.type != BacnetObjectTypes.OBJECT_DEVICE) // local object
+                // reference.deviceIdentifier.type is not set to OBJECT_DEVICE for local object reference
+                if (reference.deviceIdentifier.type != BacnetObjectTypes.OBJECT_DEVICE) // local object
                 {
                     BaCSharpObject bcs= Mydevice.FindBacnetObject(reference.objectIdentifier);
                     if (bcs != null)
@@ -357,7 +357,7 @@ namespace BaCSharp
                     try
                     {
                         // SuroundingDevices is updated with Iam messages
-                        recipient = Mydevice.SuroundingDevices[reference.deviceIndentifier.instance];
+                        recipient = Mydevice.SuroundingDevices[reference.deviceIdentifier.instance];
                     }
                     catch { }
                     if (recipient == null)

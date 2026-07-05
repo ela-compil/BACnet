@@ -526,8 +526,8 @@ public class ASN1
 
         /* Likewise, device id is optional so see if needed
          * (set type to non device to omit */
-        if (value.deviceIndentifier.type == BacnetObjectTypes.OBJECT_DEVICE)
-            encode_context_object_id(buffer, 3, value.deviceIndentifier.type, value.deviceIndentifier.instance);
+        if (value.deviceIdentifier.type == BacnetObjectTypes.OBJECT_DEVICE)
+            encode_context_object_id(buffer, 3, value.deviceIdentifier.type, value.deviceIdentifier.instance);
     }
 
     public static void bacapp_encode_context_device_obj_property_ref(EncodeBuffer buffer, byte tagNumber, BacnetDeviceObjectPropertyReference value)
@@ -1263,7 +1263,9 @@ public class ASN1
 
         len += decode_enumerated(buffer, offset + len, lenValueType, out value.propertyIdentifier);
 
-        /* Tag 2: Optional Array Index */
+        /* Tag 2: Optional Array Index - both optional tags may also be cut off by the buffer end */
+        if (offset + len >= apdu_len)
+            return len;
         var tagLen = decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValueType);
         if (tagNumber == 2)
         {
@@ -1272,14 +1274,16 @@ public class ASN1
         }
 
         /* Tag 3 : Optional Device Identifier */
+        if (offset + len >= apdu_len)
+            return len;
         if (!decode_is_context_tag(buffer, offset + len, 3))
             return len;
         if (IS_CLOSING_TAG(buffer[offset + len])) return len;
 
         len++;
 
-        len += decode_object_id(buffer, offset + len, out value.deviceIndentifier.type,
-            out value.deviceIndentifier.instance);
+        len += decode_object_id(buffer, offset + len, out value.deviceIdentifier.type,
+            out value.deviceIdentifier.instance);
 
         return len;
     }
