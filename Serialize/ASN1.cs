@@ -1995,23 +1995,6 @@ public class ASN1
                 }
                 break;
 
-            case BacnetPropertyIds.PROP_EXCEPTION_SCHEDULE:
-                switch (tagNumber)
-                {
-                    case 1:
-                        tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID;
-                        break;
-
-                    case 3:
-                        tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT;
-                        break;
-
-                    case 0: /* calendarEntry: abstract syntax + context */
-                    case 2: /* list of BACnetTimeValue: abstract syntax */
-                        break;
-                }
-                break;
-
             case BacnetPropertyIds.PROP_LOG_DEVICE_OBJECT_PROPERTY:
                 switch (tagNumber)
                 {
@@ -2200,6 +2183,16 @@ public class ASN1
                 tagLen = v.Decode(buffer, offset, (uint)maxOffset);
                 if (tagLen < 0) return -1;
                 value.Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_CALENDAR_ENTRY;
+                value.Value = v;
+                return tagLen;
+            }
+            if (propertyId == BacnetPropertyIds.PROP_EXCEPTION_SCHEDULE)
+            {
+                // one BACnetSpecialEvent per call: reading the whole array yields one value per event
+                var v = new BacnetSpecialEvent();
+                tagLen = v.Decode(buffer, offset, (uint)maxOffset);
+                if (tagLen < 0) return -1;
+                value.Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_SPECIAL_EVENT;
                 value.Value = v;
                 return tagLen;
             }
