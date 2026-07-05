@@ -32,8 +32,8 @@ using System.Threading;
 
 namespace BaCSharp
 {
-    class Calendar: BaCSharpObject
-    { 
+    public class Calendar: BaCSharpObject
+    {
 
         public bool m_PROP_PRESENT_VALUE=false;
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_BOOLEAN)]
@@ -61,7 +61,7 @@ namespace BaCSharp
                 }
                 else
                 {
-                    ErrorCode_PropertyWrite = ErrorCodes.OutOfRange;
+                    ErrorCode_PropertyWrite = ErrorCodes.InvalidDataType;
                     return;
                 }
             }
