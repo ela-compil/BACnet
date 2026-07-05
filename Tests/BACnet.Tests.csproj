@@ -13,6 +13,13 @@
     <ProjectReference Include="..\BACnet.csproj" />
   </ItemGroup>
 
+  <!-- The Schedule Present_Value algorithm (Clause 12.24.4) is a pure class inside the
+       AnotherStorageImplementation example; link it here so it stays unit-tested without
+       referencing the whole example project. -->
+  <ItemGroup>
+    <Compile Include="..\Examples\AnotherStorageImplementation\BacnetObjects\ScheduleCalculation.cs" Link="Support\ScheduleCalculation.cs" />
+  </ItemGroup>
+
   <!-- Package versions are centralised in Directory.Packages.props (CPM). -->
   <ItemGroup>
     <PackageReference Include="coverlet.collector">
