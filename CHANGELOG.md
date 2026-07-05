@@ -21,9 +21,9 @@ See [MIGRATION.md](MIGRATION.md) for upgrade guidance.
 - Multi-targeting: `net48;netstandard2.0;net8.0;net10.0`.
 - New packages: `BACnet.Ethernet`, `BACnet.Serial`, `BACnet.Logging.CommonLogging`.
 - Central Package Management, MinVer tag-driven versioning, Source Link + symbol (`.snupkg`) packages.
-- `BacnetIpUdpProtocolTransport` accepts a `maxApdu` constructor parameter to lower the advertised and
-  sent APDU size (e.g. `MAX_APDU1024` keeps every frame, including segmented responses, under a
-  1500-byte MTU instead of relying on IP fragmentation).
+- `BacnetIpUdpProtocolTransport` and `BacnetIpV6UdpProtocolTransport` accept a `maxApdu` constructor
+  parameter to lower the advertised and sent APDU size (e.g. `MAX_APDU1024` keeps every frame,
+  including segmented responses, under a 1500-byte MTU instead of relying on IP fragmentation).
 - CI: multi-OS build matrix; tag-triggered publish to both nuget.org (Trusted Publishing) and GitHub Packages.
 - Runnable sample projects moved in-repo under `Examples/` and built in CI.
 - ASHRAE 135 Annex F golden-vector encode/decode tests.

@@ -45,13 +45,22 @@ public class BacnetIpV6UdpProtocolTransport : BacnetTransportBase
     // Some more complex solutions could avoid this, that's why this property is virtual
     public virtual IPEndPoint LocalEndPoint => (IPEndPoint)_exclusiveConn.Client.LocalEndPoint;
 
+    /// <param name="maxApdu">
+    /// Largest APDU this endpoint sends and advertises (in I-Am and confirmed
+    /// request headers). The default <see cref="BVLCV6.BVLC_MAX_APDU"/> (1476)
+    /// predates UDP/IP overhead — with IPv6's 40-byte header a 1500-byte MTU
+    /// carries only 1452 octets of UDP payload, so full-size frames always
+    /// fragment; pass <see cref="BacnetMaxAdpu.MAX_APDU1024"/> to keep every
+    /// frame, including segmented responses, below the MTU.
+    /// </param>
     public BacnetIpV6UdpProtocolTransport(int port, int vMac = -1, bool useExclusivePort = false,
-        bool dontFragment = false, int maxPayload = 1472, string localEndpointIp = "")
+        bool dontFragment = false, int maxPayload = 1472, string localEndpointIp = "",
+        BacnetMaxAdpu maxApdu = BVLCV6.BVLC_MAX_APDU)
     {
         SharedPort = port;
         MaxBufferLength = maxPayload;
         Type = BacnetAddressTypes.IPV6;
-        MaxAdpuLength = BVLCV6.BVLC_MAX_APDU;
+        MaxAdpuLength = maxApdu;
 
         // Two frames type, unicast with 10 bytes or broadcast with 7 bytes
         // Here it's the biggest header, resize will be done after, if needed
