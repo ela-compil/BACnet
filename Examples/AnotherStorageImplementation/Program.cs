@@ -275,18 +275,26 @@ namespace AnotherStorageImplementation
             
             sch.PROP_SCHEDULE_DEFAULT = (int)452;
 
-            // Schedule a change today in 60 seconds
+            // Schedule a change today in 10 seconds
             sch.AddSchedule
-            ( 
-                DateTime.Now.DayOfWeek == 0 ? 6 : (int)DateTime.Now.DayOfWeek - 1, // Monday=0, Sunday=6                 
-                DateTime.Now.AddSeconds(10), (int)900                
-            );    
-            sch.PROP_OUT_OF_SERVICE = false;    // needed after all initialization to start the service
+            (
+                DateTime.Now.DayOfWeek == 0 ? 6 : (int)DateTime.Now.DayOfWeek - 1, // Monday=0, Sunday=6
+                DateTime.Now.AddSeconds(10), (int)900
+            );
 
-            // One empty Calendar, could be fullfill with yabe
-
+            // A Calendar, empty at first: while its Present_Value is FALSE the special event below
+            // is not in effect and the weekly schedule rules; add today to the date list (with Yabe,
+            // over the network, or cal.AddDate(DateTime.Now)) and the higher-priority exception
+            // takes over per the 12.24.4 evaluation order
             Calendar cal = new Calendar(0, "Test Calendar", "A Yabe calendar");
             device.AddBacnetObject(cal);
+
+            sch.AddSpecialEvent(new BacnetSpecialEvent(
+                new BacnetObjectId(BacnetObjectTypes.OBJECT_CALENDAR, 0),
+                new[] { new BacnetTimeValue(TimeSpan.Zero, new BacnetValue((int)111)) },
+                eventPriority: 4));
+
+            sch.PROP_OUT_OF_SERVICE = false;    // needed after all initialization to start the service
         }
 
         // This shows how persistence could be achieved
