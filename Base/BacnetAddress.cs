@@ -58,7 +58,9 @@ public class BacnetAddress : ASN1.IEncode
     public override int GetHashCode()
     {
         // DAL this was originally broken...
-        var str = Convert.ToBase64String(adr);
+        // adr may legitimately be null (e.g. a MAC-less source address) and Equals treats two
+        // null-adr addresses as equal, so hash that case consistently instead of throwing
+        var str = adr != null ? Convert.ToBase64String(adr) : "";
         return str.GetHashCode();
     }
 

@@ -59,6 +59,11 @@ See [MIGRATION.md](MIGRATION.md) for upgrade guidance.
   The same fix applies to `DecodeAlarmAcknowledge` (an ack echoes the event's timestamp choice) and
   the GetEventInformation timestamps; new `ASN1.bacapp_decode_timestamp` handles the full CHOICE and
   `BacnetGenericTime.Tag`/`Sequence` are now populated on decode.
+- Incoming confirmed requests are checked for duplicates as ASHRAE 135 §5.4.5 requires (#35): a
+  retransmitted request (same source, invoke-id and content within the retry window) no longer
+  re-executes the service — the original response is retransmitted instead. Previously every client
+  retry of e.g. a WriteProperty whose ack was lost wrote again and produced duplicate COV
+  notifications. Opt out via `BacnetClient.DuplicateRequestDetection = false`.
 - Partially-wildcarded Date and Time values no longer throw during decode (#103): any octet may
   individually be X'FF' (unspecified) and Date carries special values (odd/even month, last day —
   ASHRAE 135 §20.2.12/§20.2.13). Wildcarded time components are clamped to zero and unrepresentable

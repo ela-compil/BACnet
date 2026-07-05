@@ -48,6 +48,15 @@ public class BacnetClient : IDisposable
     private ConcurrentDictionary<byte, object> _locksPerInvokeId = new();
     private Dictionary<byte, byte> _expectedSegmentsPerInvokeId = new();
 
+    private readonly Dictionary<(BacnetAddress Address, byte InvokeId), RecentRequest> _recentRequests = new();
+
+    private class RecentRequest
+    {
+        public byte[] Request;
+        public byte[] Response;
+        public DateTime LastSeen;
+    }
+
     public const int DEFAULT_UDP_PORT = 0xBAC0;
     public const int DEFAULT_TIMEOUT = 1000;
     public const int DEFAULT_RETRIES = 3;
@@ -60,6 +69,14 @@ public class BacnetClient : IDisposable
     public byte ProposedWindowSize { get; set; } = 10;
     public bool ForceWindowSize { get; set; }
     public bool DefaultSegmentationHandling { get; set; } = true;
+
+    /// <summary>
+    /// Detect retransmitted confirmed requests (same source, invoke-id and content) as required by
+    /// ASHRAE 135 §5.4.5 and answer them by retransmitting the original response instead of executing
+    /// the service again. Without this, a request whose acknowledgment was lost or late is re-executed
+    /// on every client retry - e.g. one retransmitted WriteProperty produces duplicate COV notifications.
+    /// </summary>
+    public bool DuplicateRequestDetection { get; set; } = true;
     public ILogger Log { get; set; } = BacnetLogging.CreateLogger<BacnetClient>();
 
     /// <summary>
@@ -224,8 +241,87 @@ public class BacnetClient : IDisposable
     [ThreadStatic]
     private static BacnetMaxAdpu? _currentRequestMaxAdpu;
 
+    /// <summary>
+    /// Duplicate detection for incoming confirmed requests (ASHRAE 135 §5.4.5): a retransmission
+    /// carries the same source, invoke-id and content as a recently seen request and must not execute
+    /// the service again. If the original response already went out it is retransmitted; while the
+    /// original is still being processed the duplicate is dropped. Entries are kept for the span a
+    /// requester keeps retrying (Timeout x (Retries + 1)); a request that reuses an invoke-id with
+    /// different content is a new transaction and replaces the entry.
+    /// </summary>
+    private bool HandleDuplicateRequest(BacnetAddress address, byte invokeId, byte[] buffer, int offset, int length)
+    {
+        var now = DateTime.UtcNow;
+        var retention = TimeSpan.FromMilliseconds(Timeout * (Retries + 1.0));
+
+        lock (_recentRequests)
+        {
+            List<(BacnetAddress, byte)> stale = null;
+            foreach (var kv in _recentRequests)
+                if (now - kv.Value.LastSeen > retention)
+                    (stale ??= new List<(BacnetAddress, byte)>()).Add(kv.Key);
+            if (stale != null)
+                foreach (var key in stale)
+                    _recentRequests.Remove(key);
+
+            if (_recentRequests.TryGetValue((address, invokeId), out var entry)
+                && entry.Request.Length == length && SameContent(entry.Request, buffer, offset, length))
+            {
+                entry.LastSeen = now;
+                if (entry.Response != null)
+                {
+                    Log.LogDebug($"Duplicate request with invoke-id {invokeId} - retransmitting the response");
+                    var frame = new byte[Transport.HeaderLength + entry.Response.Length];
+                    Array.Copy(entry.Response, 0, frame, Transport.HeaderLength, entry.Response.Length);
+                    Transport.Send(frame, Transport.HeaderLength, entry.Response.Length, address, false, 0);
+                }
+                else
+                {
+                    Log.LogDebug($"Duplicate request with invoke-id {invokeId} - still being processed, dropped");
+                }
+                return true;
+            }
+
+            var request = new byte[length];
+            Array.Copy(buffer, offset, request, 0, length);
+            _recentRequests[(address, invokeId)] = new RecentRequest { Request = request, LastSeen = now };
+            return false;
+        }
+
+        static bool SameContent(byte[] stored, byte[] incoming, int offset, int length)
+        {
+            for (var i = 0; i < length; i++)
+                if (stored[i] != incoming[offset + i])
+                    return false;
+            return true;
+        }
+    }
+
+    /// <summary>
+    /// Remember the response sent for a confirmed request so a retransmission of that request can be
+    /// answered with the identical response (see <see cref="HandleDuplicateRequest"/>). Segmented
+    /// responses are not registered - duplicates of their request are dropped instead.
+    /// </summary>
+    private void RegisterResponse(BacnetAddress address, byte invokeId, EncodeBuffer buffer, int length)
+    {
+        if (!DuplicateRequestDetection)
+            return;
+
+        lock (_recentRequests)
+        {
+            if (!_recentRequests.TryGetValue((address, invokeId), out var entry))
+                return;
+
+            entry.Response = new byte[length];
+            Array.Copy(buffer.buffer, Transport.HeaderLength, entry.Response, 0, length);
+        }
+    }
+
     protected void ProcessConfirmedServiceRequest(BacnetAddress address, BacnetPduTypes type, BacnetConfirmedServices service, BacnetMaxSegments maxSegments, BacnetMaxAdpu maxAdpu, byte invokeId, byte[] buffer, int offset, int length)
     {
+        if (DuplicateRequestDetection && HandleDuplicateRequest(address, invokeId, buffer, offset, length))
+            return;
+
         try
         {
             Log.LogDebug($"ConfirmedServiceRequest {service}");
@@ -1295,6 +1391,7 @@ public class BacnetClient : IDisposable
         NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, adr.RoutedSource, adr.RoutedDestination);
         APDU.EncodeError(b, BacnetPduTypes.PDU_TYPE_REJECT, (BacnetConfirmedServices)reason, invokeId);
         Transport.Send(b.buffer, Transport.HeaderLength, b.offset - Transport.HeaderLength, adr, false, 0);
+        RegisterResponse(adr, invokeId, b, b.offset - Transport.HeaderLength);
     }
 
     public void SendAbort(BacnetAddress adr, byte invokeId, BacnetAbortReason reason)
@@ -1307,6 +1404,7 @@ public class BacnetClient : IDisposable
         NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, adr.RoutedSource, adr.RoutedDestination);
         APDU.EncodeError(b, BacnetPduTypes.PDU_TYPE_ABORT, (BacnetConfirmedServices)reason, invokeId);
         Transport.Send(b.buffer, Transport.HeaderLength, b.offset - Transport.HeaderLength, adr, false, 0);
+        RegisterResponse(adr, invokeId, b, b.offset - Transport.HeaderLength);
     }
 
     public void SynchronizeTime(BacnetAddress adr, DateTime dateTime, BacnetAddress source = null)
@@ -2968,7 +3066,8 @@ public class BacnetClient : IDisposable
         Log.LogDebug($"Sending {ToTitleCase(service)}");
 
         //encode
-        if (EncodeSegment(adr, invokeId, segmentation, service, out var buffer, apduContentEncode))
+        var segmented = EncodeSegment(adr, invokeId, segmentation, service, out var buffer, apduContentEncode);
+        if (segmented)
         {
             //client doesn't support segments
             if (segmentation == null)
@@ -3002,6 +3101,8 @@ public class BacnetClient : IDisposable
 
         //send
         Transport.Send(buffer.buffer, Transport.HeaderLength, buffer.GetLength() - Transport.HeaderLength, adr, false, 0);
+        if (!segmented)
+            RegisterResponse(adr, invokeId, buffer, buffer.GetLength() - Transport.HeaderLength);
     }
 
     public void ReadPropertyResponse(BacnetAddress adr, byte invokeId, Segmentation segmentation, BacnetObjectId objectId, BacnetPropertyReference property, IEnumerable<BacnetValue> value)
@@ -3086,6 +3187,7 @@ public class BacnetClient : IDisposable
         APDU.EncodeError(buffer, BacnetPduTypes.PDU_TYPE_ERROR, service, invokeId);
         Services.EncodeError(buffer, errorClass, errorCode);
         Transport.Send(buffer.buffer, Transport.HeaderLength, buffer.offset - Transport.HeaderLength, adr, false, 0);
+        RegisterResponse(adr, invokeId, buffer, buffer.offset - Transport.HeaderLength);
     }
 
     public void PrivateTransferErrorResponse(BacnetAddress adr, byte invokeId, BacnetErrorClasses errorClass, BacnetErrorCodes errorCode, uint vendorId, uint serviceNumber, byte[] errorParameters = null)
@@ -3096,6 +3198,7 @@ public class BacnetClient : IDisposable
         APDU.EncodeError(buffer, BacnetPduTypes.PDU_TYPE_ERROR, BacnetConfirmedServices.SERVICE_CONFIRMED_PRIVATE_TRANSFER, invokeId);
         Services.EncodePrivateTransferError(buffer, errorClass, errorCode, vendorId, serviceNumber, errorParameters);
         Transport.Send(buffer.buffer, Transport.HeaderLength, buffer.offset - Transport.HeaderLength, adr, false, 0);
+        RegisterResponse(adr, invokeId, buffer, buffer.offset - Transport.HeaderLength);
     }
 
     public void SimpleAckResponse(BacnetAddress adr, BacnetConfirmedServices service, byte invokeId)
@@ -3105,6 +3208,7 @@ public class BacnetClient : IDisposable
         NPDU.Encode(buffer, BacnetNpduControls.PriorityNormalMessage, adr.RoutedSource, adr.RoutedDestination);
         APDU.EncodeSimpleAck(buffer, BacnetPduTypes.PDU_TYPE_SIMPLE_ACK, service, invokeId);
         Transport.Send(buffer.buffer, Transport.HeaderLength, buffer.offset - Transport.HeaderLength, adr, false, 0);
+        RegisterResponse(adr, invokeId, buffer, buffer.offset - Transport.HeaderLength);
     }
 
     public void SegmentAckResponse(BacnetAddress adr, bool negative, bool server, byte originalInvokeId, byte sequenceNumber, byte actualWindowSize)
