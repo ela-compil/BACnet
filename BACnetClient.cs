@@ -1145,20 +1145,25 @@ public class BacnetClient : IDisposable
 
     public void WhoIs(int lowLimit = -1, int highLimit = -1, BacnetAddress receiver = null, BacnetAddress source = null)
     {
+        BacnetAddress npduDestination;
         if (receiver == null)
         {
-            // _receiver could be an unicast @ : for direct acces 
+            // _receiver could be an unicast @ : for direct acces
             // usefull on BIP for a known IP:Port, unknown device Id
             receiver = Transport.GetBroadcastAddress();
+            npduDestination = receiver;
             Log.LogDebug("Broadcasting WhoIs");
         }
         else
         {
-            Log.LogDebug($"Sending WhoIs to {receiver}");
+            // a receiver behind a BACnet router: address the NPDU to its
+            // network/MAC while the frame goes to the router that fronts it
+            npduDestination = receiver.RoutedSource ?? receiver;
+            Log.LogDebug($"Sending WhoIs to {receiver.ToString(false)}");
         }
 
         var b = GetEncodeBuffer(Transport.HeaderLength);
-        NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, receiver, source);
+        NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, npduDestination, source);
         APDU.EncodeUnconfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_WHO_IS);
         Services.EncodeWhoIsBroadcast(b, lowLimit, highLimit);
 
@@ -1204,18 +1209,23 @@ public class BacnetClient : IDisposable
 
     private void WhoHasCore(BacnetObjectId? objId, string objName, int lowLimit, int highLimit, BacnetAddress receiver, BacnetAddress source)
     {
+        BacnetAddress npduDestination;
         if (receiver == null)
         {
             receiver = Transport.GetBroadcastAddress();
+            npduDestination = receiver;
             Log.LogDebug($"Broadcasting WhoHas {objId?.ToString() ?? objName}");
         }
         else
         {
-            Log.LogDebug($"Sending WhoHas {objId?.ToString() ?? objName} to {receiver}");
+            // a receiver behind a BACnet router: address the NPDU to its
+            // network/MAC while the frame goes to the router that fronts it
+            npduDestination = receiver.RoutedSource ?? receiver;
+            Log.LogDebug($"Sending WhoHas {objId?.ToString() ?? objName} to {receiver.ToString(false)}");
         }
 
         var b = GetEncodeBuffer(Transport.HeaderLength);
-        NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, receiver, source);
+        NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, npduDestination, source);
         APDU.EncodeUnconfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_WHO_HAS);
         Services.EncodeWhoHasBroadcast(b, lowLimit, highLimit, objId, objName);
 
@@ -1223,17 +1233,33 @@ public class BacnetClient : IDisposable
     }
 
     // ReSharper disable once InconsistentNaming
-    public void IHave(BacnetObjectId deviceId, BacnetObjectId objId, string objName, BacnetAddress source = null)
+    // note: receiver comes after source (unlike Iam/WhoIs/WhoHas) so that
+    // pre-4.0 positional `source` callers keep compiling with the same
+    // meaning; harmonize the order in 5.0 alongside the namespace rename
+    public void IHave(BacnetObjectId deviceId, BacnetObjectId objId, string objName, BacnetAddress source = null, BacnetAddress receiver = null)
     {
-        Log.LogDebug($"Broadcasting IHave {objName} {objId}");
+        BacnetAddress npduDestination;
+        if (receiver == null)
+        {
+            receiver = Transport.GetBroadcastAddress();
+            npduDestination = receiver;
+            Log.LogDebug($"Broadcasting IHave {objName} {objId}");
+        }
+        else
+        {
+            // answering a Who-Has that came through a BACnet router: the NPDU
+            // destination is the original source network/address while the
+            // frame goes back to the router that forwarded it (135 §16.9)
+            npduDestination = receiver.RoutedSource ?? receiver;
+            Log.LogDebug($"Sending IHave {objName} {objId} to {receiver.ToString(false)}");
+        }
 
         var b = GetEncodeBuffer(Transport.HeaderLength);
-        var broadcast = Transport.GetBroadcastAddress();
-        NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, broadcast, source);
+        NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, npduDestination, source);
         APDU.EncodeUnconfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_I_HAVE);
         Services.EncodeIhaveBroadcast(b, deviceId, objId, objName);
 
-        Transport.Send(b.buffer, Transport.HeaderLength, b.offset - Transport.HeaderLength, broadcast, false, 0);
+        Transport.Send(b.buffer, Transport.HeaderLength, b.offset - Transport.HeaderLength, receiver, false, 0);
     }
 
     public void SendUnconfirmedEventNotification(BacnetAddress adr, BacnetEventNotificationData eventData, BacnetAddress source = null)
@@ -1241,7 +1267,9 @@ public class BacnetClient : IDisposable
         Log.LogDebug($"Sending Event Notification {eventData.eventType} {eventData.eventObjectIdentifier}");
 
         var b = GetEncodeBuffer(Transport.HeaderLength);
-        NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, adr, source);
+        // adr.RoutedSource: peers behind a BACnet router get the NPDU addressed
+        // to their network/MAC while the frame goes to the fronting router
+        NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, adr.RoutedSource ?? adr, source);
         APDU.EncodeUnconfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_EVENT_NOTIFICATION);
         Services.EncodeEventNotifyUnconfirmed(b, eventData);
         Transport.Send(b.buffer, Transport.HeaderLength, b.offset - Transport.HeaderLength, adr, false, 0);
@@ -1252,7 +1280,7 @@ public class BacnetClient : IDisposable
         Log.LogDebug($"Sending UnconfirmedPrivateTransfer vendor {vendorId} service {serviceNumber}");
 
         var b = GetEncodeBuffer(Transport.HeaderLength);
-        NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, adr, source);
+        NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage, adr.RoutedSource ?? adr, source);
         APDU.EncodeUnconfirmedServiceRequest(b, BacnetPduTypes.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST, BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_PRIVATE_TRANSFER);
         Services.EncodePrivateTransferUnconfirmed(b, vendorId, serviceNumber, serviceParameters);
         Transport.Send(b.buffer, Transport.HeaderLength, b.offset - Transport.HeaderLength, adr, false, 0);
@@ -1286,7 +1314,7 @@ public class BacnetClient : IDisposable
         Log.LogDebug($"Sending Time Synchronize: {dateTime} {dateTime.Kind.ToString().ToUpper()}");
 
         var buffer = GetEncodeBuffer(Transport.HeaderLength);
-        NPDU.Encode(buffer, BacnetNpduControls.PriorityNormalMessage, adr, source);
+        NPDU.Encode(buffer, BacnetNpduControls.PriorityNormalMessage, adr.RoutedSource ?? adr, source);
         APDU.EncodeUnconfirmedServiceRequest(buffer, BacnetPduTypes.PDU_TYPE_UNCONFIRMED_SERVICE_REQUEST, dateTime.Kind == DateTimeKind.Utc
                 ? BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_UTC_TIME_SYNCHRONIZATION
                 : BacnetUnconfirmedServices.SERVICE_UNCONFIRMED_TIME_SYNCHRONIZATION);

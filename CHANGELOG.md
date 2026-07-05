@@ -53,6 +53,12 @@ See [MIGRATION.md](MIGRATION.md) for upgrade guidance.
 - OS detection in the UDP transport now uses `RuntimeInformation.IsOSPlatform`, fixing `DontFragment` on
   macOS (#91) and making the Windows-only `SIO_UDP_CONNRESET` guard analyzer-clean.
 - Response correlation matches by invoke-id per ASHRAE 135 §20.1.2.6 (#141, #149).
+- All unconfirmed sends now address peers behind a BACnet router correctly (NPDU destination =
+  the peer's network/MAC, frame to the fronting router — the same addressing the `Iam()` fix
+  established): directed `WhoIs`/`WhoHas`, `SendUnconfirmedEventNotification`,
+  `SendUnconfirmedPrivateTransfer` and `SynchronizeTime`. `IHave()` gained an optional `receiver`
+  parameter (appended after `source` to stay source-compatible) so it can answer a Who-Has that
+  arrived through a router (135 §16.9).
 - `ErrorResponse` sends the Error PDU with the plain §20.1.7 encoding again: since 3.x the error
   class/code pair was wrapped in spurious context tags, so foreign stacks mis-decoded every error this
   library returned (the tolerant decoder hid it from same-stack round-trips) (#199). Context wrapping
