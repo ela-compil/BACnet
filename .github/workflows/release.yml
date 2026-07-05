@@ -71,6 +71,11 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # note: no array splatting into the native gh call - pwsh mangles it
+          # (a stray '-' token made `gh release create` fail on v4.0.0-beta.2)
           $tag = '${{ github.ref_name }}'
-          $flags = if ($tag -match '-') { @('--prerelease') } else { @() }
-          gh release create $tag --title $tag --generate-notes @flags
+          if ($tag -match '-') {
+            gh release create $tag --title $tag --generate-notes --prerelease
+          } else {
+            gh release create $tag --title $tag --generate-notes
+          }
