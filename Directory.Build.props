@@ -36,6 +36,12 @@
          not every local build. -->
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
 
+    <!-- Package validation: run the SDK's compatibility checks at pack time. This catches missing
+         target-framework assets and any accidental public-API break across the multi-targeted
+         surface (net48/netstandard2.0/net8.0/net10.0). Baseline-against-a-previous-release checks
+         stay off until a stable v4 ships on nuget.org - set PackageValidationBaselineVersion then. -->
+    <EnablePackageValidation>true</EnablePackageValidation>
+
     <!-- Versioning is tag-driven via MinVer: the git tag IS the package/file version. Release tags
          are v-prefixed (e.g. v4.0.0); MinimumMajorMinor floors untagged builds at 4.0.0-alpha.0.<height>
          until the first v4 tag. AssemblyVersion stays pinned major-only so net48 consumers avoid
