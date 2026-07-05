@@ -300,8 +300,13 @@ namespace AnotherStorageImplementation
                             bacEr = BacnetErrorCodes.ERROR_CODE_WRITE_ACCESS_DENIED;
                         if (error == ErrorCodes.OutOfRange)
                             bacEr = BacnetErrorCodes.ERROR_CODE_VALUE_OUT_OF_RANGE;
+                        if (error == ErrorCodes.DuplicateEntry)
+                            bacEr = BacnetErrorCodes.ERROR_CODE_DUPLICATE_ENTRY;
+                        if (error == ErrorCodes.InvalidDataType)
+                            bacEr = BacnetErrorCodes.ERROR_CODE_INVALID_DATA_TYPE;
 
-                        sender.ErrorResponse(adr, BacnetConfirmedServices.SERVICE_CONFIRMED_WRITE_PROPERTY, invoke_id, BacnetErrorClasses.ERROR_CLASS_DEVICE, bacEr);
+                        // property-level failures belong to the PROPERTY error class (135 Clause 18)
+                        sender.ErrorResponse(adr, BacnetConfirmedServices.SERVICE_CONFIRMED_WRITE_PROPERTY, invoke_id, BacnetErrorClasses.ERROR_CLASS_PROPERTY, bacEr);
                     }
                 }
                 else

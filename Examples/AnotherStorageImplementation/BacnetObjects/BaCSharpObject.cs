@@ -40,7 +40,9 @@ namespace BaCSharp
         NotExist = -2,
         NotForMe = -3,
         WriteAccessDenied = -4,
-        OutOfRange = -5
+        OutOfRange = -5,
+        DuplicateEntry = -6,
+        InvalidDataType = -7
     }
 
     // All children classes are serializable, except Device and Structured View
@@ -96,6 +98,10 @@ namespace BaCSharp
         protected BacnetClient sender;
 
         protected ErrorCodes ErrorCode_PropertyWrite;
+
+        // The array index of the WriteProperty in progress (BACNET_ARRAY_ALL when absent), for
+        // set2_ methods of array properties - same side-channel idea as ErrorCode_PropertyWrite
+        protected uint ArrayIndex_PropertyWrite = System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL;
 
         IList<BacnetPropertyReference> AllMyProperties = null;
 
@@ -338,6 +344,8 @@ namespace BaCSharp
 
         public ErrorCodes WritePropertyValue(BacnetPropertyValue value, bool writeFromNetwork)
         {
+            ArrayIndex_PropertyWrite = value.property.propertyArrayIndex;
+
             // First try to found the set2_ method in the class code
             MethodInfo m = this.GetType().GetMethod("set2_" + value.property.ToString());
             try
