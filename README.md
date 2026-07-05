@@ -1,11 +1,11 @@
 # .NET library for BACnet
 
-<img src="https://raw.githubusercontent.com/ela-compil/BACnet/master/logo.png" alt="BACnet logo" align="right" width="130" />
-
 [![build](https://github.com/ela-compil/BACnet/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/ela-compil/BACnet/actions/workflows/build.yml)
 [![NuGet](https://img.shields.io/nuget/vpre/BACnet.svg?label=BACnet)](https://www.nuget.org/packages/BACnet)
 [![Downloads](https://img.shields.io/nuget/dt/BACnet.svg?label=downloads)](https://www.nuget.org/packages/BACnet)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/ela-compil/BACnet/blob/master/LICENSE)
+
+![BACnet logo](https://raw.githubusercontent.com/ela-compil/BACnet/master/logo.png)
 
 [BACnet](http://www.bacnet.org/) (ASHRAE 135) is the standard communication protocol for
 building-automation systems — HVAC, lighting, access control, and metering. This library is a
