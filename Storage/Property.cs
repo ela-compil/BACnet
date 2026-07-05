@@ -82,9 +82,24 @@ public class Property
                 return new BacnetValue(type, BacnetReadAccessSpecification.Parse(value));
             case BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_PROPERTY_REFERENCE:
                 return new BacnetValue(type, BacnetDeviceObjectPropertyReference.Parse(value));
+            case BacnetApplicationTags.BACNET_APPLICATION_TAG_WEEKLY_SCHEDULE:
+                return DeserializeEncoded(type, value, new BacnetDailySchedule());
+            case BacnetApplicationTags.BACNET_APPLICATION_TAG_SPECIAL_EVENT:
+                return DeserializeEncoded(type, value, new BacnetSpecialEvent());
+            case BacnetApplicationTags.BACNET_APPLICATION_TAG_CALENDAR_ENTRY:
+                return DeserializeEncoded(type, value, new BacnetCalendarEntry());
             default:
                 return new BacnetValue(type, null);
         }
+    }
+
+    // schedule values are stored as base64 of their ASN.1 encoding, like octet strings
+    private static BacnetValue DeserializeEncoded(BacnetApplicationTags type, string value, ASN1.IDecode target)
+    {
+        var bytes = Convert.FromBase64String(value);
+        return target.Decode(bytes, 0, (uint)bytes.Length) < 0
+            ? new BacnetValue(type, null)
+            : new BacnetValue(type, target);
     }
 
     public static string SerializeValue(BacnetValue value, BacnetApplicationTags type)
@@ -120,6 +135,14 @@ public class Property
                 // Format: yyyy/MM/dd-HH:mm:ss.hh where hh = hundredths (0-99) (bacnet-stack compatible)
                 return ((DateTime)value.Value).ToString("yyyy/MM/dd-HH:mm:ss.", CultureInfo.InvariantCulture)
                     + (((DateTime)value.Value).Millisecond / 10).ToString("D2", CultureInfo.InvariantCulture);
+            case BacnetApplicationTags.BACNET_APPLICATION_TAG_WEEKLY_SCHEDULE:
+            case BacnetApplicationTags.BACNET_APPLICATION_TAG_SPECIAL_EVENT:
+            case BacnetApplicationTags.BACNET_APPLICATION_TAG_CALENDAR_ENTRY:
+                {
+                    var buffer = new EncodeBuffer();
+                    ((ASN1.IEncode)value.Value).Encode(buffer);
+                    return Convert.ToBase64String(buffer.ToArray());
+                }
             default:
                 return value.Value.ToString();
         }
