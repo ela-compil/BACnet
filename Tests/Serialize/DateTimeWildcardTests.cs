@@ -1,0 +1,62 @@
+using System.IO.BACnet.Serialize;
+using Xunit;
+
+namespace System.IO.BACnet.Tests;
+
+/// <summary>
+/// Date and Time octets may individually be X'FF' (unspecified), and Date carries special values
+/// (month 13/14 = odd/even, day 32/33/34 = last/odd/even - ASHRAE 135 §20.2.12/§20.2.13). Real
+/// devices send these for "don't care" fields; the decoders previously threw from the DateTime
+/// constructor, which upstream code swallows - e.g. an event notification stamped with a
+/// partially-wildcarded time silently never reached OnEventNotify.
+/// </summary>
+public class DateTimeWildcardTests
+{
+    [Fact]
+    public void Time_with_wildcard_seconds_decodes_with_specified_fields_kept()
+    {
+        var len = ASN1.decode_bacnet_time(new byte[] { 11, 22, 0xFF, 0xFF }, 0, out var time);
+
+        Assert.Equal(4, len);
+        Assert.Equal(new TimeSpan(11, 22, 0), time.TimeOfDay);
+    }
+
+    [Fact]
+    public void Time_with_wildcard_hour_decodes_with_specified_fields_kept()
+    {
+        var len = ASN1.decode_bacnet_time(new byte[] { 0xFF, 22, 33, 44 }, 0, out var time);
+
+        Assert.Equal(4, len);
+        Assert.Equal(new TimeSpan(0, 0, 22, 33, 440), time.TimeOfDay);
+    }
+
+    [Fact]
+    public void Fully_wildcarded_time_keeps_the_minimum_sentinel()
+    {
+        ASN1.decode_bacnet_time(new byte[] { 0xFF, 0xFF, 0xFF, 0xFF }, 0, out var time);
+
+        Assert.Equal(new DateTime(1, 1, 1), time);
+    }
+
+    [Theory]
+    [InlineData(new byte[] { 126, 7, 0xFF, 0xFF })] // 2026-07, day unspecified
+    [InlineData(new byte[] { 126, 13, 15, 0xFF })]  // odd months (13)
+    [InlineData(new byte[] { 126, 7, 32, 0xFF })]   // last day of month (32)
+    public void Unrepresentable_date_specials_degrade_to_minimum_instead_of_throwing(byte[] octets)
+    {
+        var len = ASN1.decode_date(octets, 0, out var date);
+
+        Assert.Equal(4, len);
+        Assert.Equal(new DateTime(1, 1, 1), date);
+    }
+
+    [Fact]
+    public void Fully_specified_date_and_time_still_decode_exactly()
+    {
+        ASN1.decode_date(new byte[] { 126, 7, 5, 7 }, 0, out var date);
+        ASN1.decode_bacnet_time(new byte[] { 11, 22, 33, 44 }, 0, out var time);
+
+        Assert.Equal(new DateTime(2026, 7, 5), date);
+        Assert.Equal(new TimeSpan(0, 11, 22, 33, 440), time.TimeOfDay);
+    }
+}
