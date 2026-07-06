@@ -1837,6 +1837,19 @@ public class Services
         while (len < apduLen && depth > 0)
         {
             var tagByte = buffer[offset + len];
+
+            // the whole tag header (extended tag number / extended length octets) must fit
+            var header = 1 + (ASN1.IS_EXTENDED_TAG_NUMBER(tagByte) ? 1 : 0);
+            if (ASN1.IS_EXTENDED_VALUE(tagByte))
+            {
+                if (len + header >= apduLen)
+                    return 0;
+                var extended = buffer[offset + len + header];
+                header += extended == 254 ? 3 : extended == 255 ? 5 : 1;
+            }
+            if (len + header > apduLen)
+                return 0;
+
             var tagLen = ASN1.decode_tag_number_and_value(buffer, offset + len, out byte _, out var tagPayload);
             len += tagLen;
 
@@ -1845,7 +1858,12 @@ public class Services
             else if (ASN1.IS_CLOSING_TAG(tagByte))
                 depth--;
             else if (ASN1.IS_CONTEXT_SPECIFIC(tagByte) || (tagByte >> 4) != (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_BOOLEAN)
-                len += (int)tagPayload; // an application BOOLEAN carries its value in the tag itself
+            {
+                // an application BOOLEAN carries its value in the tag itself
+                if (tagPayload > (uint)(apduLen - len))
+                    return 0; // the announced value length runs past the ack
+                len += (int)tagPayload;
+            }
         }
         if (depth != 0)
             return 0;

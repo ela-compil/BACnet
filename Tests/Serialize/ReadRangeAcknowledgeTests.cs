@@ -34,7 +34,7 @@ public class ReadRangeAcknowledgeTests
         {
             0x0C, 0x05, 0x00, 0x00, 0x02,   // objectIdentifier [0]: trend-log,2
             0x19, 0x83,                     // propertyIdentifier [1]: log-buffer (131)
-            0x3A, 0x05, 0xA0,               // resultFlags [3]: {FIRST_ITEM, LAST_ITEM}
+            0x3A, 0x05, 0xA0,               // resultFlags [3]: {FIRST_ITEM, MORE_ITEMS}
             0x49, 0x02,                     // itemCount [4]: 2
             0x5E                            // itemData [5] opening
         };
@@ -109,5 +109,37 @@ public class ReadRangeAcknowledgeTests
             2, TwoLogRecords(), BacnetReadRangeRequestTypes.RR_BY_POSITION, 0);
 
         AssertRangeDecodesToTheTwoRecords(ack.ToArray());
+    }
+
+    private static byte[] MalformedAck(params byte[] itemDataBytes)
+    {
+        var ack = new System.Collections.Generic.List<byte>
+        {
+            0x0C, 0x05, 0x00, 0x00, 0x02,   // objectIdentifier [0]: trend-log,2
+            0x19, 0x83,                     // propertyIdentifier [1]: log-buffer (131)
+            0x3A, 0x05, 0xC0,               // resultFlags [3]: {FIRST_ITEM, LAST_ITEM}
+            0x49, 0x02,                     // itemCount [4]: 2
+            0x5E                            // itemData [5] opening - never closed below
+        };
+        ack.AddRange(itemDataBytes);
+        return ack.ToArray();
+    }
+
+    [Fact]
+    public void Malformed_ack_ending_in_a_truncated_extended_tag_returns_zero()
+    {
+        // a lone tag byte announcing an extended length that never follows
+        var bytes = MalformedAck(0x25);
+
+        Assert.Equal(0u, Services.DecodeReadRangeAcknowledge(bytes, 0, bytes.Length, out _));
+    }
+
+    [Fact]
+    public void Malformed_ack_with_an_oversized_item_length_returns_zero()
+    {
+        // REAL with extended length 4294967295 - far beyond the buffer
+        var bytes = MalformedAck(0x45, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF);
+
+        Assert.Equal(0u, Services.DecodeReadRangeAcknowledge(bytes, 0, bytes.Length, out _));
     }
 }
