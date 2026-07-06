@@ -33,8 +33,6 @@ using System.Xml;
 using System.Threading;
 using Microsoft.Win32;
 using BaCSharp;
-// this sample uses the BaCSharp DateTime-value OBJECT, which predates (and shadows) the core BACnetDateTime struct
-using BacnetDateTime = BaCSharp.BacnetDateTime;
 using AnotherStorageImplementation;
 using System.IO.BACnet;
 using System.Globalization;
@@ -53,7 +51,7 @@ namespace Weather2_to_Bacnet
         AnalogInput<float> Temp, Windspeed, Humidity, Pressure, DewPoint, VaporPressure;
         TrendLog TrendTemp;
         CharacterString Windsdir, WeatherDescr;
-        BacnetDateTime SunSet, SunRise, Updatetime, NextUpdatetime;
+        DateTimeValue SunSet, SunRise, Updatetime, NextUpdatetime;
 
         // An alternative is to embbed data into code, or to use another way (configuration file, ...)
         string BacnetDeviceId = (string)Registry.GetValue(@"HKEY_LOCAL_MACHINE\SOFTWARE\Weather2_to_Bacnet", "BacnetDeviceId", null);
@@ -242,10 +240,10 @@ namespace Weather2_to_Bacnet
                 WeatherDescr = new CharacterString
                 (1, "WeatherDescr", "Weather Description", "Not available", false);
 
-                SunRise = new BacnetDateTime(0, "Sunrise", "Sun up time");
-                SunSet = new BacnetDateTime(1, "Sunset", "Sun down time");
-                Updatetime = new BacnetDateTime(2, "Updatetime", "Date & Time of the current values");
-                NextUpdatetime = new BacnetDateTime(3, "NextUpdatetime", "Date & Time of the next request");
+                SunRise = new DateTimeValue(0, "Sunrise", "Sun up time");
+                SunSet = new DateTimeValue(1, "Sunset", "Sun down time");
+                Updatetime = new DateTimeValue(2, "Updatetime", "Date & Time of the current values");
+                NextUpdatetime = new DateTimeValue(3, "NextUpdatetime", "Date & Time of the next request");
 
                 device.AddBacnetObject(Temp);
                 device.AddBacnetObject(TrendTemp);
