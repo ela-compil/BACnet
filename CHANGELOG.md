@@ -77,11 +77,12 @@ See [MIGRATION.md](MIGRATION.md) for upgrade guidance.
   swallowed upstream, e.g. silently dropping event notifications stamped with a wildcarded time.
 - A TIME value of exactly midnight no longer encodes as the "any time" wildcard: `DateTime(1,1,1)`
   — which every decoded midnight is — used to double as the wildcard sentinel, so reading a 00:00
-  time (or timestamp) and writing it back corrupted it to `FF FF FF FF`. Midnight now encodes as
-  00:00:00.00; a deliberate unspecified time (e.g. GetEventInformation timestamps of transitions
-  never seen) is expressed with the new `ASN1.BACNET_TIME_WILDCARD` marker. Decoders keep mapping
-  a fully-wildcarded time to `DateTime(1,1,1)` for compatibility, so that direction stays lossy;
-  a lossless wildcard representation is planned for 5.0.
+  time (or timestamp) and writing it back corrupted it to `FF FF FF FF`. The unspecified time now
+  has a dedicated marker, `ASN1.BACNET_TIME_WILDCARD`: decoders return it for a fully-wildcarded
+  time and encoders turn it back into `FF FF FF FF`, so midnight and the wildcard each round-trip
+  losslessly (see MIGRATION.md — a fully-wildcarded time used to decode to `DateTime.MinValue`).
+  Combined date+time decodes (BACnetDateTime, timestamps, log records) keep degrading an
+  unspecified time component to 00:00, as those values cannot carry it.
 - All unconfirmed sends now address peers behind a BACnet router correctly (NPDU destination =
   the peer's network/MAC, frame to the fronting router — the same addressing the `Iam()` fix
   established): directed `WhoIs`/`WhoHas`, `SendUnconfirmedEventNotification`,

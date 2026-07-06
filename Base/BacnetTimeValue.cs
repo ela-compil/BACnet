@@ -36,7 +36,8 @@ public struct BacnetTimeValue : ASN1.IEncode, ASN1.IDecode
             return -1;
 
         len += ASN1.decode_bacnet_time(buffer, offset + len, out var time);
-        Time = time.TimeOfDay;
+        // schedule times must be specific (12.24.7); tolerate a spec-illegal wildcard as midnight
+        Time = time == ASN1.BACNET_TIME_WILDCARD ? TimeSpan.Zero : time.TimeOfDay;
 
         if (offset + len >= count)
             return -1;

@@ -31,11 +31,38 @@ public class DateTimeWildcardTests
     }
 
     [Fact]
-    public void Fully_wildcarded_time_keeps_the_minimum_sentinel()
+    public void Fully_wildcarded_time_decodes_to_the_wildcard_marker()
     {
         ASN1.decode_bacnet_time(new byte[] { 0xFF, 0xFF, 0xFF, 0xFF }, 0, out var time);
 
-        Assert.Equal(new DateTime(1, 1, 1), time);
+        Assert.Equal(ASN1.BACNET_TIME_WILDCARD, time);
+    }
+
+    [Fact]
+    public void Fully_wildcarded_time_round_trips_byte_identical()
+    {
+        ASN1.decode_bacnet_time(new byte[] { 0xFF, 0xFF, 0xFF, 0xFF }, 0, out var time);
+
+        var buffer = new EncodeBuffer();
+        ASN1.encode_bacnet_time(buffer, time);
+
+        Assert.Equal(new byte[] { 0xFF, 0xFF, 0xFF, 0xFF }, buffer.ToArray());
+    }
+
+    [Fact]
+    public void Datetime_with_wildcard_time_component_combines_to_midnight()
+    {
+        // combined date+time values cannot carry an unspecified time: it degrades to 00:00
+        var wire = new byte[]
+        {
+            0xA4, 126, 7, 6, 1,             // Date 2026-07-06 (Monday)
+            0xB4, 0xFF, 0xFF, 0xFF, 0xFF    // Time unspecified
+        };
+
+        var len = ASN1.decode_bacnet_datetime(wire, 0, out var dateTime);
+
+        Assert.Equal(wire.Length, len);
+        Assert.Equal(new DateTime(2026, 7, 6, 0, 0, 0), dateTime);
     }
 
     [Theory]

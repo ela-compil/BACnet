@@ -1750,7 +1750,7 @@ public class Services
                     requestType = BacnetReadRangeRequestTypes.RR_BY_TIME;
                     len += ASN1.decode_application_date(buffer, offset + len, out var date);
                     len += ASN1.decode_application_time(buffer, offset + len, out time);
-                    time = new DateTime(date.Year, date.Month, date.Day, time.Hour, time.Minute, time.Second, time.Millisecond);
+                    time = ASN1.combine_date_and_time(date, time);
                     len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValueType);
                     len += ASN1.decode_signed(buffer, offset + len, lenValueType, out count);
                     break;
@@ -2532,7 +2532,7 @@ public class Services
         len += ASN1.decode_bacnet_time(buffer, offset + len, out var time);
 
         //merge
-        dateTime = new DateTime(date.Year, date.Month, date.Day, time.Hour, time.Minute, time.Second, time.Millisecond);
+        dateTime = ASN1.combine_date_and_time(date, time);
 
         return len;
     }
@@ -2666,7 +2666,7 @@ public class Services
         len += ASN1.decode_application_date(buffer, offset + len, out var date);
         len += ASN1.decode_application_time(buffer, offset + len, out var time);
 
-        var dt = new DateTime(date.Year, date.Month, date.Day, time.Hour, time.Minute, time.Second, time.Millisecond);
+        var dt = ASN1.combine_date_and_time(date, time);
 
         if (!ASN1.decode_is_closing_tag(buffer, offset + len)) return -1;
         len++;

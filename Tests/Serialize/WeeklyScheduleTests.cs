@@ -192,6 +192,21 @@ public class WeeklyScheduleTests
     }
 
     [Fact]
+    public void Wildcard_time_in_a_time_value_is_tolerated_as_midnight()
+    {
+        // schedule times must be specific (Clause 12.24.7); a spec-illegal wildcard from a
+        // peer must not surface as a 23:59:59 time
+        var wire = new byte[] { 0xB4, 0xFF, 0xFF, 0xFF, 0xFF, 0x44, 0x41, 0xB4, 0x00, 0x00 };
+
+        var timeValue = new BacnetTimeValue();
+        var len = timeValue.Decode(wire, 0, (uint)wire.Length);
+
+        Assert.Equal(wire.Length, len);
+        Assert.Equal(TimeSpan.Zero, timeValue.Time);
+        Assert.Equal(22.5f, timeValue.Value.Value);
+    }
+
+    [Fact]
     public void Truncated_daily_schedule_decode_returns_minus_one()
     {
         var buffer = new EncodeBuffer();

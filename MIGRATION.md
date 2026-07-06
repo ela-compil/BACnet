@@ -151,3 +151,23 @@ Exception_Schedule, Date_List), which replaces two old types that did not match 
   (`BacnetDailySchedule`, `BacnetSpecialEvent`) instead of `..._CONTEXT_SPECIFIC_DECODED` with a
   nested `BacnetValue[]` tree. Code that pattern-matched the old opaque shape must switch to the
   typed objects — reading and writing schedules no longer needs any manual re-assembly.
+
+## The unspecified ("wildcard") TIME has a dedicated marker
+
+Earlier versions decoded a fully-wildcarded Time (`FF FF FF FF` — "any time", e.g. the timestamp
+of an event transition that never happened) to `DateTime(1,1,1)`, which is also exactly what a
+decoded **midnight** looks like. The two were indistinguishable, and writing such a value back
+turned a real 00:00:00.00 into the wildcard.
+
+4.0 separates them: a fully-wildcarded Time decodes to **`ASN1.BACNET_TIME_WILDCARD`**
+(`DateTime.MaxValue`) and only that marker encodes back to `FF FF FF FF`; `DateTime(1,1,1)` is
+plain midnight in both directions. Update any code that compared a decoded time against
+`DateTime.MinValue` to detect "unspecified":
+
+```diff
+- if (timestamp.Time == DateTime.MinValue) // unspecified?
++ if (timestamp.Time == ASN1.BACNET_TIME_WILDCARD) // unspecified?
+```
+
+Combined date+time values (`BACnetDateTime`, datetime timestamps, log-record stamps) cannot carry
+an unspecified time and keep degrading it to 00:00 on decode, as before.

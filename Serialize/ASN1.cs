@@ -12,10 +12,11 @@ public class ASN1
     public const uint BACNET_MAX_PRIORITY = 16;
 
     /// <summary>
-    /// Marker for the fully-unspecified Time (all octets X'FF' - ASHRAE 135 §20.2.13), e.g. the
-    /// timestamps of never-seen transitions in a GetEventInformation ack. A distinct marker is
-    /// needed because <c>new DateTime(1, 1, 1)</c> - the value every decoded time carries as its
-    /// date part - is plain midnight and must encode as 00:00:00.00.
+    /// The fully-unspecified Time (all octets X'FF' - ASHRAE 135 §20.2.13), e.g. the timestamps
+    /// of never-seen transitions in a GetEventInformation ack. Decoders return this marker for a
+    /// fully-wildcarded time and encoders turn it back into FF FF FF FF, so wildcards round-trip.
+    /// A value distinct from <c>new DateTime(1, 1, 1)</c> is needed because that - the date part
+    /// every decoded time carries - is plain midnight and must encode as 00:00:00.00.
     /// </summary>
     public static readonly DateTime BACNET_TIME_WILDCARD = DateTime.MaxValue;
 
@@ -696,11 +697,8 @@ public class ASN1
     /// <summary>
     /// Encodes the four Time octets. <see cref="BACNET_TIME_WILDCARD"/> encodes as the
     /// fully-unspecified time (FF FF FF FF - 135 §20.2.13); every other value, including
-    /// midnight <c>new DateTime(1, 1, 1)</c>, encodes its actual time of day. Note the
-    /// asymmetry with the decoders, which map a fully-wildcarded time to the
-    /// <c>DateTime(1, 1, 1)</c> minimum sentinel: that value is indistinguishable from
-    /// midnight, so re-encoding it yields 00:00 - a lossless wildcard representation is
-    /// planned for 5.0.
+    /// midnight <c>new DateTime(1, 1, 1)</c>, encodes its actual time of day - the mirror
+    /// of <see cref="decode_bacnet_time"/>, so both values round-trip.
     /// </summary>
     public static void encode_bacnet_time(EncodeBuffer buffer, DateTime value)
     {
@@ -847,9 +845,7 @@ public class ASN1
             var len = 1; /* opening tag 2 */
             len += decode_application_date(buffer, offset + len, out var date);
             len += decode_application_time(buffer, offset + len, out var time);
-            value = new BacnetGenericTime(
-                new DateTime(date.Year, date.Month, date.Day, time.Hour, time.Minute, time.Second, time.Millisecond),
-                BacnetTimestampTags.TIME_STAMP_DATETIME);
+            value = new BacnetGenericTime(combine_date_and_time(date, time), BacnetTimestampTags.TIME_STAMP_DATETIME);
             if (!decode_is_closing_tag_number(buffer, offset + len, 2))
                 return -1;
             return len + 1; /* closing tag 2 */
@@ -1735,7 +1731,7 @@ public class ASN1
         int hundredths = buffer[offset + 3];
         if (hour == 0xFF && min == 0xFF && sec == 0xFF && hundredths == 0xFF)
         {
-            btime = new DateTime(1, 1, 1);
+            btime = BACNET_TIME_WILDCARD; // distinct from midnight, re-encodes as FF FF FF FF
         }
         else
         {
@@ -1764,8 +1760,20 @@ public class ASN1
         var len = 0;
         len += decode_application_date(buffer, offset + len, out var date); // Date
         len += decode_application_time(buffer, offset + len, out var time); // Time
-        bdatetime = new DateTime(date.Year, date.Month, date.Day, time.Hour, time.Minute, time.Second, time.Millisecond);
+        bdatetime = combine_date_and_time(date, time);
         return len;
+    }
+
+    /// <summary>
+    /// Merges a decoded Date and a decoded Time into one DateTime. A fully-wildcarded time
+    /// component degrades to midnight here, as combined values have no way to carry it.
+    /// </summary>
+    public static DateTime combine_date_and_time(DateTime date, DateTime time)
+    {
+        if (time == BACNET_TIME_WILDCARD)
+            return new DateTime(date.Year, date.Month, date.Day);
+
+        return new DateTime(date.Year, date.Month, date.Day, time.Hour, time.Minute, time.Second, time.Millisecond);
     }
 
     public static int decode_object_id(byte[] buffer, int offset, out ushort objectType, out uint instance)
