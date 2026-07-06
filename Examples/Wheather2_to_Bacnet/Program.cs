@@ -33,6 +33,8 @@ using System.Xml;
 using System.Threading;
 using Microsoft.Win32;
 using BaCSharp;
+// this sample uses the BaCSharp DateTime-value OBJECT, which predates (and shadows) the core BACnetDateTime struct
+using BacnetDateTime = BaCSharp.BacnetDateTime;
 using AnotherStorageImplementation;
 using System.IO.BACnet;
 using System.Globalization;

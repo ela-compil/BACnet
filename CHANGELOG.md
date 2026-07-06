@@ -75,10 +75,15 @@ See [MIGRATION.md](MIGRATION.md) for upgrade guidance.
   ASHRAE 135 §20.2.12/§20.2.13); previously the exception was swallowed upstream, e.g. silently
   dropping event notifications stamped with a wildcarded time. Such values are also **lossless**
   now: a decoded `BacnetValue` carries the new per-octet `BacnetTime` (or the existing
-  `BacnetDate`) whenever the octets cannot be represented faithfully as a `DateTime`, and both
-  re-encode byte-identically. Fully-specified values keep coming back as `DateTime`; only the
-  date/time *merging* decodes (BACnetDateTime, timestamps, log records) still clamp unspecified
-  components, as a merged `DateTime` cannot carry them.
+  `BacnetDate`) whenever the octets cannot be represented faithfully as a `DateTime`, a Date+Time
+  property pair with wildcards merges into the new `BacnetDateTime` struct, and timestamps keep
+  their original time octets in `BacnetGenericTime.PartialTime` next to the best-effort clamped
+  `Time` — so echoing an event's partially-wildcarded timestamp back (e.g. in an AcknowledgeAlarm)
+  reproduces the wire bytes. Fully-specified values keep coming back as `DateTime`.
+  `Event_Time_Stamps` elements now decode as `BacnetGenericTime` (preserving the BACnetTimeStamp
+  choice) instead of a bare `DateTime` that crashed on re-encode. Log-record stamps and
+  service-internal times (TimeSynchronization, ReadRange by-time), where the standard requires
+  specific values, still clamp.
 - `PROP_EFFECTIVE_PERIOD` decodes as one typed `BacnetDateRange` value instead of two bare
   `DateTime`s, so the open (wildcarded) boundaries of a Schedule's Effective_Period survive a
   read/write round-trip. Writing either shape — the typed range or two application-tagged

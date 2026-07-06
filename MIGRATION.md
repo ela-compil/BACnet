@@ -183,3 +183,10 @@ values are unaffected.
 `PROP_EFFECTIVE_PERIOD` now decodes as **one `BacnetValue` holding a `BacnetDateRange`** (tag
 `..._TAG_DATERANGE`) instead of two `DateTime` values, so open boundaries survive round-trips.
 Writes accept both the typed range and the legacy two-date shape.
+
+`PROP_EVENT_TIME_STAMPS` elements decode as **`BacnetGenericTime`** (preserving which
+BACnetTimeStamp choice the device used) instead of a bare `DateTime`; sequence-number stamps still
+come back as an unsigned. Timestamps whose time octets are partially wildcarded expose the
+original octets via the new `BacnetGenericTime.PartialTime` while `Time` keeps the familiar
+best-effort clamped value, and a wildcarded Date+Time property pair merges into the new
+`BacnetDateTime` struct instead of a clamped `DateTime`.

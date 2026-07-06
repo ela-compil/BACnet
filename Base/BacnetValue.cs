@@ -57,6 +57,10 @@ public struct BacnetValue
             return BacnetApplicationTags.BACNET_APPLICATION_TAG_DATE;
         if (t == typeof(BacnetTime))
             return BacnetApplicationTags.BACNET_APPLICATION_TAG_TIME;
+        if (t == typeof(BacnetDateTime))
+            return BacnetApplicationTags.BACNET_APPLICATION_TAG_DATETIME;
+        if (t == typeof(BacnetGenericTime))
+            return BacnetApplicationTags.BACNET_APPLICATION_TAG_TIMESTAMP;
         if (t.IsEnum)
             return BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED;
 
