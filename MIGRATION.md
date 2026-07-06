@@ -165,8 +165,8 @@ plain midnight in both directions. Update any code that compared a decoded time 
 `DateTime.MinValue` to detect "unspecified":
 
 ```diff
-- if (timestamp.Time == DateTime.MinValue) // unspecified?
-+ if (timestamp.Time == ASN1.BACNET_TIME_WILDCARD) // unspecified?
+- if (timestamp.Time == DateTime.MinValue)
++ if (timestamp.Time == ASN1.BACNET_TIME_WILDCARD)
 ```
 
 Combined date+time values (`BACnetDateTime`, datetime timestamps, log-record stamps) cannot carry
