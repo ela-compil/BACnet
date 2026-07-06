@@ -1,4 +1,4 @@
-/**************************************************************************
+﻿/**************************************************************************
 *                           MIT License
 * 
 * Copyright (C) 2014 Morten Kvistgaard <mk@pch-engineering.dk>
@@ -46,7 +46,7 @@ namespace AnotherStorageImplementation
             device=_device;
 
             // Bacnet on UDP/IP/Ethernet
-            bacnet_client = new BacnetClient(new BacnetIpUdpProtocolTransport(0xBAC0, localEndpointIp: "192.168.1.99"));
+            bacnet_client = new BacnetClient(new BacnetIpUdpProtocolTransport(0xBAC0, false));
 
             bacnet_client.OnIam += new BacnetClient.IamHandler(handler_OnIam);
             bacnet_client.OnReadPropertyRequest += new BacnetClient.ReadPropertyRequestHandler(handler_OnReadPropertyRequest);
