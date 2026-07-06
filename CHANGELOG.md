@@ -38,6 +38,9 @@ See [MIGRATION.md](MIGRATION.md) for upgrade guidance.
 - PrivateTransfer send/receive support in `BacnetClient` (#154): `PrivateTransferRequest`,
   `SendUnconfirmedPrivateTransfer`, the `OnPrivateTransfer` event, and the
   `PrivateTransferResponse` / `PrivateTransferErrorResponse` replies (ASHRAE 135 clauses 16.2/16.3).
+- `WritePropertyRequest` / `BeginWritePropertyRequest` accept an optional `arrayIndex` to write a
+  single array element (matching `ReadPropertyRequest`), e.g. one slot of a `Priority_Array` or
+  one day of a `Weekly_Schedule`.
 - Full Schedule/Calendar (scheduling) serialization (#26, #131): `BacnetTimeValue`,
   `BacnetDailySchedule`, `BacnetSpecialEvent` and the reworked `BacnetCalendarEntry` /
   `BacnetWeekNDay` give `Weekly_Schedule`, `Exception_Schedule` and `Date_List` symmetric
