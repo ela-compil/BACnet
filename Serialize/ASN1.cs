@@ -2056,7 +2056,8 @@ public class ASN1
             case BacnetApplicationTags.BACNET_APPLICATION_TAG_TIME:
                 if (lenValueType == 4 && offset + 4 <= buffer.Length && IsPartiallyUnspecifiedTime(buffer, offset))
                 {
-                    // partially-wildcarded times used to clamp to zero; keep them per-octet instead
+                    // times with only some octets unspecified cannot live in a DateTime: keep
+                    // them per-octet so the value round-trips losslessly
                     var partialTime = new BacnetTime();
                     len = partialTime.Decode(buffer, offset, (uint)(offset + 4));
                     value.Value = partialTime;

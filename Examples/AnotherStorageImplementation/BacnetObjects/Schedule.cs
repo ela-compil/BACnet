@@ -109,7 +109,7 @@ namespace BaCSharp
             }
 
             if (changed)
-                DoDispatchValue(); // the COV notification is raised by the write dispatcher
+                DoDispatchValue(); // our own COV is raised by WritePropertyValue once this setter returns
         }
 
         public object m_PROP_SCHEDULE_DEFAULT;
@@ -484,7 +484,7 @@ namespace BaCSharp
         {
             OnExternalCOVNotify -= OnDeviceObjectChanged;
             lock (lockObj)
-                tmrId++; // this will devalidate thread pool tasks
+                tmrId++; // invalidate any pending timer callback; the object is going away
         }
 
         private bool HasConsistentDatatypes()

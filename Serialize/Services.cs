@@ -1829,10 +1829,9 @@ public class Services
             return 0;
         len += 1;
 
-        // The item data runs to the MATCHING closing tag [5]: by-sequence and by-time acks carry
-        // a first-sequence-number [6] after it, which the old "rest of the buffer minus one byte"
-        // extraction wrongly included in the range. The items may themselves contain constructed
-        // values, so track the tag nesting depth.
+        // The item data runs to the MATCHING closing tag [5] - not to the end of the buffer, as
+        // by-sequence and by-time acks carry a first-sequence-number [6] behind it. The items may
+        // themselves contain constructed values, so track the tag nesting depth.
         var dataStart = len;
         var depth = 1;
         while (len < apduLen && depth > 0)
