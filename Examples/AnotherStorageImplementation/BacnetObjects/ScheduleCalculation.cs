@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.IO.BACnet;
 
 namespace BaCSharp
@@ -79,14 +80,12 @@ namespace BaCSharp
         private static IEnumerable<BacnetSpecialEvent> ByDescendingImportance(IReadOnlyList<BacnetSpecialEvent> events)
         {
             if (events == null)
-                yield break;
+                return Enumerable.Empty<BacnetSpecialEvent>();
 
-            // EventPriority 1 is the most important; equal priorities tie-break on the array index,
-            // which a stable sort over the index-ordered source preserves (Clause 12.24.8)
-            var ordered = new List<BacnetSpecialEvent>(events);
-            ordered.Sort((a, b) => a.EventPriority.CompareTo(b.EventPriority));
-            foreach (var specialEvent in ordered)
-                yield return specialEvent;
+            // EventPriority 1 is the most important; equal priorities tie-break on the array
+            // index (Clause 12.24.8), which OrderBy - a guaranteed-stable sort, unlike
+            // List<T>.Sort - preserves from the source order
+            return events.OrderBy(specialEvent => specialEvent.EventPriority);
         }
 
         private static bool IsInEffect(BacnetSpecialEvent specialEvent, DateTime now, Func<BacnetObjectId, bool?> calendarPresentValue)

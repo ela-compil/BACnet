@@ -900,7 +900,9 @@ public class ASN1
     }
 
     // decodes one typed element per call, so reading a whole BACnetARRAY/LIST yields one
-    // BacnetValue per element, matching how other arrays decode element-wise
+    // BacnetValue per element, matching how other arrays decode element-wise. Like the
+    // neighbouring dispatches this is keyed on the property id alone, so a proprietary property
+    // reusing one of these ids on a vendor object would be mis-decoded
     private static int DecodeTypedValue<T>(byte[] buffer, int offset, int maxOffset,
         BacnetApplicationTags tag, ref BacnetValue value) where T : IDecode, new()
     {

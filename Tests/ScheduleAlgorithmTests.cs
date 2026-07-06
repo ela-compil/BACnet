@@ -83,7 +83,11 @@ public class ScheduleAlgorithmTests
         var byPriority = new List<BacnetSpecialEvent> { TodayEvent(12, At(8, 99.0f)), TodayEvent(5, At(8, 88.0f)) };
         Assert.Equal(88.0f, Compute(MondayMorning, Week(), byPriority));
 
-        var byIndex = new List<BacnetSpecialEvent> { TodayEvent(5, At(8, 11.0f)), TodayEvent(5, At(8, 22.0f)) };
+        var byIndex = new List<BacnetSpecialEvent>
+        {
+            TodayEvent(5, At(8, 11.0f)), TodayEvent(5, At(8, 22.0f)),
+            TodayEvent(5, At(8, 33.0f)), TodayEvent(5, At(8, 44.0f))
+        };
         Assert.Equal(11.0f, Compute(MondayMorning, Week(), byIndex));
     }
 

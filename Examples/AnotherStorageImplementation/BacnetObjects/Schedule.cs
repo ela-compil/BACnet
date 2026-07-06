@@ -167,8 +167,9 @@ namespace BaCSharp
             }
             else if (values.Count == 2 && values[0].Value is DateTime start && values[1].Value is DateTime end)
             {
-                // a network write arrives as two application-tagged dates; the DateTime(1,1,1)
-                // sentinel stands for a fully wildcarded (open) boundary
+                // the pre-4.0 two-date shape, still used by in-process callers (network writes
+                // arrive as one decoded BacnetDateRange); the DateTime(1,1,1) sentinel stands
+                // for a fully wildcarded (open) boundary
                 range = new BacnetDateRange(BacnetDate.FromDateTime(start), BacnetDate.FromDateTime(end));
             }
             else
@@ -279,7 +280,8 @@ namespace BaCSharp
         }
 
         // writing array index 0 resizes the array; new elements carry an empty list of time
-        // values (12.24.8), with a never-active all-wildcard date as their period
+        // values (12.24.8) under an always-matching wildcard date - harmless, since an event
+        // with no time-value at or before now never contributes a value
         private void Resize_PROP_EXCEPTION_SCHEDULE(IList<BacnetValue> values)
         {
             if (values.Count != 1 || !(values[0].Value is uint newSize))
