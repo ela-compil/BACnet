@@ -1821,9 +1821,9 @@ public class BacnetClient : IDisposable
 	    res.Dispose();
     }
 
-    public bool WritePropertyRequest(BacnetAddress adr, BacnetObjectId objectId, BacnetPropertyIds propertyId, IEnumerable<BacnetValue> valueList, byte invokeId = 0, byte? priority = null)
+    public bool WritePropertyRequest(BacnetAddress adr, BacnetObjectId objectId, BacnetPropertyIds propertyId, IEnumerable<BacnetValue> valueList, byte invokeId = 0, byte? priority = null, uint arrayIndex = ASN1.BACNET_ARRAY_ALL)
     {
-        using (var result = (BacnetAsyncResult)BeginWritePropertyRequest(adr, objectId, propertyId, valueList, true, invokeId, priority))
+        using (var result = (BacnetAsyncResult)BeginWritePropertyRequest(adr, objectId, propertyId, valueList, true, invokeId, priority, arrayIndex))
         {
             for (var r = 0; r < _retries; r++)
             {
@@ -1861,7 +1861,7 @@ public class BacnetClient : IDisposable
         return false;
     }
 
-    public IAsyncResult BeginWritePropertyRequest(BacnetAddress adr, BacnetObjectId objectId, BacnetPropertyIds propertyId, IEnumerable<BacnetValue> valueList, bool waitForTransmit, byte invokeId = 0, byte? priority = null)
+    public IAsyncResult BeginWritePropertyRequest(BacnetAddress adr, BacnetObjectId objectId, BacnetPropertyIds propertyId, IEnumerable<BacnetValue> valueList, bool waitForTransmit, byte invokeId = 0, byte? priority = null, uint arrayIndex = ASN1.BACNET_ARRAY_ALL)
     {
         if (priority.HasValue && (priority < 1 || priority > 16))
             throw new ArgumentOutOfRangeException(nameof(priority), "WritePropertyRequest priority must be between 1 and 16");
@@ -1873,7 +1873,7 @@ public class BacnetClient : IDisposable
         var buffer = GetEncodeBuffer(Transport.HeaderLength);
         NPDU.Encode(buffer, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource, adr.RoutedDestination);
         APDU.EncodeConfirmedServiceRequest(buffer, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST, BacnetConfirmedServices.SERVICE_CONFIRMED_WRITE_PROPERTY, MaxSegments, Transport.MaxAdpuLength, invokeId);
-        Services.EncodeWriteProperty(buffer, objectId, (uint)propertyId, ASN1.BACNET_ARRAY_ALL, priority ?? _writepriority, valueList);
+        Services.EncodeWriteProperty(buffer, objectId, (uint)propertyId, arrayIndex, priority ?? _writepriority, valueList);
 
         //send
         var ret = new BacnetAsyncResult(this, adr, invokeId, buffer.buffer, buffer.offset - Transport.HeaderLength, waitForTransmit, TransmitTimeout);
