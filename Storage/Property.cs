@@ -89,8 +89,18 @@ public class Property
                     return DeserializeEncoded(type, value, new BacnetTime());
                 }
             case BacnetApplicationTags.BACNET_APPLICATION_TAG_DATETIME:
-                // Format: yyyy/MM/dd-HH:mm:ss.hh where hh = hundredths (0-99) (bacnet-stack compatible)
-                return new BacnetValue(type, DateTime.ParseExact(value, "yyyy/MM/dd-HH:mm:ss.ff", CultureInfo.InvariantCulture));
+                // Format: yyyy/MM/dd-HH:mm:ss.hh where hh = hundredths (0-99) (bacnet-stack compatible);
+                // wildcarded date+time values are stored as base64
+                try
+                {
+                    return new BacnetValue(type, DateTime.ParseExact(value, "yyyy/MM/dd-HH:mm:ss.ff", CultureInfo.InvariantCulture));
+                }
+                catch (FormatException)
+                {
+                    return DeserializeEncoded(type, value, new BacnetDateTime());
+                }
+            case BacnetApplicationTags.BACNET_APPLICATION_TAG_DATERANGE:
+                return DeserializeEncoded(type, value, new BacnetDateRange());
             case BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID:
                 return new BacnetValue(type, BacnetObjectId.Parse(value));
             case BacnetApplicationTags.BACNET_APPLICATION_TAG_READ_ACCESS_SPECIFICATION:
@@ -118,10 +128,17 @@ public class Property
     // schedule values are stored as base64 of their ASN.1 encoding, like octet strings
     private static BacnetValue DeserializeEncoded(BacnetApplicationTags type, string value, ASN1.IDecode target)
     {
-        var bytes = Convert.FromBase64String(value);
-        return target.Decode(bytes, 0, (uint)bytes.Length) < 0
-            ? new BacnetValue(type, null)
-            : new BacnetValue(type, target);
+        try
+        {
+            var bytes = Convert.FromBase64String(value);
+            return target.Decode(bytes, 0, (uint)bytes.Length) < 0
+                ? new BacnetValue(type, null)
+                : new BacnetValue(type, target);
+        }
+        catch (FormatException)
+        {
+            return new BacnetValue(type, null); // not base64 - a corrupt or hand-edited store
+        }
     }
 
     public static string SerializeValue(BacnetValue value, BacnetApplicationTags type)
@@ -158,12 +175,15 @@ public class Property
                 return ((DateTime)value.Value).ToString("HH:mm:ss.", CultureInfo.InvariantCulture)
                     + (((DateTime)value.Value).Millisecond / 10).ToString("D2", CultureInfo.InvariantCulture);
             case BacnetApplicationTags.BACNET_APPLICATION_TAG_DATETIME:
+                if (value.Value is BacnetDateTime bacnetDateTime)
+                    return SerializeEncoded(bacnetDateTime); // a wildcarded date+time has no textual form
                 // Format: yyyy/MM/dd-HH:mm:ss.hh where hh = hundredths (0-99) (bacnet-stack compatible)
                 return ((DateTime)value.Value).ToString("yyyy/MM/dd-HH:mm:ss.", CultureInfo.InvariantCulture)
                     + (((DateTime)value.Value).Millisecond / 10).ToString("D2", CultureInfo.InvariantCulture);
             case BacnetApplicationTags.BACNET_APPLICATION_TAG_WEEKLY_SCHEDULE:
             case BacnetApplicationTags.BACNET_APPLICATION_TAG_SPECIAL_EVENT:
             case BacnetApplicationTags.BACNET_APPLICATION_TAG_CALENDAR_ENTRY:
+            case BacnetApplicationTags.BACNET_APPLICATION_TAG_DATERANGE:
                 return SerializeEncoded((ASN1.IEncode)value.Value);
             default:
                 return value.Value.ToString();
