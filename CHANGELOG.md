@@ -88,6 +88,9 @@ See [MIGRATION.md](MIGRATION.md) for upgrade guidance.
   `DateTime`s, so the open (wildcarded) boundaries of a Schedule's Effective_Period survive a
   read/write round-trip. Writing either shape — the typed range or two application-tagged
   dates — stays supported.
+- ReadRange by-time and by-sequence responses decode correctly: the ack's trailing
+  first-sequence-number was included in the returned item-data range (the extraction assumed the
+  by-position layout), so decoding the last "record" of a time-based trend-log read failed.
 - A TIME value of exactly midnight no longer encodes as the "any time" wildcard: `DateTime(1,1,1)`
   — which every decoded midnight is — used to double as the wildcard sentinel, so reading a 00:00
   time (or timestamp) and writing it back corrupted it to `FF FF FF FF`. The unspecified time now

@@ -1829,9 +1829,30 @@ public class Services
             return 0;
         len += 1;
 
-        rangeBuffer = new byte[buffer.Length - offset - len - 1];
+        // The item data runs to the MATCHING closing tag [5]: by-sequence and by-time acks carry
+        // a first-sequence-number [6] after it, which the old "rest of the buffer minus one byte"
+        // extraction wrongly included in the range. The items may themselves contain constructed
+        // values, so track the tag nesting depth.
+        var dataStart = len;
+        var depth = 1;
+        while (len < apduLen && depth > 0)
+        {
+            var tagByte = buffer[offset + len];
+            var tagLen = ASN1.decode_tag_number_and_value(buffer, offset + len, out byte _, out var tagPayload);
+            len += tagLen;
 
-        Array.Copy(buffer, offset + len, rangeBuffer, 0, rangeBuffer.Length);
+            if (ASN1.IS_OPENING_TAG(tagByte))
+                depth++;
+            else if (ASN1.IS_CLOSING_TAG(tagByte))
+                depth--;
+            else if (ASN1.IS_CONTEXT_SPECIFIC(tagByte) || (tagByte >> 4) != (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_BOOLEAN)
+                len += (int)tagPayload; // an application BOOLEAN carries its value in the tag itself
+        }
+        if (depth != 0)
+            return 0;
+
+        rangeBuffer = new byte[len - 1 - dataStart];
+        Array.Copy(buffer, offset + dataStart, rangeBuffer, 0, rangeBuffer.Length);
 
         return itemCount;
     }
