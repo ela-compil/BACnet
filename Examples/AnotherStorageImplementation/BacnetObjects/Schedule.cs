@@ -1,6 +1,6 @@
-﻿/**************************************************************************
+/**************************************************************************
 *                           MIT License
-* 
+*
 * Copyright (C) 2015 Frederic Chaxel <fchaxel@free.fr>
 *
 * Permission is hereby granted, free of charge, to any person obtaining
@@ -26,92 +26,99 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.IO.BACnet;
 using System.IO.BACnet.Serialize;
 using System.Threading;
 
 namespace BaCSharp
 {
-    class Schedule : BaCSharpObject
+    // The Schedule object of ASHRAE 135-2016 Clause 12.24: Weekly_Schedule (BACnetARRAY[7] of
+    // BACnetDailySchedule, Monday..Sunday), Exception_Schedule (BACnetARRAY of BACnetSpecialEvent),
+    // the 12.24.4 Present_Value evaluation (see ScheduleCalculation) and dispatch of the value to
+    // every List_Of_Object_Property_References member at Priority_For_Writing.
+    public class Schedule : BaCSharpObject
     {
         protected int tmrId;
-        protected object lockObj=new object();
+        protected object lockObj = new object();
 
-        public bool m_PROP_OUT_OF_SERVICE = true; // No need to lock, to much simple type
+        public bool m_PROP_OUT_OF_SERVICE = true; // start decoupled; enable after wiring (see Program.cs)
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_BOOLEAN)]
         public virtual bool PROP_OUT_OF_SERVICE
         {
             get { return m_PROP_OUT_OF_SERVICE; }
             set
-            {  
-                m_PROP_OUT_OF_SERVICE = value;
-                m_PROP_STATUS_FLAGS.SetBit((byte)3, value);
+            {
+                lock (lockObj)
+                {
+                    m_PROP_OUT_OF_SERVICE = value;
+                    m_PROP_STATUS_FLAGS.SetBit((byte)3, value);
+                }
                 ExternalCOVManagement(BacnetPropertyIds.PROP_OUT_OF_SERVICE);
-                DoScheduling();
+                Recalculate();
             }
         }
 
-        BacnetBitString m_PROP_STATUS_FLAGS = new BacnetBitString();
+        public BacnetBitString m_PROP_STATUS_FLAGS = new BacnetBitString();
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_BIT_STRING)]
         public virtual BacnetBitString PROP_STATUS_FLAGS
         {
             get { return m_PROP_STATUS_FLAGS; }
         }
 
-        BacnetDeviceObjectPropertyReferenceList m_PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES=new BacnetDeviceObjectPropertyReferenceList();
-        public virtual object PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES
+        public List<BacnetDeviceObjectPropertyReference> m_PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES = new List<BacnetDeviceObjectPropertyReference>();
+
+        public virtual IList<BacnetValue> get2_PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES()
         {
-            get 
-            {
-                lock (lockObj) // Bof : nothing to lock it's a reference
-                {
-                    return m_PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES;
-                }
-            }
-            set
-            {
-                lock (lockObj)
-                {
-                    if (value.GetType() == typeof(BacnetDeviceObjectPropertyReferenceList)) // during deseralization, this one is used
-                    {
-                        m_PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES=(BacnetDeviceObjectPropertyReferenceList)value;
-                        return;
-                    }
-
-                    m_PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES.references = new List<BacnetDeviceObjectPropertyReference>();
-                    if (value == null) return;
-                    if (value is BacnetDeviceObjectPropertyReference)
-                    {
-                        m_PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES.references.Add((BacnetDeviceObjectPropertyReference)value);
-                        return;
-                    }
-
-                    List<BacnetValue> valuesList = (List<BacnetValue>)value;
-                    foreach (BacnetValue bv in valuesList)
-                        m_PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES.references.Add((BacnetDeviceObjectPropertyReference)bv.Value);
-                }
-            }
+            lock (lockObj)
+                return m_PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES.Select(r => new BacnetValue(r)).ToList();
         }
-        
-        public object m_PROP_PRESENT_VALUE; // No need to lock, object reference, invariant
-        public bool IsPresentValueDefault = true; 
+
+        public virtual void set2_PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES(IList<BacnetValue> values, byte priority)
+        {
+            if (!TryGetTypedValues(values, out List<BacnetDeviceObjectPropertyReference> references))
+                return;
+
+            lock (lockObj)
+                m_PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES = references;
+
+            Recalculate();
+        }
+
+        public object m_PROP_PRESENT_VALUE;
         public virtual object PROP_PRESENT_VALUE
         {
-            get { return m_PROP_PRESENT_VALUE; } 
-        }
-
-        public virtual object internal_PROP_PRESENT_VALUE
-        {
             get { return m_PROP_PRESENT_VALUE; }
-            set
-            {
-                m_PROP_PRESENT_VALUE = value;
-                DoDispatchValue();
-            }
         }
 
-        public object m_PROP_SCHEDULE_DEFAULT;  // No need to lock, object reference, invariant
+        // Present_Value is writable only while Out_Of_Service; the write still dispatches to the
+        // referenced properties as if it had come from the internal calculation (12.24.14)
+        public virtual void set2_PROP_PRESENT_VALUE(IList<BacnetValue> values, byte priority)
+        {
+            if (!m_PROP_OUT_OF_SERVICE)
+            {
+                ErrorCode_PropertyWrite = ErrorCodes.WriteAccessDenied;
+                return;
+            }
+
+            if (values.Count != 1)
+            {
+                ErrorCode_PropertyWrite = ErrorCodes.InvalidDataType;
+                return;
+            }
+
+            bool changed;
+            lock (lockObj)
+            {
+                var newValue = values[0].Value;
+                changed = !Equals(m_PROP_PRESENT_VALUE, newValue);
+                m_PROP_PRESENT_VALUE = newValue;
+            }
+
+            if (changed)
+                DoDispatchValue(); // our own COV is raised by WritePropertyValue once this setter returns
+        }
+
+        public object m_PROP_SCHEDULE_DEFAULT;
         public virtual object PROP_SCHEDULE_DEFAULT
         {
             get { return m_PROP_SCHEDULE_DEFAULT; }
@@ -119,104 +126,200 @@ namespace BaCSharp
             {
                 m_PROP_SCHEDULE_DEFAULT = value;
                 ExternalCOVManagement(BacnetPropertyIds.PROP_SCHEDULE_DEFAULT);
-
-                if (IsPresentValueDefault==true)
-                {
-                    internal_PROP_PRESENT_VALUE = m_PROP_SCHEDULE_DEFAULT;
-                }
-                else if (m_PROP_PRESENT_VALUE == null)
-                {
-                    internal_PROP_PRESENT_VALUE = m_PROP_SCHEDULE_DEFAULT;
-                    IsPresentValueDefault = true;
-                }
+                Recalculate();
             }
         }
-        
+
+        // CONFIGURATION_ERROR when the non-NULL scheduled values and Schedule_Default do not share
+        // one primitive datatype (12.24.13)
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED)]
         public virtual uint PROP_RELIABILITY
         {
-            get { return 0; }
+            get
+            {
+                lock (lockObj)
+                    return HasConsistentDatatypes() ? 0u : (uint)BacnetReliability.RELIABILITY_CONFIGURATION_ERROR;
+            }
         }
 
+        public uint m_PROP_PRIORITY_FOR_WRITING = 16;
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT)]
-        public uint m_PROP_PRIORITY = 0;
-        public virtual uint PROP_PRIORITY
+        public virtual uint PROP_PRIORITY_FOR_WRITING
         {
-            get { return m_PROP_PRIORITY; }
-            set 
+            get { return m_PROP_PRIORITY_FOR_WRITING; }
+            set
             {
-                if (value <= 16)
-                    m_PROP_PRIORITY = value;
-                else 
+                if (value >= 1 && value <= 16)
+                    m_PROP_PRIORITY_FOR_WRITING = value;
+                else
                     ErrorCode_PropertyWrite = ErrorCodes.OutOfRange;
             }
         }
-        
-        List<BacnetValue> m_PROP_EFFECTIVE_PERIOD = new List<BacnetValue>(); // Two Dates
-        [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_DATE)]
-        public virtual List<BacnetValue> PROP_EFFECTIVE_PERIOD
+
+        public BacnetDateRange m_PROP_EFFECTIVE_PERIOD = AlwaysInEffect();
+
+        public virtual IList<BacnetValue> get2_PROP_EFFECTIVE_PERIOD()
         {
-            get { return m_PROP_EFFECTIVE_PERIOD; }
-            set 
-            {
-                lock (lockObj)
-                {
-                    m_PROP_EFFECTIVE_PERIOD = value;
-                    DoScheduling();
-                }
-            }
+            lock (lockObj)
+                return new[] { new BacnetValue(m_PROP_EFFECTIVE_PERIOD) };
         }
-        
-        public BacnetWeeklySchedule m_PROP_WEEKLY_SCHEDULE = new BacnetWeeklySchedule();
-        public virtual object PROP_WEEKLY_SCHEDULE
+
+        public virtual void set2_PROP_EFFECTIVE_PERIOD(IList<BacnetValue> values, byte priority)
         {
-            get { return m_PROP_WEEKLY_SCHEDULE; }
-            set 
+            BacnetDateRange range;
+            if (values.Count == 1 && values[0].Value is BacnetDateRange r)
             {
-                lock (lockObj)
+                range = r;
+            }
+            else if (values.Count == 2 && values[0].Value is DateTime start && values[1].Value is DateTime end)
+            {
+                // the pre-4.0 two-date shape, still used by in-process callers (network writes
+                // arrive as one decoded BacnetDateRange); the DateTime(1,1,1) sentinel stands
+                // for a fully wildcarded (open) boundary
+                range = new BacnetDateRange(BacnetDate.FromDateTime(start), BacnetDate.FromDateTime(end));
+            }
+            else
+            {
+                ErrorCode_PropertyWrite = ErrorCodes.InvalidDataType;
+                return;
+            }
+
+            lock (lockObj)
+                m_PROP_EFFECTIVE_PERIOD = range;
+
+            Recalculate();
+        }
+
+        public BacnetDailySchedule[] m_PROP_WEEKLY_SCHEDULE = NewEmptyWeek();
+
+        public virtual IList<BacnetValue> get2_PROP_WEEKLY_SCHEDULE()
+        {
+            lock (lockObj)
+                return m_PROP_WEEKLY_SCHEDULE.Select(day => new BacnetValue(day)).ToList();
+        }
+
+        public virtual void set2_PROP_WEEKLY_SCHEDULE(IList<BacnetValue> values, byte priority)
+        {
+            var index = ArrayIndex_PropertyWrite;
+            if (index == 0)
+            {
+                // a BACnetARRAY[7] has a fixed size
+                ErrorCode_PropertyWrite = ErrorCodes.WriteAccessDenied;
+                return;
+            }
+            if (index != ASN1.BACNET_ARRAY_ALL && (index < 1 || index > 7))
+            {
+                ErrorCode_PropertyWrite = ErrorCodes.OutOfRange;
+                return;
+            }
+
+            if (!TryGetTypedValues(values, out List<BacnetDailySchedule> days))
+                return;
+
+            if (days.Count != (index == ASN1.BACNET_ARRAY_ALL ? 7 : 1))
+            {
+                ErrorCode_PropertyWrite = ErrorCodes.OutOfRange;
+                return;
+            }
+
+            if (days.Any(day => HasDuplicateTime(day.DaySchedule)))
+            {
+                ErrorCode_PropertyWrite = ErrorCodes.DuplicateEntry;
+                return;
+            }
+
+            lock (lockObj)
+            {
+                if (index == ASN1.BACNET_ARRAY_ALL)
+                    m_PROP_WEEKLY_SCHEDULE = days.ToArray();
+                else
+                    m_PROP_WEEKLY_SCHEDULE[index - 1] = days[0];
+            }
+
+            Recalculate();
+        }
+
+        public List<BacnetSpecialEvent> m_PROP_EXCEPTION_SCHEDULE = new List<BacnetSpecialEvent>();
+
+        public virtual IList<BacnetValue> get2_PROP_EXCEPTION_SCHEDULE()
+        {
+            lock (lockObj)
+                return m_PROP_EXCEPTION_SCHEDULE.Select(specialEvent => new BacnetValue(specialEvent)).ToList();
+        }
+
+        public virtual void set2_PROP_EXCEPTION_SCHEDULE(IList<BacnetValue> values, byte priority)
+        {
+            var index = ArrayIndex_PropertyWrite;
+            if (index == 0)
+            {
+                Resize_PROP_EXCEPTION_SCHEDULE(values);
+                return;
+            }
+
+            if (!TryGetTypedValues(values, out List<BacnetSpecialEvent> events))
+                return;
+
+            if (events.Any(specialEvent => HasDuplicateTime(specialEvent.ListOfTimeValues)))
+            {
+                ErrorCode_PropertyWrite = ErrorCodes.DuplicateEntry;
+                return;
+            }
+
+            if (events.Any(specialEvent => specialEvent.EventPriority < 1 || specialEvent.EventPriority > 16))
+            {
+                ErrorCode_PropertyWrite = ErrorCodes.OutOfRange; // EventPriority is Unsigned(1..16) (12.24.8)
+                return;
+            }
+
+            lock (lockObj)
+            {
+                if (index == ASN1.BACNET_ARRAY_ALL)
                 {
-                    if (value.GetType() == typeof(BacnetWeeklySchedule)) // during deseralization, this one is used
-                    {
-                        m_PROP_WEEKLY_SCHEDULE = (BacnetWeeklySchedule)value;
-                        return;
-                    }
-
-                    int day = 0;
-
-                    m_PROP_WEEKLY_SCHEDULE = new BacnetWeeklySchedule();
-
-                    // A quite strange decoding due to the strange re-ordering of
-                    // empty value (day without schedule) by the stack
-                    // Maybe it could be a better way to get the raw buffer as 
-                    // in BacnetDeviceObjectPropertyReferenceList for a self decoding
-                    // rather than the automatic one proposed by Yabe stack.
-                    List<BacnetValue> valuesList = (List<BacnetValue>)value;
-                    foreach (BacnetValue bv in valuesList)
-                    {
-                        BacnetValue[] bvarray = (BacnetValue[])bv.Value;
-
-                        for (int i = 0; i < bvarray.Length; i++)
-                        {
-                            if (bvarray[i].Value is BacnetValue[])
-                            {
-                                day++;
-                            }
-                            else
-                            {
-                                if (m_PROP_WEEKLY_SCHEDULE.days[day] == null)
-                                    m_PROP_WEEKLY_SCHEDULE.days[day] = new List<DaySchedule>();
-
-                                DateTime time = (DateTime)bvarray[i].Value;
-                                i++;
-                                DaySchedule ds = new DaySchedule(time, bvarray[i].Value);
-                                m_PROP_WEEKLY_SCHEDULE.days[day].Add(ds);
-                            }
-                        }
-                        day++;
-                    }
-                    DoScheduling();
+                    m_PROP_EXCEPTION_SCHEDULE = events;
+                }
+                else if (events.Count == 1 && index >= 1 && index <= m_PROP_EXCEPTION_SCHEDULE.Count)
+                {
+                    m_PROP_EXCEPTION_SCHEDULE[(int)index - 1] = events[0];
+                }
+                else
+                {
+                    ErrorCode_PropertyWrite = ErrorCodes.OutOfRange;
+                    return;
                 }
             }
+
+            Recalculate();
+        }
+
+        // writing array index 0 resizes the array; new elements carry an empty list of time
+        // values (12.24.8) under an always-matching wildcard date - harmless, since an event
+        // with no time-value at or before now never contributes a value
+        private void Resize_PROP_EXCEPTION_SCHEDULE(IList<BacnetValue> values)
+        {
+            if (values.Count != 1 || !(values[0].Value is uint newSize))
+            {
+                ErrorCode_PropertyWrite = ErrorCodes.InvalidDataType;
+                return;
+            }
+
+            // Annex K interoperability asks for up to 255 special events; anything beyond that is a
+            // nonsensical request that would allocate unbounded memory while holding the device lock
+            if (newSize > 255)
+            {
+                ErrorCode_PropertyWrite = ErrorCodes.OutOfRange;
+                return;
+            }
+
+            lock (lockObj)
+            {
+                while (m_PROP_EXCEPTION_SCHEDULE.Count > newSize)
+                    m_PROP_EXCEPTION_SCHEDULE.RemoveAt(m_PROP_EXCEPTION_SCHEDULE.Count - 1);
+                while (m_PROP_EXCEPTION_SCHEDULE.Count < newSize)
+                    m_PROP_EXCEPTION_SCHEDULE.Add(new BacnetSpecialEvent(
+                        new BacnetCalendarEntry(BacnetDate.Any), new BacnetTimeValue[0], 16));
+            }
+
+            Recalculate();
         }
 
         public Schedule(int ObjId, String ObjName, String Description)
@@ -225,284 +328,278 @@ namespace BaCSharp
             m_PROP_STATUS_FLAGS.SetBit((byte)0, false);
             m_PROP_STATUS_FLAGS.SetBit((byte)1, false);
             m_PROP_STATUS_FLAGS.SetBit((byte)2, false);
-            m_PROP_STATUS_FLAGS.SetBit((byte)3, false);
+            m_PROP_STATUS_FLAGS.SetBit((byte)3, m_PROP_OUT_OF_SERVICE);
 
-            m_PROP_EFFECTIVE_PERIOD.Add(new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_DATE, DateTime.Now));
-            m_PROP_EFFECTIVE_PERIOD.Add(new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_DATE, DateTime.Now.AddYears(10)));
+            // exception schedules can be driven by Calendar objects: follow their changes
+            OnExternalCOVNotify += OnDeviceObjectChanged;
         }
 
         public override void Post_NewtonSoft_Json_Deserialization(DeviceObject device)
         {
             base.Post_NewtonSoft_Json_Deserialization(device);
-            // uint a int change to int64, uint64
-            foreach (List<DaySchedule> dsl in  m_PROP_WEEKLY_SCHEDULE.days)
-                if (dsl!=null)
-                foreach (DaySchedule ds in dsl)
-                {
-                    if (ds.Value.GetType() == typeof(Int64))
-                    {
-                        ds.Value=Convert.ChangeType(ds.Value, typeof(Int32));
-                    }
-                    if (ds.Value.GetType() == typeof(UInt64))
-                    {
-                        ds.Value = Convert.ChangeType(ds.Value, typeof(UInt32));
-                    }
-                }
-            try
-            {
-                if (m_PROP_PRESENT_VALUE.GetType() == typeof(Int64))
-                    m_PROP_PRESENT_VALUE = Convert.ChangeType(m_PROP_PRESENT_VALUE, typeof(Int32));
-                if (m_PROP_PRESENT_VALUE.GetType() == typeof(UInt64))
-                    m_PROP_PRESENT_VALUE = Convert.ChangeType(m_PROP_PRESENT_VALUE, typeof(UInt32));
-            }
-            catch { }
-            try
-            {
-            if (m_PROP_SCHEDULE_DEFAULT.GetType() == typeof(Int64))
-                m_PROP_SCHEDULE_DEFAULT = Convert.ChangeType(m_PROP_SCHEDULE_DEFAULT, typeof(Int32));
-            if (m_PROP_SCHEDULE_DEFAULT.GetType() == typeof(UInt64))
-                m_PROP_SCHEDULE_DEFAULT = Convert.ChangeType(m_PROP_SCHEDULE_DEFAULT, typeof(UInt32));
-            }
-            catch { }
-            DoScheduling();
+
+            // Json.NET restores numbers as Int64/UInt64/Double: narrow them back to what each
+            // value's tag says. The bare PV/Schedule_Default objects carry no tag of their own,
+            // so they follow the datatype of the scheduled values (12.24.13 expects one type).
+            foreach (var day in m_PROP_WEEKLY_SCHEDULE)
+                NarrowJsonNumbers(day.DaySchedule);
+            foreach (var specialEvent in m_PROP_EXCEPTION_SCHEDULE)
+                NarrowJsonNumbers(specialEvent.ListOfTimeValues);
+            var scheduledTag = ScheduledValueTag();
+            m_PROP_PRESENT_VALUE = NarrowJsonNumber(m_PROP_PRESENT_VALUE, scheduledTag);
+            m_PROP_SCHEDULE_DEFAULT = NarrowJsonNumber(m_PROP_SCHEDULE_DEFAULT, scheduledTag);
+
+            Recalculate();
         }
 
         public void AddSchedule(int day, DateTime time, object value)
         {
             lock (lockObj)
-            {
-                if (m_PROP_WEEKLY_SCHEDULE.days[day] == null)
-                    m_PROP_WEEKLY_SCHEDULE.days[day] = new List<DaySchedule>();
+                m_PROP_WEEKLY_SCHEDULE[day].DaySchedule.Add(new BacnetTimeValue(time.TimeOfDay, new BacnetValue(value)));
 
-                m_PROP_WEEKLY_SCHEDULE.days[day].Add(new DaySchedule(time, value));
+            Recalculate();
+        }
 
-                // this will set the PropPresent value to the given type
-                if (m_PROP_PRESENT_VALUE == null) m_PROP_PRESENT_VALUE = value;
+        public void AddSpecialEvent(BacnetSpecialEvent specialEvent)
+        {
+            lock (lockObj)
+                m_PROP_EXCEPTION_SCHEDULE.Add(specialEvent);
 
-                DoScheduling();
-            }
+            Recalculate();
         }
 
         public void AddPropertyReference(BacnetDeviceObjectPropertyReference reference)
         {
             lock (lockObj)
-            {
-                if (m_PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES.references == null)
-                    m_PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES.references = new List<BacnetDeviceObjectPropertyReference>();
-                m_PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES.references.Add(reference);
-            }
+                m_PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES.Add(reference);
         }
 
-        // timer Handler : it's time to change something
-        protected virtual void TimeSchedule(Object state)
+        private void OnDeviceObjectChanged(BaCSharpObject sender, BacnetPropertyIds propId)
         {
-            if (m_PROP_OUT_OF_SERVICE == true)
+            if (!(sender is Calendar))
+                return;
+            if (propId != BacnetPropertyIds.PROP_PRESENT_VALUE && propId != BacnetPropertyIds.PROP_DATE_LIST)
                 return;
 
+            Recalculate();
+        }
+
+        private bool? ResolveCalendarPresentValue(BacnetObjectId calendarId)
+        {
+            var calendar = Mydevice?.FindBacnetObject(calendarId) as Calendar;
+            return calendar?.m_PROP_PRESENT_VALUE;
+        }
+
+        // Evaluate 12.24.4 now, dispatch a changed Present_Value, and arm the timer for the next
+        // transition (or just past midnight). Called on every affecting write, on Out_Of_Service
+        // changes, on Calendar changes and when the timer fires.
+        public void Recalculate()
+        {
+            var changed = false;
             lock (lockObj)
             {
-                if ((int)((object[])state)[0] != tmrId)    // an old timer, since we cannot stop a launched timer
+                tmrId++; // invalidate a pending timer callback; we arm a fresh one below
+
+                if (disposed || Mydevice == null)
                     return;
-                else
+
+                m_PROP_STATUS_FLAGS.SetBit((byte)1, !HasConsistentDatatypes()); // FAULT
+
+                if (m_PROP_OUT_OF_SERVICE)
+                    return;
+
+                var now = DateTime.Now;
+                var computed = ScheduleCalculation.ComputePresentValue(now, m_PROP_WEEKLY_SCHEDULE,
+                    m_PROP_EXCEPTION_SCHEDULE, m_PROP_EFFECTIVE_PERIOD, ResolveCalendarPresentValue);
+                var newValue = computed.HasValue ? computed.Value.Value : m_PROP_SCHEDULE_DEFAULT;
+
+                if (!Equals(m_PROP_PRESENT_VALUE, newValue))
                 {
-                    if (((object[])state)[1] == null)
-                    {
-                        internal_PROP_PRESENT_VALUE = m_PROP_SCHEDULE_DEFAULT;
-                        IsPresentValueDefault = true;
-                    }
-                    else
-                    {
-                        internal_PROP_PRESENT_VALUE = ((object[])state)[1];
-                        IsPresentValueDefault = false;
-                    }
-                    DoScheduling();
+                    m_PROP_PRESENT_VALUE = newValue;
+                    changed = true;
                 }
+
+                var next = ScheduleCalculation.NextRecalculationTime(now, m_PROP_WEEKLY_SCHEDULE,
+                    m_PROP_EXCEPTION_SCHEDULE, ResolveCalendarPresentValue);
+                var delay = next - now;
+                if (delay < TimeSpan.FromMilliseconds(100))
+                    delay = TimeSpan.FromMilliseconds(100);
+
+                tmr?.Dispose();
+                tmr = new Timer(TimerFired, tmrId, delay, Timeout.InfiniteTimeSpan);
+            }
+
+            if (changed)
+            {
+                DoDispatchValue();
+                ExternalCOVManagement(BacnetPropertyIds.PROP_PRESENT_VALUE);
             }
         }
 
-        // Copy the Present value into each reference properties value
+        Timer tmr;
+        bool disposed;
+        private void TimerFired(object state)
+        {
+            lock (lockObj)
+            {
+                if ((int)state != tmrId)
+                    return;
+            }
+
+            Recalculate();
+        }
+
+        // Copy the Present_Value into each referenced property, at Priority_For_Writing
         protected virtual void DoDispatchValue()
         {
-            if ((m_PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES.references == null)||(Mydevice==null))
+            if (Mydevice == null)
                 return;
 
-            foreach (object obj in m_PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES.references)
+            List<BacnetDeviceObjectPropertyReference> references;
+            object presentValue;
+            uint priority;
+            lock (lockObj)
             {
-                BacnetDeviceObjectPropertyReference reference = (BacnetDeviceObjectPropertyReference)obj;
+                references = new List<BacnetDeviceObjectPropertyReference>(m_PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES);
+                presentValue = m_PROP_PRESENT_VALUE;
+                priority = m_PROP_PRIORITY_FOR_WRITING;
+            }
 
-                // reference.deviceIndentifier.type is not set to OBJECT_DEVICE for local object reference
-                if (reference.deviceIndentifier.type != BacnetObjectTypes.OBJECT_DEVICE) // local object
+            foreach (var reference in references)
+            {
+                // an error (or missing target) on one member must not stop the others (12.24.4)
+                if (reference.deviceIdentifier.type != BacnetObjectTypes.OBJECT_DEVICE) // local object
                 {
-                    BaCSharpObject bcs= Mydevice.FindBacnetObject(reference.objectIdentifier);
-                    if (bcs != null)
+                    BaCSharpObject bcs = Mydevice.FindBacnetObject(reference.objectIdentifier);
+                    if (bcs == null)
+                        continue;
+
+                    var value = new BacnetPropertyValue
                     {
-                        BacnetPropertyValue value = new BacnetPropertyValue();
-                        
-                        if (m_PROP_PRIORITY==0)
-                            value.priority = (byte)16;
-                        else
-                            value.priority = (byte)m_PROP_PRIORITY;
-
-                        value.property = new BacnetPropertyReference((uint)reference.propertyIdentifier, reference.arrayIndex);
-
-                        value.value = new BacnetValue[] { new BacnetValue(m_PROP_PRESENT_VALUE) };
-
-                        bcs.WritePropertyValue(value, false);
-                    }
+                        priority = (byte)priority,
+                        property = new BacnetPropertyReference((uint)reference.propertyIdentifier, reference.arrayIndex),
+                        value = new BacnetValue[] { new BacnetValue(presentValue) }
+                    };
+                    bcs.WritePropertyValue(value, false);
                 }
                 else
                 {
                     KeyValuePair<BacnetClient, BacnetAddress>? recipient = null;
-
                     try
                     {
                         // SuroundingDevices is updated with Iam messages
-                        recipient = Mydevice.SuroundingDevices[reference.deviceIndentifier.instance];
+                        recipient = Mydevice.SuroundingDevices[reference.deviceIdentifier.instance];
                     }
                     catch { }
                     if (recipient == null)
-                        return;
+                        continue;
 
-                    BacnetValue[] value = new BacnetValue[] { new BacnetValue(m_PROP_PRESENT_VALUE) };
-                    uint wp = m_PROP_PRIORITY;
-                    System.Threading.ThreadPool.QueueUserWorkItem((o) =>
+                    BacnetValue[] value = { new BacnetValue(presentValue) };
+                    ThreadPool.QueueUserWorkItem(o =>
                         {
-                            recipient.Value.Key.WritePriority = wp;
+                            recipient.Value.Key.WritePriority = priority;
                             recipient.Value.Key.BeginWritePropertyRequest(recipient.Value.Value, reference.objectIdentifier, (BacnetPropertyIds)reference.propertyIdentifier, value, false);
                         }
                         , null);
                 }
             }
         }
-        //
-        // Add a Thread pool Timer for the next event
-        //
-        Timer tmr;
-        protected virtual void DoScheduling()
-        {
-            lock (lockObj)
-            {
 
-                if ((m_PROP_OUT_OF_SERVICE == true)||(Mydevice==null))
-                {
-                    tmrId++;    // in order to invalidate the action of the timer in the ThreadPool
-                    return;
-                }
-
-                DateTime Now = DateTime.Now; 
-
-                // test Validity Date and return if out
-                //
-                // dt.Ticks = 0  is the way always date (encoded FF-FF-FF-FF) is put into a DateTime struct
-                DateTime dt = (DateTime)m_PROP_EFFECTIVE_PERIOD[0].Value;
-                if (((Now - dt).TotalSeconds < 0) && (dt.Ticks != 0))
-                    return;
-
-                dt = (DateTime)m_PROP_EFFECTIVE_PERIOD[1].Value;
-                if (((Now - dt).TotalSeconds > 0) && (dt.Ticks != 0))
-                    return;
-
-                // dayofWeek eq 0 if Now is monday, 1 for friday ....
-                int DayOfWeek = Now.DayOfWeek == 0 ? 6 : (int)Now.DayOfWeek - 1; // Put Sunday at the end of the enumaration
-
-                int timeShift = 0;
-                int delay = Int32.MaxValue;
-                object NewValue = null;
-                // Values are not ordered so we need to check quite all the days
-                // in order to found the next date after now
-                for (int i = 0; i < 7; i++)
-                {
-
-                    if (m_PROP_WEEKLY_SCHEDULE.days[(i + DayOfWeek) % 7] != null) // schdules for this day ?
-                        foreach (DaySchedule schedule in m_PROP_WEEKLY_SCHEDULE.days[(i + DayOfWeek) % 7])
-                        {
-                            DateTime eventdate = new DateTime(Now.Year, Now.Month, Now.Day, schedule.dt.Hour, schedule.dt.Minute, schedule.dt.Second);
-                            int interval = (int)(eventdate - Now).TotalSeconds + timeShift; // could be negative
-
-                            if (                                
-                                ((interval < delay) && (interval >= 0)) ||
-                                ((interval < 0) && (delay == Int32.MaxValue)) ||
-                                ((interval > delay) && (delay <= 0))
-                                )
-                            {
-                                delay = interval;
-                                NewValue = schedule.Value;
-                            }
-                        }
-
-                    if ((delay > 0)&&(delay!=Int32.MaxValue))
-                        break;      // No need to go next day
-
-                    timeShift = timeShift + 24 * 60 * 60;   // search the next day
-                }
-
-                if (delay <= 0) delay = delay + 7 * 24 * 60 * 60; // Add one week
-
-                // Put the next TimerEvent in the ThreadPool (Threading.Timer)
-                if ((NewValue != null)&&(delay!=Int32.MaxValue))
-                {
-                    tmrId++;
-                    tmr = new Timer(new TimerCallback(TimeSchedule), new object[] { tmrId, NewValue }, delay * 1000, Timeout.Infinite);
-                }
-            }
-        }
         public override void Dispose()
         {
+            OnExternalCOVNotify -= OnDeviceObjectChanged;
             lock (lockObj)
-                tmrId++; // this will devalidate thread pool tasks
-        }
-    }
-
-    [Serializable]
-    class DaySchedule
-    {
-        public DateTime dt;
-        public object Value;
-
-        public DaySchedule(DateTime dt, object Value)
-        {
-            this.dt = dt;
-            this.Value = Value;
-        }
-    }
-
-    [Serializable]
-    class BacnetWeeklySchedule : ASN1.IEncode
-    {
-        public List<DaySchedule>[] days = new List<DaySchedule>[7];
-
-        public void Encode(EncodeBuffer buffer)
-        {
-            for (int i = 0; i < 7; i++)
             {
-                ASN1.encode_opening_tag(buffer, 0);
-                if (days[i] != null)
-                {
-                    List<DaySchedule> dsl = days[i];
-                        foreach (DaySchedule ds in dsl)
-                        {
-                            ASN1.bacapp_encode_application_data(buffer, new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_TIME, ds.dt));
-                            ASN1.bacapp_encode_application_data(buffer, new BacnetValue(ds.Value));
-
-                        }
-                }
-                ASN1.encode_closing_tag(buffer, 0);
+                // the disposed flag stops a timer callback that already passed its tmrId check
+                // from re-arming through Recalculate
+                disposed = true;
+                tmrId++;
+                tmr?.Dispose();
+                tmr = null;
             }
         }
-    }
-    [Serializable]
-    class BacnetDeviceObjectPropertyReferenceList : ASN1.IEncode
-    {
-        public List<BacnetDeviceObjectPropertyReference> references = null;
 
-        public void Encode(EncodeBuffer buffer)
+        private bool HasConsistentDatatypes()
         {
-            if (references == null) return;
+            Type reference = m_PROP_SCHEDULE_DEFAULT?.GetType();
 
-            foreach (BacnetDeviceObjectPropertyReference reference in references)
+            foreach (var timeValue in m_PROP_WEEKLY_SCHEDULE.SelectMany(day => day.DaySchedule)
+                .Concat(m_PROP_EXCEPTION_SCHEDULE.SelectMany(specialEvent => specialEvent.ListOfTimeValues)))
             {
-                reference.Encode(buffer);
+                var type = timeValue.Value.Value?.GetType();
+                if (type == null)
+                    continue; // NULL values are always allowed
+
+                if (reference == null)
+                    reference = type;
+                else if (type != reference)
+                    return false;
             }
+
+            return true;
+        }
+
+        private static bool HasDuplicateTime(List<BacnetTimeValue> timeValues)
+        {
+            return timeValues.GroupBy(timeValue => timeValue.Time).Any(group => group.Count() > 1);
+        }
+
+        private static BacnetDailySchedule[] NewEmptyWeek()
+        {
+            var week = new BacnetDailySchedule[7];
+            for (var i = 0; i < 7; i++)
+                week[i] = new BacnetDailySchedule();
+            return week;
+        }
+
+        private static BacnetDateRange AlwaysInEffect()
+        {
+            return new BacnetDateRange(BacnetDate.Any, BacnetDate.Any);
+        }
+
+        private static void NarrowJsonNumbers(List<BacnetTimeValue> timeValues)
+        {
+            for (var i = 0; i < timeValues.Count; i++)
+            {
+                var timeValue = timeValues[i];
+                var narrowed = NarrowJsonNumber(timeValue.Value.Value, timeValue.Value.Tag);
+                if (!ReferenceEquals(narrowed, timeValue.Value.Value))
+                    timeValues[i] = new BacnetTimeValue(timeValue.Time, new BacnetValue(timeValue.Value.Tag, narrowed));
+            }
+        }
+
+        private static object NarrowJsonNumber(object value, BacnetApplicationTags tag)
+        {
+            if (!(value is Int64) && !(value is UInt64) && !(value is double))
+                return value;
+
+            switch (tag)
+            {
+                case BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT:
+                case BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED:
+                    return Convert.ToUInt32(value);
+                case BacnetApplicationTags.BACNET_APPLICATION_TAG_SIGNED_INT:
+                    return Convert.ToInt32(value);
+                case BacnetApplicationTags.BACNET_APPLICATION_TAG_REAL:
+                    return Convert.ToSingle(value);
+                case BacnetApplicationTags.BACNET_APPLICATION_TAG_DOUBLE:
+                    return Convert.ToDouble(value);
+                default:
+                    return value;
+            }
+        }
+
+        private BacnetApplicationTags ScheduledValueTag()
+        {
+            foreach (var day in m_PROP_WEEKLY_SCHEDULE)
+                foreach (var timeValue in day.DaySchedule)
+                    if (timeValue.Value.Tag != BacnetApplicationTags.BACNET_APPLICATION_TAG_NULL)
+                        return timeValue.Value.Tag;
+            foreach (var specialEvent in m_PROP_EXCEPTION_SCHEDULE)
+                foreach (var timeValue in specialEvent.ListOfTimeValues)
+                    if (timeValue.Value.Tag != BacnetApplicationTags.BACNET_APPLICATION_TAG_NULL)
+                        return timeValue.Value.Tag;
+            return BacnetApplicationTags.BACNET_APPLICATION_TAG_SIGNED_INT;
         }
     }
 }

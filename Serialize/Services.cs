@@ -1750,7 +1750,7 @@ public class Services
                     requestType = BacnetReadRangeRequestTypes.RR_BY_TIME;
                     len += ASN1.decode_application_date(buffer, offset + len, out var date);
                     len += ASN1.decode_application_time(buffer, offset + len, out time);
-                    time = new DateTime(date.Year, date.Month, date.Day, time.Hour, time.Minute, time.Second, time.Millisecond);
+                    time = ASN1.combine_date_and_time(date, time);
                     len += ASN1.decode_tag_number_and_value(buffer, offset + len, out tagNumber, out lenValueType);
                     len += ASN1.decode_signed(buffer, offset + len, lenValueType, out count);
                     break;
@@ -1829,9 +1829,47 @@ public class Services
             return 0;
         len += 1;
 
-        rangeBuffer = new byte[buffer.Length - offset - len - 1];
+        // The item data runs to the MATCHING closing tag [5] - not to the end of the buffer, as
+        // by-sequence and by-time acks carry a first-sequence-number [6] behind it. The items may
+        // themselves contain constructed values, so track the tag nesting depth.
+        var dataStart = len;
+        var depth = 1;
+        while (len < apduLen && depth > 0)
+        {
+            var tagByte = buffer[offset + len];
 
-        Array.Copy(buffer, offset + len, rangeBuffer, 0, rangeBuffer.Length);
+            // the whole tag header (extended tag number / extended length octets) must fit
+            var header = 1 + (ASN1.IS_EXTENDED_TAG_NUMBER(tagByte) ? 1 : 0);
+            if (ASN1.IS_EXTENDED_VALUE(tagByte))
+            {
+                if (len + header >= apduLen)
+                    return 0;
+                var extended = buffer[offset + len + header];
+                header += extended == 254 ? 3 : extended == 255 ? 5 : 1;
+            }
+            if (len + header > apduLen)
+                return 0;
+
+            var tagLen = ASN1.decode_tag_number_and_value(buffer, offset + len, out byte _, out var tagPayload);
+            len += tagLen;
+
+            if (ASN1.IS_OPENING_TAG(tagByte))
+                depth++;
+            else if (ASN1.IS_CLOSING_TAG(tagByte))
+                depth--;
+            else if (ASN1.IS_CONTEXT_SPECIFIC(tagByte) || (tagByte >> 4) != (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_BOOLEAN)
+            {
+                // an application BOOLEAN carries its value in the tag itself
+                if (tagPayload > (uint)(apduLen - len))
+                    return 0; // the announced value length runs past the ack
+                len += (int)tagPayload;
+            }
+        }
+        if (depth != 0)
+            return 0;
+
+        rangeBuffer = new byte[len - 1 - dataStart];
+        Array.Copy(buffer, offset + dataStart, rangeBuffer, 0, rangeBuffer.Length);
 
         return itemCount;
     }
@@ -1928,15 +1966,15 @@ public class Services
         else if (ASN1.decode_is_opening_tag_number(buffer, offset + len, 1))
         {
             throw new NotImplementedException("Non stream File transfers are not supported");
-            ///* a tag number is not extended so only one octet */
+            // /* a tag number is not extended so only one octet */
             //len++;
-            ///* fileStartRecord */
+            // /* fileStartRecord */
             //tag_len = ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value_type);
             //len += tag_len;
             //if (tag_number != (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_SIGNED_INT)
             //    return -1;
             //len += ASN1.decode_signed(buffer, offset + len, len_value_type, out position);
-            ///* returnedRecordCount */
+            // /* returnedRecordCount */
             //tag_len = ASN1.decode_tag_number_and_value(buffer, offset + len, out tag_number, out len_value_type);
             //len += tag_len;
             //if (tag_number != (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT)
@@ -1953,7 +1991,7 @@ public class Services
             //}
             //if (!ASN1.decode_is_closing_tag_number(buffer, offset + len, 1))
             //    return -1;
-            ///* a tag number is not extended so only one octet */
+            // /* a tag number is not extended so only one octet */
             //len++;
         }
         else
@@ -2532,7 +2570,7 @@ public class Services
         len += ASN1.decode_bacnet_time(buffer, offset + len, out var time);
 
         //merge
-        dateTime = new DateTime(date.Year, date.Month, date.Day, time.Hour, time.Minute, time.Second, time.Millisecond);
+        dateTime = ASN1.combine_date_and_time(date, time);
 
         return len;
     }
@@ -2666,7 +2704,7 @@ public class Services
         len += ASN1.decode_application_date(buffer, offset + len, out var date);
         len += ASN1.decode_application_time(buffer, offset + len, out var time);
 
-        var dt = new DateTime(date.Year, date.Month, date.Day, time.Hour, time.Minute, time.Second, time.Millisecond);
+        var dt = ASN1.combine_date_and_time(date, time);
 
         if (!ASN1.decode_is_closing_tag(buffer, offset + len)) return -1;
         len++;

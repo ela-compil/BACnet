@@ -11,17 +11,23 @@ public struct BacnetDateRange : ASN1.IEncode, ASN1.IDecode
         endDate = end;
     }
 
+    public BacnetDateRange(DateTime start, DateTime end)
+        : this(new BacnetDate(start), new BacnetDate(end))
+    {
+    }
+
     public void Encode(EncodeBuffer buffer)
     {
-        ASN1.encode_tag(buffer, (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_DATE, false, 4);
-        startDate.Encode(buffer);
-        ASN1.encode_tag(buffer, (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_DATE, false, 4);
-        endDate.Encode(buffer);
+        ASN1.encode_application_date(buffer, startDate);
+        ASN1.encode_application_date(buffer, endDate);
     }
 
     public int Decode(byte[] buffer, int offset, uint count)
     {
-        var len = 1; // opening tag
+        if (offset + 10 > count)
+            return -1;
+
+        var len = 1; // skip the Date application tag
         len += startDate.Decode(buffer, offset + len, count);
         len++;
         len += endDate.Decode(buffer, offset + len, count);
@@ -31,7 +37,15 @@ public struct BacnetDateRange : ASN1.IEncode, ASN1.IDecode
     public bool IsAFittingDate(DateTime date)
     {
         date = new DateTime(date.Year, date.Month, date.Day);
-        return date >= startDate.toDateTime() && date <= endDate.toDateTime();
+
+        // a wildcarded boundary leaves that side of the range open (135-2016 20.2.12);
+        // in particular the all-wildcard default Effective_Period is always in effect
+        if (!startDate.IsPeriodic && date < startDate.ToDateTime())
+            return false;
+        if (!endDate.IsPeriodic && date > endDate.ToDateTime())
+            return false;
+
+        return true;
     }
 
     public override string ToString()

@@ -1,23 +1,33 @@
 namespace System.IO.BACnet;
 
-public struct BacnetDeviceObjectPropertyReference : ASN1.IEncode
+public struct BacnetDeviceObjectPropertyReference : ASN1.IEncode, ASN1.IDecode
 {
     public BacnetObjectId objectIdentifier;
     public BacnetPropertyIds propertyIdentifier;
     public uint arrayIndex;
-    public BacnetObjectId deviceIndentifier;
+    public BacnetObjectId deviceIdentifier;
 
-    public BacnetDeviceObjectPropertyReference(BacnetObjectId objectIdentifier, BacnetPropertyIds propertyIdentifier, BacnetObjectId? deviceIndentifier = null, uint arrayIndex = ASN1.BACNET_ARRAY_ALL)
+    public BacnetDeviceObjectPropertyReference(BacnetObjectId objectIdentifier, BacnetPropertyIds propertyIdentifier, BacnetObjectId? deviceIdentifier = null, uint arrayIndex = ASN1.BACNET_ARRAY_ALL)
     {
         this.objectIdentifier = objectIdentifier;
         this.propertyIdentifier = propertyIdentifier;
         this.arrayIndex = arrayIndex;
-        this.deviceIndentifier = deviceIndentifier ?? new BacnetObjectId(BacnetObjectTypes.MAX_BACNET_OBJECT_TYPE, 0);
+        this.deviceIdentifier = deviceIdentifier ?? new BacnetObjectId(BacnetObjectTypes.MAX_BACNET_OBJECT_TYPE, 0);
     }
 
     public void Encode(EncodeBuffer buffer)
     {
         ASN1.bacapp_encode_device_obj_property_ref(buffer, this);
+    }
+
+    public int Decode(byte[] buffer, int offset, uint count)
+    {
+        var len = ASN1.decode_device_obj_property_ref(buffer, offset, (int)count, out var value);
+        if (len < 0)
+            return -1;
+
+        this = value;
+        return len;
     }
 
     public BacnetObjectId ObjectId
@@ -40,13 +50,13 @@ public struct BacnetDeviceObjectPropertyReference : ASN1.IEncode
     {
         get
         {
-            return deviceIndentifier.type == BacnetObjectTypes.OBJECT_DEVICE
-                ? (BacnetObjectId?)deviceIndentifier
+            return deviceIdentifier.type == BacnetObjectTypes.OBJECT_DEVICE
+                ? (BacnetObjectId?)deviceIdentifier
                 : null;
         }
         set
         {
-            deviceIndentifier = value ?? new BacnetObjectId();
+            deviceIdentifier = value ?? new BacnetObjectId();
         }
     }
 

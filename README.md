@@ -19,6 +19,7 @@ or expose your application as a BACnet device.
 - **Discovery** — Who-Is / I-Am and Who-Has / I-Have, including across routers
 - **Data access** — ReadProperty, WriteProperty, ReadPropertyMultiple, WritePropertyMultiple, ReadRange
 - **Change of Value** — SubscribeCOV / SubscribeProperty and COV notifications
+- **Scheduling** — typed read/write of Schedule and Calendar properties (`Weekly_Schedule`, `Exception_Schedule`, `Date_List`, `Effective_Period`), plus example Schedule/Calendar objects implementing the standard behavior
 - **Alarms & events** — event/alarm notifications, alarm summary, and acknowledgement
 - **More services** — object create/delete, atomic file read/write, device-communication-control, reinitialize, time synchronization
 - **Segmentation** of large requests and responses
@@ -106,6 +107,9 @@ Console, Serilog, NLog, and log4net all work via their MEL providers. If you alr
   `BacnetIpUdpProtocolTransport` no longer picks one for you — `Start()` throws and lists the
   candidates. Pass the interface IP: `new BacnetIpUdpProtocolTransport(0xBAC0, localEndpointIp: "192.168.1.50")`.
 - **Renamed** the misspelled enum member `BacnetRejectReason.RECOGNIZED_SERVICE` to `UNRECOGNIZED_SERVICE` (value unchanged).
+- **Scheduling types are spec-shaped now**: the old `BACnetCalendarEntry` and `BacnetweekNDay` are replaced by
+  `BacnetCalendarEntry` / `BacnetWeekNDay`, and schedule properties decode into typed values
+  (`BacnetDailySchedule`, `BacnetSpecialEvent`) instead of opaque nested constructs.
 
 ## GitHub Packages
 

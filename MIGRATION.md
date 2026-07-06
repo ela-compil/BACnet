@@ -123,3 +123,74 @@ Select the interface by passing its local IP to the constructor:
 - var transport = new BacnetIpUdpProtocolTransport(0xBAC0);
 + var transport = new BacnetIpUdpProtocolTransport(0xBAC0, localEndpointIp: "192.168.1.50");
 ```
+
+## Scheduling types are spec-shaped now
+
+4.0 adds first-class serialization for the Schedule and Calendar objects (Weekly_Schedule,
+Exception_Schedule, Date_List), which replaces two old types that did not match the standard:
+
+- **`BACnetCalendarEntry` → `BacnetCalendarEntry`.** The old struct held a `List<object> Entries`
+  bag of every entry in a Date_List. The new class models the standard's CHOICE: exactly one of
+  `Date`, `DateRange` or `WeekNDay` is set, and one instance represents one entry. Reading a
+  Calendar's `PROP_DATE_LIST` now returns **one `BacnetValue` per entry** (it used to be a single
+  value holding the whole list), each with `Tag = BACNET_APPLICATION_TAG_CALENDAR_ENTRY` and a
+  `BacnetCalendarEntry` in `Value`. The same list can be passed straight back to
+  `WritePropertyRequest`.
+
+- **`BacnetweekNDay` → `BacnetWeekNDay`.** The raw `month`/`week`/`wday` bytes became the
+  `BacnetMonthOptions`, `BacnetWeekOfMonthOptions` and `BacnetDayOfWeekOptions` enums, and
+  `IsAFittingDate` now implements the week-of-month octet (values 1-9) the old type ignored.
+  The byte-based constructor `(day, month, week)` keeps its shape.
+
+- **`BacnetDeviceObjectPropertyReference.deviceIndentifier` → `deviceIdentifier`.** The misspelled
+  public field and the constructor parameter of the same name lost the typo; behavior is unchanged.
+
+- **`BacnetDate.toDateTime()` → `ToDateTime()`**, which now returns the `new DateTime(1, 1, 1)`
+  wildcard sentinel for unrepresentable dates instead of `DateTime.Now`, and understands day 32
+  ("last day of the month"). The periodic day specials 33/34 ("odd/even days") yield the sentinel
+  and are evaluated by `IsAFittingDate`.
+
+- Values decoded from `PROP_WEEKLY_SCHEDULE` and `PROP_EXCEPTION_SCHEDULE` now carry the dedicated
+  application tags (`..._WEEKLY_SCHEDULE`, `..._SPECIAL_EVENT`) and typed objects
+  (`BacnetDailySchedule`, `BacnetSpecialEvent`) instead of `..._CONTEXT_SPECIFIC_DECODED` with a
+  nested `BacnetValue[]` tree. Code that pattern-matched the old opaque shape must switch to the
+  typed objects — reading and writing schedules no longer needs any manual re-assembly.
+
+## The unspecified ("wildcard") TIME has a dedicated marker
+
+Earlier versions decoded a fully-wildcarded Time (`FF FF FF FF` — "any time", e.g. the timestamp
+of an event transition that never happened) to `DateTime(1,1,1)`, which is also exactly what a
+decoded **midnight** looks like. The two were indistinguishable, and writing such a value back
+turned a real 00:00:00.00 into the wildcard.
+
+4.0 separates them: a fully-wildcarded Time decodes to **`ASN1.BACNET_TIME_WILDCARD`**
+(`DateTime.MaxValue`) and only that marker encodes back to `FF FF FF FF`; `DateTime(1,1,1)` is
+plain midnight in both directions. Update any code that compared a decoded time against
+`DateTime.MinValue` to detect "unspecified":
+
+```diff
+- if (timestamp.Time == DateTime.MinValue)
++ if (timestamp.Time == ASN1.BACNET_TIME_WILDCARD)
+```
+
+Combined date+time values (`BACnetDateTime`, datetime timestamps, log-record stamps) cannot carry
+an unspecified time and keep degrading it to 00:00 on decode, as before.
+
+**Partially**-wildcarded values are kept per-octet instead of being clamped: a decoded TIME whose
+octets cannot be represented faithfully as a `DateTime` (e.g. `11:22:**.**`) comes back as the new
+`BacnetTime` struct, and an unrepresentable DATE (patterns like "last day of every odd month", or
+invalid calendar dates) comes back as the existing `BacnetDate` struct — both under their usual
+`..._TAG_TIME`/`..._TAG_DATE` application tags, and both re-encode byte-identically. Code that
+unconditionally cast such values to `DateTime` must handle the struct forms; fully-specified
+values are unaffected.
+
+`PROP_EFFECTIVE_PERIOD` now decodes as **one `BacnetValue` holding a `BacnetDateRange`** (tag
+`..._TAG_DATERANGE`) instead of two `DateTime` values, so open boundaries survive round-trips.
+Writes accept both the typed range and the legacy two-date shape.
+
+`PROP_EVENT_TIME_STAMPS` elements decode as **`BacnetGenericTime`** (preserving which
+BACnetTimeStamp choice the device used) instead of a bare `DateTime`; sequence-number stamps still
+come back as an unsigned. Timestamps whose time octets are partially wildcarded expose the
+original octets via the new `BacnetGenericTime.PartialTime` while `Time` keeps the familiar
+best-effort clamped value, and a wildcarded Date+Time property pair merges into the new
+`BacnetDateTime` struct instead of a clamped `DateTime`.

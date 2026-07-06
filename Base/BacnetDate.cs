@@ -4,7 +4,7 @@ public struct BacnetDate : ASN1.IEncode, ASN1.IDecode
 {
     public byte year;     /* 255 any */
     public byte month;      /* 1=Jan; 255 any, 13 Odd, 14 Even */
-    public byte day;        /* 1..31; 32 last day of the month; 255 any */
+    public byte day;        /* 1..31; 32 last day of the month; 33 odd, 34 even days; 255 any */
     public byte wday;       /* 1=Monday-7=Sunday, 255 any */
 
     public BacnetDate(byte year, byte month, byte day, byte wday = 255)
@@ -13,6 +13,23 @@ public struct BacnetDate : ASN1.IEncode, ASN1.IDecode
         this.month = month;
         this.day = day;
         this.wday = wday;
+    }
+
+    public BacnetDate(DateTime date)
+    {
+        year = (byte)(date.Year - 1900);
+        month = (byte)date.Month;
+        day = (byte)date.Day;
+        wday = (byte)(date.DayOfWeek == 0 ? 7 : (int)date.DayOfWeek);
+    }
+
+    /// <summary>The fully-unspecified date, matching every day.</summary>
+    public static readonly BacnetDate Any = new BacnetDate(255, 255, 255);
+
+    /// <summary>Like the constructor, but maps the DateTime(1,1,1) 'any date' sentinel to <see cref="Any"/>.</summary>
+    public static BacnetDate FromDateTime(DateTime date)
+    {
+        return date == new DateTime(1, 1, 1) ? Any : new BacnetDate(date);
     }
 
     public void Encode(EncodeBuffer buffer)
@@ -25,6 +42,9 @@ public struct BacnetDate : ASN1.IEncode, ASN1.IDecode
 
     public int Decode(byte[] buffer, int offset, uint count)
     {
+        if (offset + 4 > count)
+            return -1;
+
         year = buffer[offset];
         month = buffer[offset + 1];
         day = buffer[offset + 2];
@@ -32,7 +52,7 @@ public struct BacnetDate : ASN1.IEncode, ASN1.IDecode
         return 4;
     }
 
-    public bool IsPeriodic => year == 255 || month > 12 || day == 255;
+    public bool IsPeriodic => year == 255 || month > 12 || day > 32;
 
     public bool IsAFittingDate(DateTime date)
     {
@@ -46,9 +66,25 @@ public struct BacnetDate : ASN1.IEncode, ASN1.IDecode
         if (month == 14 && (date.Month & 1) == 1)
             return false;
 
-        if (date.Day != day && day != 255)
+        if (day == 32)
+        {
+            if (date.Day != DateTime.DaysInMonth(date.Year, date.Month))
+                return false;
+        }
+        else if (day == 33)
+        {
+            if ((date.Day & 1) != 1)
+                return false;
+        }
+        else if (day == 34)
+        {
+            if ((date.Day & 1) == 1)
+                return false;
+        }
+        else if (date.Day != day && day != 255)
+        {
             return false;
-        // day 32 todo
+        }
 
         if (wday == 255)
             return true;
@@ -62,17 +98,20 @@ public struct BacnetDate : ASN1.IEncode, ASN1.IDecode
         return false;
     }
 
-    public DateTime toDateTime() // Not every time possible, too much complex (any month, any year ...)
+    public DateTime ToDateTime() // not always possible (any month, any year, ...): those yield the wildcard sentinel
     {
         try
         {
-            return IsPeriodic
-                ? new DateTime(1, 1, 1)
+            if (IsPeriodic)
+                return new DateTime(1, 1, 1);
+
+            return day == 32 // last day of the month
+                ? new DateTime(year + 1900, month, DateTime.DaysInMonth(year + 1900, month))
                 : new DateTime(year + 1900, month, day);
         }
         catch
         {
-            return DateTime.Now; // or anything else why not !
+            return new DateTime(1, 1, 1);
         }
     }
 
@@ -93,10 +132,24 @@ public struct BacnetDate : ASN1.IEncode, ASN1.IDecode
         else
             ret = "";
 
-        if (day != 255)
-            ret = ret + day + "/";
-        else
-            ret += "**/";
+        switch (day)
+        {
+            case 32:
+                ret += "last/";
+                break;
+            case 33:
+                ret += "odd/";
+                break;
+            case 34:
+                ret += "even/";
+                break;
+            case 255:
+                ret += "**/";
+                break;
+            default:
+                ret = ret + day + "/";
+                break;
+        }
 
         switch (month)
         {

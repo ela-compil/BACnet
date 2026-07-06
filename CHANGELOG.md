@@ -16,6 +16,14 @@ See [MIGRATION.md](MIGRATION.md) for upgrade guidance.
 - **Native transports** moved out of the core into optional packages: the pcap-based Ethernet
   transport → **`BACnet.Ethernet`**, the physical serial port → **`BACnet.Serial`**. The MS/TP and PTP
   protocols remain in the core; wire a serial port with `SerialTransport.Mstp(...)` / `.Ptp(...)`.
+- **Scheduling types** replaced with spec-shaped ones (see MIGRATION.md): `BACnetCalendarEntry`
+  (a `List<object>` bag) → `BacnetCalendarEntry` (a real CHOICE, one entry per value),
+  `BacnetweekNDay` → `BacnetWeekNDay` (month/week-of-month/day-of-week enums, week-of-month
+  actually evaluated), `BacnetDate.toDateTime()` → `ToDateTime()`. Decoded `Date_List`,
+  `Weekly_Schedule` and `Exception_Schedule` values now carry dedicated application tags and typed
+  objects instead of the opaque `CONTEXT_SPECIFIC_DECODED` shapes.
+- **`BacnetDeviceObjectPropertyReference`**: the misspelled public field `deviceIndentifier` is now
+  `deviceIdentifier` (the constructor parameter included).
 
 ### Added
 - Multi-targeting: `net48;netstandard2.0;net8.0;net10.0`.
@@ -31,7 +39,13 @@ See [MIGRATION.md](MIGRATION.md) for upgrade guidance.
   `SendUnconfirmedPrivateTransfer`, the `OnPrivateTransfer` event, and the
   `PrivateTransferResponse` / `PrivateTransferErrorResponse` replies (ASHRAE 135 clauses 16.2/16.3).
 - `WritePropertyRequest` / `BeginWritePropertyRequest` accept an optional `arrayIndex` to write a
-  single array element (matching `ReadPropertyRequest`), e.g. one slot of a `Priority_Array`.
+  single array element (matching `ReadPropertyRequest`), e.g. one slot of a `Priority_Array` or
+  one day of a `Weekly_Schedule`.
+- Full Schedule/Calendar (scheduling) serialization (#26, #131): `BacnetTimeValue`,
+  `BacnetDailySchedule`, `BacnetSpecialEvent` and the reworked `BacnetCalendarEntry` /
+  `BacnetWeekNDay` give `Weekly_Schedule`, `Exception_Schedule` and `Date_List` symmetric
+  encode/decode - values read from a device can be modified and written back as-is
+  (ASHRAE 135-2016 clauses 12.9 / 12.24 / 21).
 
 ### Changed
 - The core package is now pure-managed with no native dependencies (closes the pcap → log4net chain, #112).
@@ -63,9 +77,33 @@ See [MIGRATION.md](MIGRATION.md) for upgrade guidance.
   `BacnetGenericTime.Tag`/`Sequence` are now populated on decode.
 - Partially-wildcarded Date and Time values no longer throw during decode (#103): any octet may
   individually be X'FF' (unspecified) and Date carries special values (odd/even month, last day —
-  ASHRAE 135 §20.2.12/§20.2.13). Wildcarded time components are clamped to zero and unrepresentable
-  dates degrade to `DateTime.MinValue`, matching YABE's behaviour; previously the exception was
-  swallowed upstream, e.g. silently dropping event notifications stamped with a wildcarded time.
+  ASHRAE 135 §20.2.12/§20.2.13); previously the exception was swallowed upstream, e.g. silently
+  dropping event notifications stamped with a wildcarded time. Such values are also **lossless**
+  now: a decoded `BacnetValue` carries the new per-octet `BacnetTime` (or the existing
+  `BacnetDate`) whenever the octets cannot be represented faithfully as a `DateTime`, a Date+Time
+  property pair with wildcards merges into the new `BacnetDateTime` struct, and timestamps keep
+  their original time octets in `BacnetGenericTime.PartialTime` next to the best-effort clamped
+  `Time` — so echoing an event's partially-wildcarded timestamp back (e.g. in an AcknowledgeAlarm)
+  reproduces the wire bytes. Fully-specified values keep coming back as `DateTime`.
+  `Event_Time_Stamps` elements now decode as `BacnetGenericTime` (preserving the BACnetTimeStamp
+  choice) instead of a bare `DateTime` that crashed on re-encode. Log-record stamps and
+  service-internal times (TimeSynchronization, ReadRange by-time), where the standard requires
+  specific values, still clamp.
+- `PROP_EFFECTIVE_PERIOD` decodes as one typed `BacnetDateRange` value instead of two bare
+  `DateTime`s, so the open (wildcarded) boundaries of a Schedule's Effective_Period survive a
+  read/write round-trip. Writing either shape — the typed range or two application-tagged
+  dates — stays supported.
+- ReadRange by-time and by-sequence responses decode correctly: the ack's trailing
+  first-sequence-number was included in the returned item-data range (the extraction assumed the
+  by-position layout), so decoding the last "record" of a time-based trend-log read failed.
+- A TIME value of exactly midnight no longer encodes as the "any time" wildcard: `DateTime(1,1,1)`
+  — which every decoded midnight is — used to double as the wildcard sentinel, so reading a 00:00
+  time (or timestamp) and writing it back corrupted it to `FF FF FF FF`. The unspecified time now
+  has a dedicated marker, `ASN1.BACNET_TIME_WILDCARD`: decoders return it for a fully-wildcarded
+  time and encoders turn it back into `FF FF FF FF`, so midnight and the wildcard each round-trip
+  losslessly (see MIGRATION.md — a fully-wildcarded time used to decode to `DateTime.MinValue`).
+  Combined date+time decodes (BACnetDateTime, timestamps, log records) keep degrading an
+  unspecified time component to 00:00, as those values cannot carry it.
 - All unconfirmed sends now address peers behind a BACnet router correctly (NPDU destination =
   the peer's network/MAC, frame to the fronting router — the same addressing the `Iam()` fix
   established): directed `WhoIs`/`WhoHas`, `SendUnconfirmedEventNotification`,

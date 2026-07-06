@@ -43,6 +43,24 @@ public struct BacnetValue
             return BacnetApplicationTags.BACNET_APPLICATION_TAG_ERROR;
         if (t == typeof(BacnetDeviceObjectPropertyReference))
             return BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_PROPERTY_REFERENCE;
+        if (t == typeof(BacnetDailySchedule))
+            return BacnetApplicationTags.BACNET_APPLICATION_TAG_WEEKLY_SCHEDULE;
+        if (t == typeof(BacnetSpecialEvent))
+            return BacnetApplicationTags.BACNET_APPLICATION_TAG_SPECIAL_EVENT;
+        if (t == typeof(BacnetCalendarEntry))
+            return BacnetApplicationTags.BACNET_APPLICATION_TAG_CALENDAR_ENTRY;
+        if (t == typeof(BacnetWeekNDay))
+            return BacnetApplicationTags.BACNET_APPLICATION_TAG_WEEKNDAY;
+        if (t == typeof(BacnetDateRange))
+            return BacnetApplicationTags.BACNET_APPLICATION_TAG_DATERANGE;
+        if (t == typeof(BacnetDate))
+            return BacnetApplicationTags.BACNET_APPLICATION_TAG_DATE;
+        if (t == typeof(BacnetTime))
+            return BacnetApplicationTags.BACNET_APPLICATION_TAG_TIME;
+        if (t == typeof(BacnetDateTime))
+            return BacnetApplicationTags.BACNET_APPLICATION_TAG_DATETIME;
+        if (t == typeof(BacnetGenericTime))
+            return BacnetApplicationTags.BACNET_APPLICATION_TAG_TIMESTAMP;
         if (t.IsEnum)
             return BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED;
 

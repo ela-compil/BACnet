@@ -32,8 +32,8 @@ using System.Threading;
 
 namespace BaCSharp
 {
-    class Calendar: BaCSharpObject
-    { 
+    public class Calendar: BaCSharpObject
+    {
 
         public bool m_PROP_PRESENT_VALUE=false;
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_BOOLEAN)]
@@ -42,22 +42,23 @@ namespace BaCSharp
             get { return m_PROP_PRESENT_VALUE; }
         }
 
-        public BACnetCalendarEntry CalenarEntry = new BACnetCalendarEntry();
-        public virtual object PROP_DATE_LIST
-        {
-            get { return CalenarEntry; }
-            set 
-            {
-                try  // null value cause an exception, of course
-                {
-                    CalenarEntry = (BACnetCalendarEntry)value;
-                    if (CalenarEntry.Entries == null)
-                        CalenarEntry.Entries = new List<object>();
-                }
-                catch { }
+        public List<BacnetCalendarEntry> DateList = new List<BacnetCalendarEntry>();
 
-                DayChanged(tmrId); 
-            }
+        public virtual IList<BacnetValue> get2_PROP_DATE_LIST()
+        {
+            lock (LockObj)
+                return DateList.Select(entry => new BacnetValue(entry)).ToList();
+        }
+
+        public virtual void set2_PROP_DATE_LIST(IList<BacnetValue> values, byte priority)
+        {
+            if (!TryGetTypedValues(values, out List<BacnetCalendarEntry> newList))
+                return;
+
+            lock (LockObj)
+                DateList = newList;
+
+            DayChanged(tmrId);
         }
 
         private int tmrId = 0;
@@ -66,9 +67,7 @@ namespace BaCSharp
         public Calendar(int ObjId, String ObjName, String Description)
              : base(new BacnetObjectId(BacnetObjectTypes.OBJECT_CALENDAR,(uint)ObjId), ObjName, Description)
         {
-            CalenarEntry.Entries = new List<object>();
             DayChanged(tmrId);
-
         }
 
         public override void Post_NewtonSoft_Json_Deserialization(DeviceObject device)
@@ -83,37 +82,35 @@ namespace BaCSharp
                 tmrId++; // it is used to 'desactivate the effect' of the timer call sleeping in the ThreadPool
         }
 
-        // Two simple methods to add .NET date and range
+        // Simple methods to add .NET dates, ranges and week-n-day patterns
         public void AddDate(DateTime date)
         {
-            BacnetDate bd = new BacnetDate((byte)(date.Year-1900), (byte)date.Month, (byte)date.Day);
-            CalenarEntry.Entries.Add(bd);
-
-            DayChanged(tmrId);
+            AddEntry(new BacnetCalendarEntry(new BacnetDate(date)));
         }
 
         public void AddRange(DateTime start, DateTime end)
         {
-            BacnetDate st = new BacnetDate((byte)(start.Year-1900), (byte)start.Month, (byte)start.Day);            
-            BacnetDate en = new BacnetDate((byte)(end.Year-1900), (byte)end.Month, (byte)end.Day);
-
-            BacnetDateRange bdr=new BacnetDateRange(st,en);
-            CalenarEntry.Entries.Add(bdr);
-
-            DayChanged(tmrId);
+            AddEntry(new BacnetCalendarEntry(new BacnetDateRange(start, end)));
         }
 
-        public void AddEntry(BacnetDateRange bdr)
-        {
-            CalenarEntry.Entries.Add(bdr);
-        }
         public void AddEntry(BacnetDate bd)
         {
-            CalenarEntry.Entries.Add(bd);
+            AddEntry(new BacnetCalendarEntry(bd));
         }
-        public void AddEntry(BacnetweekNDay bwd)
+        public void AddEntry(BacnetDateRange bdr)
         {
-            CalenarEntry.Entries.Add(bwd);
+            AddEntry(new BacnetCalendarEntry(bdr));
+        }
+        public void AddEntry(BacnetWeekNDay bwd)
+        {
+            AddEntry(new BacnetCalendarEntry(bwd));
+        }
+        public void AddEntry(BacnetCalendarEntry entry)
+        {
+            lock (LockObj)
+                DateList.Add(entry);
+
+            DayChanged(tmrId);
         }
 
         Timer tmr;
@@ -126,29 +123,8 @@ namespace BaCSharp
 
                 tmrId++; // it is used to 'desactivate the effect' of the timer call sleeping in the ThreadPool 
 
-                bool NewPresentValue = false;
                 // Update Present_Value
-                foreach (object entry in CalenarEntry.Entries)
-                {
-                    if (entry is BacnetDate)
-                        if (((BacnetDate)entry).IsAFittingDate(DateTime.Now))
-                        {
-                            NewPresentValue = true;
-                            break;
-                        }
-                    if (entry is BacnetDateRange)
-                        if (((BacnetDateRange)entry).IsAFittingDate(DateTime.Now))
-                        {
-                            NewPresentValue = true;
-                            break;
-                        }
-                    if (entry is BacnetweekNDay)
-                        if (((BacnetweekNDay)entry).IsAFittingDate(DateTime.Now))
-                        {
-                            NewPresentValue = true;
-                            break;
-                        }
-                }
+                bool NewPresentValue = DateList.Any(entry => entry.IsAFittingDate(DateTime.Now));
 
                 if (NewPresentValue != m_PROP_PRESENT_VALUE)
                 {

@@ -1,4 +1,5 @@
 using System.IO.BACnet.Serialize;
+using System.IO.BACnet.Tests.Support;
 using Xunit;
 
 namespace System.IO.BACnet.Tests;
@@ -31,11 +32,38 @@ public class DateTimeWildcardTests
     }
 
     [Fact]
-    public void Fully_wildcarded_time_keeps_the_minimum_sentinel()
+    public void Fully_wildcarded_time_decodes_to_the_wildcard_marker()
     {
         ASN1.decode_bacnet_time(new byte[] { 0xFF, 0xFF, 0xFF, 0xFF }, 0, out var time);
 
-        Assert.Equal(new DateTime(1, 1, 1), time);
+        Assert.Equal(ASN1.BACNET_TIME_WILDCARD, time);
+    }
+
+    [Fact]
+    public void Fully_wildcarded_time_round_trips_byte_identical()
+    {
+        ASN1.decode_bacnet_time(new byte[] { 0xFF, 0xFF, 0xFF, 0xFF }, 0, out var time);
+
+        var buffer = new EncodeBuffer();
+        ASN1.encode_bacnet_time(buffer, time);
+
+        Assert.Equal(new byte[] { 0xFF, 0xFF, 0xFF, 0xFF }, buffer.ToArray());
+    }
+
+    [Fact]
+    public void Datetime_with_wildcard_time_component_combines_to_midnight()
+    {
+        // combined date+time values cannot carry an unspecified time: it degrades to 00:00
+        var wire = new byte[]
+        {
+            0xA4, 126, 7, 6, 1,             // Date 2026-07-06 (Monday)
+            0xB4, 0xFF, 0xFF, 0xFF, 0xFF    // Time unspecified
+        };
+
+        var len = ASN1.decode_bacnet_datetime(wire, 0, out var dateTime);
+
+        Assert.Equal(wire.Length, len);
+        Assert.Equal(new DateTime(2026, 7, 6, 0, 0, 0), dateTime);
     }
 
     [Theory]
@@ -58,5 +86,115 @@ public class DateTimeWildcardTests
 
         Assert.Equal(new DateTime(2026, 7, 5), date);
         Assert.Equal(new TimeSpan(0, 11, 22, 33, 440), time.TimeOfDay);
+    }
+
+    [Fact]
+    public void Midnight_encodes_as_zeros_not_as_the_time_wildcard()
+    {
+        // DateTime(1,1,1) is both the minimum sentinel and a plain 00:00:00.00 - and decoded
+        // midnight IS that value, so re-encoding it must produce midnight, never FF FF FF FF
+        var buffer = new EncodeBuffer();
+        ASN1.encode_bacnet_time(buffer, new DateTime(1, 1, 1));
+
+        Assert.Equal(new byte[] { 0, 0, 0, 0 }, buffer.ToArray());
+    }
+
+    [Fact]
+    public void Decoded_midnight_re_encodes_byte_identical()
+    {
+        ASN1.decode_bacnet_time(new byte[] { 0, 0, 0, 0 }, 0, out var midnight);
+
+        var buffer = new EncodeBuffer();
+        ASN1.encode_bacnet_time(buffer, midnight);
+
+        Assert.Equal(new byte[] { 0, 0, 0, 0 }, buffer.ToArray());
+    }
+
+    [Fact]
+    public void Time_wildcard_marker_encodes_as_all_unspecified_octets()
+    {
+        var buffer = new EncodeBuffer();
+        ASN1.encode_bacnet_time(buffer, ASN1.BACNET_TIME_WILDCARD);
+
+        Assert.Equal(new byte[] { 0xFF, 0xFF, 0xFF, 0xFF }, buffer.ToArray());
+    }
+
+    [Fact]
+    public void Date_wildcard_sentinel_still_encodes_as_all_unspecified_octets()
+    {
+        // no collision on the date side: no legal BACnet date maps to DateTime(1,1,1),
+        // so the minimum sentinel remains the wildcard for dates
+        var buffer = new EncodeBuffer();
+        ASN1.encode_bacnet_date(buffer, new DateTime(1, 1, 1));
+
+        Assert.Equal(new byte[] { 0xFF, 0xFF, 0xFF, 0xFF }, buffer.ToArray());
+    }
+
+    [Fact]
+    public void Partially_wildcarded_time_value_survives_per_octet_and_round_trips()
+    {
+        var wire = new byte[] { 0xB4, 11, 22, 0xFF, 0xFF }; // 11:22:**.**
+
+        var value = ApplicationValue.Decode(wire);
+
+        var time = Assert.IsType<BacnetTime>(value.Value);
+        Assert.Equal(BacnetApplicationTags.BACNET_APPLICATION_TAG_TIME, value.Tag);
+        Assert.Equal((11, 22, 255, 255), (time.hour, time.minute, time.second, time.hundredths));
+        Assert.Equal(new TimeSpan(11, 22, 0), time.ToTimeSpan());
+        ApplicationValue.AssertReencodesTo(wire, value);
+    }
+
+    [Fact]
+    public void Fully_specified_time_value_stays_a_DateTime()
+    {
+        var value = ApplicationValue.Decode(new byte[] { 0xB4, 11, 22, 33, 44 });
+
+        Assert.IsType<DateTime>(value.Value);
+        Assert.Equal(new TimeSpan(0, 11, 22, 33, 440), ((DateTime)value.Value).TimeOfDay);
+    }
+
+    [Theory]
+    [InlineData(new byte[] { 0xA4, 0xFF, 13, 32, 0xFF })]  // last day of every odd month, any year
+    [InlineData(new byte[] { 0xA4, 126, 7, 0xFF, 0xFF })]  // any day of July 2026
+    [InlineData(new byte[] { 0xA4, 126, 2, 30, 0xFF })]    // invalid calendar date (Feb 30)
+    [InlineData(new byte[] { 0xA4, 126, 7, 33, 0xFF })]    // odd days of July 2026 (day special 33)
+    public void Unrepresentable_date_value_survives_per_octet_and_round_trips(byte[] wire)
+    {
+        var value = ApplicationValue.Decode(wire);
+
+        Assert.IsType<BacnetDate>(value.Value);
+        Assert.Equal(BacnetApplicationTags.BACNET_APPLICATION_TAG_DATE, value.Tag);
+        ApplicationValue.AssertReencodesTo(wire, value);
+    }
+
+    [Fact]
+    public void Specific_date_with_unspecified_weekday_stays_a_DateTime()
+    {
+        // the weekday of a specific date is redundant; it is normalized on re-encode (135 §20.2.12)
+        var value = ApplicationValue.Decode(new byte[] { 0xA4, 126, 7, 6, 0xFF });
+
+        Assert.Equal(new DateTime(2026, 7, 6), value.Value);
+        ApplicationValue.AssertReencodesTo(new byte[] { 0xA4, 126, 7, 6, 1 }, value); // 2026-07-06 is a Monday
+    }
+
+    [Theory]
+    [InlineData(11, 22, 33, 44, true)]
+    [InlineData(11, 22, 33, 45, false)]
+    [InlineData(11, 22, 0, 0, false)]
+    public void BacnetTime_fitting_checks_every_specified_octet(int h, int m, int s, int hs, bool expected)
+    {
+        var pattern = new BacnetTime(11, 22, 33, 44);
+
+        Assert.Equal(expected, pattern.IsAFittingTime(new TimeSpan(0, h, m, s, hs * 10)));
+    }
+
+    [Fact]
+    public void BacnetTime_wildcarded_octets_fit_anything_and_print_as_stars()
+    {
+        var pattern = new BacnetTime(11, 255, 255, 255);
+
+        Assert.True(pattern.IsAFittingTime(new TimeSpan(0, 11, 59, 7, 130)));
+        Assert.False(pattern.IsAFittingTime(new TimeSpan(0, 12, 0, 0, 0)));
+        Assert.Equal("11:**:**.**", pattern.ToString());
     }
 }

@@ -1,6 +1,6 @@
-﻿/**************************************************************************
+/**************************************************************************
 *                           MIT License
-* 
+*
 * Copyright (C) 2016 Frederic Chaxel <fchaxel@free.fr>
 *
 * Permission is hereby granted, free of charge, to any person obtaining
@@ -31,7 +31,7 @@ using System.IO.BACnet;
 
 namespace BaCSharp
 {
-    public class BacnetDateTime:BaCSharpObject
+    public class DateTimeValue:BaCSharpObject
     {
         public DateTime m_PresentValue = new DateTime(1, 1, 1);
         [BaCSharpType(BacnetApplicationTags.BACNET_APPLICATION_TAG_DATETIME)]
@@ -47,7 +47,7 @@ namespace BaCSharp
             get { return m_PROP_STATUS_FLAGS; }
         }
 
-        public BacnetDateTime(int ObjId, String ObjName, String Description)
+        public DateTimeValue(int ObjId, String ObjName, String Description)
             : base(new BacnetObjectId(BacnetObjectTypes.OBJECT_DATETIME_VALUE, (uint)ObjId), ObjName,  Description)
         {
             m_PROP_STATUS_FLAGS.SetBit((byte)0, false);
@@ -55,7 +55,7 @@ namespace BaCSharp
             m_PROP_STATUS_FLAGS.SetBit((byte)2, false);
             m_PROP_STATUS_FLAGS.SetBit((byte)3, false);
         }
-                
-        public BacnetDateTime() { }
+
+        public DateTimeValue() { }
     }
 }

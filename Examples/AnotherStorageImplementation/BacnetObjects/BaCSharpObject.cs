@@ -40,7 +40,9 @@ namespace BaCSharp
         NotExist = -2,
         NotForMe = -3,
         WriteAccessDenied = -4,
-        OutOfRange = -5
+        OutOfRange = -5,
+        DuplicateEntry = -6,
+        InvalidDataType = -7
     }
 
     // All children classes are serializable, except Device and Structured View
@@ -95,7 +97,37 @@ namespace BaCSharp
         //To get back the raw buffer for specific decoding if needed
         protected BacnetClient sender;
 
-        protected ErrorCodes ErrorCode_PropertyWrite;
+        // Both write side-channels are per-thread: WritePropertyValue assigns them before every
+        // set2_ dispatch, and e.g. a Schedule pushing its Present_Value from a timer thread must
+        // not clobber the state of a network write running concurrently on another object.
+        [ThreadStatic]
+        protected static ErrorCodes ErrorCode_PropertyWrite;
+
+        // The array index of the WriteProperty in progress (BACNET_ARRAY_ALL when absent), for
+        // set2_ methods of array properties - same side-channel idea as ErrorCode_PropertyWrite
+        [ThreadStatic]
+        protected static uint ArrayIndex_PropertyWrite;
+
+        // Shared by set2_ writers of typed lists: every element must hold a T, anything else is
+        // reported as INVALID_DATA_TYPE
+        protected bool TryGetTypedValues<T>(IList<BacnetValue> values, out List<T> result)
+        {
+            result = new List<T>();
+            foreach (BacnetValue value in values)
+            {
+                if (value.Value is T typed)
+                {
+                    result.Add(typed);
+                }
+                else
+                {
+                    ErrorCode_PropertyWrite = ErrorCodes.InvalidDataType;
+                    return false;
+                }
+            }
+
+            return true;
+        }
 
         IList<BacnetPropertyReference> AllMyProperties = null;
 
@@ -338,6 +370,8 @@ namespace BaCSharp
 
         public ErrorCodes WritePropertyValue(BacnetPropertyValue value, bool writeFromNetwork)
         {
+            ArrayIndex_PropertyWrite = value.property.propertyArrayIndex;
+
             // First try to found the set2_ method in the class code
             MethodInfo m = this.GetType().GetMethod("set2_" + value.property.ToString());
             try
