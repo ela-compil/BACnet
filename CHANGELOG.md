@@ -30,6 +30,8 @@ See [MIGRATION.md](MIGRATION.md) for upgrade guidance.
 - PrivateTransfer send/receive support in `BacnetClient` (#154): `PrivateTransferRequest`,
   `SendUnconfirmedPrivateTransfer`, the `OnPrivateTransfer` event, and the
   `PrivateTransferResponse` / `PrivateTransferErrorResponse` replies (ASHRAE 135 clauses 16.2/16.3).
+- `WritePropertyRequest` / `BeginWritePropertyRequest` accept an optional `arrayIndex` to write a
+  single array element (matching `ReadPropertyRequest`), e.g. one slot of a `Priority_Array`.
 
 ### Changed
 - The core package is now pure-managed with no native dependencies (closes the pcap → log4net chain, #112).
