@@ -276,8 +276,8 @@ public class AshraeAnnexFTests
                 eventTimeStamps = new[]
                 {
                     new BacnetGenericTime(new DateTime(1, 1, 1, 15, 35, 0).AddMilliseconds(200), BacnetTimestampTags.TIME_STAMP_TIME),
-                    new BacnetGenericTime(default(DateTime), BacnetTimestampTags.TIME_STAMP_TIME),
-                    new BacnetGenericTime(default(DateTime), BacnetTimestampTags.TIME_STAMP_TIME),
+                    new BacnetGenericTime(ASN1.BACNET_TIME_WILDCARD, BacnetTimestampTags.TIME_STAMP_TIME),
+                    new BacnetGenericTime(ASN1.BACNET_TIME_WILDCARD, BacnetTimestampTags.TIME_STAMP_TIME),
                 },
                 notifyType = BacnetNotifyTypes.NOTIFY_ALARM,
                 eventEnable = BacnetBitString.Parse("111"),
@@ -291,7 +291,7 @@ public class AshraeAnnexFTests
                 eventTimeStamps = new[]
                 {
                     new BacnetGenericTime(new DateTime(1, 1, 1, 15, 40, 0), BacnetTimestampTags.TIME_STAMP_TIME),
-                    new BacnetGenericTime(default(DateTime), BacnetTimestampTags.TIME_STAMP_TIME),
+                    new BacnetGenericTime(ASN1.BACNET_TIME_WILDCARD, BacnetTimestampTags.TIME_STAMP_TIME),
                     new BacnetGenericTime(new DateTime(1, 1, 1, 15, 45, 30).AddMilliseconds(300), BacnetTimestampTags.TIME_STAMP_TIME),
                 },
                 notifyType = BacnetNotifyTypes.NOTIFY_ALARM,

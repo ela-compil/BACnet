@@ -59,4 +59,46 @@ public class DateTimeWildcardTests
         Assert.Equal(new DateTime(2026, 7, 5), date);
         Assert.Equal(new TimeSpan(0, 11, 22, 33, 440), time.TimeOfDay);
     }
+
+    [Fact]
+    public void Midnight_encodes_as_zeros_not_as_the_time_wildcard()
+    {
+        // DateTime(1,1,1) is both the minimum sentinel and a plain 00:00:00.00 - and decoded
+        // midnight IS that value, so re-encoding it must produce midnight, never FF FF FF FF
+        var buffer = new EncodeBuffer();
+        ASN1.encode_bacnet_time(buffer, new DateTime(1, 1, 1));
+
+        Assert.Equal(new byte[] { 0, 0, 0, 0 }, buffer.ToArray());
+    }
+
+    [Fact]
+    public void Decoded_midnight_re_encodes_byte_identical()
+    {
+        ASN1.decode_bacnet_time(new byte[] { 0, 0, 0, 0 }, 0, out var midnight);
+
+        var buffer = new EncodeBuffer();
+        ASN1.encode_bacnet_time(buffer, midnight);
+
+        Assert.Equal(new byte[] { 0, 0, 0, 0 }, buffer.ToArray());
+    }
+
+    [Fact]
+    public void Time_wildcard_marker_encodes_as_all_unspecified_octets()
+    {
+        var buffer = new EncodeBuffer();
+        ASN1.encode_bacnet_time(buffer, ASN1.BACNET_TIME_WILDCARD);
+
+        Assert.Equal(new byte[] { 0xFF, 0xFF, 0xFF, 0xFF }, buffer.ToArray());
+    }
+
+    [Fact]
+    public void Date_wildcard_sentinel_still_encodes_as_all_unspecified_octets()
+    {
+        // no collision on the date side: no legal BACnet date maps to DateTime(1,1,1),
+        // so the minimum sentinel remains the wildcard for dates
+        var buffer = new EncodeBuffer();
+        ASN1.encode_bacnet_date(buffer, new DateTime(1, 1, 1));
+
+        Assert.Equal(new byte[] { 0xFF, 0xFF, 0xFF, 0xFF }, buffer.ToArray());
+    }
 }

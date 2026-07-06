@@ -75,6 +75,13 @@ See [MIGRATION.md](MIGRATION.md) for upgrade guidance.
   ASHRAE 135 §20.2.12/§20.2.13). Wildcarded time components are clamped to zero and unrepresentable
   dates degrade to `DateTime.MinValue`, matching YABE's behaviour; previously the exception was
   swallowed upstream, e.g. silently dropping event notifications stamped with a wildcarded time.
+- A TIME value of exactly midnight no longer encodes as the "any time" wildcard: `DateTime(1,1,1)`
+  — which every decoded midnight is — used to double as the wildcard sentinel, so reading a 00:00
+  time (or timestamp) and writing it back corrupted it to `FF FF FF FF`. Midnight now encodes as
+  00:00:00.00; a deliberate unspecified time (e.g. GetEventInformation timestamps of transitions
+  never seen) is expressed with the new `ASN1.BACNET_TIME_WILDCARD` marker. Decoders keep mapping
+  a fully-wildcarded time to `DateTime(1,1,1)` for compatibility, so that direction stays lossy;
+  a lossless wildcard representation is planned for 5.0.
 - All unconfirmed sends now address peers behind a BACnet router correctly (NPDU destination =
   the peer's network/MAC, frame to the fronting router — the same addressing the `Iam()` fix
   established): directed `WhoIs`/`WhoHas`, `SendUnconfirmedEventNotification`,

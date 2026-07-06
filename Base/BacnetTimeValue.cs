@@ -23,13 +23,7 @@ public struct BacnetTimeValue : ASN1.IEncode, ASN1.IDecode
 
     public void Encode(EncodeBuffer buffer)
     {
-        ASN1.encode_tag(buffer, (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_TIME, false, 4);
-        // encoded octet-by-octet rather than through encode_bacnet_time: there DateTime(1,1,1)
-        // doubles as the 'any time' wildcard sentinel, which would turn a midnight entry into FF FF FF FF
-        buffer.Add((byte)Time.Hours);
-        buffer.Add((byte)Time.Minutes);
-        buffer.Add((byte)Time.Seconds);
-        buffer.Add((byte)(Time.Milliseconds / 10));
+        ASN1.encode_application_time(buffer, new DateTime(1, 1, 1).Add(Time));
         ASN1.bacapp_encode_application_data(buffer, Value);
     }
 

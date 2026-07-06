@@ -12,6 +12,14 @@ public class ASN1
     public const uint BACNET_MAX_PRIORITY = 16;
 
     /// <summary>
+    /// Marker for the fully-unspecified Time (all octets X'FF' - ASHRAE 135 §20.2.13), e.g. the
+    /// timestamps of never-seen transitions in a GetEventInformation ack. A distinct marker is
+    /// needed because <c>new DateTime(1, 1, 1)</c> - the value every decoded time carries as its
+    /// date part - is plain midnight and must encode as 00:00:00.00.
+    /// </summary>
+    public static readonly DateTime BACNET_TIME_WILDCARD = DateTime.MaxValue;
+
+    /// <summary>
     /// You can provide a function to resolve a given tag within a property to a different tag (e.g. for custom properties)
     /// The address of the remote device is provided so that you can support devices from multiple vendors
     /// (the same custom property# has different meaning for each vendor)
@@ -685,9 +693,18 @@ public class ASN1
         buffer.Add(tmp, len);
     }
 
+    /// <summary>
+    /// Encodes the four Time octets. <see cref="BACNET_TIME_WILDCARD"/> encodes as the
+    /// fully-unspecified time (FF FF FF FF - 135 §20.2.13); every other value, including
+    /// midnight <c>new DateTime(1, 1, 1)</c>, encodes its actual time of day. Note the
+    /// asymmetry with the decoders, which map a fully-wildcarded time to the
+    /// <c>DateTime(1, 1, 1)</c> minimum sentinel: that value is indistinguishable from
+    /// midnight, so re-encoding it yields 00:00 - a lossless wildcard representation is
+    /// planned for 5.0.
+    /// </summary>
     public static void encode_bacnet_time(EncodeBuffer buffer, DateTime value)
     {
-        if (value == new DateTime(1, 1, 1)) // 'Time any' wildcard, same sentinel encode_bacnet_date uses
+        if (value == BACNET_TIME_WILDCARD)
         {
             buffer.Add(0xFF);
             buffer.Add(0xFF);
