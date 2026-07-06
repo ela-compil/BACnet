@@ -18,10 +18,8 @@ public struct BacnetDateRange : ASN1.IEncode, ASN1.IDecode
 
     public void Encode(EncodeBuffer buffer)
     {
-        ASN1.encode_tag(buffer, (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_DATE, false, 4);
-        startDate.Encode(buffer);
-        ASN1.encode_tag(buffer, (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_DATE, false, 4);
-        endDate.Encode(buffer);
+        ASN1.encode_application_date(buffer, startDate);
+        ASN1.encode_application_date(buffer, endDate);
     }
 
     public int Decode(byte[] buffer, int offset, uint count)

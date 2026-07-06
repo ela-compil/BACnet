@@ -29,6 +29,16 @@ public struct BacnetTime : ASN1.IEncode, ASN1.IDecode
         hundredths = (byte)(timeOfDay.Milliseconds / 10);
     }
 
+    /// <summary>The fully-unspecified time, matching any time of day.</summary>
+    public static readonly BacnetTime Any = new BacnetTime(255, 255, 255, 255);
+
+    /// <summary>Like the TimeSpan constructor, but maps the <see cref="ASN1.BACNET_TIME_WILDCARD"/>
+    /// marker to <see cref="Any"/>.</summary>
+    public static BacnetTime FromDateTime(DateTime time)
+    {
+        return time == ASN1.BACNET_TIME_WILDCARD ? Any : new BacnetTime(time.TimeOfDay);
+    }
+
     public bool IsFullySpecified => hour <= 23 && minute <= 59 && second <= 59 && hundredths <= 99;
 
     public bool IsFullyUnspecified => hour == 255 && minute == 255 && second == 255 && hundredths == 255;

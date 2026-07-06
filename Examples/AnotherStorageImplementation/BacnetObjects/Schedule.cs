@@ -75,19 +75,8 @@ namespace BaCSharp
 
         public virtual void set2_PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES(IList<BacnetValue> values, byte priority)
         {
-            var references = new List<BacnetDeviceObjectPropertyReference>();
-            foreach (BacnetValue value in values)
-            {
-                if (value.Value is BacnetDeviceObjectPropertyReference reference)
-                {
-                    references.Add(reference);
-                }
-                else
-                {
-                    ErrorCode_PropertyWrite = ErrorCodes.InvalidDataType;
-                    return;
-                }
-            }
+            if (!TryGetTypedValues(values, out List<BacnetDeviceObjectPropertyReference> references))
+                return;
 
             lock (lockObj)
                 m_PROP_LIST_OF_OBJECT_PROPERTY_REFERENCES = references;
@@ -180,7 +169,7 @@ namespace BaCSharp
             {
                 // a network write arrives as two application-tagged dates; the DateTime(1,1,1)
                 // sentinel stands for a fully wildcarded (open) boundary
-                range = new BacnetDateRange(ToBacnetDate(start), ToBacnetDate(end));
+                range = new BacnetDateRange(BacnetDate.FromDateTime(start), BacnetDate.FromDateTime(end));
             }
             else
             {
@@ -217,19 +206,8 @@ namespace BaCSharp
                 return;
             }
 
-            var days = new List<BacnetDailySchedule>();
-            foreach (BacnetValue value in values)
-            {
-                if (value.Value is BacnetDailySchedule day)
-                {
-                    days.Add(day);
-                }
-                else
-                {
-                    ErrorCode_PropertyWrite = ErrorCodes.InvalidDataType;
-                    return;
-                }
-            }
+            if (!TryGetTypedValues(values, out List<BacnetDailySchedule> days))
+                return;
 
             if (days.Count != (index == ASN1.BACNET_ARRAY_ALL ? 7 : 1))
             {
@@ -271,19 +249,8 @@ namespace BaCSharp
                 return;
             }
 
-            var events = new List<BacnetSpecialEvent>();
-            foreach (BacnetValue value in values)
-            {
-                if (value.Value is BacnetSpecialEvent specialEvent)
-                {
-                    events.Add(specialEvent);
-                }
-                else
-                {
-                    ErrorCode_PropertyWrite = ErrorCodes.InvalidDataType;
-                    return;
-                }
-            }
+            if (!TryGetTypedValues(values, out List<BacnetSpecialEvent> events))
+                return;
 
             if (events.Any(specialEvent => HasDuplicateTime(specialEvent.ListOfTimeValues)))
             {
@@ -327,7 +294,7 @@ namespace BaCSharp
                     m_PROP_EXCEPTION_SCHEDULE.RemoveAt(m_PROP_EXCEPTION_SCHEDULE.Count - 1);
                 while (m_PROP_EXCEPTION_SCHEDULE.Count < newSize)
                     m_PROP_EXCEPTION_SCHEDULE.Add(new BacnetSpecialEvent(
-                        new BacnetCalendarEntry(new BacnetDate(255, 255, 255)), new BacnetTimeValue[0], 16));
+                        new BacnetCalendarEntry(BacnetDate.Any), new BacnetTimeValue[0], 16));
             }
 
             Recalculate();
@@ -553,14 +520,7 @@ namespace BaCSharp
 
         private static BacnetDateRange AlwaysInEffect()
         {
-            return new BacnetDateRange(new BacnetDate(255, 255, 255), new BacnetDate(255, 255, 255));
-        }
-
-        private static BacnetDate ToBacnetDate(DateTime date)
-        {
-            return date == new DateTime(1, 1, 1)
-                ? new BacnetDate(255, 255, 255)
-                : new BacnetDate(date);
+            return new BacnetDateRange(BacnetDate.Any, BacnetDate.Any);
         }
 
         private static void NarrowJsonIntegers(List<BacnetTimeValue> timeValues)

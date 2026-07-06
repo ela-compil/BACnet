@@ -34,10 +34,8 @@ public struct BacnetDateTime : ASN1.IEncode, ASN1.IDecode
 
     public void Encode(EncodeBuffer buffer)
     {
-        ASN1.encode_tag(buffer, (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_DATE, false, 4);
-        Date.Encode(buffer);
-        ASN1.encode_tag(buffer, (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_TIME, false, 4);
-        Time.Encode(buffer);
+        ASN1.encode_application_date(buffer, Date);
+        ASN1.encode_application_time(buffer, Time);
     }
 
     public int Decode(byte[] buffer, int offset, uint count)

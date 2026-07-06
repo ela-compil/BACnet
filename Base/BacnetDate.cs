@@ -23,6 +23,15 @@ public struct BacnetDate : ASN1.IEncode, ASN1.IDecode
         wday = (byte)(date.DayOfWeek == 0 ? 7 : (int)date.DayOfWeek);
     }
 
+    /// <summary>The fully-unspecified date, matching every day.</summary>
+    public static readonly BacnetDate Any = new BacnetDate(255, 255, 255);
+
+    /// <summary>Like the constructor, but maps the DateTime(1,1,1) 'any date' sentinel to <see cref="Any"/>.</summary>
+    public static BacnetDate FromDateTime(DateTime date)
+    {
+        return date == new DateTime(1, 1, 1) ? Any : new BacnetDate(date);
+    }
+
     public void Encode(EncodeBuffer buffer)
     {
         buffer.Add(year);

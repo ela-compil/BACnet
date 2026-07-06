@@ -445,26 +445,16 @@ public class ASN1
 
             case BacnetApplicationTags.BACNET_APPLICATION_TAG_DATE:
                 if (value.Value is BacnetDate bacnetDate) // per-octet date pattern
-                {
-                    encode_tag(buffer, (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_DATE, false, 4);
-                    bacnetDate.Encode(buffer);
-                }
+                    encode_application_date(buffer, bacnetDate);
                 else
-                {
                     encode_application_date(buffer, (DateTime)value.Value);
-                }
                 break;
 
             case BacnetApplicationTags.BACNET_APPLICATION_TAG_TIME:
                 if (value.Value is BacnetTime bacnetTime) // per-octet partially-wildcarded time
-                {
-                    encode_tag(buffer, (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_TIME, false, 4);
-                    bacnetTime.Encode(buffer);
-                }
+                    encode_application_time(buffer, bacnetTime);
                 else
-                {
                     encode_application_time(buffer, (DateTime)value.Value);
-                }
                 break;
             // Added for EventTimeStamp
             case BacnetApplicationTags.BACNET_APPLICATION_TAG_TIMESTAMP:
@@ -774,10 +764,22 @@ public class ASN1
         encode_bacnet_date(buffer, value);
     }
 
+    public static void encode_application_date(EncodeBuffer buffer, BacnetDate value)
+    {
+        encode_tag(buffer, (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_DATE, false, 4);
+        value.Encode(buffer);
+    }
+
     public static void encode_application_time(EncodeBuffer buffer, DateTime value)
     {
         encode_tag(buffer, (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_TIME, false, 4);
         encode_bacnet_time(buffer, value);
+    }
+
+    public static void encode_application_time(EncodeBuffer buffer, BacnetTime value)
+    {
+        encode_tag(buffer, (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_TIME, false, 4);
+        value.Encode(buffer);
     }
 
     public static void bacapp_encode_datetime(EncodeBuffer buffer, DateTime value)
@@ -825,8 +827,7 @@ public class ASN1
                     // the date part rides in Time (best-effort); the time part keeps its octets
                     encode_opening_tag(buffer, 2);
                     encode_application_date(buffer, value.Time);
-                    encode_tag(buffer, (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_TIME, false, 4);
-                    value.PartialTime.Value.Encode(buffer);
+                    encode_application_time(buffer, value.PartialTime.Value);
                     encode_closing_tag(buffer, 2);
                 }
                 else
@@ -898,26 +899,28 @@ public class ASN1
         return -1;
     }
 
+    // decodes one typed element per call, so reading a whole BACnetARRAY/LIST yields one
+    // BacnetValue per element, matching how other arrays decode element-wise
+    private static int DecodeTypedValue<T>(byte[] buffer, int offset, int maxOffset,
+        BacnetApplicationTags tag, ref BacnetValue value) where T : IDecode, new()
+    {
+        var decoded = new T();
+        var len = decoded.Decode(buffer, offset, (uint)maxOffset);
+        if (len < 0) return -1;
+
+        value.Tag = tag;
+        value.Value = decoded;
+        return len;
+    }
+
     private static BacnetDate ToBacnetDate(object value)
     {
-        if (value is BacnetDate bacnetDate)
-            return bacnetDate;
-
-        var date = (DateTime)value;
-        return date == new DateTime(1, 1, 1) // the 'any date' sentinel
-            ? new BacnetDate(255, 255, 255)
-            : new BacnetDate(date);
+        return value is BacnetDate bacnetDate ? bacnetDate : BacnetDate.FromDateTime((DateTime)value);
     }
 
     private static BacnetTime ToBacnetTime(object value)
     {
-        if (value is BacnetTime bacnetTime)
-            return bacnetTime;
-
-        var time = (DateTime)value;
-        return time == BACNET_TIME_WILDCARD
-            ? new BacnetTime(255, 255, 255, 255)
-            : new BacnetTime(time.TimeOfDay);
+        return value is BacnetTime bacnetTime ? bacnetTime : BacnetTime.FromDateTime((DateTime)value);
     }
 
     // keeps the original octets of a not-fully-specified time so a timestamp can be re-encoded
@@ -2076,12 +2079,9 @@ public class ASN1
     // everything in between is only representable per-octet (135 §20.2.13)
     private static bool IsPartiallyUnspecifiedTime(byte[] buffer, int offset)
     {
-        byte hour = buffer[offset], minute = buffer[offset + 1], second = buffer[offset + 2], hundredths = buffer[offset + 3];
-
-        if (hour == 0xFF && minute == 0xFF && second == 0xFF && hundredths == 0xFF)
-            return false;
-
-        return hour > 23 || minute > 59 || second > 59 || hundredths > 99;
+        var time = new BacnetTime();
+        time.Decode(buffer, offset, (uint)(offset + 4));
+        return !time.IsFullySpecified && !time.IsFullyUnspecified;
     }
 
     // the all-FF 'any date' keeps its DateTime(1,1,1) sentinel (which re-encodes as the wildcard)
@@ -2359,36 +2359,14 @@ public class ASN1
                 return tagLen;
             }
             if (propertyId == BacnetPropertyIds.PROP_DATE_LIST)
-            {
-                // one BACnetCalendarEntry per call: reading the whole Date_List yields one value per entry
-                var v = new BacnetCalendarEntry();
-                tagLen = v.Decode(buffer, offset, (uint)maxOffset);
-                if (tagLen < 0) return -1;
-                value.Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_CALENDAR_ENTRY;
-                value.Value = v;
-                return tagLen;
-            }
+                return DecodeTypedValue<BacnetCalendarEntry>(buffer, offset, maxOffset,
+                    BacnetApplicationTags.BACNET_APPLICATION_TAG_CALENDAR_ENTRY, ref value);
             if (propertyId == BacnetPropertyIds.PROP_EXCEPTION_SCHEDULE)
-            {
-                // one BACnetSpecialEvent per call: reading the whole array yields one value per event
-                var v = new BacnetSpecialEvent();
-                tagLen = v.Decode(buffer, offset, (uint)maxOffset);
-                if (tagLen < 0) return -1;
-                value.Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_SPECIAL_EVENT;
-                value.Value = v;
-                return tagLen;
-            }
+                return DecodeTypedValue<BacnetSpecialEvent>(buffer, offset, maxOffset,
+                    BacnetApplicationTags.BACNET_APPLICATION_TAG_SPECIAL_EVENT, ref value);
             if (propertyId == BacnetPropertyIds.PROP_WEEKLY_SCHEDULE)
-            {
-                // one BACnetDailySchedule per call: reading the whole BACnetARRAY[7] therefore
-                // yields seven values, matching how other arrays decode element-wise
-                var v = new BacnetDailySchedule();
-                tagLen = v.Decode(buffer, offset, (uint)maxOffset);
-                if (tagLen < 0) return -1;
-                value.Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_WEEKLY_SCHEDULE;
-                value.Value = v;
-                return tagLen;
-            }
+                return DecodeTypedValue<BacnetDailySchedule>(buffer, offset, maxOffset,
+                    BacnetApplicationTags.BACNET_APPLICATION_TAG_WEEKLY_SCHEDULE, ref value);
             if (propertyId == BacnetPropertyIds.PROP_EVENT_TIME_STAMPS || propertyId == BacnetPropertyIds.PROP_TIME_OF_DEVICE_RESTART)
             {
                 // a BACnetTimeStamp CHOICE per element: decode into a BacnetGenericTime so the

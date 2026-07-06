@@ -103,6 +103,27 @@ namespace BaCSharp
         // set2_ methods of array properties - same side-channel idea as ErrorCode_PropertyWrite
         protected uint ArrayIndex_PropertyWrite = System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL;
 
+        // Shared by set2_ writers of typed lists: every element must hold a T, anything else is
+        // reported as INVALID_DATA_TYPE
+        protected bool TryGetTypedValues<T>(IList<BacnetValue> values, out List<T> result)
+        {
+            result = new List<T>();
+            foreach (BacnetValue value in values)
+            {
+                if (value.Value is T typed)
+                {
+                    result.Add(typed);
+                }
+                else
+                {
+                    ErrorCode_PropertyWrite = ErrorCodes.InvalidDataType;
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         IList<BacnetPropertyReference> AllMyProperties = null;
 
         // Somes classes needs to access to the device object

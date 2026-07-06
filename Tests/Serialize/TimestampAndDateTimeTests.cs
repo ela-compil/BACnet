@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO.BACnet.Serialize;
+using System.IO.BACnet.Tests.Support;
 using Xunit;
 
 namespace System.IO.BACnet.Tests;
@@ -12,21 +13,9 @@ namespace System.IO.BACnet.Tests;
 /// </summary>
 public class TimestampAndDateTimeTests
 {
-    private static readonly BacnetAddress DummyAddress = new BacnetAddress(BacnetAddressTypes.None, 0, null);
-
     private static BacnetValue DecodeEventTimeStamp(byte[] wire)
     {
-        var len = ASN1.bacapp_decode_application_data(DummyAddress, wire, 0, wire.Length,
-            BacnetObjectTypes.OBJECT_SCHEDULE, BacnetPropertyIds.PROP_EVENT_TIME_STAMPS, out var value);
-        Assert.Equal(wire.Length, len);
-        return value;
-    }
-
-    private static void AssertReencodesTo(byte[] wire, BacnetValue value)
-    {
-        var buffer = new EncodeBuffer();
-        ASN1.bacapp_encode_application_data(buffer, value);
-        Assert.Equal(wire, buffer.ToArray());
+        return ApplicationValue.Decode(wire, BacnetPropertyIds.PROP_EVENT_TIME_STAMPS);
     }
 
     [Fact]
@@ -46,7 +35,7 @@ public class TimestampAndDateTimeTests
         Assert.Equal(BacnetTimestampTags.TIME_STAMP_DATETIME, stamp.Tag);
         Assert.Equal(new DateTime(2026, 7, 6, 8, 0, 0), stamp.Time);
         Assert.Null(stamp.PartialTime);
-        AssertReencodesTo(wire, value); // used to throw: the decoded value was a bare DateTime
+        ApplicationValue.AssertReencodesTo(wire, value); // used to throw: the decoded value was a bare DateTime
     }
 
     [Fact]
@@ -66,7 +55,7 @@ public class TimestampAndDateTimeTests
         var stamp = Assert.IsType<BacnetGenericTime>(value.Value);
         Assert.Equal(BacnetTimestampTags.TIME_STAMP_DATETIME, stamp.Tag);
         Assert.NotNull(stamp.PartialTime);
-        AssertReencodesTo(wire, value);
+        ApplicationValue.AssertReencodesTo(wire, value);
     }
 
     [Fact]
@@ -80,7 +69,7 @@ public class TimestampAndDateTimeTests
         Assert.Equal(BacnetTimestampTags.TIME_STAMP_TIME, stamp.Tag);
         Assert.Equal(new TimeSpan(11, 22, 0), stamp.Time.TimeOfDay); // best-effort for consumers
         Assert.Equal(new BacnetTime(11, 22, 255, 255), stamp.PartialTime); // lossless for re-encode
-        AssertReencodesTo(wire, value);
+        ApplicationValue.AssertReencodesTo(wire, value);
     }
 
     [Fact]
@@ -108,7 +97,7 @@ public class TimestampAndDateTimeTests
         ASN1.encode_read_access_result(buffer, result);
         var bytes = buffer.ToArray();
 
-        var len = ASN1.decode_read_access_result(DummyAddress, bytes, 0, bytes.Length, out var decoded);
+        var len = ASN1.decode_read_access_result(ApplicationValue.DummyAddress, bytes, 0, bytes.Length, out var decoded);
         Assert.True(len > 0);
         return decoded.values[0].value;
     }

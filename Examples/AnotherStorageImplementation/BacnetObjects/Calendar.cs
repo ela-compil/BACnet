@@ -52,19 +52,8 @@ namespace BaCSharp
 
         public virtual void set2_PROP_DATE_LIST(IList<BacnetValue> values, byte priority)
         {
-            var newList = new List<BacnetCalendarEntry>();
-            foreach (BacnetValue value in values)
-            {
-                if (value.Value is BacnetCalendarEntry entry)
-                {
-                    newList.Add(entry);
-                }
-                else
-                {
-                    ErrorCode_PropertyWrite = ErrorCodes.InvalidDataType;
-                    return;
-                }
-            }
+            if (!TryGetTypedValues(values, out List<BacnetCalendarEntry> newList))
+                return;
 
             lock (LockObj)
                 DateList = newList;
