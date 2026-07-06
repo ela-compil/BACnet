@@ -125,6 +125,12 @@ public class ExceptionScheduleTests
             (uint)BacnetPropertyIds.PROP_EXCEPTION_SCHEDULE, ASN1.BACNET_ARRAY_ALL, 0, readValues);
         var writeBytes = write.ToArray();
 
+        // the write built from the decoded values must equal one built from the original values
+        var reference = new EncodeBuffer();
+        Services.EncodeWriteProperty(reference, new BacnetObjectId(BacnetObjectTypes.OBJECT_SCHEDULE, 1),
+            (uint)BacnetPropertyIds.PROP_EXCEPTION_SCHEDULE, ASN1.BACNET_ARRAY_ALL, 0, events);
+        Assert.Equal(reference.ToArray(), writeBytes);
+
         var writeLen = Services.DecodeWriteProperty(DummyAddress, writeBytes, 0, writeBytes.Length,
             out _, out var written);
         Assert.Equal(writeBytes.Length, writeLen);
