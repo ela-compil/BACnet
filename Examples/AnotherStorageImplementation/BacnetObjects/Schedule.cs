@@ -100,10 +100,16 @@ namespace BaCSharp
                 return;
             }
 
+            if (values.Count != 1)
+            {
+                ErrorCode_PropertyWrite = ErrorCodes.InvalidDataType;
+                return;
+            }
+
             bool changed;
             lock (lockObj)
             {
-                var newValue = values.Count == 1 ? values[0].Value : null;
+                var newValue = values[0].Value;
                 changed = !Equals(m_PROP_PRESENT_VALUE, newValue);
                 m_PROP_PRESENT_VALUE = newValue;
             }
@@ -259,6 +265,12 @@ namespace BaCSharp
                 return;
             }
 
+            if (events.Any(specialEvent => specialEvent.EventPriority < 1 || specialEvent.EventPriority > 16))
+            {
+                ErrorCode_PropertyWrite = ErrorCodes.OutOfRange; // EventPriority is Unsigned(1..16) (12.24.8)
+                return;
+            }
+
             lock (lockObj)
             {
                 if (index == ASN1.BACNET_ARRAY_ALL)
@@ -290,6 +302,14 @@ namespace BaCSharp
                 return;
             }
 
+            // Annex K interoperability asks for up to 255 special events; anything beyond that is a
+            // nonsensical request that would allocate unbounded memory while holding the device lock
+            if (newSize > 255)
+            {
+                ErrorCode_PropertyWrite = ErrorCodes.OutOfRange;
+                return;
+            }
+
             lock (lockObj)
             {
                 while (m_PROP_EXCEPTION_SCHEDULE.Count > newSize)
@@ -318,13 +338,16 @@ namespace BaCSharp
         {
             base.Post_NewtonSoft_Json_Deserialization(device);
 
-            // Json.NET restores integers as Int64/UInt64: narrow them back
+            // Json.NET restores numbers as Int64/UInt64/Double: narrow them back to what each
+            // value's tag says. The bare PV/Schedule_Default objects carry no tag of their own,
+            // so they follow the datatype of the scheduled values (12.24.13 expects one type).
             foreach (var day in m_PROP_WEEKLY_SCHEDULE)
-                NarrowJsonIntegers(day.DaySchedule);
+                NarrowJsonNumbers(day.DaySchedule);
             foreach (var specialEvent in m_PROP_EXCEPTION_SCHEDULE)
-                NarrowJsonIntegers(specialEvent.ListOfTimeValues);
-            m_PROP_PRESENT_VALUE = NarrowJsonInteger(m_PROP_PRESENT_VALUE);
-            m_PROP_SCHEDULE_DEFAULT = NarrowJsonInteger(m_PROP_SCHEDULE_DEFAULT);
+                NarrowJsonNumbers(specialEvent.ListOfTimeValues);
+            var scheduledTag = ScheduledValueTag();
+            m_PROP_PRESENT_VALUE = NarrowJsonNumber(m_PROP_PRESENT_VALUE, scheduledTag);
+            m_PROP_SCHEDULE_DEFAULT = NarrowJsonNumber(m_PROP_SCHEDULE_DEFAULT, scheduledTag);
 
             Recalculate();
         }
@@ -377,7 +400,7 @@ namespace BaCSharp
             {
                 tmrId++; // invalidate a pending timer callback; we arm a fresh one below
 
-                if (Mydevice == null)
+                if (disposed || Mydevice == null)
                     return;
 
                 m_PROP_STATUS_FLAGS.SetBit((byte)1, !HasConsistentDatatypes()); // FAULT
@@ -402,6 +425,7 @@ namespace BaCSharp
                 if (delay < TimeSpan.FromMilliseconds(100))
                     delay = TimeSpan.FromMilliseconds(100);
 
+                tmr?.Dispose();
                 tmr = new Timer(TimerFired, tmrId, delay, Timeout.InfiniteTimeSpan);
             }
 
@@ -413,6 +437,7 @@ namespace BaCSharp
         }
 
         Timer tmr;
+        bool disposed;
         private void TimerFired(object state)
         {
             lock (lockObj)
@@ -484,7 +509,14 @@ namespace BaCSharp
         {
             OnExternalCOVNotify -= OnDeviceObjectChanged;
             lock (lockObj)
-                tmrId++; // invalidate any pending timer callback; the object is going away
+            {
+                // the disposed flag stops a timer callback that already passed its tmrId check
+                // from re-arming through Recalculate
+                disposed = true;
+                tmrId++;
+                tmr?.Dispose();
+                tmr = null;
+            }
         }
 
         private bool HasConsistentDatatypes()
@@ -525,24 +557,49 @@ namespace BaCSharp
             return new BacnetDateRange(BacnetDate.Any, BacnetDate.Any);
         }
 
-        private static void NarrowJsonIntegers(List<BacnetTimeValue> timeValues)
+        private static void NarrowJsonNumbers(List<BacnetTimeValue> timeValues)
         {
             for (var i = 0; i < timeValues.Count; i++)
             {
                 var timeValue = timeValues[i];
-                var narrowed = NarrowJsonInteger(timeValue.Value.Value);
+                var narrowed = NarrowJsonNumber(timeValue.Value.Value, timeValue.Value.Tag);
                 if (!ReferenceEquals(narrowed, timeValue.Value.Value))
                     timeValues[i] = new BacnetTimeValue(timeValue.Time, new BacnetValue(timeValue.Value.Tag, narrowed));
             }
         }
 
-        private static object NarrowJsonInteger(object value)
+        private static object NarrowJsonNumber(object value, BacnetApplicationTags tag)
         {
-            if (value is Int64 signed)
-                return Convert.ToInt32(signed);
-            if (value is UInt64 unsigned)
-                return Convert.ToUInt32(unsigned);
-            return value;
+            if (!(value is Int64) && !(value is UInt64) && !(value is double))
+                return value;
+
+            switch (tag)
+            {
+                case BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT:
+                case BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED:
+                    return Convert.ToUInt32(value);
+                case BacnetApplicationTags.BACNET_APPLICATION_TAG_SIGNED_INT:
+                    return Convert.ToInt32(value);
+                case BacnetApplicationTags.BACNET_APPLICATION_TAG_REAL:
+                    return Convert.ToSingle(value);
+                case BacnetApplicationTags.BACNET_APPLICATION_TAG_DOUBLE:
+                    return Convert.ToDouble(value);
+                default:
+                    return value;
+            }
+        }
+
+        private BacnetApplicationTags ScheduledValueTag()
+        {
+            foreach (var day in m_PROP_WEEKLY_SCHEDULE)
+                foreach (var timeValue in day.DaySchedule)
+                    if (timeValue.Value.Tag != BacnetApplicationTags.BACNET_APPLICATION_TAG_NULL)
+                        return timeValue.Value.Tag;
+            foreach (var specialEvent in m_PROP_EXCEPTION_SCHEDULE)
+                foreach (var timeValue in specialEvent.ListOfTimeValues)
+                    if (timeValue.Value.Tag != BacnetApplicationTags.BACNET_APPLICATION_TAG_NULL)
+                        return timeValue.Value.Tag;
+            return BacnetApplicationTags.BACNET_APPLICATION_TAG_SIGNED_INT;
         }
     }
 }

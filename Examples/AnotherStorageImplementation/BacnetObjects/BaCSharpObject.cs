@@ -97,11 +97,16 @@ namespace BaCSharp
         //To get back the raw buffer for specific decoding if needed
         protected BacnetClient sender;
 
-        protected ErrorCodes ErrorCode_PropertyWrite;
+        // Both write side-channels are per-thread: WritePropertyValue assigns them before every
+        // set2_ dispatch, and e.g. a Schedule pushing its Present_Value from a timer thread must
+        // not clobber the state of a network write running concurrently on another object.
+        [ThreadStatic]
+        protected static ErrorCodes ErrorCode_PropertyWrite;
 
         // The array index of the WriteProperty in progress (BACNET_ARRAY_ALL when absent), for
         // set2_ methods of array properties - same side-channel idea as ErrorCode_PropertyWrite
-        protected uint ArrayIndex_PropertyWrite = System.IO.BACnet.Serialize.ASN1.BACNET_ARRAY_ALL;
+        [ThreadStatic]
+        protected static uint ArrayIndex_PropertyWrite;
 
         // Shared by set2_ writers of typed lists: every element must hold a T, anything else is
         // reported as INVALID_DATA_TYPE
