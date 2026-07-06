@@ -142,9 +142,13 @@ Exception_Schedule, Date_List), which replaces two old types that did not match 
   `IsAFittingDate` now implements the week-of-month octet (values 1-9) the old type ignored.
   The byte-based constructor `(day, month, week)` keeps its shape.
 
+- **`BacnetDeviceObjectPropertyReference.deviceIndentifier` → `deviceIdentifier`.** The misspelled
+  public field and the constructor parameter of the same name lost the typo; behavior is unchanged.
+
 - **`BacnetDate.toDateTime()` → `ToDateTime()`**, which now returns the `new DateTime(1, 1, 1)`
   wildcard sentinel for unrepresentable dates instead of `DateTime.Now`, and understands day 32
-  ("last day of the month").
+  ("last day of the month"). The periodic day specials 33/34 ("odd/even days") yield the sentinel
+  and are evaluated by `IsAFittingDate`.
 
 - Values decoded from `PROP_WEEKLY_SCHEDULE` and `PROP_EXCEPTION_SCHEDULE` now carry the dedicated
   application tags (`..._WEEKLY_SCHEDULE`, `..._SPECIAL_EVENT`) and typed objects

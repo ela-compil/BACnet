@@ -22,6 +22,8 @@ See [MIGRATION.md](MIGRATION.md) for upgrade guidance.
   actually evaluated), `BacnetDate.toDateTime()` → `ToDateTime()`. Decoded `Date_List`,
   `Weekly_Schedule` and `Exception_Schedule` values now carry dedicated application tags and typed
   objects instead of the opaque `CONTEXT_SPECIFIC_DECODED` shapes.
+- **`BacnetDeviceObjectPropertyReference`**: the misspelled public field `deviceIndentifier` is now
+  `deviceIdentifier` (the constructor parameter included).
 
 ### Added
 - Multi-targeting: `net48;netstandard2.0;net8.0;net10.0`.
