@@ -157,6 +157,7 @@ public class DateTimeWildcardTests
     [InlineData(new byte[] { 0xA4, 0xFF, 13, 32, 0xFF })]  // last day of every odd month, any year
     [InlineData(new byte[] { 0xA4, 126, 7, 0xFF, 0xFF })]  // any day of July 2026
     [InlineData(new byte[] { 0xA4, 126, 2, 30, 0xFF })]    // invalid calendar date (Feb 30)
+    [InlineData(new byte[] { 0xA4, 126, 7, 33, 0xFF })]    // odd days of July 2026 (day special 33)
     public void Unrepresentable_date_value_survives_per_octet_and_round_trips(byte[] wire)
     {
         var value = ApplicationValue.Decode(wire);

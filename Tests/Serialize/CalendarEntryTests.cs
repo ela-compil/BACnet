@@ -182,4 +182,54 @@ public class CalendarEntryTests
         Assert.True(until2026.IsAFittingDate(new DateTime(1990, 5, 5)));
         Assert.False(until2026.IsAFittingDate(new DateTime(2027, 1, 1)));
     }
+
+    [Theory]
+    [InlineData(33, 5, true)]   // day 33 = odd days of the month (135-2016 20.2.12)
+    [InlineData(33, 6, false)]
+    [InlineData(34, 6, true)]   // day 34 = even days of the month
+    [InlineData(34, 5, false)]
+    public void Day_specials_33_and_34_match_odd_and_even_days(byte day, int dayOfMonth, bool fits)
+    {
+        var pattern = new BacnetDate(255, 255, day);
+
+        Assert.Equal(fits, pattern.IsAFittingDate(new DateTime(2026, 7, dayOfMonth)));
+    }
+
+    [Theory]
+    [InlineData(33)]
+    [InlineData(34)]
+    public void Day_specials_33_and_34_are_periodic(byte day)
+    {
+        var date = new BacnetDate(126, 7, day);
+
+        Assert.True(date.IsPeriodic);
+        Assert.Equal(new DateTime(1, 1, 1), date.ToDateTime());
+    }
+
+    [Fact]
+    public void Truncated_date_range_entry_decodes_to_minus_one()
+    {
+        // opening tag [1] and the first Date application tag, but the buffer ends mid-date
+        var wire = new byte[] { 0x1E, 0xA4, 0x7E, 0x01, 0x01 };
+
+        Assert.Equal(-1, new BacnetCalendarEntry().Decode(wire, 0, (uint)wire.Length));
+    }
+
+    [Fact]
+    public void Extended_tag_number_entry_decodes_to_minus_one()
+    {
+        Assert.Equal(-1, new BacnetCalendarEntry().Decode(new byte[] { 0xF8 }, 0, 1));
+    }
+
+    [Fact]
+    public void Date_decode_rejects_a_truncated_buffer()
+    {
+        Assert.Equal(-1, new BacnetDate().Decode(new byte[] { 0x7E, 0x07 }, 0, 2));
+    }
+
+    [Fact]
+    public void Date_range_decode_rejects_a_truncated_buffer()
+    {
+        Assert.Equal(-1, new BacnetDateRange().Decode(new byte[] { 0xA4, 0x7E, 0x07, 0x05 }, 0, 4));
+    }
 }

@@ -60,7 +60,7 @@ public class BacnetCalendarEntry : ASN1.IEncode, ASN1.IDecode
     /// </summary>
     public int Decode(byte[] buffer, int offset, uint count)
     {
-        if (offset >= count)
+        if (offset >= count || ASN1.IS_EXTENDED_TAG_NUMBER(buffer[offset]))
             return -1;
 
         Date = null;

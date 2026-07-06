@@ -24,7 +24,10 @@ public struct BacnetDateRange : ASN1.IEncode, ASN1.IDecode
 
     public int Decode(byte[] buffer, int offset, uint count)
     {
-        var len = 1; // opening tag
+        if (offset + 10 > count)
+            return -1;
+
+        var len = 1; // skip the Date application tag
         len += startDate.Decode(buffer, offset + len, count);
         len++;
         len += endDate.Decode(buffer, offset + len, count);
