@@ -444,11 +444,27 @@ public class ASN1
                 break;
 
             case BacnetApplicationTags.BACNET_APPLICATION_TAG_DATE:
-                encode_application_date(buffer, (DateTime)value.Value);
+                if (value.Value is BacnetDate bacnetDate) // per-octet date pattern
+                {
+                    encode_tag(buffer, (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_DATE, false, 4);
+                    bacnetDate.Encode(buffer);
+                }
+                else
+                {
+                    encode_application_date(buffer, (DateTime)value.Value);
+                }
                 break;
 
             case BacnetApplicationTags.BACNET_APPLICATION_TAG_TIME:
-                encode_application_time(buffer, (DateTime)value.Value);
+                if (value.Value is BacnetTime bacnetTime) // per-octet partially-wildcarded time
+                {
+                    encode_tag(buffer, (byte)BacnetApplicationTags.BACNET_APPLICATION_TAG_TIME, false, 4);
+                    bacnetTime.Encode(buffer);
+                }
+                else
+                {
+                    encode_application_time(buffer, (DateTime)value.Value);
+                }
                 break;
             // Added for EventTimeStamp
             case BacnetApplicationTags.BACNET_APPLICATION_TAG_TIMESTAMP:
@@ -1944,13 +1960,34 @@ public class ASN1
                 break;
 
             case BacnetApplicationTags.BACNET_APPLICATION_TAG_DATE:
-                len = decode_date_safe(buffer, offset, lenValueType, out var dateValue);
-                value.Value = dateValue;
+                if (lenValueType == 4 && offset + 4 <= buffer.Length && IsUnrepresentableDate(buffer, offset))
+                {
+                    // date patterns (any-year, odd/even month, last day, ...) cannot live in a
+                    // DateTime: keep them per-octet so the value round-trips losslessly
+                    var patternDate = new BacnetDate();
+                    len = patternDate.Decode(buffer, offset, (uint)(offset + 4));
+                    value.Value = patternDate;
+                }
+                else
+                {
+                    len = decode_date_safe(buffer, offset, lenValueType, out var dateValue);
+                    value.Value = dateValue;
+                }
                 break;
 
             case BacnetApplicationTags.BACNET_APPLICATION_TAG_TIME:
-                len = decode_bacnet_time_safe(buffer, offset, lenValueType, out var timeValue);
-                value.Value = timeValue;
+                if (lenValueType == 4 && offset + 4 <= buffer.Length && IsPartiallyUnspecifiedTime(buffer, offset))
+                {
+                    // partially-wildcarded times used to clamp to zero; keep them per-octet instead
+                    var partialTime = new BacnetTime();
+                    len = partialTime.Decode(buffer, offset, (uint)(offset + 4));
+                    value.Value = partialTime;
+                }
+                else
+                {
+                    len = decode_bacnet_time_safe(buffer, offset, lenValueType, out var timeValue);
+                    value.Value = timeValue;
+                }
                 break;
 
             case BacnetApplicationTags.BACNET_APPLICATION_TAG_OBJECT_ID:
@@ -1960,6 +1997,35 @@ public class ASN1
         }
 
         return len;
+    }
+
+    // a fully-wildcarded time keeps its DateTime marker and a fully-specified one fits a DateTime;
+    // everything in between is only representable per-octet (135 §20.2.13)
+    private static bool IsPartiallyUnspecifiedTime(byte[] buffer, int offset)
+    {
+        byte hour = buffer[offset], minute = buffer[offset + 1], second = buffer[offset + 2], hundredths = buffer[offset + 3];
+
+        if (hour == 0xFF && minute == 0xFF && second == 0xFF && hundredths == 0xFF)
+            return false;
+
+        return hour > 23 || minute > 59 || second > 59 || hundredths > 99;
+    }
+
+    // the all-FF 'any date' keeps its DateTime(1,1,1) sentinel (which re-encodes as the wildcard)
+    // and specific dates fit a DateTime; patterns and invalid calendar dates stay per-octet.
+    // An unspecified day-of-week octet on an otherwise specific date still counts as a DateTime:
+    // the weekday of a specific date is redundant and gets normalized on re-encode (135 §20.2.12)
+    private static bool IsUnrepresentableDate(byte[] buffer, int offset)
+    {
+        byte year = buffer[offset], month = buffer[offset + 1], day = buffer[offset + 2], wday = buffer[offset + 3];
+
+        if (year == 0xFF && month == 0xFF && day == 0xFF && wday == 0xFF)
+            return false;
+
+        if (year == 0xFF || month < 1 || month > 12 || day < 1)
+            return true;
+
+        return day > DateTime.DaysInMonth(1900 + year, month);
     }
 
     /* returns the fixed tag type for certain context tagged properties */
@@ -2140,6 +2206,20 @@ public class ASN1
         /* FIXME: use max_apdu_len! */
         if (!IS_CONTEXT_SPECIFIC(buffer[offset]))
         {
+            // Effective_Period is one BACnetDateRange serialized as two application-tagged dates
+            // (0xA4 = the DATE tag): decode it as the typed value so date patterns and open
+            // (wildcarded) boundaries survive a read/write round-trip
+            if (propertyId == BacnetPropertyIds.PROP_EFFECTIVE_PERIOD &&
+                offset + 10 <= maxOffset && buffer[offset] == 0xA4 && buffer[offset + 5] == 0xA4)
+            {
+                var dateRange = new BacnetDateRange();
+                var rangeLen = dateRange.Decode(buffer, offset, (uint)maxOffset);
+                if (rangeLen < 0) return -1;
+                value.Tag = BacnetApplicationTags.BACNET_APPLICATION_TAG_DATERANGE;
+                value.Value = dateRange;
+                return rangeLen;
+            }
+
             var tagLen = decode_tag_number_and_value(buffer, offset, out BacnetApplicationTags tagNumber, out uint lenValueType);
             if (tagLen > 0)
             {

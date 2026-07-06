@@ -72,9 +72,17 @@ See [MIGRATION.md](MIGRATION.md) for upgrade guidance.
   `BacnetGenericTime.Tag`/`Sequence` are now populated on decode.
 - Partially-wildcarded Date and Time values no longer throw during decode (#103): any octet may
   individually be X'FF' (unspecified) and Date carries special values (odd/even month, last day —
-  ASHRAE 135 §20.2.12/§20.2.13). Wildcarded time components are clamped to zero and unrepresentable
-  dates degrade to `DateTime.MinValue`, matching YABE's behaviour; previously the exception was
-  swallowed upstream, e.g. silently dropping event notifications stamped with a wildcarded time.
+  ASHRAE 135 §20.2.12/§20.2.13); previously the exception was swallowed upstream, e.g. silently
+  dropping event notifications stamped with a wildcarded time. Such values are also **lossless**
+  now: a decoded `BacnetValue` carries the new per-octet `BacnetTime` (or the existing
+  `BacnetDate`) whenever the octets cannot be represented faithfully as a `DateTime`, and both
+  re-encode byte-identically. Fully-specified values keep coming back as `DateTime`; only the
+  date/time *merging* decodes (BACnetDateTime, timestamps, log records) still clamp unspecified
+  components, as a merged `DateTime` cannot carry them.
+- `PROP_EFFECTIVE_PERIOD` decodes as one typed `BacnetDateRange` value instead of two bare
+  `DateTime`s, so the open (wildcarded) boundaries of a Schedule's Effective_Period survive a
+  read/write round-trip. Writing either shape — the typed range or two application-tagged
+  dates — stays supported.
 - A TIME value of exactly midnight no longer encodes as the "any time" wildcard: `DateTime(1,1,1)`
   — which every decoded midnight is — used to double as the wildcard sentinel, so reading a 00:00
   time (or timestamp) and writing it back corrupted it to `FF FF FF FF`. The unspecified time now

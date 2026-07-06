@@ -53,6 +53,10 @@ public struct BacnetValue
             return BacnetApplicationTags.BACNET_APPLICATION_TAG_WEEKNDAY;
         if (t == typeof(BacnetDateRange))
             return BacnetApplicationTags.BACNET_APPLICATION_TAG_DATERANGE;
+        if (t == typeof(BacnetDate))
+            return BacnetApplicationTags.BACNET_APPLICATION_TAG_DATE;
+        if (t == typeof(BacnetTime))
+            return BacnetApplicationTags.BACNET_APPLICATION_TAG_TIME;
         if (t.IsEnum)
             return BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED;
 

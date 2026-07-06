@@ -171,3 +171,15 @@ plain midnight in both directions. Update any code that compared a decoded time 
 
 Combined date+time values (`BACnetDateTime`, datetime timestamps, log-record stamps) cannot carry
 an unspecified time and keep degrading it to 00:00 on decode, as before.
+
+**Partially**-wildcarded values are kept per-octet instead of being clamped: a decoded TIME whose
+octets cannot be represented faithfully as a `DateTime` (e.g. `11:22:**.**`) comes back as the new
+`BacnetTime` struct, and an unrepresentable DATE (patterns like "last day of every odd month", or
+invalid calendar dates) comes back as the existing `BacnetDate` struct — both under their usual
+`..._TAG_TIME`/`..._TAG_DATE` application tags, and both re-encode byte-identically. Code that
+unconditionally cast such values to `DateTime` must handle the struct forms; fully-specified
+values are unaffected.
+
+`PROP_EFFECTIVE_PERIOD` now decodes as **one `BacnetValue` holding a `BacnetDateRange`** (tag
+`..._TAG_DATERANGE`) instead of two `DateTime` values, so open boundaries survive round-trips.
+Writes accept both the typed range and the legacy two-date shape.
