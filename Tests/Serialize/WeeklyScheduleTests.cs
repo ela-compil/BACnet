@@ -18,7 +18,7 @@ public class WeeklyScheduleTests
     });
 
     [Fact]
-    public void Daily_schedule_with_one_time_value_encodes_golden_bytes()
+    public void Daily_schedule_with_one_time_value_encodes_the_expected_wire_bytes()
     {
         var buffer = new EncodeBuffer();
         ASN1.bacapp_encode_application_data(buffer, new BacnetValue(OneEntryDay()));

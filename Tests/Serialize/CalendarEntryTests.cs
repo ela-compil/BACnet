@@ -12,7 +12,7 @@ namespace System.IO.BACnet.Tests;
 public class CalendarEntryTests
 {
     [Fact]
-    public void Date_choice_encodes_primitive_context_tag_golden_bytes()
+    public void Date_choice_encodes_as_a_primitive_context_tag()
     {
         var buffer = new EncodeBuffer();
         new BacnetCalendarEntry(new BacnetDate(126, 7, 5, 7)).Encode(buffer); // 2026-07-05, a Sunday
@@ -21,7 +21,7 @@ public class CalendarEntryTests
     }
 
     [Fact]
-    public void Week_n_day_choice_encodes_primitive_context_tag_golden_bytes()
+    public void Week_n_day_choice_encodes_as_a_primitive_context_tag()
     {
         var buffer = new EncodeBuffer();
         new BacnetCalendarEntry(new BacnetWeekNDay(
@@ -32,7 +32,7 @@ public class CalendarEntryTests
     }
 
     [Fact]
-    public void Date_range_choice_encodes_constructed_golden_bytes()
+    public void Date_range_choice_encodes_as_a_constructed_value()
     {
         var buffer = new EncodeBuffer();
         new BacnetCalendarEntry(new BacnetDateRange(

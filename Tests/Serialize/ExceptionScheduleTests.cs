@@ -14,7 +14,7 @@ public class ExceptionScheduleTests
     private static readonly BacnetAddress DummyAddress = new BacnetAddress(BacnetAddressTypes.None, 0, null);
 
     [Fact]
-    public void Special_event_with_date_period_encodes_golden_bytes()
+    public void Special_event_with_date_period_encodes_the_expected_wire_bytes()
     {
         var specialEvent = new BacnetSpecialEvent(
             new BacnetCalendarEntry(new BacnetDate(126, 7, 5, 7)), // 2026-07-05, a Sunday
@@ -38,7 +38,7 @@ public class ExceptionScheduleTests
     }
 
     [Fact]
-    public void Special_event_with_calendar_reference_encodes_golden_bytes()
+    public void Special_event_with_calendar_reference_encodes_the_expected_wire_bytes()
     {
         var specialEvent = new BacnetSpecialEvent(
             new BacnetObjectId(BacnetObjectTypes.OBJECT_CALENDAR, 1),
