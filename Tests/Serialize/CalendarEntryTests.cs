@@ -81,7 +81,7 @@ public class CalendarEntryTests
         var len = Services.DecodeReadPropertyAcknowledge(new BacnetAddress(BacnetAddressTypes.None, 0, null),
             bytes, 0, bytes.Length, out _, out _, out var values);
 
-        Assert.True(len > 0);
+        Assert.Equal(bytes.Length, len);
         Assert.Equal(3, values.Count);
         Assert.All(values, v => Assert.Equal(BacnetApplicationTags.BACNET_APPLICATION_TAG_CALENDAR_ENTRY, v.Tag));
         Assert.NotNull(((BacnetCalendarEntry)values[0].Value).Date);

@@ -94,7 +94,7 @@ public class WeeklyScheduleTests
         var len = Services.DecodeReadPropertyAcknowledge(new BacnetAddress(BacnetAddressTypes.None, 0, null),
             bytes, 0, bytes.Length, out var objectId, out var property, out var values);
 
-        Assert.True(len > 0);
+        Assert.Equal(bytes.Length, len);
         Assert.Equal(BacnetObjectTypes.OBJECT_SCHEDULE, objectId.type);
         Assert.Equal((uint)BacnetPropertyIds.PROP_WEEKLY_SCHEDULE, property.propertyIdentifier);
         Assert.Equal(7, values.Count);
@@ -139,7 +139,7 @@ public class WeeklyScheduleTests
         var len = Services.DecodeWriteProperty(new BacnetAddress(BacnetAddressTypes.None, 0, null),
             bytes, 0, bytes.Length, out var objectId, out var value);
 
-        Assert.True(len > 0);
+        Assert.Equal(bytes.Length, len);
         Assert.Equal(BacnetObjectTypes.OBJECT_SCHEDULE, objectId.type);
         Assert.Equal(7, value.value.Count);
         var tuesday = Assert.IsType<BacnetDailySchedule>(value.value[1].Value);
@@ -159,7 +159,7 @@ public class WeeklyScheduleTests
         var len = Services.DecodeReadPropertyAcknowledge(new BacnetAddress(BacnetAddressTypes.None, 0, null),
             bytes, 0, bytes.Length, out _, out var property, out var values);
 
-        Assert.True(len > 0);
+        Assert.Equal(bytes.Length, len);
         Assert.Equal(0u, property.propertyArrayIndex);
         var count = Assert.Single(values);
         Assert.Equal(BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT, count.Tag);
@@ -178,7 +178,7 @@ public class WeeklyScheduleTests
         var len = Services.DecodeReadPropertyAcknowledge(new BacnetAddress(BacnetAddressTypes.None, 0, null),
             bytes, 0, bytes.Length, out _, out var property, out var values);
 
-        Assert.True(len > 0);
+        Assert.Equal(bytes.Length, len);
         Assert.Equal(1u, property.propertyArrayIndex);
         var day = Assert.Single(values);
         Assert.IsType<BacnetDailySchedule>(day.Value);

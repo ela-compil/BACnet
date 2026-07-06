@@ -31,7 +31,7 @@ public class EffectivePeriodTests
         var len = Services.DecodeReadPropertyAcknowledge(DummyAddress, ackBytes, 0, ackBytes.Length,
             out _, out _, out var values);
 
-        Assert.True(len > 0);
+        Assert.Equal(ackBytes.Length, len);
         var value = Assert.Single(values);
         Assert.Equal(BacnetApplicationTags.BACNET_APPLICATION_TAG_DATERANGE, value.Tag);
         var range = Assert.IsType<BacnetDateRange>(value.Value);
@@ -89,7 +89,7 @@ public class EffectivePeriodTests
 
         var len = Services.DecodeWriteProperty(DummyAddress, bytes, 0, bytes.Length, out _, out var value);
 
-        Assert.True(len > 0);
+        Assert.Equal(bytes.Length, len);
         var range = Assert.IsType<BacnetDateRange>(Assert.Single(value.value).Value);
         Assert.Equal(new DateTime(2026, 1, 1), range.startDate.ToDateTime());
         Assert.Equal(new DateTime(2030, 12, 31), range.endDate.ToDateTime());

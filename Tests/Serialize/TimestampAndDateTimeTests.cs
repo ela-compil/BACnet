@@ -98,7 +98,7 @@ public class TimestampAndDateTimeTests
         var bytes = buffer.ToArray();
 
         var len = ASN1.decode_read_access_result(ApplicationValue.DummyAddress, bytes, 0, bytes.Length, out var decoded);
-        Assert.True(len > 0);
+        Assert.Equal(bytes.Length, len);
         return decoded.values[0].value;
     }
 

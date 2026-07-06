@@ -80,7 +80,7 @@ public class BacnetDeviceObjectPropertyReferenceTests
         var len = Services.DecodeReadPropertyAcknowledge(new BacnetAddress(BacnetAddressTypes.None, 0, null),
             ackBytes, 0, ackBytes.Length, out _, out _, out var values);
 
-        Assert.True(len > 0);
+        Assert.Equal(ackBytes.Length, len);
         Assert.Equal(2, values.Count);
         Assert.All(values, v => Assert.IsType<BacnetDeviceObjectPropertyReference>(v.Value));
 

@@ -116,7 +116,7 @@ public class ExceptionScheduleTests
 
         var len = Services.DecodeReadPropertyAcknowledge(DummyAddress, ackBytes, 0, ackBytes.Length,
             out _, out _, out var readValues);
-        Assert.True(len > 0);
+        Assert.Equal(ackBytes.Length, len);
         Assert.Equal(2, readValues.Count);
         Assert.All(readValues, v => Assert.Equal(BacnetApplicationTags.BACNET_APPLICATION_TAG_SPECIAL_EVENT, v.Tag));
 
@@ -127,7 +127,7 @@ public class ExceptionScheduleTests
 
         var writeLen = Services.DecodeWriteProperty(DummyAddress, writeBytes, 0, writeBytes.Length,
             out _, out var written);
-        Assert.True(writeLen > 0);
+        Assert.Equal(writeBytes.Length, writeLen);
         Assert.Equal(2, written.value.Count);
 
         var first = Assert.IsType<BacnetSpecialEvent>(written.value[0].Value);
