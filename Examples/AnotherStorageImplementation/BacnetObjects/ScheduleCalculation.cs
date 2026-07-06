@@ -13,6 +13,10 @@ namespace BaCSharp
     /// </summary>
     public static class ScheduleCalculation
     {
+        /// <param name="now">The moment to evaluate the schedule for.</param>
+        /// <param name="weeklySchedule">The seven Weekly_Schedule days, Monday first.</param>
+        /// <param name="exceptionSchedule">The Exception_Schedule events, in array order.</param>
+        /// <param name="effectivePeriod">The date range gating the whole object.</param>
         /// <param name="calendarPresentValue">Resolves a calendar-reference period to the referenced
         /// Calendar object's Present_Value; null when the object cannot be found.</param>
         public static BacnetValue? ComputePresentValue(
