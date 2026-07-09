@@ -421,16 +421,32 @@ public class Services
     }
 
     // by Christopher Günter
-    public static void EncodeCreateProperty(EncodeBuffer buffer, BacnetObjectId objectId, ICollection<BacnetPropertyValue> valueList)
+    public static void EncodeCreateObject(EncodeBuffer buffer, BacnetObjectId objectId, ICollection<BacnetPropertyValue> valueList)
     {
-        /* Tag 1: sequence of WriteAccessSpecification */
+        /* Tag 0: objectSpecifier - choice [1] objectIdentifier */
         ASN1.encode_opening_tag(buffer, 0);
         ASN1.encode_context_object_id(buffer, 1, objectId.type, objectId.instance);
         ASN1.encode_closing_tag(buffer, 0);
 
+        EncodeListOfInitialValues(buffer, valueList);
+    }
+
+    public static void EncodeCreateObject(EncodeBuffer buffer, BacnetObjectTypes objectType, ICollection<BacnetPropertyValue> valueList)
+    {
+        /* Tag 0: objectSpecifier - choice [0] objectType, the device assigns the instance number */
+        ASN1.encode_opening_tag(buffer, 0);
+        ASN1.encode_context_enumerated(buffer, 0, (uint)objectType);
+        ASN1.encode_closing_tag(buffer, 0);
+
+        EncodeListOfInitialValues(buffer, valueList);
+    }
+
+    private static void EncodeListOfInitialValues(EncodeBuffer buffer, ICollection<BacnetPropertyValue> valueList)
+    {
         if (valueList == null)
             return;
 
+        /* Tag 1: listOfInitialValues - sequence of BACnetPropertyValue */
         ASN1.encode_opening_tag(buffer, 1);
 
         foreach (var pValue in valueList)
@@ -2505,6 +2521,11 @@ public class Services
         valuesRefs = _values;
 
         return len;
+    }
+
+    public static void EncodeDeleteObject(EncodeBuffer buffer, BacnetObjectId objectId)
+    {
+        ASN1.encode_application_object_id(buffer, objectId.type, objectId.instance);
     }
 
     public static int DecodeDeleteObject(byte[] buffer, int offset, int apduLen, out BacnetObjectId objectId)

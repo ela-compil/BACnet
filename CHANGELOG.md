@@ -24,6 +24,9 @@ See [MIGRATION.md](MIGRATION.md) for upgrade guidance.
   objects instead of the opaque `CONTEXT_SPECIFIC_DECODED` shapes.
 - **`BacnetDeviceObjectPropertyReference`**: the misspelled public field `deviceIndentifier` is now
   `deviceIdentifier` (the constructor parameter included).
+- **`Services.EncodeCreateProperty` → `EncodeCreateObject`**: the encoder was misnamed - it encodes
+  a CreateObject-Request (BACnet has no CreateProperty service). Same signature; the `BacnetClient`
+  request methods are unaffected.
 
 ### Added
 - Multi-targeting: `net48;netstandard2.0;net8.0;net10.0`.
@@ -34,7 +37,10 @@ See [MIGRATION.md](MIGRATION.md) for upgrade guidance.
   including segmented responses, under a 1500-byte MTU instead of relying on IP fragmentation).
 - CI: multi-OS build matrix; tag-triggered publish to both nuget.org (Trusted Publishing) and GitHub Packages.
 - Runnable sample projects moved in-repo under `Examples/` and built in CI.
-- ASHRAE 135 Annex F golden-vector encode/decode tests.
+- ASHRAE 135 Annex F golden-vector encode/decode tests - complete: all 62 Annex F example
+  encodings are asserted byte-for-byte.
+- `Services.EncodeCreateObject` overload taking a `BacnetObjectTypes` (CreateObject by object type,
+  the device assigns the instance number) and `Services.EncodeDeleteObject`.
 - PrivateTransfer send/receive support in `BacnetClient` (#154): `PrivateTransferRequest`,
   `SendUnconfirmedPrivateTransfer`, the `OnPrivateTransfer` event, and the
   `PrivateTransferResponse` / `PrivateTransferErrorResponse` replies (ASHRAE 135 clauses 16.2/16.3).

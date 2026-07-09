@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO.BACnet.Serialize;
+using System.Linq;
 using Xunit;
 
 namespace System.IO.BACnet.Tests;
@@ -14,6 +15,7 @@ public class AshraeAnnexF3Tests
     private static readonly BacnetObjectId Ai16 = new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 16);
     private const uint PresentValue = (uint)BacnetPropertyIds.PROP_PRESENT_VALUE;
     private const uint Reliability = (uint)BacnetPropertyIds.PROP_RELIABILITY;
+    private const uint Description = (uint)BacnetPropertyIds.PROP_DESCRIPTION;
 
     [Fact] // F.3.5 - ReadProperty request
     public void F_3_5_ReadProperty_request()
@@ -163,6 +165,37 @@ public class AshraeAnnexF3Tests
         Assert.Equal(new byte[] { 0x20, 0x01, 0x10 }, buffer.ToArray());
     }
 
+    [Fact] // F.3.3 - CreateObject request (File object by type, the device assigns the instance)
+    public void F_3_3_CreateObject_request()
+    {
+        var buffer = new EncodeBuffer();
+        APDU.EncodeConfirmedServiceRequest(buffer, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST,
+            BacnetConfirmedServices.SERVICE_CONFIRMED_CREATE_OBJECT, BacnetMaxSegments.MAX_SEG0, BacnetMaxAdpu.MAX_APDU1024, 86);
+        Services.EncodeCreateObject(buffer, BacnetObjectTypes.OBJECT_FILE, new List<BacnetPropertyValue>
+        {
+            new BacnetPropertyValue
+            {
+                property = new BacnetPropertyReference(BacnetPropertyIds.PROP_OBJECT_NAME),
+                value = new List<BacnetValue> { new BacnetValue("Trend 1") }
+            },
+            new BacnetPropertyValue
+            {
+                property = new BacnetPropertyReference(BacnetPropertyIds.PROP_FILE_ACCESS_METHOD),
+                value = new List<BacnetValue>
+                {
+                    new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED,
+                        (uint)BacnetFileAccessMethod.RECORD_ACCESS)
+                }
+            }
+        });
+
+        Assert.Equal(new byte[]
+        {
+            0x00, 0x04, 0x56, 0x0A, 0x0E, 0x09, 0x0A, 0x0F, 0x1E, 0x09, 0x4D, 0x2E, 0x75, 0x08, 0x00, 0x54, 0x72,
+            0x65, 0x6E, 0x64, 0x20, 0x31, 0x2F, 0x09, 0x29, 0x2E, 0x91, 0x00, 0x2F, 0x1F
+        }, buffer.ToArray());
+    }
+
     [Fact] // F.3.3 - CreateObject complex-ack (AnalogValue#13)
     public void F_3_3_CreateObject_ack()
     {
@@ -172,6 +205,17 @@ public class AshraeAnnexF3Tests
         Services.EncodeCreateObjectAcknowledge(buffer, new BacnetObjectId(BacnetObjectTypes.OBJECT_FILE, 13));
 
         Assert.Equal(new byte[] { 0x30, 0x56, 0x0A, 0xC4, 0x02, 0x80, 0x00, 0x0D }, buffer.ToArray());
+    }
+
+    [Fact] // F.3.4 - DeleteObject request (Group#6)
+    public void F_3_4_DeleteObject_request()
+    {
+        var buffer = new EncodeBuffer();
+        APDU.EncodeConfirmedServiceRequest(buffer, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST,
+            BacnetConfirmedServices.SERVICE_CONFIRMED_DELETE_OBJECT, BacnetMaxSegments.MAX_SEG0, BacnetMaxAdpu.MAX_APDU1024, 87);
+        Services.EncodeDeleteObject(buffer, new BacnetObjectId(BacnetObjectTypes.OBJECT_GROUP, 6));
+
+        Assert.Equal(new byte[] { 0x00, 0x04, 0x57, 0x0B, 0xC4, 0x02, 0xC0, 0x00, 0x06 }, buffer.ToArray());
     }
 
     [Fact] // F.3.4 - DeleteObject simple-ack
@@ -184,6 +228,41 @@ public class AshraeAnnexF3Tests
         Assert.Equal(new byte[] { 0x20, 0x57, 0x0B }, buffer.ToArray());
     }
 
+    [Fact] // F.3.4 - DeleteObject error (Group#7 is protected: object / object-deletion-not-permitted)
+    public void F_3_4_DeleteObject_error()
+    {
+        var buffer = new EncodeBuffer();
+        APDU.EncodeError(buffer, BacnetPduTypes.PDU_TYPE_ERROR,
+            BacnetConfirmedServices.SERVICE_CONFIRMED_DELETE_OBJECT, 88);
+        Services.EncodeError(buffer, BacnetErrorClasses.ERROR_CLASS_OBJECT,
+            BacnetErrorCodes.ERROR_CODE_OBJECT_DELETION_NOT_PERMITTED);
+
+        Assert.Equal(new byte[] { 0x50, 0x58, 0x0B, 0x91, 0x01, 0x91, 0x17 }, buffer.ToArray());
+    }
+
+    // List_Of_Group_Members holds ReadAccessSpecifications (object-id [0] + property references [1])
+    private static BacnetValue GroupMember(uint instance, params uint[] propertyIds) =>
+        new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_READ_ACCESS_SPECIFICATION,
+            new BacnetReadAccessSpecification(new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, instance),
+                propertyIds.Select(id => new BacnetPropertyReference(id)).ToList()));
+
+    [Fact] // F.3.1 - AddListElement request (add AI#15 to Group#3 List_Of_Group_Members)
+    public void F_3_1_AddListElement_request()
+    {
+        var buffer = new EncodeBuffer();
+        APDU.EncodeConfirmedServiceRequest(buffer, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST,
+            BacnetConfirmedServices.SERVICE_CONFIRMED_ADD_LIST_ELEMENT, BacnetMaxSegments.MAX_SEG0, BacnetMaxAdpu.MAX_APDU206, 1);
+        Services.EncodeAddListElement(buffer, new BacnetObjectId(BacnetObjectTypes.OBJECT_GROUP, 3),
+            (uint)BacnetPropertyIds.PROP_LIST_OF_GROUP_MEMBERS, ASN1.BACNET_ARRAY_ALL,
+            new List<BacnetValue> { GroupMember(15, PresentValue, Reliability) });
+
+        Assert.Equal(new byte[]
+        {
+            0x00, 0x02, 0x01, 0x08, 0x0C, 0x02, 0xC0, 0x00, 0x03, 0x19, 0x35, 0x3E, 0x0C, 0x00, 0x00, 0x00, 0x0F,
+            0x1E, 0x09, 0x55, 0x09, 0x67, 0x1F, 0x3F
+        }, buffer.ToArray());
+    }
+
     [Fact] // F.3.1 - AddListElement simple-ack
     public void F_3_1_AddListElement_ack()
     {
@@ -192,6 +271,28 @@ public class AshraeAnnexF3Tests
             BacnetConfirmedServices.SERVICE_CONFIRMED_ADD_LIST_ELEMENT, 1);
 
         Assert.Equal(new byte[] { 0x20, 0x01, 0x08 }, buffer.ToArray());
+    }
+
+    [Fact] // F.3.2 - RemoveListElement request (remove AI#12 and AI#13 from Group#3 List_Of_Group_Members)
+    public void F_3_2_RemoveListElement_request()
+    {
+        var buffer = new EncodeBuffer();
+        APDU.EncodeConfirmedServiceRequest(buffer, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST,
+            BacnetConfirmedServices.SERVICE_CONFIRMED_REMOVE_LIST_ELEMENT, BacnetMaxSegments.MAX_SEG0, BacnetMaxAdpu.MAX_APDU206, 52);
+        // Add/RemoveListElement share the same request production, so both use the one encoder
+        Services.EncodeAddListElement(buffer, new BacnetObjectId(BacnetObjectTypes.OBJECT_GROUP, 3),
+            (uint)BacnetPropertyIds.PROP_LIST_OF_GROUP_MEMBERS, ASN1.BACNET_ARRAY_ALL, new List<BacnetValue>
+            {
+                GroupMember(12, PresentValue, Reliability, Description),
+                GroupMember(13, PresentValue, Reliability, Description)
+            });
+
+        Assert.Equal(new byte[]
+        {
+            0x00, 0x02, 0x34, 0x09, 0x0C, 0x02, 0xC0, 0x00, 0x03, 0x19, 0x35, 0x3E,
+            0x0C, 0x00, 0x00, 0x00, 0x0C, 0x1E, 0x09, 0x55, 0x09, 0x67, 0x09, 0x1C, 0x1F,
+            0x0C, 0x00, 0x00, 0x00, 0x0D, 0x1E, 0x09, 0x55, 0x09, 0x67, 0x09, 0x1C, 0x1F, 0x3F
+        }, buffer.ToArray());
     }
 
     [Fact] // F.3.2 - RemoveListElement simple-ack
