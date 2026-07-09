@@ -194,3 +194,18 @@ come back as an unsigned. Timestamps whose time octets are partially wildcarded 
 original octets via the new `BacnetGenericTime.PartialTime` while `Time` keeps the familiar
 best-effort clamped value, and a wildcarded Date+Time property pair merges into the new
 `BacnetDateTime` struct instead of a clamped `DateTime`.
+
+## `Services.EncodeCreateProperty` → `EncodeCreateObject`
+
+This low-level encoder was misnamed: it encodes a **CreateObject-Request** (BACnet has no
+CreateProperty service). It keeps its signature under the correct name:
+
+```diff
+- Services.EncodeCreateProperty(buffer, objectId, values);
++ Services.EncodeCreateObject(buffer, objectId, values);
+```
+
+It also gains an overload taking a `BacnetObjectTypes`, encoding the request's objectType choice
+("create an object of this type, the device assigns the instance number"), and DeleteObject gets
+its counterpart `Services.EncodeDeleteObject`. The `BacnetClient` request methods
+(`CreateObjectRequest`, `DeleteObjectRequest` and their `Begin`/`End` forms) are unchanged.
