@@ -2115,7 +2115,7 @@ public class BacnetClient : IDisposable
 
         NPDU.Encode(buffer, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply, adr.RoutedSource, adr.RoutedDestination);
         APDU.EncodeConfirmedServiceRequest(buffer, PduConfirmedServiceRequest(), BacnetConfirmedServices.SERVICE_CONFIRMED_CREATE_OBJECT, MaxSegments, Transport.MaxAdpuLength, invokeId);
-        Services.EncodeCreateProperty(buffer, objectId, valueList);
+        Services.EncodeCreateObject(buffer, objectId, valueList);
 
         //send
         var ret = new BacnetAsyncResult(this, adr, invokeId, buffer.buffer, buffer.offset - Transport.HeaderLength, waitForTransmit, TransmitTimeout);
@@ -2166,7 +2166,7 @@ public class BacnetClient : IDisposable
         //NPDU.Encode(b, BacnetNpduControls.PriorityNormalMessage | BacnetNpduControls.ExpectingReply , adr.RoutedSource);
 
         APDU.EncodeConfirmedServiceRequest(buffer, BacnetPduTypes.PDU_TYPE_CONFIRMED_SERVICE_REQUEST, BacnetConfirmedServices.SERVICE_CONFIRMED_DELETE_OBJECT, MaxSegments, Transport.MaxAdpuLength, invokeId);
-        ASN1.encode_application_object_id(buffer, objectId.type, objectId.instance);
+        Services.EncodeDeleteObject(buffer, objectId);
 
         //send
         var ret = new BacnetAsyncResult(this, adr, invokeId, buffer.buffer, buffer.offset - Transport.HeaderLength, waitForTransmit, TransmitTimeout);
