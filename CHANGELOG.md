@@ -58,6 +58,10 @@ See [MIGRATION.md](MIGRATION.md) for upgrade guidance.
 - SharpPcap bumped 4.x → 6.x in `BACnet.Ethernet` (drops the vulnerable transitive log4net).
 
 ### Fixed
+- `Services.DecodeCreateObject` now decodes the CreateObject "by object type" request form
+  (objectSpecifier choice `[0]`, where the device assigns the instance number) as well as the
+  "by object identifier" form (`[1]`). Only `[1]` was decoded before, so a request produced by the
+  `EncodeCreateObject(BacnetObjectTypes, ...)` overload could not be read back by a receiver.
 - Segmented responses no longer crash with an `IndexOutOfRangeException` when the APDU limit exceeds
   the transport payload buffer (the default `maxPayload: 1472` vs the 1476-byte B/IP APDU): the segment
   encoder clamps its window to the physical buffer and `EncodeBuffer` reports `NotEnoughBuffer` instead
