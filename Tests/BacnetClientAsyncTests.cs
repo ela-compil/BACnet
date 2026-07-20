@@ -1,9 +1,16 @@
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO.BACnet.Serialize;
 using System.IO.BACnet.Tests.Support;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
+
+// These tests drive the library's own timeout/cancellation semantics (and pass an explicit token
+// where cancellation is under test), so they deliberately don't thread xUnit's TestContext token.
+#pragma warning disable xUnit1051
 
 namespace System.IO.BACnet.Tests;
 
@@ -104,6 +111,80 @@ public class BacnetClientAsyncTests
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => client.ReadPropertyAsync(Anywhere,
             new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_VALUE, 1), BacnetPropertyIds.PROP_PRESENT_VALUE,
             cancellationToken: cts.Token));
+    }
+
+    [Fact]
+    public async Task ReadPropertyAsync_reassembles_a_segmented_response()
+    {
+        // Produce a genuine multi-segment ReadProperty-ACK with the (proven) send path, then feed those
+        // segments to the client under test and confirm the awaited read reassembles them in order.
+        // This exercises the async wait's per-segment re-arm - the path that PR #118's approach lost.
+        var text = MakeCharString(3000);
+        const byte invokeId = 55;
+        var objectId = new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, 1234);
+        var property = new BacnetPropertyReference((uint)BacnetPropertyIds.PROP_DESCRIPTION, ASN1.BACNET_ARRAY_ALL);
+        var adr = new BacnetAddress(BacnetAddressTypes.IP, "10.0.0.2:47808");
+        var bigValue = new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_CHARACTER_STRING, text);
+
+        var producerTransport = new RecordingTransport(maxApdu: BacnetMaxAdpu.MAX_APDU480) { AutoSegmentAck = true };
+        using var producer = new BacnetClient(producerTransport);
+        producer.Start();
+        var segmentation = producer.GetSegmentBuffer(BacnetMaxSegments.MAX_SEG16, BacnetMaxAdpu.MAX_APDU480);
+        producer.ReadPropertyResponse(adr, invokeId, segmentation, objectId, property, new[] { bigValue });
+
+        // The send path streams the remaining segments on a background thread (driven by AutoSegmentAck),
+        // so wait until the whole sequence has been emitted before harvesting the frames.
+        var segments = WaitForSegments(producerTransport);
+        Assert.True(segments.Count > 1, $"test setup: expected a segmented response, produced {segments.Count} frame(s)");
+
+        var consumerTransport = new RecordingTransport(maxApdu: BacnetMaxAdpu.MAX_APDU480);
+        using var client = new BacnetClient(consumerTransport, timeout: 5000, retries: 1);
+        client.MaxSegments = BacnetMaxSegments.MAX_SEG16;   // advertise that segmented responses are accepted
+        var segmentsSeen = 0;
+        client.OnSegment += (_, _, _, _, _, _, _, _, _, _, _) => Interlocked.Increment(ref segmentsSeen);
+        client.Start();
+
+        var readTask = client.ReadPropertyAsync(adr, objectId,
+            (BacnetPropertyIds)property.propertyIdentifier, invokeId: invokeId);
+
+        foreach (var segment in segments)
+            consumerTransport.Receive(segment, adr);
+
+        var values = await readTask;
+
+        Assert.True(segmentsSeen > 1, $"expected several segments to be received, saw {segmentsSeen}");
+        Assert.Single(values);
+        Assert.Equal(text, values[0].Value);
+    }
+
+    private static string MakeCharString(int length)
+    {
+        var builder = new StringBuilder(length);
+        while (builder.Length < length)
+            builder.Append("0123456789");
+        return builder.ToString(0, length);
+    }
+
+    // Poll a recording transport until it has emitted a complete ComplexACK segment sequence
+    // (the last segment clears MORE_FOLLOWS). The NPDU here is 2 bytes, so the PDU-type octet is [2].
+    private static List<byte[]> WaitForSegments(RecordingTransport transport)
+    {
+        var watch = Stopwatch.StartNew();
+        while (watch.ElapsedMilliseconds < 5000)
+        {
+            List<byte[]> complexAcks;
+            lock (transport.Sent)
+            {
+                complexAcks = transport.Sent
+                    .Select(s => s.Frame)
+                    .Where(f => ((BacnetPduTypes)f[2] & BacnetPduTypes.PDU_TYPE_MASK) == BacnetPduTypes.PDU_TYPE_COMPLEX_ACK)
+                    .ToList();
+            }
+            if (complexAcks.Count > 0 && ((BacnetPduTypes)complexAcks[^1][2] & BacnetPduTypes.MORE_FOLLOWS) == 0)
+                return complexAcks;
+            Thread.Sleep(20);
+        }
+        throw new Exception("segmented response did not complete within 5 s");
     }
 
     /// <summary>
