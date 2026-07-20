@@ -141,4 +141,24 @@ public class Asn1PrimitiveTests
 
         Assert.Equal(new byte[] { 0x00, 0x00, 0x00, 0x0A }, buffer.ToArray());
     }
+
+    // --- Date (year-1900, month, day, day-of-week) ---
+
+    [Theory] // BACnet numbers the days Monday = 1 .. Sunday = 7 (Clause 20.2.12), unlike .NET's DayOfWeek.
+    [InlineData(2018, 2, 26, 1)] // Monday
+    [InlineData(2018, 2, 27, 2)] // Tuesday
+    [InlineData(2018, 2, 28, 3)] // Wednesday
+    [InlineData(2018, 3, 1, 4)]  // Thursday
+    [InlineData(2018, 3, 2, 5)]  // Friday
+    [InlineData(2018, 3, 3, 6)]  // Saturday
+    [InlineData(2018, 3, 4, 7)]  // Sunday
+    public void Date_encodes_the_day_of_week_per_the_standard(int year, int month, int day, byte expectedDayOfWeek)
+    {
+        var buffer = new EncodeBuffer();
+        ASN1.encode_bacnet_date(buffer, new DateTime(year, month, day));
+        var bytes = buffer.ToArray();
+
+        Assert.Equal(4, bytes.Length);
+        Assert.Equal(expectedDayOfWeek, bytes[3]);
+    }
 }
