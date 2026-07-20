@@ -7,12 +7,14 @@ namespace System.IO.BACnet.Tests;
 
 /// <summary>
 /// Golden-vector encode tests from ASHRAE 135 Annex F, "Examples of APDU Encoding" — object access
-/// (F.3) and file access (F.2). Vectors harvested from #25 (DarkStarDS9), adapted to the v4 API.
+/// (F.3) and file access (F.2) — plus encode/decode round-trips that exercise the matching decoders.
+/// Vectors harvested from #25 (DarkStarDS9), adapted to the v4 API.
 /// </summary>
 public class AshraeAnnexF3Tests
 {
     private static readonly BacnetObjectId Ai5 = new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 5);
     private static readonly BacnetObjectId Ai16 = new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 16);
+    private static readonly BacnetAddress Adr = new BacnetAddress(BacnetAddressTypes.None, 0, null);
     private const uint PresentValue = (uint)BacnetPropertyIds.PROP_PRESENT_VALUE;
     private const uint Reliability = (uint)BacnetPropertyIds.PROP_RELIABILITY;
     private const uint Description = (uint)BacnetPropertyIds.PROP_DESCRIPTION;
@@ -412,5 +414,177 @@ public class AshraeAnnexF3Tests
             0x1F, 0x2A, 0x04, 0x00, 0x0E, 0xA4, 0x62, 0x03, 0x17, 0x01, 0xB4, 0x13, 0x38, 0x1B, 0x00, 0x0F, 0x1E,
             0x2C, 0x41, 0x90, 0xCC, 0xCD, 0x1F, 0x2A, 0x04, 0x00, 0x5F, 0x6B, 0x01, 0x35, 0x61
         }, buffer.ToArray());
+    }
+
+    [Fact] // F.3.3 - CreateObject request decodes back to the object type and initial values
+    public void F_3_3_CreateObject_request_round_trips()
+    {
+        var buffer = new EncodeBuffer();
+        Services.EncodeCreateObject(buffer, BacnetObjectTypes.OBJECT_FILE, new List<BacnetPropertyValue>
+        {
+            new BacnetPropertyValue
+            {
+                property = new BacnetPropertyReference(BacnetPropertyIds.PROP_OBJECT_NAME),
+                value = new List<BacnetValue> { new BacnetValue("Trend 1") }
+            },
+            new BacnetPropertyValue
+            {
+                property = new BacnetPropertyReference(BacnetPropertyIds.PROP_FILE_ACCESS_METHOD),
+                value = new List<BacnetValue>
+                {
+                    new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED,
+                        (uint)BacnetFileAccessMethod.RECORD_ACCESS)
+                }
+            }
+        });
+
+        Services.DecodeCreateObject(Adr, buffer.buffer, 0, buffer.GetLength(), out var objectId, out var values);
+
+        // The object-type choice leaves the instance for the device to assign (decoded as "unspecified").
+        Assert.Equal(BacnetObjectTypes.OBJECT_FILE, objectId.type);
+        Assert.Equal((uint)ASN1.BACNET_MAX_INSTANCE, objectId.instance);
+        var valueList = values.ToList();
+        Assert.Equal(2, valueList.Count);
+        Assert.Equal((uint)BacnetPropertyIds.PROP_OBJECT_NAME, valueList[0].property.propertyIdentifier);
+        Assert.Equal("Trend 1", valueList[0].value.Single().Value);
+        Assert.Equal((uint)BacnetPropertyIds.PROP_FILE_ACCESS_METHOD, valueList[1].property.propertyIdentifier);
+    }
+
+    [Fact] // CreateObject by object-identifier decodes back to the exact object id (the other objectSpecifier choice)
+    public void CreateObject_by_object_identifier_round_trips()
+    {
+        var target = new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_VALUE, 42);
+        var buffer = new EncodeBuffer();
+        Services.EncodeCreateObject(buffer, target, new List<BacnetPropertyValue>
+        {
+            new BacnetPropertyValue
+            {
+                property = new BacnetPropertyReference(BacnetPropertyIds.PROP_OBJECT_NAME),
+                value = new List<BacnetValue> { new BacnetValue("AV 42") }
+            }
+        });
+
+        Services.DecodeCreateObject(Adr, buffer.buffer, 0, buffer.GetLength(), out var objectId, out var values);
+
+        Assert.Equal(target, objectId);
+        Assert.Equal("AV 42", values.Single().value.Single().Value);
+    }
+
+    [Fact] // F.3.4 - DeleteObject request decodes back to the target object id
+    public void F_3_4_DeleteObject_request_round_trips()
+    {
+        var buffer = new EncodeBuffer();
+        Services.EncodeDeleteObject(buffer, new BacnetObjectId(BacnetObjectTypes.OBJECT_GROUP, 6));
+
+        Services.DecodeDeleteObject(buffer.buffer, 0, buffer.GetLength(), out var objectId);
+
+        Assert.Equal(new BacnetObjectId(BacnetObjectTypes.OBJECT_GROUP, 6), objectId);
+    }
+
+    [Fact] // F.3.7 - ReadPropertyMultiple request (single object) decodes back to the specification
+    public void F_3_7_ReadPropertyMultiple_request_round_trips()
+    {
+        var buffer = new EncodeBuffer();
+        Services.EncodeReadPropertyMultiple(buffer, Ai16, new List<BacnetPropertyReference>
+        {
+            new BacnetPropertyReference(PresentValue, ASN1.BACNET_ARRAY_ALL),
+            new BacnetPropertyReference(Reliability, ASN1.BACNET_ARRAY_ALL)
+        });
+
+        Services.DecodeReadPropertyMultiple(buffer.buffer, 0, buffer.GetLength(), out var properties);
+
+        Assert.Single(properties);
+        Assert.Equal(Ai16, properties[0].objectIdentifier);
+        Assert.Equal(new[] { PresentValue, Reliability },
+            properties[0].propertyReferences.Select(p => p.propertyIdentifier).ToArray());
+    }
+
+    [Fact] // F.3.7 - ReadPropertyMultiple request (multiple objects) decodes back to all specifications
+    public void F_3_7_ReadPropertyMultiple_multipleObjects_request_round_trips()
+    {
+        var buffer = new EncodeBuffer();
+        Services.EncodeReadPropertyMultiple(buffer, new List<BacnetReadAccessSpecification> { PvSpec(33), PvSpec(50), PvSpec(35) });
+
+        Services.DecodeReadPropertyMultiple(buffer.buffer, 0, buffer.GetLength(), out var properties);
+
+        Assert.Equal(3, properties.Count);
+        Assert.Equal(new uint[] { 33, 50, 35 }, properties.Select(p => p.objectIdentifier.instance).ToArray());
+        Assert.All(properties, p => Assert.Equal(PresentValue, p.propertyReferences.Single().propertyIdentifier));
+    }
+
+    [Fact] // F.3.7 - ReadPropertyMultiple ack decodes back to the read-access results
+    public void F_3_7_ReadPropertyMultiple_ack_round_trips()
+    {
+        var results = new List<BacnetReadAccessResult>
+        {
+            new BacnetReadAccessResult(Ai16, new List<BacnetPropertyValue>
+            {
+                new BacnetPropertyValue
+                {
+                    property = new BacnetPropertyReference(PresentValue, ASN1.BACNET_ARRAY_ALL),
+                    value = new List<BacnetValue> { new BacnetValue(72.3f) }
+                },
+                new BacnetPropertyValue
+                {
+                    property = new BacnetPropertyReference(Reliability, ASN1.BACNET_ARRAY_ALL),
+                    value = new List<BacnetValue>
+                    {
+                        new BacnetValue(BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED,
+                            (uint)BacnetReliability.RELIABILITY_NO_FAULT_DETECTED)
+                    }
+                }
+            })
+        };
+
+        var buffer = new EncodeBuffer();
+        Services.EncodeReadPropertyMultipleAcknowledge(buffer, results);
+
+        Services.DecodeReadPropertyMultipleAcknowledge(Adr, buffer.buffer, 0, buffer.GetLength(), out var values);
+
+        Assert.Single(values);
+        Assert.Equal(Ai16, values[0].objectIdentifier);
+        var props = values[0].values.ToList();
+        Assert.Equal(2, props.Count);
+        Assert.Equal(PresentValue, props[0].property.propertyIdentifier);
+        Assert.Equal(72.3f, Convert.ToSingle(props[0].value.Single().Value));
+        Assert.Equal(Reliability, props[1].property.propertyIdentifier);
+    }
+
+    [Fact] // F.3.8 - a trend-log record (timestamp + REAL value + status) survives an encode/decode round-trip
+    public void F_3_8_LogRecord_round_trips()
+    {
+        // DecodeLogRecord's nCurves is the number of values in one (TrendLogMultiple) record, all sharing
+        // the single timestamp - not a count of independent records - so this decodes one single-curve record.
+        var record = new BacnetLogRecord(BacnetTrendLogValueType.TL_TYPE_REAL, 18.1f,
+            new DateTime(1998, 3, 23, 19, 56, 27), BacnetStatusFlags.STATUS_FLAG_IN_ALARM);
+
+        var buffer = new EncodeBuffer();
+        Services.EncodeLogRecord(buffer, record);
+
+        Services.DecodeLogRecord(buffer.buffer, 0, buffer.GetLength(), 1, out var records);
+
+        Assert.Single(records);
+        Assert.Equal(record.timestamp, records[0].timestamp);
+        Assert.Equal(18.1f, Convert.ToSingle(records[0].Value));
+        Assert.Equal(record.statusFlags, records[0].statusFlags);
+    }
+
+    [Theory] // A ReadProperty ack with a corrupted tag octet must be rejected, not silently mis-decoded.
+    [InlineData(0)]  // object-id context tag [0]
+    [InlineData(5)]  // property-id context tag [1]
+    [InlineData(7)]  // opening tag [3] of the value
+    [InlineData(13)] // closing tag [3] of the value
+    public void ReadProperty_ack_with_a_corrupted_tag_is_rejected(int corruptedByte)
+    {
+        var buffer = new EncodeBuffer();
+        Services.EncodeReadPropertyAcknowledge(buffer, Ai5, PresentValue, ASN1.BACNET_ARRAY_ALL,
+            new List<BacnetValue> { new BacnetValue(72.3f) });
+        var bytes = buffer.ToArray();
+        unchecked { bytes[corruptedByte] += 128; }
+
+        var consumed = Services.DecodeReadPropertyAcknowledge(Adr, bytes, 0, bytes.Length,
+            out _, out _, out _);
+
+        Assert.Equal(-1, consumed);
     }
 }

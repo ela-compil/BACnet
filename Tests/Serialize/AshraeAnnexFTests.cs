@@ -1,17 +1,21 @@
 using System.Collections.Generic;
 using System.IO.BACnet.Serialize;
+using System.Linq;
 using Xunit;
 
 namespace System.IO.BACnet.Tests;
 
 /// <summary>
 /// Golden-vector encode tests from ASHRAE 135 Annex F, "Examples of APDU Encoding" — alarm/event
-/// (F.1) and remote-device management (F.4). Vectors harvested from the community test effort in
-/// #25 (DarkStarDS9) and adapted to the v4 API / xUnit. The F.1 alarm/event examples are expressed
-/// against the flat BacnetEventNotificationData / COV API (not #25's refactored event model).
+/// (F.1) and remote-device management (F.4) — plus encode/decode round-trips that exercise the
+/// matching decoders. Vectors harvested from the community test effort in #25 (DarkStarDS9) and
+/// adapted to the v4 API / xUnit. The F.1 alarm/event examples are expressed against the flat
+/// BacnetEventNotificationData / COV API (not #25's refactored event model).
 /// </summary>
 public class AshraeAnnexFTests
 {
+    private static readonly BacnetAddress Adr = new BacnetAddress(BacnetAddressTypes.None, 0, null);
+
     // AnalogInput#10 Present_Value = 65.0, Status_Flags = {false,false,false,false}
     private static BacnetPropertyValue[] CovValues() => new[]
     {
@@ -518,5 +522,262 @@ public class AshraeAnnexFTests
         {
             0x00, 0x02, 0x0F, 0x1B, 0x09, 0x12, 0x1C, 0x00, 0x4D, 0x44, 0x4C, 0x29, 0x04, 0x3C, 0x05, 0x40, 0x00, 0x01
         }, buffer.ToArray());
+    }
+
+    [Fact] // F.1.3 - UnconfirmedCOVNotification decodes back to the monitored object and property values
+    public void F_1_3_UnconfirmedCOVNotification_round_trips()
+    {
+        var buffer = new EncodeBuffer();
+        Services.EncodeCOVNotifyUnconfirmed(buffer, 18, 4,
+            new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 10), 0, CovValues());
+
+        Services.DecodeCOVNotifyUnconfirmed(Adr, buffer.buffer, 0, buffer.GetLength(),
+            out var subscriberProcessIdentifier, out var initiatingDevice, out var monitoredObject, out var timeRemaining, out var values);
+
+        Assert.Equal(18u, subscriberProcessIdentifier);
+        Assert.Equal(4u, initiatingDevice.instance);
+        Assert.Equal(new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 10), monitoredObject);
+        Assert.Equal(0u, timeRemaining);
+        Assert.Equal(2, values.Count);
+    }
+
+    [Fact] // F.1.4 - ConfirmedEventNotification (OutOfRange) decodes back to the notification data
+    public void F_1_4_ConfirmedEventNotification_round_trips()
+    {
+        var data = new BacnetEventNotificationData
+        {
+            processIdentifier = 1,
+            initiatingObjectIdentifier = new BacnetObjectId(BacnetObjectTypes.OBJECT_DEVICE, 4),
+            eventObjectIdentifier = new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 2),
+            timeStamp = new BacnetGenericTime(default(DateTime), BacnetTimestampTags.TIME_STAMP_SEQUENCE, 16),
+            notificationClass = 4,
+            priority = 100,
+            eventType = BacnetEventTypes.EVENT_OUT_OF_RANGE,
+            notifyType = BacnetNotifyTypes.NOTIFY_ALARM,
+            ackRequired = true,
+            fromState = BacnetEventStates.EVENT_STATE_NORMAL,
+            toState = BacnetEventStates.EVENT_STATE_HIGH_LIMIT,
+            outOfRange_exceedingValue = 80.1f,
+            outOfRange_statusFlags = BacnetBitString.Parse("1000"),
+            outOfRange_deadband = 1.0f,
+            outOfRange_exceededLimit = 80.0f,
+        };
+
+        var buffer = new EncodeBuffer();
+        Services.EncodeEventNotifyConfirmed(buffer, data);
+
+        Services.DecodeEventNotifyData(buffer.buffer, 0, buffer.GetLength(), out var decoded);
+
+        Assert.Equal(data.processIdentifier, decoded.processIdentifier);
+        Assert.Equal(data.initiatingObjectIdentifier, decoded.initiatingObjectIdentifier);
+        Assert.Equal(data.eventObjectIdentifier, decoded.eventObjectIdentifier);
+        Assert.Equal(data.eventType, decoded.eventType);
+        Assert.Equal(data.notifyType, decoded.notifyType);
+        Assert.Equal(data.fromState, decoded.fromState);
+        Assert.Equal(data.toState, decoded.toState);
+        Assert.Equal(data.outOfRange_exceedingValue, decoded.outOfRange_exceedingValue);
+        Assert.Equal(data.outOfRange_exceededLimit, decoded.outOfRange_exceededLimit);
+    }
+
+    [Fact] // F.1.6 - GetAlarmSummary ack decodes back to the two alarm summaries
+    public void F_1_6_GetAlarmSummary_ack_round_trips()
+    {
+        var buffer = new EncodeBuffer();
+        Services.EncodeAlarmSummary(buffer, new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 2),
+            (uint)BacnetEventStates.EVENT_STATE_HIGH_LIMIT, BacnetBitString.Parse("011"));
+        Services.EncodeAlarmSummary(buffer, new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 3),
+            (uint)BacnetEventStates.EVENT_STATE_LOW_LIMIT, BacnetBitString.Parse("111"));
+
+        IList<BacnetGetEventInformationData> alarms = new List<BacnetGetEventInformationData>();
+        Services.DecodeAlarmSummaryOrEvent(buffer.buffer, 0, buffer.GetLength(), false, ref alarms, out var moreEvent);
+
+        Assert.False(moreEvent);
+        Assert.Equal(2, alarms.Count);
+        Assert.Equal(new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 2), alarms[0].objectIdentifier);
+        Assert.Equal(BacnetEventStates.EVENT_STATE_HIGH_LIMIT, alarms[0].eventState);
+        Assert.Equal(new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 3), alarms[1].objectIdentifier);
+        Assert.Equal(BacnetEventStates.EVENT_STATE_LOW_LIMIT, alarms[1].eventState);
+    }
+
+    [Fact] // F.1.8 - GetEventInformation ack decodes back to the two events
+    public void F_1_8_GetEventInformation_ack_round_trips()
+    {
+        var events = new[]
+        {
+            new BacnetGetEventInformationData
+            {
+                objectIdentifier = new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 2),
+                eventState = BacnetEventStates.EVENT_STATE_HIGH_LIMIT,
+                acknowledgedTransitions = BacnetBitString.Parse("011"),
+                eventTimeStamps = new[]
+                {
+                    new BacnetGenericTime(new DateTime(1, 1, 1, 15, 35, 0).AddMilliseconds(200), BacnetTimestampTags.TIME_STAMP_TIME),
+                    new BacnetGenericTime(ASN1.BACNET_TIME_WILDCARD, BacnetTimestampTags.TIME_STAMP_TIME),
+                    new BacnetGenericTime(ASN1.BACNET_TIME_WILDCARD, BacnetTimestampTags.TIME_STAMP_TIME),
+                },
+                notifyType = BacnetNotifyTypes.NOTIFY_ALARM,
+                eventEnable = BacnetBitString.Parse("111"),
+                eventPriorities = new uint[] { 15, 15, 20 }
+            },
+            new BacnetGetEventInformationData
+            {
+                objectIdentifier = new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 3),
+                eventState = BacnetEventStates.EVENT_STATE_NORMAL,
+                acknowledgedTransitions = BacnetBitString.Parse("110"),
+                eventTimeStamps = new[]
+                {
+                    new BacnetGenericTime(new DateTime(1, 1, 1, 15, 40, 0), BacnetTimestampTags.TIME_STAMP_TIME),
+                    new BacnetGenericTime(ASN1.BACNET_TIME_WILDCARD, BacnetTimestampTags.TIME_STAMP_TIME),
+                    new BacnetGenericTime(new DateTime(1, 1, 1, 15, 45, 30).AddMilliseconds(300), BacnetTimestampTags.TIME_STAMP_TIME),
+                },
+                notifyType = BacnetNotifyTypes.NOTIFY_ALARM,
+                eventEnable = BacnetBitString.Parse("111"),
+                eventPriorities = new uint[] { 15, 15, 20 }
+            }
+        };
+
+        var buffer = new EncodeBuffer();
+        Services.EncodeGetEventInformationAcknowledge(buffer, events, false);
+
+        IList<BacnetGetEventInformationData> decoded = new List<BacnetGetEventInformationData>();
+        Services.DecodeAlarmSummaryOrEvent(buffer.buffer, 0, buffer.GetLength(), true, ref decoded, out var moreEvent);
+
+        Assert.False(moreEvent);
+        Assert.Equal(2, decoded.Count);
+        Assert.Equal(events[0].objectIdentifier, decoded[0].objectIdentifier);
+        Assert.Equal(events[0].eventState, decoded[0].eventState);
+        Assert.Equal(events[0].notifyType, decoded[0].notifyType);
+        Assert.Equal(events[1].objectIdentifier, decoded[1].objectIdentifier);
+        Assert.Equal(events[1].eventState, decoded[1].eventState);
+    }
+
+    [Fact] // F.1.10 - SubscribeCOV request decodes back to the subscription parameters
+    public void F_1_10_SubscribeCOV_round_trips()
+    {
+        var buffer = new EncodeBuffer();
+        Services.EncodeSubscribeCOV(buffer, 18, new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 10), false, true, 0);
+
+        Services.DecodeSubscribeCOV(buffer.buffer, 0, buffer.GetLength(),
+            out var subscriberProcessIdentifier, out var monitoredObject, out var cancellationRequest,
+            out var issueConfirmedNotifications, out var lifetime);
+
+        Assert.Equal(18u, subscriberProcessIdentifier);
+        Assert.Equal(new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 10), monitoredObject);
+        Assert.False(cancellationRequest);
+        Assert.True(issueConfirmedNotifications);
+        Assert.Equal(0u, lifetime);
+    }
+
+    [Fact] // F.1.11 - SubscribeCOVProperty request decodes back to the property subscription parameters
+    public void F_1_11_SubscribeCOVProperty_round_trips()
+    {
+        var buffer = new EncodeBuffer();
+        Services.EncodeSubscribeProperty(buffer, 18, new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 10), false, true, 60,
+            new BacnetPropertyReference((uint)BacnetPropertyIds.PROP_PRESENT_VALUE, ASN1.BACNET_ARRAY_ALL), true, 1.0f);
+
+        Services.DecodeSubscribeProperty(buffer.buffer, 0, buffer.GetLength(),
+            out var subscriberProcessIdentifier, out var monitoredObject, out var monitoredProperty,
+            out var cancellationRequest, out var issueConfirmedNotifications, out var lifetime, out var covIncrement);
+
+        Assert.Equal(18u, subscriberProcessIdentifier);
+        Assert.Equal(new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 10), monitoredObject);
+        Assert.Equal((uint)BacnetPropertyIds.PROP_PRESENT_VALUE, monitoredProperty.propertyIdentifier);
+        Assert.False(cancellationRequest);
+        Assert.True(issueConfirmedNotifications);
+        Assert.Equal(60u, lifetime);
+        Assert.Equal(1.0f, covIncrement);
+    }
+
+    [Fact] // F.4.1 - DeviceCommunicationControl request decodes back to its parameters
+    public void F_4_1_DeviceCommunicationControl_round_trips()
+    {
+        var buffer = new EncodeBuffer();
+        Services.EncodeDeviceCommunicationControl(buffer, 5, 1 /* disable */, "#egbdf!");
+
+        Services.DecodeDeviceCommunicationControl(buffer.buffer, 0, buffer.GetLength(),
+            out var timeDuration, out var enableDisable, out var password);
+
+        Assert.Equal(5u, timeDuration);
+        Assert.Equal(1u, enableDisable);
+        Assert.Equal("#egbdf!", password);
+    }
+
+    [Fact] // F.4.4 - ReinitializeDevice request decodes back to the state and password
+    public void F_4_4_ReinitializeDevice_round_trips()
+    {
+        var buffer = new EncodeBuffer();
+        Services.EncodeReinitializeDevice(buffer, BacnetReinitializedStates.BACNET_REINIT_WARMSTART, "AbCdEfGh");
+
+        Services.DecodeReinitializeDevice(buffer.buffer, 0, buffer.GetLength(), out var state, out var password);
+
+        Assert.Equal(BacnetReinitializedStates.BACNET_REINIT_WARMSTART, state);
+        Assert.Equal("AbCdEfGh", password);
+    }
+
+    [Fact] // F.4.7 - TimeSynchronization request decodes back to the same instant (hundredths resolution)
+    public void F_4_7_TimeSynchronization_round_trips()
+    {
+        var when = new DateTime(1992, 11, 17, 22, 45, 30).AddMilliseconds(700);
+
+        var buffer = new EncodeBuffer();
+        Services.EncodeTimeSync(buffer, when);
+
+        Services.DecodeTimeSync(buffer.buffer, 0, buffer.GetLength(), out var decoded);
+
+        Assert.Equal(when, decoded);
+    }
+
+    [Fact] // F.4.8 - Who-Has by object id decodes back to the object id
+    public void F_4_8_WhoHas_by_id_round_trips()
+    {
+        var buffer = new EncodeBuffer();
+        Services.EncodeWhoHasBroadcast(buffer, -1, -1, new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 3), null);
+
+        Services.DecodeWhoHasBroadcast(buffer.buffer, 0, buffer.GetLength(),
+            out var lowLimit, out var highLimit, out var objId, out var objName);
+
+        Assert.Equal(-1, lowLimit);
+        Assert.Equal(-1, highLimit);
+        Assert.Equal(new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_INPUT, 3), objId);
+        Assert.True(string.IsNullOrEmpty(objName));
+    }
+
+    [Fact] // F.4.8 - Who-Has by object name decodes back to the object name
+    public void F_4_8_WhoHas_by_name_round_trips()
+    {
+        var buffer = new EncodeBuffer();
+        Services.EncodeWhoHasBroadcast(buffer, -1, -1, null, "OATemp");
+
+        Services.DecodeWhoHasBroadcast(buffer.buffer, 0, buffer.GetLength(),
+            out var lowLimit, out var highLimit, out var objId, out var objName);
+
+        Assert.Equal(-1, lowLimit);
+        Assert.Equal(-1, highLimit);
+        Assert.Null(objId);
+        Assert.Equal("OATemp", objName);
+    }
+
+    [Fact] // F.4.9 - Who-Is with an id range decodes back to the range
+    public void F_4_9_WhoIs_by_id_round_trips()
+    {
+        var buffer = new EncodeBuffer();
+        Services.EncodeWhoIsBroadcast(buffer, 3, 3);
+
+        Services.DecodeWhoIsBroadcast(buffer.buffer, 0, buffer.GetLength(), out var lowLimit, out var highLimit);
+
+        Assert.Equal(3, lowLimit);
+        Assert.Equal(3, highLimit);
+    }
+
+    [Fact] // F.4.9 - Who-Is with no parameters decodes back to the unbounded range
+    public void F_4_9_WhoIs_all_round_trips()
+    {
+        var buffer = new EncodeBuffer();
+        Services.EncodeWhoIsBroadcast(buffer, -1, -1);
+
+        Services.DecodeWhoIsBroadcast(buffer.buffer, 0, buffer.GetLength(), out var lowLimit, out var highLimit);
+
+        Assert.Equal(-1, lowLimit);
+        Assert.Equal(-1, highLimit);
     }
 }

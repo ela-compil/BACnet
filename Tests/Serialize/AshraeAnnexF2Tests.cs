@@ -7,7 +7,8 @@ namespace System.IO.BACnet.Tests;
 
 /// <summary>
 /// Golden-vector encode tests from ASHRAE 135 Annex F.2, AtomicReadFile / AtomicWriteFile
-/// (stream and record access). Harvested from #25 (DarkStarDS9), adapted to the v4 API.
+/// (stream and record access), plus encode/decode round-trips that exercise the matching
+/// decoders. Harvested from #25 (DarkStarDS9), adapted to the v4 API.
 /// </summary>
 public class AshraeAnnexF2Tests
 {
@@ -108,5 +109,54 @@ public class AshraeAnnexF2Tests
         Services.EncodeAtomicWriteFileAcknowledge(buffer, false, 14);
 
         Assert.Equal(new byte[] { 0x30, 0x55, 0x07, 0x19, 0x0E }, buffer.ToArray());
+    }
+
+    [Fact] // F.2.1 - AtomicReadFile stream ack decodes back to the encoded file data
+    public void F_2_1_AtomicReadFile_stream_ack_round_trips()
+    {
+        var buffer = new EncodeBuffer();
+        Services.EncodeAtomicReadFileAcknowledge(buffer, true, false, 0, 1, Stream, Counts(Stream));
+
+        Services.DecodeAtomicReadFileAcknowledge(buffer.buffer, 0, buffer.GetLength(),
+            out var endOfFile, out var isStream, out var position, out var count, out var targetBuffer, out var targetOffset);
+
+        Assert.True(isStream);
+        Assert.False(endOfFile);
+        Assert.Equal(0, position);
+        Assert.Equal((uint)Stream[0].Length, count);
+        Assert.Equal(Stream[0], targetBuffer.Skip(targetOffset).Take((int)count).ToArray());
+    }
+
+    [Fact] // F.2.2 - AtomicWriteFile stream request decodes back to the encoded block
+    public void F_2_2_AtomicWriteFile_stream_round_trips()
+    {
+        var buffer = new EncodeBuffer();
+        Services.EncodeAtomicWriteFile(buffer, true, File1, 30, 1, Stream, Counts(Stream));
+
+        Services.DecodeAtomicWriteFile(buffer.buffer, 0, buffer.GetLength(),
+            out var isStream, out var objectId, out var position, out var blockCount, out var blocks, out _);
+
+        Assert.True(isStream);
+        Assert.Equal(File1, objectId);
+        Assert.Equal(30, position);
+        Assert.Equal(1u, blockCount);
+        Assert.Equal(Stream[0], blocks[0]);
+    }
+
+    [Fact] // F.2.2 - AtomicWriteFile record request decodes back to the two encoded records
+    public void F_2_2_AtomicWriteFile_record_round_trips()
+    {
+        var buffer = new EncodeBuffer();
+        Services.EncodeAtomicWriteFile(buffer, false, File2, -1, 2, Records, Counts(Records));
+
+        Services.DecodeAtomicWriteFile(buffer.buffer, 0, buffer.GetLength(),
+            out var isStream, out var objectId, out var position, out var blockCount, out var blocks, out _);
+
+        Assert.False(isStream);
+        Assert.Equal(File2, objectId);
+        Assert.Equal(-1, position);
+        Assert.Equal(2u, blockCount);
+        Assert.Equal(Records[0], blocks[0]);
+        Assert.Equal(Records[1], blocks[1]);
     }
 }
