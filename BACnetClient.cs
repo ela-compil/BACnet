@@ -2790,6 +2790,9 @@ public class BacnetClient : IDisposable
     // in flight concurrently on a single client without a lock.
     // ==============================================================================================
 
+    /// <summary>
+    /// Writes a block to a File object (AtomicWriteFile) and returns the new file position.
+    /// </summary>
     public async Task<int> WriteFileAsync(BacnetAddress adr, BacnetObjectId objectId, int position, int count, byte[] fileBuffer, byte invokeId = 0, CancellationToken cancellationToken = default)
     {
         using var result = (BacnetAsyncResult)BeginWriteFileRequest(adr, objectId, position, count, fileBuffer, true, invokeId);
@@ -2803,6 +2806,9 @@ public class BacnetClient : IDisposable
         return newPosition;
     }
 
+    /// <summary>
+    /// Reads a block from a File object (AtomicReadFile).
+    /// </summary>
     public async Task<(int position, uint count, bool endOfFile, byte[] fileBuffer, int fileBufferOffset)> ReadFileAsync(BacnetAddress adr, BacnetObjectId objectId, int position, uint count, byte invokeId = 0, CancellationToken cancellationToken = default)
     {
         using var result = (BacnetAsyncResult)BeginReadFileRequest(adr, objectId, position, count, true, invokeId);
@@ -2817,6 +2823,9 @@ public class BacnetClient : IDisposable
     }
 
     // Read range by start time
+    /// <summary>
+    /// Reads a range of items from a list or log property, starting at the given time.
+    /// </summary>
     public async Task<(byte[] range, uint count)> ReadRangeAsync(BacnetAddress adr, BacnetObjectId objectId, DateTime readFrom, uint quantity, byte invokeId = 0, CancellationToken cancellationToken = default)
     {
         using var result = (BacnetAsyncResult)BeginReadRangeRequest(adr, objectId, readFrom, quantity, true, invokeId);
@@ -2831,6 +2840,9 @@ public class BacnetClient : IDisposable
     }
 
     // Read range by position
+    /// <summary>
+    /// Reads a range of items from a list or log property, starting at the given index.
+    /// </summary>
     public async Task<(byte[] range, uint count)> ReadRangeAsync(BacnetAddress adr, BacnetObjectId objectId, uint idxBegin, uint quantity, byte invokeId = 0, CancellationToken cancellationToken = default)
     {
         using var result = (BacnetAsyncResult)BeginReadRangeRequest(adr, objectId, idxBegin, quantity, true, invokeId);
@@ -2844,6 +2856,9 @@ public class BacnetClient : IDisposable
         return (range, count);
     }
 
+    /// <summary>
+    /// Subscribes to (or cancels) change-of-value notifications for an object.
+    /// </summary>
     public async Task SubscribeCOVAsync(BacnetAddress adr, BacnetObjectId objectId, uint subscribeId, bool cancel, bool issueConfirmedNotifications, uint lifetime, byte invokeId = 0, CancellationToken cancellationToken = default)
     {
         using var result = (BacnetAsyncResult)BeginSubscribeCOVRequest(adr, objectId, subscribeId, cancel, issueConfirmedNotifications, lifetime, true, invokeId);
@@ -2855,6 +2870,9 @@ public class BacnetClient : IDisposable
             throw ex;
     }
 
+    /// <summary>
+    /// Sends a confirmed event notification.
+    /// </summary>
     public async Task SendConfirmedEventNotificationAsync(BacnetAddress adr, BacnetEventNotificationData eventData, byte invokeId = 0, BacnetAddress source = null, CancellationToken cancellationToken = default)
     {
         using var result = (BacnetAsyncResult)BeginSendConfirmedEventNotificationRequest(adr, eventData, true, invokeId, source);
@@ -2866,6 +2884,9 @@ public class BacnetClient : IDisposable
             throw ex;
     }
 
+    /// <summary>
+    /// Subscribes to (or cancels) change-of-value notifications for a single property.
+    /// </summary>
     public async Task SubscribePropertyAsync(BacnetAddress adr, BacnetObjectId objectId, BacnetPropertyReference monitoredProperty, uint subscribeId, bool cancel, bool issueConfirmedNotifications, byte invokeId = 0, CancellationToken cancellationToken = default)
     {
         using var result = (BacnetAsyncResult)BeginSubscribePropertyRequest(adr, objectId, monitoredProperty, subscribeId, cancel, issueConfirmedNotifications, true, invokeId);
@@ -2877,6 +2898,9 @@ public class BacnetClient : IDisposable
             throw ex;
     }
 
+    /// <summary>
+    /// Writes a single property of an object.
+    /// </summary>
     public async Task WritePropertyAsync(BacnetAddress adr, BacnetObjectId objectId, BacnetPropertyIds propertyId, IEnumerable<BacnetValue> valueList, byte invokeId = 0, byte? priority = null, uint arrayIndex = ASN1.BACNET_ARRAY_ALL, CancellationToken cancellationToken = default)
     {
         using var result = (BacnetAsyncResult)BeginWritePropertyRequest(adr, objectId, propertyId, valueList, true, invokeId, priority, arrayIndex);
@@ -2888,6 +2912,9 @@ public class BacnetClient : IDisposable
             throw ex;
     }
 
+    /// <summary>
+    /// Writes several properties of a single object.
+    /// </summary>
     public async Task WritePropertyMultipleAsync(BacnetAddress adr, BacnetObjectId objectId, ICollection<BacnetPropertyValue> valueList, byte invokeId = 0, CancellationToken cancellationToken = default)
     {
         using var result = (BacnetAsyncResult)BeginWritePropertyMultipleRequest(adr, objectId, valueList, true, invokeId);
@@ -2899,6 +2926,9 @@ public class BacnetClient : IDisposable
             throw ex;
     }
 
+    /// <summary>
+    /// Writes several properties across several objects.
+    /// </summary>
     public async Task WritePropertyMultipleAsync(BacnetAddress adr, ICollection<BacnetReadAccessResult> valueList, byte invokeId = 0, CancellationToken cancellationToken = default)
     {
         using var result = (BacnetAsyncResult)BeginWritePropertyMultipleRequest(adr, valueList, true, invokeId);
@@ -2910,6 +2940,9 @@ public class BacnetClient : IDisposable
             throw ex;
     }
 
+    /// <summary>
+    /// Reads several properties of a single object.
+    /// </summary>
     public async Task<IList<BacnetReadAccessResult>> ReadPropertyMultipleAsync(BacnetAddress adr, BacnetObjectId objectId, IList<BacnetPropertyReference> propertyIdAndArrayIndex, byte invokeId = 0, CancellationToken cancellationToken = default)
     {
         using var result = (BacnetAsyncResult)BeginReadPropertyMultipleRequest(adr, objectId, propertyIdAndArrayIndex, true, invokeId);
@@ -2923,6 +2956,9 @@ public class BacnetClient : IDisposable
         return values;
     }
 
+    /// <summary>
+    /// Reads several properties across several objects.
+    /// </summary>
     public async Task<IList<BacnetReadAccessResult>> ReadPropertyMultipleAsync(BacnetAddress adr, IList<BacnetReadAccessSpecification> properties, byte invokeId = 0, CancellationToken cancellationToken = default)
     {
         using var result = (BacnetAsyncResult)BeginReadPropertyMultipleRequest(adr, properties, true, invokeId);
@@ -2936,6 +2972,9 @@ public class BacnetClient : IDisposable
         return values;
     }
 
+    /// <summary>
+    /// Creates an object on the remote device.
+    /// </summary>
     public async Task CreateObjectAsync(BacnetAddress adr, BacnetObjectId objectId, ICollection<BacnetPropertyValue> valueList = null, byte invokeId = 0, CancellationToken cancellationToken = default)
     {
         using var result = (BacnetAsyncResult)BeginCreateObjectRequest(adr, objectId, valueList, true, invokeId);
@@ -2947,6 +2986,9 @@ public class BacnetClient : IDisposable
             throw ex;
     }
 
+    /// <summary>
+    /// Deletes an object on the remote device.
+    /// </summary>
     public async Task DeleteObjectAsync(BacnetAddress adr, BacnetObjectId objectId, byte invokeId = 0, CancellationToken cancellationToken = default)
     {
         using var result = (BacnetAsyncResult)BeginDeleteObjectRequest(adr, objectId, true, invokeId);
@@ -2958,6 +3000,9 @@ public class BacnetClient : IDisposable
             throw ex;
     }
 
+    /// <summary>
+    /// Adds one or more elements to a list property.
+    /// </summary>
     public async Task AddListElementAsync(BacnetAddress adr, BacnetObjectId objectId, BacnetPropertyReference reference, IList<BacnetValue> valueList, byte invokeId = 0, CancellationToken cancellationToken = default)
     {
         using var result = (BacnetAsyncResult)BeginAddListElementRequest(adr, objectId, reference, valueList, true, invokeId);
@@ -2969,6 +3014,9 @@ public class BacnetClient : IDisposable
             throw ex;
     }
 
+    /// <summary>
+    /// Removes one or more elements from a list property.
+    /// </summary>
     public async Task RemoveListElementAsync(BacnetAddress adr, BacnetObjectId objectId, BacnetPropertyReference reference, IList<BacnetValue> valueList, byte invokeId = 0, CancellationToken cancellationToken = default)
     {
         using var result = (BacnetAsyncResult)BeginRemoveListElementRequest(adr, objectId, reference, valueList, true, invokeId);
@@ -2980,6 +3028,9 @@ public class BacnetClient : IDisposable
             throw ex;
     }
 
+    /// <summary>
+    /// Sends a confirmed request with a caller-supplied, pre-encoded payload and returns the raw response body.
+    /// </summary>
     public async Task<byte[]> RawEncodedDecodedPropertyConfirmedAsync(BacnetAddress adr, BacnetObjectId objectId, BacnetPropertyIds propertyId, BacnetConfirmedServices serviceId, byte[] inOutBuffer = null, byte invokeId = 0, CancellationToken cancellationToken = default)
     {
         using var result = (BacnetAsyncResult)BeginRawEncodedDecodedPropertyConfirmedRequest(adr, objectId, propertyId, serviceId, inOutBuffer, true, invokeId);
@@ -2993,6 +3044,9 @@ public class BacnetClient : IDisposable
         return outBuffer;
     }
 
+    /// <summary>
+    /// Enables or disables the remote device's BACnet communication.
+    /// </summary>
     public async Task DeviceCommunicationControlAsync(BacnetAddress adr, uint timeDuration, uint enableDisable, string password, byte invokeId = 0, CancellationToken cancellationToken = default)
     {
         using var result = (BacnetAsyncResult)BeginDeviceCommunicationControlRequest(adr, timeDuration, enableDisable, password, true, invokeId);
@@ -3004,6 +3058,9 @@ public class BacnetClient : IDisposable
             throw ex;
     }
 
+    /// <summary>
+    /// Sends a vendor-specific confirmed PrivateTransfer request and returns the device's response.
+    /// </summary>
     public async Task<(uint vendorId, uint serviceNumber, byte[] resultBlock)> PrivateTransferAsync(BacnetAddress adr, uint vendorId, uint serviceNumber, byte[] serviceParameters, byte invokeId = 0, CancellationToken cancellationToken = default)
     {
         using var result = (BacnetAsyncResult)BeginPrivateTransferRequest(adr, vendorId, serviceNumber, serviceParameters, true, invokeId);
@@ -3017,6 +3074,9 @@ public class BacnetClient : IDisposable
         return (outVendorId, outServiceNumber, resultBlock);
     }
 
+    /// <summary>
+    /// Reads the device's alarm summary or event information, following the get-next chain to completion.
+    /// </summary>
     public async Task<IList<BacnetGetEventInformationData>> GetAlarmSummaryOrEventAsync(BacnetAddress adr, bool getEvent, byte invokeId = 0, CancellationToken cancellationToken = default)
     {
         IList<BacnetGetEventInformationData> alarms = new List<BacnetGetEventInformationData>();
@@ -3039,6 +3099,9 @@ public class BacnetClient : IDisposable
         return alarms;
     }
 
+    /// <summary>
+    /// Reinitializes the remote device (e.g. warm or cold start).
+    /// </summary>
     public async Task ReinitializeAsync(BacnetAddress adr, BacnetReinitializedStates state, string password, byte invokeId = 0, CancellationToken cancellationToken = default)
     {
         using var result = (BacnetAsyncResult)BeginReinitializeRequest(adr, state, password, true, invokeId);
@@ -3050,6 +3113,9 @@ public class BacnetClient : IDisposable
             throw ex;
     }
 
+    /// <summary>
+    /// Sends a life-safety operation (e.g. silence or reset) for an object.
+    /// </summary>
     public async Task LifeSafetyOperationAsync(BacnetAddress address, BacnetObjectId objectId, string requestingSrc, BacnetLifeSafetyOperations operation, byte invokeId = 0, CancellationToken cancellationToken = default)
     {
         using var result = (BacnetAsyncResult)BeginLifeSafetyOperationRequest(address, objectId, 0, requestingSrc, operation, true, invokeId);
@@ -3061,6 +3127,9 @@ public class BacnetClient : IDisposable
             throw ex;
     }
 
+    /// <summary>
+    /// Acknowledges an alarm or event for an object.
+    /// </summary>
     public async Task AlarmAcknowledgementAsync(BacnetAddress adr, BacnetObjectId objId, BacnetEventStates eventState, string ackText, BacnetGenericTime evTimeStamp, BacnetGenericTime ackTimeStamp, byte invokeId = 0, CancellationToken cancellationToken = default)
     {
         using var result = (BacnetAsyncResult)BeginAlarmAcknowledgement(adr, objId, eventState, ackText, evTimeStamp, ackTimeStamp, true, invokeId);
@@ -3072,6 +3141,9 @@ public class BacnetClient : IDisposable
             throw ex;
     }
 
+    /// <summary>
+    /// Sends a change-of-value notification, confirmed or unconfirmed.
+    /// </summary>
     public async Task NotifyAsync(BacnetAddress adr, uint subscriberProcessIdentifier, uint initiatingDeviceIdentifier, BacnetObjectId monitoredObjectIdentifier, uint timeRemaining, bool issueConfirmedNotifications, IList<BacnetPropertyValue> values, CancellationToken cancellationToken = default)
     {
         if (!issueConfirmedNotifications)
