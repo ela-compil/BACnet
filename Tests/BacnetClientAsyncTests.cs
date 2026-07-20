@@ -162,7 +162,9 @@ public class BacnetClientAsyncTests
         public void Dispose() { }
     }
 
-    /// <summary>Transport that accepts sends but never delivers anything back, so requests go unanswered.</summary>
+    /// <summary>
+    /// Transport that accepts sends but never delivers anything back, so requests go unanswered.
+    /// </summary>
     private sealed class SilentTransport : IBacnetTransport
     {
         public byte MaxInfoFrames { get; set; } = 0xFF;

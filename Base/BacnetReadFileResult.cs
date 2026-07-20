@@ -15,13 +15,19 @@ public readonly struct BacnetReadFileResult
         FileBufferOffset = fileBufferOffset;
     }
 
-    /// <summary>The file position the data was read from.</summary>
+    /// <summary>
+    /// The file position the data was read from.
+    /// </summary>
     public int Position { get; }
 
-    /// <summary>The number of octets returned.</summary>
+    /// <summary>
+    /// The number of octets returned.
+    /// </summary>
     public uint Count { get; }
 
-    /// <summary>Whether the read reached the end of the file.</summary>
+    /// <summary>
+    /// Whether the read reached the end of the file.
+    /// </summary>
     public bool EndOfFile { get; }
 
     /// <summary>
@@ -30,6 +36,8 @@ public readonly struct BacnetReadFileResult
     /// </summary>
     public byte[] FileBuffer { get; }
 
-    /// <summary>The offset into <see cref="FileBuffer"/> at which the returned data starts.</summary>
+    /// <summary>
+    /// The offset into <see cref="FileBuffer"/> at which the returned data starts.
+    /// </summary>
     public int FileBufferOffset { get; }
 }

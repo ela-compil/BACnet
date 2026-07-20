@@ -12,9 +12,13 @@ public readonly struct BacnetReadRangeResult
         ItemCount = itemCount;
     }
 
-    /// <summary>The encoded application data of the returned items.</summary>
+    /// <summary>
+    /// The encoded application data of the returned items.
+    /// </summary>
     public byte[] Range { get; }
 
-    /// <summary>The number of items returned (may be fewer than requested).</summary>
+    /// <summary>
+    /// The number of items returned (may be fewer than requested).
+    /// </summary>
     public uint ItemCount { get; }
 }

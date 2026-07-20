@@ -13,12 +13,18 @@ public readonly struct BacnetPrivateTransferResult
         ResultBlock = resultBlock;
     }
 
-    /// <summary>The vendor identifier echoed by the device.</summary>
+    /// <summary>
+    /// The vendor identifier echoed by the device.
+    /// </summary>
     public uint VendorId { get; }
 
-    /// <summary>The service number echoed by the device.</summary>
+    /// <summary>
+    /// The service number echoed by the device.
+    /// </summary>
     public uint ServiceNumber { get; }
 
-    /// <summary>The vendor-specific result payload; may be null when the device returns none.</summary>
+    /// <summary>
+    /// The vendor-specific result payload; may be null when the device returns none.
+    /// </summary>
     public byte[] ResultBlock { get; }
 }
