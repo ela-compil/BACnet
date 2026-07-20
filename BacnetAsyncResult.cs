@@ -21,6 +21,14 @@ public class BacnetAsyncResult : IAsyncResult, IDisposable
     private ManualResetEvent _waitHandle;
     private readonly BacnetAddress _address;
 
+    // Non-blocking waiting path used by the *Async request methods. It runs in parallel with the
+    // ManualResetEvent above (which still drives the synchronous WaitForDone), so the public API is
+    // unchanged: both are signalled at the same points. Continuations run asynchronously so a waiter
+    // resuming never executes on — and thus never stalls — the transport's receive thread.
+    private readonly object _asyncLock = new();
+    private TaskCompletionSource<bool> _completionSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
+    private bool _done;
+
     public bool Segmented { get; private set; }
     public byte[] Result { get; private set; }
     public object AsyncState { get; set; }
@@ -37,6 +45,7 @@ public class BacnetAsyncResult : IAsyncResult, IDisposable
             _error = value;
             CompletedSynchronously = true;
             _waitHandle.Set();
+            MarkDone();
         }
     }
 
@@ -80,6 +89,7 @@ public class BacnetAsyncResult : IAsyncResult, IDisposable
 
         Segmented = true;
         _waitHandle.Set();
+        MarkActivity();
     }
 
     private void OnSimpleAck(BacnetClient sender, BacnetAddress adr, BacnetPduTypes type, BacnetConfirmedServices service, byte invokeId, byte[] data, int dataOffset, int dataLength)
@@ -88,6 +98,7 @@ public class BacnetAsyncResult : IAsyncResult, IDisposable
             return;
 
         _waitHandle.Set();
+        MarkDone();
     }
 
     private void OnAbort(BacnetClient sender, BacnetAddress adr, BacnetPduTypes type, byte invokeId, BacnetAbortReason reason, byte[] buffer, int offset, int length)
@@ -127,6 +138,7 @@ public class BacnetAsyncResult : IAsyncResult, IDisposable
 
         //notify waiter even if segmented
         _waitHandle.Set();
+        MarkDone();
     }
 
     /// <summary>
@@ -142,6 +154,57 @@ public class BacnetAsyncResult : IAsyncResult, IDisposable
                 _waitHandle.Reset();
             else
                 return true;
+        }
+    }
+
+    /// <summary>
+    /// Non-blocking equivalent of <see cref="WaitForDone"/>. Completes when a terminal reply (simple
+    /// ack, final complex ack, error, abort or reject) for this invoke-id arrives, mirroring the
+    /// segmented semantics of <see cref="WaitForDone"/>: each incoming segment re-arms the timeout so
+    /// the whole transfer is bounded per segment, not in total.
+    /// </summary>
+    /// <returns><c>true</c> if the request completed within the timeout; <c>false</c> on timeout.</returns>
+    public async Task<bool> GetResultOrTimeout(int timeoutMs, CancellationToken cancellationToken = default)
+    {
+        while (true)
+        {
+            Task signal;
+            lock (_asyncLock)
+            {
+                if (_done)
+                    return true;
+                if (_completionSource.Task.IsCompleted)
+                    _completionSource = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+                signal = _completionSource.Task;
+            }
+
+            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            var completed = await Task.WhenAny(signal, Task.Delay(timeoutMs, timeoutCts.Token)).ConfigureAwait(false);
+
+            if (completed != signal)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                return false;
+            }
+
+            // A terminal reply or a segment arrived; stop the timer and loop to re-evaluate: _done
+            // ends the wait, a bare segment re-arms it (the completed source is replaced above).
+            timeoutCts.Cancel();
+        }
+    }
+
+    private void MarkActivity()
+    {
+        lock (_asyncLock)
+            _completionSource.TrySetResult(true);
+    }
+
+    private void MarkDone()
+    {
+        lock (_asyncLock)
+        {
+            _done = true;
+            _completionSource.TrySetResult(true);
         }
     }
 

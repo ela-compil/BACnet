@@ -1759,6 +1759,21 @@ public class BacnetClient : IDisposable
         return false;
     }
 
+    // Awaits a request already put on the wire by a Begin* call, honouring the same per-attempt Timeout
+    // and Retries as the synchronous request methods, but without blocking a thread while the reply is
+    // outstanding. Returns false if every attempt timed out; device-level errors surface through End*.
+    private async Task<bool> SendRequestAsync(BacnetAsyncResult result, CancellationToken cancellationToken)
+    {
+        for (var r = 0; r < _retries; r++)
+        {
+            if (await result.GetResultOrTimeout(Timeout, cancellationToken).ConfigureAwait(false))
+                return true;
+            if (r < _retries - 1)
+                result.Resend();
+        }
+        return false;
+    }
+
     public Task<IList<BacnetValue>> ReadPropertyAsync(BacnetAddress address, BacnetObjectTypes objType, uint objInstance,
         BacnetPropertyIds propertyId, byte invokeId = 0, uint arrayIndex = ASN1.BACNET_ARRAY_ALL)
     {
@@ -1766,16 +1781,18 @@ public class BacnetClient : IDisposable
         return ReadPropertyAsync(address, objectId, propertyId, invokeId, arrayIndex);
     }
 
-    public Task<IList<BacnetValue>> ReadPropertyAsync(BacnetAddress address, BacnetObjectId objectId,
+    public async Task<IList<BacnetValue>> ReadPropertyAsync(BacnetAddress address, BacnetObjectId objectId,
         BacnetPropertyIds propertyId, byte invokeId = 0, uint arrayIndex = ASN1.BACNET_ARRAY_ALL)
     {
-        return Task<IList<BacnetValue>>.Factory.StartNew(() =>
-        {
-            if (!ReadPropertyRequest(address, objectId, propertyId, out IList<BacnetValue> result, invokeId, arrayIndex))
-                throw new Exception($"Failed to read property {propertyId} of {objectId} from {address}");
+        using var result = (BacnetAsyncResult)BeginReadPropertyRequest(address, objectId, propertyId, true, invokeId, arrayIndex);
+        if (!await SendRequestAsync(result, CancellationToken.None).ConfigureAwait(false))
+            throw new Exception($"Failed to read property {propertyId} of {objectId} from {address}");
 
-            return result;
-        });
+        EndReadPropertyRequest(result, out var valueList, out var ex);
+        if (ex != null)
+            throw ex;
+
+        return valueList;
     }
 
     public IAsyncResult BeginReadPropertyRequest(BacnetAddress address, BacnetObjectId objectId, BacnetPropertyIds propertyId, bool waitForTransmit, byte invokeId = 0, uint arrayIndex = ASN1.BACNET_ARRAY_ALL)
@@ -1982,19 +1999,22 @@ public class BacnetClient : IDisposable
         return ReadPropertyMultipleAsync(address, objectId, propertyIds);
     }
 
-    public Task<IList<BacnetPropertyValue>> ReadPropertyMultipleAsync(BacnetAddress address,
+    public async Task<IList<BacnetPropertyValue>> ReadPropertyMultipleAsync(BacnetAddress address,
         BacnetObjectId objectId, params BacnetPropertyIds[] propertyIds)
     {
-        var propertyReferences = propertyIds.Select(p =>
-            new BacnetPropertyReference((uint)p, ASN1.BACNET_ARRAY_ALL));
+        var propertyReferences = propertyIds
+            .Select(p => new BacnetPropertyReference((uint)p, ASN1.BACNET_ARRAY_ALL))
+            .ToList();
 
-        return Task<IList<BacnetPropertyValue>>.Factory.StartNew(() =>
-        {
-            if (!ReadPropertyMultipleRequest(address, objectId, propertyReferences.ToList(), out var result))
-                throw new Exception($"Failed to read multiple properties of {objectId} from {address}");
+        using var result = (BacnetAsyncResult)BeginReadPropertyMultipleRequest(address, objectId, propertyReferences, true);
+        if (!await SendRequestAsync(result, CancellationToken.None).ConfigureAwait(false))
+            throw new Exception($"Failed to read multiple properties of {objectId} from {address}");
 
-            return result.Single().values;
-        });
+        EndReadPropertyMultipleRequest(result, out var values, out var ex);
+        if (ex != null)
+            throw ex;
+
+        return values.Single().values;
     }
 
     public IAsyncResult BeginReadPropertyMultipleRequest(BacnetAddress adr, BacnetObjectId objectId, IList<BacnetPropertyReference> propertyIdAndArrayIndex, bool waitForTransmit, byte invokeId = 0)
@@ -2496,15 +2516,7 @@ public class BacnetClient : IDisposable
 
     public Task<IList<BacnetGetEventInformationData>> GetEventsAsync(BacnetAddress address, byte invokeId = 0)
     {
-        IList<BacnetGetEventInformationData> result = new List<BacnetGetEventInformationData>();
-
-        return Task<IList<BacnetGetEventInformationData>>.Factory.StartNew(() =>
-        {
-            if (!GetAlarmSummaryOrEventRequest(address, true, ref result, invokeId))
-                throw new Exception($"Failed to get events from {address}");
-
-            return result;
-        });
+        return GetAlarmSummaryOrEventAsync(address, true, invokeId);
     }
 
     public IAsyncResult BeginGetAlarmSummaryOrEventRequest(BacnetAddress adr, bool getEvent, IList<BacnetGetEventInformationData> alarms, bool waitForTransmit, byte invokeId = 0)
@@ -2764,6 +2776,317 @@ public class BacnetClient : IDisposable
             ex = new Exception("Wait Timeout");
 
         res.Dispose();
+    }
+
+    // ==============================================================================================
+    // Asynchronous request methods.
+    //
+    // Each mirrors its synchronous XxxRequest sibling but never blocks a thread while the reply is
+    // outstanding: the request is put on the wire by the matching Begin* call and awaited through the
+    // TaskCompletionSource in BacnetAsyncResult. Per-attempt Timeout and Retries behave exactly as on
+    // the synchronous path. Failure is reported by throwing — a TimeoutException when every attempt
+    // times out, or the device-reported exception (abort, reject, error or decode failure) otherwise.
+    // The confirmed request itself already carries a source-unique invoke-id, so many of these may be
+    // in flight concurrently on a single client without a lock.
+    // ==============================================================================================
+
+    public async Task<int> WriteFileAsync(BacnetAddress adr, BacnetObjectId objectId, int position, int count, byte[] fileBuffer, byte invokeId = 0, CancellationToken cancellationToken = default)
+    {
+        using var result = (BacnetAsyncResult)BeginWriteFileRequest(adr, objectId, position, count, fileBuffer, true, invokeId);
+        if (!await SendRequestAsync(result, cancellationToken).ConfigureAwait(false))
+            throw new TimeoutException($"Failed to write file {objectId} on {adr}");
+
+        EndWriteFileRequest(result, out var newPosition, out var ex);
+        if (ex != null)
+            throw ex;
+
+        return newPosition;
+    }
+
+    public async Task<(int position, uint count, bool endOfFile, byte[] fileBuffer, int fileBufferOffset)> ReadFileAsync(BacnetAddress adr, BacnetObjectId objectId, int position, uint count, byte invokeId = 0, CancellationToken cancellationToken = default)
+    {
+        using var result = (BacnetAsyncResult)BeginReadFileRequest(adr, objectId, position, count, true, invokeId);
+        if (!await SendRequestAsync(result, cancellationToken).ConfigureAwait(false))
+            throw new TimeoutException($"Failed to read file {objectId} from {adr}");
+
+        EndReadFileRequest(result, out var readCount, out var readPosition, out var endOfFile, out var buffer, out var bufferOffset, out var ex);
+        if (ex != null)
+            throw ex;
+
+        return (readPosition, readCount, endOfFile, buffer, bufferOffset);
+    }
+
+    // Read range by start time
+    public async Task<(byte[] range, uint count)> ReadRangeAsync(BacnetAddress adr, BacnetObjectId objectId, DateTime readFrom, uint quantity, byte invokeId = 0, CancellationToken cancellationToken = default)
+    {
+        using var result = (BacnetAsyncResult)BeginReadRangeRequest(adr, objectId, readFrom, quantity, true, invokeId);
+        if (!await SendRequestAsync(result, cancellationToken).ConfigureAwait(false))
+            throw new TimeoutException($"Failed to read range of {objectId} from {adr}");
+
+        EndReadRangeRequest(result, out var range, out var count, out var ex);
+        if (ex != null)
+            throw ex;
+
+        return (range, count);
+    }
+
+    // Read range by position
+    public async Task<(byte[] range, uint count)> ReadRangeAsync(BacnetAddress adr, BacnetObjectId objectId, uint idxBegin, uint quantity, byte invokeId = 0, CancellationToken cancellationToken = default)
+    {
+        using var result = (BacnetAsyncResult)BeginReadRangeRequest(adr, objectId, idxBegin, quantity, true, invokeId);
+        if (!await SendRequestAsync(result, cancellationToken).ConfigureAwait(false))
+            throw new TimeoutException($"Failed to read range of {objectId} from {adr}");
+
+        EndReadRangeRequest(result, out var range, out var count, out var ex);
+        if (ex != null)
+            throw ex;
+
+        return (range, count);
+    }
+
+    public async Task SubscribeCOVAsync(BacnetAddress adr, BacnetObjectId objectId, uint subscribeId, bool cancel, bool issueConfirmedNotifications, uint lifetime, byte invokeId = 0, CancellationToken cancellationToken = default)
+    {
+        using var result = (BacnetAsyncResult)BeginSubscribeCOVRequest(adr, objectId, subscribeId, cancel, issueConfirmedNotifications, lifetime, true, invokeId);
+        if (!await SendRequestAsync(result, cancellationToken).ConfigureAwait(false))
+            throw new TimeoutException($"Failed to subscribe COV of {objectId} on {adr}");
+
+        EndSubscribeCOVRequest(result, out var ex);
+        if (ex != null)
+            throw ex;
+    }
+
+    public async Task SendConfirmedEventNotificationAsync(BacnetAddress adr, BacnetEventNotificationData eventData, byte invokeId = 0, BacnetAddress source = null, CancellationToken cancellationToken = default)
+    {
+        using var result = (BacnetAsyncResult)BeginSendConfirmedEventNotificationRequest(adr, eventData, true, invokeId, source);
+        if (!await SendRequestAsync(result, cancellationToken).ConfigureAwait(false))
+            throw new TimeoutException($"Failed to send confirmed event notification to {adr}");
+
+        EndSendConfirmedEventNotificationRequest(result, out var ex);
+        if (ex != null)
+            throw ex;
+    }
+
+    public async Task SubscribePropertyAsync(BacnetAddress adr, BacnetObjectId objectId, BacnetPropertyReference monitoredProperty, uint subscribeId, bool cancel, bool issueConfirmedNotifications, byte invokeId = 0, CancellationToken cancellationToken = default)
+    {
+        using var result = (BacnetAsyncResult)BeginSubscribePropertyRequest(adr, objectId, monitoredProperty, subscribeId, cancel, issueConfirmedNotifications, true, invokeId);
+        if (!await SendRequestAsync(result, cancellationToken).ConfigureAwait(false))
+            throw new TimeoutException($"Failed to subscribe property {objectId}.{monitoredProperty} on {adr}");
+
+        EndSubscribePropertyRequest(result, out var ex);
+        if (ex != null)
+            throw ex;
+    }
+
+    public async Task WritePropertyAsync(BacnetAddress adr, BacnetObjectId objectId, BacnetPropertyIds propertyId, IEnumerable<BacnetValue> valueList, byte invokeId = 0, byte? priority = null, uint arrayIndex = ASN1.BACNET_ARRAY_ALL, CancellationToken cancellationToken = default)
+    {
+        using var result = (BacnetAsyncResult)BeginWritePropertyRequest(adr, objectId, propertyId, valueList, true, invokeId, priority, arrayIndex);
+        if (!await SendRequestAsync(result, cancellationToken).ConfigureAwait(false))
+            throw new TimeoutException($"Failed to write property {propertyId} of {objectId} on {adr}");
+
+        EndWritePropertyRequest(result, out var ex);
+        if (ex != null)
+            throw ex;
+    }
+
+    public async Task WritePropertyMultipleAsync(BacnetAddress adr, BacnetObjectId objectId, ICollection<BacnetPropertyValue> valueList, byte invokeId = 0, CancellationToken cancellationToken = default)
+    {
+        using var result = (BacnetAsyncResult)BeginWritePropertyMultipleRequest(adr, objectId, valueList, true, invokeId);
+        if (!await SendRequestAsync(result, cancellationToken).ConfigureAwait(false))
+            throw new TimeoutException($"Failed to write multiple properties of {objectId} on {adr}");
+
+        EndWritePropertyRequest(result, out var ex);
+        if (ex != null)
+            throw ex;
+    }
+
+    public async Task WritePropertyMultipleAsync(BacnetAddress adr, ICollection<BacnetReadAccessResult> valueList, byte invokeId = 0, CancellationToken cancellationToken = default)
+    {
+        using var result = (BacnetAsyncResult)BeginWritePropertyMultipleRequest(adr, valueList, true, invokeId);
+        if (!await SendRequestAsync(result, cancellationToken).ConfigureAwait(false))
+            throw new TimeoutException($"Failed to write multiple properties on {adr}");
+
+        EndWritePropertyRequest(result, out var ex);
+        if (ex != null)
+            throw ex;
+    }
+
+    public async Task<IList<BacnetReadAccessResult>> ReadPropertyMultipleAsync(BacnetAddress adr, BacnetObjectId objectId, IList<BacnetPropertyReference> propertyIdAndArrayIndex, byte invokeId = 0, CancellationToken cancellationToken = default)
+    {
+        using var result = (BacnetAsyncResult)BeginReadPropertyMultipleRequest(adr, objectId, propertyIdAndArrayIndex, true, invokeId);
+        if (!await SendRequestAsync(result, cancellationToken).ConfigureAwait(false))
+            throw new TimeoutException($"Failed to read multiple properties of {objectId} from {adr}");
+
+        EndReadPropertyMultipleRequest(result, out var values, out var ex);
+        if (ex != null)
+            throw ex;
+
+        return values;
+    }
+
+    public async Task<IList<BacnetReadAccessResult>> ReadPropertyMultipleAsync(BacnetAddress adr, IList<BacnetReadAccessSpecification> properties, byte invokeId = 0, CancellationToken cancellationToken = default)
+    {
+        using var result = (BacnetAsyncResult)BeginReadPropertyMultipleRequest(adr, properties, true, invokeId);
+        if (!await SendRequestAsync(result, cancellationToken).ConfigureAwait(false))
+            throw new TimeoutException($"Failed to read multiple properties from {adr}");
+
+        EndReadPropertyMultipleRequest(result, out var values, out var ex);
+        if (ex != null)
+            throw ex;
+
+        return values;
+    }
+
+    public async Task CreateObjectAsync(BacnetAddress adr, BacnetObjectId objectId, ICollection<BacnetPropertyValue> valueList = null, byte invokeId = 0, CancellationToken cancellationToken = default)
+    {
+        using var result = (BacnetAsyncResult)BeginCreateObjectRequest(adr, objectId, valueList, true, invokeId);
+        if (!await SendRequestAsync(result, cancellationToken).ConfigureAwait(false))
+            throw new TimeoutException($"Failed to create object {objectId} on {adr}");
+
+        EndCreateObjectRequest(result, out var ex);
+        if (ex != null)
+            throw ex;
+    }
+
+    public async Task DeleteObjectAsync(BacnetAddress adr, BacnetObjectId objectId, byte invokeId = 0, CancellationToken cancellationToken = default)
+    {
+        using var result = (BacnetAsyncResult)BeginDeleteObjectRequest(adr, objectId, true, invokeId);
+        if (!await SendRequestAsync(result, cancellationToken).ConfigureAwait(false))
+            throw new TimeoutException($"Failed to delete object {objectId} on {adr}");
+
+        EndDeleteObjectRequest(result, out var ex);
+        if (ex != null)
+            throw ex;
+    }
+
+    public async Task AddListElementAsync(BacnetAddress adr, BacnetObjectId objectId, BacnetPropertyReference reference, IList<BacnetValue> valueList, byte invokeId = 0, CancellationToken cancellationToken = default)
+    {
+        using var result = (BacnetAsyncResult)BeginAddListElementRequest(adr, objectId, reference, valueList, true, invokeId);
+        if (!await SendRequestAsync(result, cancellationToken).ConfigureAwait(false))
+            throw new TimeoutException($"Failed to add list element to {objectId}.{(BacnetPropertyIds)reference.propertyIdentifier} on {adr}");
+
+        EndAddListElementRequest(result, out var ex);
+        if (ex != null)
+            throw ex;
+    }
+
+    public async Task RemoveListElementAsync(BacnetAddress adr, BacnetObjectId objectId, BacnetPropertyReference reference, IList<BacnetValue> valueList, byte invokeId = 0, CancellationToken cancellationToken = default)
+    {
+        using var result = (BacnetAsyncResult)BeginRemoveListElementRequest(adr, objectId, reference, valueList, true, invokeId);
+        if (!await SendRequestAsync(result, cancellationToken).ConfigureAwait(false))
+            throw new TimeoutException($"Failed to remove list element from {objectId}.{(BacnetPropertyIds)reference.propertyIdentifier} on {adr}");
+
+        EndAddListElementRequest(result, out var ex);
+        if (ex != null)
+            throw ex;
+    }
+
+    public async Task<byte[]> RawEncodedDecodedPropertyConfirmedAsync(BacnetAddress adr, BacnetObjectId objectId, BacnetPropertyIds propertyId, BacnetConfirmedServices serviceId, byte[] inOutBuffer = null, byte invokeId = 0, CancellationToken cancellationToken = default)
+    {
+        using var result = (BacnetAsyncResult)BeginRawEncodedDecodedPropertyConfirmedRequest(adr, objectId, propertyId, serviceId, inOutBuffer, true, invokeId);
+        if (!await SendRequestAsync(result, cancellationToken).ConfigureAwait(false))
+            throw new TimeoutException($"Failed raw confirmed request {serviceId} of {objectId} on {adr}");
+
+        EndRawEncodedDecodedPropertyConfirmedRequest(result, serviceId, out var outBuffer, out var ex);
+        if (ex != null)
+            throw ex;
+
+        return outBuffer;
+    }
+
+    public async Task DeviceCommunicationControlAsync(BacnetAddress adr, uint timeDuration, uint enableDisable, string password, byte invokeId = 0, CancellationToken cancellationToken = default)
+    {
+        using var result = (BacnetAsyncResult)BeginDeviceCommunicationControlRequest(adr, timeDuration, enableDisable, password, true, invokeId);
+        if (!await SendRequestAsync(result, cancellationToken).ConfigureAwait(false))
+            throw new TimeoutException($"Failed device communication control on {adr}");
+
+        EndDeviceCommunicationControlRequest(result, out var ex);
+        if (ex != null)
+            throw ex;
+    }
+
+    public async Task<(uint vendorId, uint serviceNumber, byte[] resultBlock)> PrivateTransferAsync(BacnetAddress adr, uint vendorId, uint serviceNumber, byte[] serviceParameters, byte invokeId = 0, CancellationToken cancellationToken = default)
+    {
+        using var result = (BacnetAsyncResult)BeginPrivateTransferRequest(adr, vendorId, serviceNumber, serviceParameters, true, invokeId);
+        if (!await SendRequestAsync(result, cancellationToken).ConfigureAwait(false))
+            throw new TimeoutException($"Failed private transfer (vendor {vendorId}, service {serviceNumber}) on {adr}");
+
+        EndPrivateTransferRequest(result, out var outVendorId, out var outServiceNumber, out var resultBlock, out var ex);
+        if (ex != null)
+            throw ex;
+
+        return (outVendorId, outServiceNumber, resultBlock);
+    }
+
+    public async Task<IList<BacnetGetEventInformationData>> GetAlarmSummaryOrEventAsync(BacnetAddress adr, bool getEvent, byte invokeId = 0, CancellationToken cancellationToken = default)
+    {
+        IList<BacnetGetEventInformationData> alarms = new List<BacnetGetEventInformationData>();
+        var currentInvokeId = invokeId;
+        bool moreEvent;
+
+        do
+        {
+            using var result = (BacnetAsyncResult)BeginGetAlarmSummaryOrEventRequest(adr, getEvent, alarms, true, currentInvokeId);
+            if (!await SendRequestAsync(result, cancellationToken).ConfigureAwait(false))
+                throw new TimeoutException($"Failed to get {(getEvent ? "events" : "alarms")} from {adr}");
+
+            EndGetAlarmSummaryOrEventRequest(result, getEvent, ref alarms, out moreEvent, out var ex);
+            if (ex != null)
+                throw ex;
+
+            currentInvokeId = 0; // let each follow-up "get next" round take a fresh invoke-id
+        } while (moreEvent);
+
+        return alarms;
+    }
+
+    public async Task ReinitializeAsync(BacnetAddress adr, BacnetReinitializedStates state, string password, byte invokeId = 0, CancellationToken cancellationToken = default)
+    {
+        using var result = (BacnetAsyncResult)BeginReinitializeRequest(adr, state, password, true, invokeId);
+        if (!await SendRequestAsync(result, cancellationToken).ConfigureAwait(false))
+            throw new TimeoutException($"Failed to reinitialize {adr}");
+
+        EndReinitializeRequest(result, out var ex);
+        if (ex != null)
+            throw ex;
+    }
+
+    public async Task LifeSafetyOperationAsync(BacnetAddress address, BacnetObjectId objectId, string requestingSrc, BacnetLifeSafetyOperations operation, byte invokeId = 0, CancellationToken cancellationToken = default)
+    {
+        using var result = (BacnetAsyncResult)BeginLifeSafetyOperationRequest(address, objectId, 0, requestingSrc, operation, true, invokeId);
+        if (!await SendRequestAsync(result, cancellationToken).ConfigureAwait(false))
+            throw new TimeoutException($"Failed life safety operation {operation} on {objectId} at {address}");
+
+        EndLifeSafetyOperationRequest(result, out var ex);
+        if (ex != null)
+            throw ex;
+    }
+
+    public async Task AlarmAcknowledgementAsync(BacnetAddress adr, BacnetObjectId objId, BacnetEventStates eventState, string ackText, BacnetGenericTime evTimeStamp, BacnetGenericTime ackTimeStamp, byte invokeId = 0, CancellationToken cancellationToken = default)
+    {
+        using var result = (BacnetAsyncResult)BeginAlarmAcknowledgement(adr, objId, eventState, ackText, evTimeStamp, ackTimeStamp, true, invokeId);
+        if (!await SendRequestAsync(result, cancellationToken).ConfigureAwait(false))
+            throw new TimeoutException($"Failed to acknowledge alarm on {objId} at {adr}");
+
+        EndAlarmAcknowledgement(result, out var ex);
+        if (ex != null)
+            throw ex;
+    }
+
+    public async Task NotifyAsync(BacnetAddress adr, uint subscriberProcessIdentifier, uint initiatingDeviceIdentifier, BacnetObjectId monitoredObjectIdentifier, uint timeRemaining, bool issueConfirmedNotifications, IList<BacnetPropertyValue> values, CancellationToken cancellationToken = default)
+    {
+        if (!issueConfirmedNotifications)
+        {
+            Notify(adr, subscriberProcessIdentifier, initiatingDeviceIdentifier, monitoredObjectIdentifier, timeRemaining, false, values);
+            return;
+        }
+
+        using var result = (BacnetAsyncResult)BeginConfirmedNotify(adr, subscriberProcessIdentifier, initiatingDeviceIdentifier, monitoredObjectIdentifier, timeRemaining, values, true);
+        if (!await SendRequestAsync(result, cancellationToken).ConfigureAwait(false))
+            throw new TimeoutException($"Failed to notify {monitoredObjectIdentifier} on {adr}");
+
+        EndConfirmedNotify(result, out var ex);
+        if (ex != null)
+            throw ex;
     }
 
     public static byte GetSegmentsCount(BacnetMaxSegments maxSegments)
