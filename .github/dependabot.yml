@@ -1,11 +1,23 @@
 version: 2
+
+# Dependabot reads this file only from the default branch (master), so every branch it should
+# maintain needs its own update entry here. The v4 entries mirror the master ones with a
+# target-branch; keep each pair (nuget, github-actions) in sync when editing.
 updates:
-  # NuGet package versions are centralised in Directory.Packages.props (CPM).
+  # ---------------------------------------------------------------- master (default branch) ----
+
+  # NuGet package versions are centralised in Directory.Packages.props (CPM). Grouping collapses a
+  # run's bumps into a single PR so they don't fight over the same Directory.Packages.props lines.
   - package-ecosystem: "nuget"
     directory: "/"
     schedule:
       interval: "weekly"
+    commit-message:
+      prefix: "chore"
     open-pull-requests-limit: 10
+    groups:
+      nuget:
+        patterns: ["*"]
     ignore:
       # Keep the library's runtime dependency floors low: a library forcing a new major of these
       # ubiquitous packages would push that major onto every consumer's graph. Take majors here
@@ -24,3 +36,41 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    commit-message:
+      prefix: "chore"
+    groups:
+      github-actions:
+        patterns: ["*"]
+
+  # ------------------------------------------------------------ v4 (maintained release branch) ----
+  # Same rules as master, targeting v4. Keep in sync with the master blocks above.
+
+  - package-ecosystem: "nuget"
+    directory: "/"
+    target-branch: "v4"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore"
+    open-pull-requests-limit: 10
+    groups:
+      nuget:
+        patterns: ["*"]
+    ignore:
+      - dependency-name: "Microsoft.Extensions.Logging"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "Microsoft.Extensions.Logging.Abstractions"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "System.IO.Ports"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    target-branch: "v4"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore"
+    groups:
+      github-actions:
+        patterns: ["*"]
