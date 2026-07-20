@@ -91,6 +91,21 @@ public class BacnetClientAsyncTests
             Assert.Equal(requested, returned);
     }
 
+    [Fact]
+    public async Task ReadPropertyAsync_honours_cancellation()
+    {
+        // Nothing ever answers (frames are dropped), so only cancellation can end the wait - and it
+        // must do so long before the 10 s timeout would.
+        using var client = new BacnetClient(new SilentTransport(), timeout: 10000, retries: 1);
+        client.Start();
+
+        using var cts = new CancellationTokenSource(150);
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => client.ReadPropertyAsync(Anywhere,
+            new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_VALUE, 1), BacnetPropertyIds.PROP_PRESENT_VALUE,
+            cancellationToken: cts.Token));
+    }
+
     /// <summary>
     /// Loopback transport that delivers each frame to its peer on a thread-pool thread after a short
     /// random delay, so requests and replies genuinely overlap and arrive out of order.
@@ -143,6 +158,30 @@ public class BacnetClientAsyncTests
 
             return dataLength;
         }
+
+        public void Dispose() { }
+    }
+
+    /// <summary>Transport that accepts sends but never delivers anything back, so requests go unanswered.</summary>
+    private sealed class SilentTransport : IBacnetTransport
+    {
+        public byte MaxInfoFrames { get; set; } = 0xFF;
+        public int HeaderLength => 0;
+        public int MaxBufferLength => 1500;
+        public BacnetAddressTypes Type => BacnetAddressTypes.None;
+        public BacnetMaxAdpu MaxAdpuLength => BacnetMaxAdpu.MAX_APDU1476;
+
+#pragma warning disable CS0067 // required by the interface; this transport never receives
+        public event MessageRecievedHandler MessageRecieved;
+#pragma warning restore CS0067
+
+        public void Start() { }
+
+        public BacnetAddress GetBroadcastAddress() => new(BacnetAddressTypes.None, 0, null);
+
+        public bool WaitForAllTransmits(int timeout) => true;
+
+        public int Send(byte[] buffer, int offset, int dataLength, BacnetAddress address, bool waitForTransmission, int timeout) => dataLength;
 
         public void Dispose() { }
     }

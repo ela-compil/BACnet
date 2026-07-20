@@ -1775,17 +1775,17 @@ public class BacnetClient : IDisposable
     }
 
     public Task<IList<BacnetValue>> ReadPropertyAsync(BacnetAddress address, BacnetObjectTypes objType, uint objInstance,
-        BacnetPropertyIds propertyId, byte invokeId = 0, uint arrayIndex = ASN1.BACNET_ARRAY_ALL)
+        BacnetPropertyIds propertyId, byte invokeId = 0, uint arrayIndex = ASN1.BACNET_ARRAY_ALL, CancellationToken cancellationToken = default)
     {
         var objectId = new BacnetObjectId(objType, objInstance);
-        return ReadPropertyAsync(address, objectId, propertyId, invokeId, arrayIndex);
+        return ReadPropertyAsync(address, objectId, propertyId, invokeId, arrayIndex, cancellationToken);
     }
 
     public async Task<IList<BacnetValue>> ReadPropertyAsync(BacnetAddress address, BacnetObjectId objectId,
-        BacnetPropertyIds propertyId, byte invokeId = 0, uint arrayIndex = ASN1.BACNET_ARRAY_ALL)
+        BacnetPropertyIds propertyId, byte invokeId = 0, uint arrayIndex = ASN1.BACNET_ARRAY_ALL, CancellationToken cancellationToken = default)
     {
         using var result = (BacnetAsyncResult)BeginReadPropertyRequest(address, objectId, propertyId, true, invokeId, arrayIndex);
-        if (!await SendRequestAsync(result, CancellationToken.None).ConfigureAwait(false))
+        if (!await SendRequestAsync(result, cancellationToken).ConfigureAwait(false))
             throw new Exception($"Failed to read property {propertyId} of {objectId} from {address}");
 
         EndReadPropertyRequest(result, out var valueList, out var ex);
@@ -2514,9 +2514,9 @@ public class BacnetClient : IDisposable
         return false;
     }
 
-    public Task<IList<BacnetGetEventInformationData>> GetEventsAsync(BacnetAddress address, byte invokeId = 0)
+    public Task<IList<BacnetGetEventInformationData>> GetEventsAsync(BacnetAddress address, byte invokeId = 0, CancellationToken cancellationToken = default)
     {
-        return GetAlarmSummaryOrEventAsync(address, true, invokeId);
+        return GetAlarmSummaryOrEventAsync(address, true, invokeId, cancellationToken);
     }
 
     public IAsyncResult BeginGetAlarmSummaryOrEventRequest(BacnetAddress adr, bool getEvent, IList<BacnetGetEventInformationData> alarms, bool waitForTransmit, byte invokeId = 0)
