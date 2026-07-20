@@ -2822,7 +2822,6 @@ public class BacnetClient : IDisposable
         return new BacnetReadFileResult(readPosition, readCount, endOfFile, buffer, bufferOffset);
     }
 
-    // Read range by start time
     /// <summary>
     /// Read a range of items from a list or log property, starting at the given time.
     /// </summary>
@@ -2839,7 +2838,6 @@ public class BacnetClient : IDisposable
         return new BacnetReadRangeResult(range, count);
     }
 
-    // Read range by position
     /// <summary>
     /// Read a range of items from a list or log property, starting at the given index.
     /// </summary>

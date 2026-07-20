@@ -16,6 +16,7 @@ or expose your application as a BACnet device.
 
 - **Transports** — BACnet/IP (UDP, IPv4 & IPv6) with BBMD and foreign-device registration; BACnet/Ethernet (pcap); MS/TP and PTP over a serial port
 - **Client and device (server) roles** — send requests and/or answer them from your own object model
+- **Async client API** — every confirmed request also has a non-blocking, awaitable `…Async` counterpart, so many can be in flight on one client at once
 - **Discovery** — Who-Is / I-Am and Who-Has / I-Have, including across routers
 - **Data access** — ReadProperty, WriteProperty, ReadPropertyMultiple, WritePropertyMultiple, ReadRange
 - **Change of Value** — SubscribeCOV / SubscribeProperty and COV notifications
@@ -81,6 +82,34 @@ Console.ReadLine();
 
 The [`Examples/`](https://github.com/ela-compil/BACnet/tree/master/Examples) folder has runnable samples — basic read/write, a device/server,
 COV subscription, alarm/event handling, BBMD, a serial device, and more.
+
+## Asynchronous requests
+
+Every confirmed service has an awaitable `…Async` counterpart (`ReadPropertyAsync`,
+`WritePropertyAsync`, `ReadPropertyMultipleAsync`, `SubscribeCOVAsync`, …). Awaiting a reply doesn't
+block a thread, so many requests can be in flight on a single client at once — each reply is matched
+to its own request:
+
+```csharp
+using System.IO.BACnet;
+
+var client = new BacnetClient(new BacnetIpUdpProtocolTransport(0xBAC0));
+client.Start();
+
+var adr = new BacnetAddress(BacnetAddressTypes.IP, "192.168.1.50");
+
+// A single read
+var values = await client.ReadPropertyAsync(adr,
+    new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_VALUE, 0), BacnetPropertyIds.PROP_PRESENT_VALUE);
+
+// Or many at once, without one thread parked per request
+var reads = Enumerable.Range(0, 50).Select(i => client.ReadPropertyAsync(adr,
+    new BacnetObjectId(BacnetObjectTypes.OBJECT_ANALOG_VALUE, (uint)i), BacnetPropertyIds.PROP_PRESENT_VALUE));
+var results = await Task.WhenAll(reads);
+```
+
+On failure they throw — a `TimeoutException` once every retry has timed out, or the device-reported
+error otherwise. Most also accept an optional `CancellationToken`.
 
 ## Logging
 
