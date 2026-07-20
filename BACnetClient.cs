@@ -2809,7 +2809,7 @@ public class BacnetClient : IDisposable
     /// <summary>
     /// Reads a block from a File object (AtomicReadFile).
     /// </summary>
-    public async Task<(int position, uint count, bool endOfFile, byte[] fileBuffer, int fileBufferOffset)> ReadFileAsync(BacnetAddress adr, BacnetObjectId objectId, int position, uint count, byte invokeId = 0, CancellationToken cancellationToken = default)
+    public async Task<BacnetReadFileResult> ReadFileAsync(BacnetAddress adr, BacnetObjectId objectId, int position, uint count, byte invokeId = 0, CancellationToken cancellationToken = default)
     {
         using var result = (BacnetAsyncResult)BeginReadFileRequest(adr, objectId, position, count, true, invokeId);
         if (!await SendRequestAsync(result, cancellationToken).ConfigureAwait(false))
@@ -2819,14 +2819,14 @@ public class BacnetClient : IDisposable
         if (ex != null)
             throw ex;
 
-        return (readPosition, readCount, endOfFile, buffer, bufferOffset);
+        return new BacnetReadFileResult(readPosition, readCount, endOfFile, buffer, bufferOffset);
     }
 
     // Read range by start time
     /// <summary>
     /// Reads a range of items from a list or log property, starting at the given time.
     /// </summary>
-    public async Task<(byte[] range, uint count)> ReadRangeAsync(BacnetAddress adr, BacnetObjectId objectId, DateTime readFrom, uint quantity, byte invokeId = 0, CancellationToken cancellationToken = default)
+    public async Task<BacnetReadRangeResult> ReadRangeAsync(BacnetAddress adr, BacnetObjectId objectId, DateTime readFrom, uint quantity, byte invokeId = 0, CancellationToken cancellationToken = default)
     {
         using var result = (BacnetAsyncResult)BeginReadRangeRequest(adr, objectId, readFrom, quantity, true, invokeId);
         if (!await SendRequestAsync(result, cancellationToken).ConfigureAwait(false))
@@ -2836,14 +2836,14 @@ public class BacnetClient : IDisposable
         if (ex != null)
             throw ex;
 
-        return (range, count);
+        return new BacnetReadRangeResult(range, count);
     }
 
     // Read range by position
     /// <summary>
     /// Reads a range of items from a list or log property, starting at the given index.
     /// </summary>
-    public async Task<(byte[] range, uint count)> ReadRangeAsync(BacnetAddress adr, BacnetObjectId objectId, uint idxBegin, uint quantity, byte invokeId = 0, CancellationToken cancellationToken = default)
+    public async Task<BacnetReadRangeResult> ReadRangeAsync(BacnetAddress adr, BacnetObjectId objectId, uint idxBegin, uint quantity, byte invokeId = 0, CancellationToken cancellationToken = default)
     {
         using var result = (BacnetAsyncResult)BeginReadRangeRequest(adr, objectId, idxBegin, quantity, true, invokeId);
         if (!await SendRequestAsync(result, cancellationToken).ConfigureAwait(false))
@@ -2853,7 +2853,7 @@ public class BacnetClient : IDisposable
         if (ex != null)
             throw ex;
 
-        return (range, count);
+        return new BacnetReadRangeResult(range, count);
     }
 
     /// <summary>
@@ -3061,7 +3061,7 @@ public class BacnetClient : IDisposable
     /// <summary>
     /// Sends a vendor-specific confirmed PrivateTransfer request and returns the device's response.
     /// </summary>
-    public async Task<(uint vendorId, uint serviceNumber, byte[] resultBlock)> PrivateTransferAsync(BacnetAddress adr, uint vendorId, uint serviceNumber, byte[] serviceParameters, byte invokeId = 0, CancellationToken cancellationToken = default)
+    public async Task<BacnetPrivateTransferResult> PrivateTransferAsync(BacnetAddress adr, uint vendorId, uint serviceNumber, byte[] serviceParameters, byte invokeId = 0, CancellationToken cancellationToken = default)
     {
         using var result = (BacnetAsyncResult)BeginPrivateTransferRequest(adr, vendorId, serviceNumber, serviceParameters, true, invokeId);
         if (!await SendRequestAsync(result, cancellationToken).ConfigureAwait(false))
@@ -3071,7 +3071,7 @@ public class BacnetClient : IDisposable
         if (ex != null)
             throw ex;
 
-        return (outVendorId, outServiceNumber, resultBlock);
+        return new BacnetPrivateTransferResult(outVendorId, outServiceNumber, resultBlock);
     }
 
     /// <summary>
