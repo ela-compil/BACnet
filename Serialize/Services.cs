@@ -2441,13 +2441,22 @@ public class Services
         objectId = new BacnetObjectId();
         valuesRefs = null;
 
-        //object id
+        //object specifier - a choice of [0] object-type (the device assigns the instance) or
+        //[1] object-identifier; both forms are produced by the two EncodeCreateObject overloads
         len += ASN1.decode_tag_number_and_value(buffer, offset + len, out var tagNumber, out var lenValue);
 
         if (tagNumber == 0 && apduLen > len)
         {
             apduLen -= len;
-            if (apduLen >= 4)
+            ASN1.decode_tag_number(buffer, offset + len, out var choiceTag);
+            if (choiceTag == 0)
+            {
+                len += ASN1.decode_tag_number_and_value(buffer, offset + len, out _, out var typeLen);
+                len += ASN1.decode_enumerated(buffer, offset + len, typeLen, out var objectType);
+                objectId.type = (BacnetObjectTypes)objectType;
+                objectId.instance = ASN1.BACNET_MAX_INSTANCE;
+            }
+            else if (choiceTag == 1 && apduLen >= 4)
             {
                 len += ASN1.decode_context_object_id(buffer, offset + len, 1, out var typenr, out objectId.instance);
                 objectId.type = (BacnetObjectTypes)typenr;
@@ -2459,7 +2468,7 @@ public class Services
             return -1;
         if (ASN1.decode_is_closing_tag(buffer, offset + len))
             len++;
-        //end objectid
+        //end object specifier
 
         // No initial values ?
         if (buffer.Length == offset + len)
