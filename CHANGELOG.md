@@ -52,6 +52,13 @@ See [MIGRATION.md](MIGRATION.md) for upgrade guidance.
   `BacnetWeekNDay` give `Weekly_Schedule`, `Exception_Schedule` and `Date_List` symmetric
   encode/decode - values read from a device can be modified and written back as-is
   (ASHRAE 135-2016 clauses 12.9 / 12.24 / 21).
+- Asynchronous, non-blocking client API (#46): every confirmed service has an awaitable `…Async`
+  counterpart (`ReadPropertyAsync`, `WritePropertyAsync`, `SubscribeCOVAsync`, …) that no longer parks
+  a thread per outstanding request, so many requests can be in flight on one client at once, each reply
+  matched to its request by invoke-id. Failures throw (a `TimeoutException` once retries are exhausted,
+  otherwise the device error); most methods accept an optional `CancellationToken`, and the
+  file/range/private-transfer variants return typed results (`BacnetReadFileResult`,
+  `BacnetReadRangeResult`, `BacnetPrivateTransferResult`).
 
 ### Changed
 - The core package is now pure-managed with no native dependencies (closes the pcap → log4net chain, #112).
