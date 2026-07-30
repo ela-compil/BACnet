@@ -365,8 +365,8 @@ public class AshraeAnnexFTests
         }, buffer.ToArray());
     }
 
-    [Fact] // F.4.3 - ConfirmedPrivateTransfer complex-ack (no result block)
-    public void F_4_3_ConfirmedPrivateTransfer_ack()
+    [Fact] // F.4.2 - ConfirmedPrivateTransfer complex-ack (no result block)
+    public void F_4_2_ConfirmedPrivateTransfer_ack()
     {
         var buffer = new EncodeBuffer();
         APDU.EncodeComplexAck(buffer, BacnetPduTypes.PDU_TYPE_COMPLEX_ACK,
