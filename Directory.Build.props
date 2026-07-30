@@ -38,9 +38,12 @@
 
     <!-- Package validation: run the SDK's compatibility checks at pack time. This catches missing
          target-framework assets and any accidental public-API break across the multi-targeted
-         surface (net48/netstandard2.0/net8.0/net10.0). Baseline-against-a-previous-release checks
-         stay off until a stable v4 ships on nuget.org - set PackageValidationBaselineVersion then. -->
+         surface (net48/netstandard2.0/net8.0/net10.0). The baseline is the last stable release on
+         nuget.org, so packing also fails on an unintended break against it: raise it when starting
+         work on the next minor/major, and record intended breaks in a CompatibilitySuppressions.xml
+         next to the project (`dotnet pack /p:GenerateCompatibilitySuppressionFile=true` writes one). -->
     <EnablePackageValidation>true</EnablePackageValidation>
+    <PackageValidationBaselineVersion>4.0.0</PackageValidationBaselineVersion>
 
     <!-- Versioning is tag-driven via MinVer: the git tag IS the package/file version. Release tags
          are v-prefixed (e.g. v4.0.0); MinimumMajorMinor floors untagged builds at 4.0.0-alpha.0.<height>

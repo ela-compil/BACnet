@@ -42,6 +42,26 @@ jobs:
           if (-not $notes) {
             throw "CHANGELOG.md has no '## $version' section - a stable release must ship real notes."
           }
+          # A release body is rendered with GitHub's comment flavour of Markdown, where a single newline
+          # is a hard line break - so the changelog's 100-column wrapping would show up as ragged breaks
+          # mid-sentence. Join each bullet and paragraph back onto one line; blank lines, headings,
+          # nested list items, tables, quotes and fenced code are left exactly as they are.
+          $reflowed = [System.Collections.Generic.List[string]]::new()
+          $fenced = $false
+          foreach ($line in ($notes -split "\r?\n")) {
+            if ($line -match '^\s*```') { $fenced = -not $fenced; $reflowed.Add($line); continue }
+            $isContinuation = -not $fenced -and
+              $line -notmatch '^\s*$' -and
+              $line -notmatch '^\s*(#{1,6}\s|[-*+]\s|\d+\.\s|\||>|```|---)' -and
+              $reflowed.Count -gt 0 -and
+              $reflowed[$reflowed.Count - 1] -notmatch '^\s*$'
+            if ($isContinuation) {
+              $reflowed[$reflowed.Count - 1] = $reflowed[$reflowed.Count - 1].TrimEnd() + ' ' + $line.Trim()
+            } else {
+              $reflowed.Add($line)
+            }
+          }
+          $notes = ($reflowed -join "`n")
           # Relative links (e.g. MIGRATION.md) do not resolve in a release body - pin them to the tag.
           $blob = "https://github.com/${{ github.repository }}/blob/$tag/"
           $notes = [regex]::Replace($notes, '\]\((?!https?://|#)([^)]+)\)', "]($blob`$1)")
