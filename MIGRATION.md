@@ -195,6 +195,56 @@ original octets via the new `BacnetGenericTime.PartialTime` while `Time` keeps t
 best-effort clamped value, and a wildcarded Date+Time property pair merges into the new
 `BacnetDateTime` struct instead of a clamped `DateTime`.
 
+## `BacnetReliability` values are renumbered
+
+The enum did not match ASHRAE 135. Two members had the wrong numbers and everything above 13 was
+missing, so 3.x both sent and interpreted the wrong values on the wire for them:
+
+| Member | 3.x | 4.0 |
+|--------|-----|-----|
+| `RELIABILITY_COMMUNICATION_FAILURE` | 12 | 12 (unchanged) |
+| `RELIABILITY_MEMBER_FAULT` | 11 | **13** |
+| `RELIABILITY_TRIPPED` | 13 | **15** |
+
+Value 11 is reserved for a future addendum by the standard and is now `RELIABILITY_RESERVED_11`. The
+members the enum lacked are added: `RELIABILITY_MONITORED_OBJECT_FAULT` (14),
+`RELIABILITY_LAMP_FAILURE` (16), `RELIABILITY_ACTIVATION_FAILURE` (17),
+`RELIABILITY_RENEW_DHCP_FAILURE` (18), `RELIABILITY_RENEW_FD_REGISTRATION_FAILURE` (19),
+`RELIABILITY_RESTART_AUTO_NEGOTIATION_FAILURE` (20), `RELIABILITY_RESTART_FAILURE` (21),
+`RELIABILITY_PROPRIETARY_COMMAND_FAILURE` (22), `RELIABILITY_FAULTS_LISTED` (23),
+`RELIABILITY_REFERENCED_OBJECT_FAULT` (24) and `RELIABILITY_MULTI_STATE_OUT_OF_RANGE` (25).
+
+Code that uses the enum members by name needs no change and starts putting the correct values on the
+wire. **Code that stored or transported the numbers does need attention**: a database column, config
+file or protocol bridge holding 11 or 13 from 3.x now means something different, and it keeps
+compiling. Migrate persisted 11 → 13 and 13 → 15, in that order.
+
+## `BacnetLogRecord.statusFlags` is a `BacnetStatusFlags`
+
+The trend-log record's status field was an untyped `BacnetBitString` built from a raw `uint`, which lost
+the meaning of the bits and encoded a variable number of them. It is now the `BacnetStatusFlags` enum,
+and records encode/decode it as the fixed 4-bit BACnetStatusFlags string the standard defines:
+
+```diff
+- var record = new BacnetLogRecord(type, value, stamp, (uint)BacnetStatusFlags.STATUS_FLAG_IN_ALARM);
++ var record = new BacnetLogRecord(type, value, stamp, BacnetStatusFlags.STATUS_FLAG_IN_ALARM);
+- if (record.statusFlags.GetBit(0)) { ... }
++ if (record.statusFlags.HasFlag(BacnetStatusFlags.STATUS_FLAG_IN_ALARM)) { ... }
+```
+
+## `BacnetRejectReason.RECOGNIZED_SERVICE` → `UNRECOGNIZED_SERVICE`
+
+Reject reason 9 is returned when the service in a confirmed request is unknown or unsupported
+(ASHRAE 135 §18.8), but the member had always been spelled without the negation - 3.x even carried
+the comment *"should be unrecognized but this is the way it was spelled"*. Only the name changed:
+
+```diff
+- SendConfirmedServiceReject(address, invokeId, BacnetRejectReason.RECOGNIZED_SERVICE);
++ SendConfirmedServiceReject(address, invokeId, BacnetRejectReason.UNRECOGNIZED_SERVICE);
+```
+
+The numeric value stays 9, so nothing changes on the wire and persisted values need no migration.
+
 ## `Services.EncodeCreateProperty` → `EncodeCreateObject`
 
 This low-level encoder was misnamed: it encodes a **CreateObject-Request** (BACnet has no
