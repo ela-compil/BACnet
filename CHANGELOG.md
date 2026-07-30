@@ -22,6 +22,17 @@ See [MIGRATION.md](MIGRATION.md) for upgrade guidance.
   actually evaluated), `BacnetDate.toDateTime()` → `ToDateTime()`. Decoded `Date_List`,
   `Weekly_Schedule` and `Exception_Schedule` values now carry dedicated application tags and typed
   objects instead of the opaque `CONTEXT_SPECIFIC_DECODED` shapes.
+- **`BacnetReliability` renumbered** to match the standard's enumeration (see MIGRATION.md):
+  `RELIABILITY_MEMBER_FAULT` moves 11 → 13 and `RELIABILITY_TRIPPED` 13 → 15 (11 is reserved by
+  ASHRAE 135 and is now `RELIABILITY_RESERVED_11`), and the values the enum was missing, 14 and
+  16-25, are added. 3.x sent and interpreted the two wrong numbers on the wire; code that persisted
+  or compared the numeric values keeps compiling and silently changes meaning.
+- **`BacnetLogRecord.statusFlags`** is now a `BacnetStatusFlags` instead of a `BacnetBitString`, and
+  the `BacnetLogRecord(type, value, stamp, status)` constructor takes the same enum in place of a raw
+  `uint`. Trend-log records encode and decode it as the fixed 4-bit BACnetStatusFlags string.
+- **`BacnetRejectReason.RECOGNIZED_SERVICE` → `UNRECOGNIZED_SERVICE`**: reject reason 9 means the
+  service is *not* recognized (ASHRAE 135 §18.8) - the member had always been spelled without the
+  negation. The value (9) is unchanged, so only a rename is needed at call sites.
 - **`BacnetDeviceObjectPropertyReference`**: the misspelled public field `deviceIndentifier` is now
   `deviceIdentifier` (the constructor parameter included).
 - **`Services.EncodeCreateProperty` → `EncodeCreateObject`**: the encoder was misnamed - it encodes
@@ -29,16 +40,30 @@ See [MIGRATION.md](MIGRATION.md) for upgrade guidance.
   request methods are unaffected.
 
 ### Added
-- Multi-targeting: `net48;netstandard2.0;net8.0;net10.0`.
+- Multi-targeting: `net48;netstandard2.0;net8.0;net10.0` for the core, `net48;net8.0;net10.0` for
+  `BACnet.Ethernet` and `BACnet.Serial` (their native dependencies have no netstandard2.0 target).
 - New packages: `BACnet.Ethernet`, `BACnet.Serial`, `BACnet.Logging.CommonLogging`.
 - Central Package Management, MinVer tag-driven versioning, Source Link + symbol (`.snupkg`) packages.
+- Every package ships its XML documentation file, so consumers get IntelliSense tooltips for the
+  doc-commented API, and `dotnet pack` runs the SDK's package validation across all four targets.
 - `BacnetIpUdpProtocolTransport` and `BacnetIpV6UdpProtocolTransport` accept a `maxApdu` constructor
   parameter to lower the advertised and sent APDU size (e.g. `MAX_APDU1024` keeps every frame,
   including segmented responses, under a 1500-byte MTU instead of relying on IP fragmentation).
+- `BacnetIpUdpProtocolTransport.ReceiveBufferSize` sets the UDP receive buffer (SO_RCVBUF) and may be
+  changed at any time, including after `Start()`. It now defaults to 1 MB rather than the OS default,
+  so a burst of incoming messages is far less likely to be dropped by the socket (on Linux the
+  effective size is still capped by `net.core.rmem_max`).
 - CI: multi-OS build matrix; tag-triggered publish to both nuget.org (Trusted Publishing) and GitHub Packages.
 - Runnable sample projects moved in-repo under `Examples/` and built in CI.
-- ASHRAE 135 Annex F golden-vector encode/decode tests - complete: all 62 Annex F example
-  encodings are asserted byte-for-byte.
+- ASHRAE 135 Annex F golden-vector tests: 83 encode/decode assertions covering 27 of Annex F's 37
+  example encodings, asserted byte-for-byte. Not covered yet: AcknowledgeAlarm (F.1.1),
+  GetEnrollmentSummary (F.1.7), the COVNotificationMultiple family (F.1.12-14), WriteGroup
+  (F.3.11-13) and TextMessage (F.4.5-6).
+- `BacnetPropertyReference`'s `arrayIndex` constructor parameter now defaults to
+  `ASN1.BACNET_ARRAY_ALL`, which omits the optional index from the request so the whole property is
+  read or written; there is also an overload taking a `BacnetPropertyIds` instead of a raw `uint`.
+  Passing 0 selects the array *length*, which is what made hand-built references to scalar
+  properties fail.
 - `Services.EncodeCreateObject` overload taking a `BacnetObjectTypes` (CreateObject by object type,
   the device assigns the instance number) and `Services.EncodeDeleteObject`.
 - PrivateTransfer send/receive support in `BacnetClient` (#154): `PrivateTransferRequest`,
@@ -63,8 +88,23 @@ See [MIGRATION.md](MIGRATION.md) for upgrade guidance.
 ### Changed
 - The core package is now pure-managed with no native dependencies (closes the pcap → log4net chain, #112).
 - SharpPcap bumped 4.x → 6.x in `BACnet.Ethernet` (drops the vulnerable transitive log4net).
+- The BACnet/IP transport no longer hex-formats every received packet to build a log message that was
+  usually discarded, removing an allocation per datagram on the receive path (#152).
 
 ### Fixed
+- A busy BACnet/IP client no longer overflows the stack: when `EndReceive` completed synchronously
+  (typical under sustained load), the receive handler re-armed the socket with `BeginReceive` from
+  inside its own `finally` block and recursed into itself. The re-arm is queued to the thread pool so
+  the stack unwinds between receives (#150).
+- `EndReadPropertyRequest` no longer deadlocks when the device answers with an Error-APDU: it read
+  `res.Error` before waiting for completion and could dispose the async result while the receive
+  thread was still signalling it. It now waits for completion, then reads the error, then disposes
+  (#153).
+- `EndSubscribeCOVRequest` had the same read-before-wait, so device rejections (e.g. unknown-object)
+  were swallowed and came back as a null exception instead of a failure (#147, #148).
+- WhoIs/I-Am broadcast works on Linux: the exclusive-port socket is bound explicitly with
+  `ExclusiveAddressUse = false` + `SO_REUSEADDR` rather than through the `UdpClient(IPEndPoint)`
+  constructor, which binds before those options can be applied (#157).
 - `Services.DecodeCreateObject` now decodes the CreateObject "by object type" request form
   (objectSpecifier choice `[0]`, where the device assigns the instance number) as well as the
   "by object identifier" form (`[1]`). Only `[1]` was decoded before, so a request produced by the
@@ -132,8 +172,25 @@ See [MIGRATION.md](MIGRATION.md) for upgrade guidance.
   library returned (the tolerant decoder hid it from same-stack round-trips) (#199). Context wrapping
   is now explicit at the call sites whose ASN.1 requires it (private-transfer error-type `[0]`,
   trend-log failure log-datum `[8]`).
+- `BacnetBitString.ConvertFromInt` counted significant bits as `ceil(log2(value))`, which under-counted
+  every exact power of two (4 gave 2 bits instead of 3) and gave 0 bits for the value 1, so those bit
+  strings went on the wire a bit short. It is `floor(log2(value)) + 1` now, and callers that know the
+  standard-defined width can pass it explicitly (#8).
+- `ReadRangeResponse` encodes BACnetResultFlags as the fixed 3-bit BIT STRING the standard defines
+  (ASHRAE 135 §20.2.10 requires all defined bits present): the width used to be derived from the enum
+  value, so all-false flags collapsed to an empty, non-conformant bit string (#171, PR #15).
+- `encode_bacnet_signed` used a strict `>` lower bound, so `int.MinValue` took the 8-byte signed64 path
+  while `decode_signed` only handles 1-4 bytes - the value silently decoded back to 0. The whole int32
+  range round-trips now.
+- `Time_Of_Device_Restart` decodes as a BACnetTimeStamp (ASHRAE 135 §12.11.45) through the same path as
+  `Event_Time_Stamps`, instead of as a bare application value (#142, svn@525).
+- BVLC broadcast-distribution and foreign-device table entries decode addresses as unsigned: an IP
+  whose last octet was ≥ 128 (e.g. 192.168.0.137) produced a negative `int`, which `new IPAddress(long)`
+  rejects, so reading such a BDT/FDT threw (#123).
+- `BACnet.Serial` reports a clear error, with the fix, when the `System.IO.Ports` native library is
+  missing from a publish rather than failing obscurely on open (#201, see MIGRATION.md).
 - Multi-object `WritePropertyMultiple` decoding (#158), DATE/TIME/DATETIME culture-invariant
-  serialization (#159), float/double property serialization (#143), and several encoder fixes surfaced
-  by the Annex F vectors (wildcard time, private-transfer ack, log-record status flags).
+  serialization (#159), REAL/DOUBLE/UNSIGNED_INT property serialization (#143), and several encoder
+  fixes surfaced by the Annex F vectors (wildcard time, private-transfer ack).
 - `GetAddressDefaultInterface` now throws a helpful error instead of returning null when the local
   interface is ambiguous (#100).
