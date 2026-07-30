@@ -19,6 +19,45 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # MinVer needs full history + tags to compute the version
+
+      # Stable-release notes come from CHANGELOG.md, not from the auto-generated commit diff: a
+      # stable tag normally sits on the very commit the last beta was cut from, so the generated
+      # "What's Changed" list would be empty. Resolved here, before pack/publish, so a missing
+      # changelog section fails the job while that is still fixable - once the packages are on
+      # nuget.org they cannot be unpublished. Prerelease tags keep the generated list, which is a
+      # useful incremental diff against the previous beta.
+      - name: Resolve release notes
+        shell: pwsh
+        run: |
+          $tag = '${{ github.ref_name }}'
+          $version = $tag -replace '^v', ''
+          if ($version -match '-') {
+            Write-Host "$tag is a prerelease - using auto-generated notes."
+            exit 0
+          }
+          # Matches "## 4.0.0" and "## 4.0.0 - 2026-07-30", but not "## 4.0.0-beta.5", and stops at
+          # the next release heading.
+          $pattern = "(?ms)^##[ \t]+$([regex]::Escape($version))(?:[ \t][^\r\n]*)?\r?\n(.*?)(?=^##[ \t]|\z)"
+          $notes = [regex]::Match((Get-Content CHANGELOG.md -Raw), $pattern).Groups[1].Value.Trim()
+          if (-not $notes) {
+            throw "CHANGELOG.md has no '## $version' section - a stable release must ship real notes."
+          }
+          # Relative links (e.g. MIGRATION.md) do not resolve in a release body - pin them to the tag.
+          $blob = "https://github.com/${{ github.repository }}/blob/$tag/"
+          $notes = [regex]::Replace($notes, '\]\((?!https?://|#)([^)]+)\)', "]($blob`$1)")
+          # Newest non-prerelease tag reachable from this tag's parent, whatever it is named - which
+          # covers the pre-v scheme (v4.0.0 compares against 3.0.2) without a special case. Picking by
+          # reachability rather than by sorting all tags also keeps a patch released after a newer major
+          # (say v4.0.5 tagged while v5.0.0 exists) comparing against its own line. Empty for the very
+          # first release, and then the footer is simply left out.
+          $previous = git describe --tags --abbrev=0 --exclude '*-*' "$tag^" 2>$null
+          if ($LASTEXITCODE -ne 0) { $previous = '' }
+          if ($previous) {
+            $notes += "`n`n**Full changelog**: https://github.com/${{ github.repository }}/compare/$previous...$tag"
+          }
+          $notes | Set-Content '${{ runner.temp }}/release-notes.md' -Encoding utf8
+          Write-Host "Resolved release notes from the '$version' changelog section."
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v6
         with:
@@ -62,10 +101,11 @@ jobs:
             dotnet nuget push $_.FullName --source https://nuget.pkg.github.com/ela-compil/index.json --api-key ${{ secrets.GITHUB_TOKEN }} --skip-duplicate --no-symbols
           }
 
-      # 3) GitHub Release — publish a release for the tag with auto-generated notes (GitHub attaches
-      #    the source archives automatically; the packages live on nuget.org / GitHub Packages). Tags
-      #    with a pre-release suffix (e.g. -beta.1 / -rc.1) are flagged as prereleases so they are not
-      #    shown as the "Latest" release.
+      # 3) GitHub Release — publish a release for the tag (GitHub attaches the source archives
+      #    automatically; the packages live on nuget.org / GitHub Packages). Tags with a pre-release
+      #    suffix (e.g. -beta.1 / -rc.1) are flagged as prereleases so they are not shown as the
+      #    "Latest" release, and get auto-generated notes; stable tags get the changelog section
+      #    resolved by the "Resolve release notes" step above.
       - name: Create GitHub Release
         shell: pwsh
         env:
@@ -77,5 +117,5 @@ jobs:
           if ($tag -match '-') {
             gh release create $tag --title $tag --generate-notes --prerelease
           } else {
-            gh release create $tag --title $tag --generate-notes
+            gh release create $tag --title $tag --notes-file '${{ runner.temp }}/release-notes.md' --latest
           }
