@@ -36,9 +36,9 @@ public class Property
             case BacnetApplicationTags.BACNET_APPLICATION_TAG_BOOLEAN:
                 return new BacnetValue(type, bool.Parse(value));
             case BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT:
-                return new BacnetValue(type, uint.Parse(value));
+                return new BacnetValue(type, uint.Parse(value, CultureInfo.InvariantCulture));
             case BacnetApplicationTags.BACNET_APPLICATION_TAG_SIGNED_INT:
-                return new BacnetValue(type, int.Parse(value));
+                return new BacnetValue(type, int.Parse(value, CultureInfo.InvariantCulture));
             case BacnetApplicationTags.BACNET_APPLICATION_TAG_REAL:
                 return new BacnetValue(type, float.Parse(value, CultureInfo.InvariantCulture));
             case BacnetApplicationTags.BACNET_APPLICATION_TAG_DOUBLE:
@@ -155,6 +155,11 @@ public class Property
                 return Convert.ToDouble(value.Value, CultureInfo.InvariantCulture).ToString(CultureInfo.InvariantCulture);
             case BacnetApplicationTags.BACNET_APPLICATION_TAG_UNSIGNED_INT:
                 return Convert.ToUInt32(value.Value, CultureInfo.InvariantCulture).ToString(CultureInfo.InvariantCulture);
+            case BacnetApplicationTags.BACNET_APPLICATION_TAG_SIGNED_INT:
+                // Without the invariant culture the negative sign follows the current culture -
+                // sv-SE and friends emit U+2212 rather than the ASCII hyphen every other
+                // BACnet tool expects.
+                return Convert.ToInt32(value.Value, CultureInfo.InvariantCulture).ToString(CultureInfo.InvariantCulture);
             case BacnetApplicationTags.BACNET_APPLICATION_TAG_OCTET_STRING:
                 return Convert.ToBase64String((byte[])value.Value);
             case BacnetApplicationTags.BACNET_APPLICATION_TAG_CONTEXT_SPECIFIC_DECODED:
