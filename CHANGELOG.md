@@ -4,6 +4,15 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/), and the project follows tag-driven
 [MinVer](https://github.com/adamralph/minver) versioning.
 
+## Unreleased
+
+### Added
+- **Logging scopes**: every log entry about a request or an answer is written inside a
+  `Microsoft.Extensions.Logging` scope carrying the address of the remote device as the
+  `RemoteAddress` property. Sinks can print it (`IncludeScopes`) or use it to route the traffic of
+  each device to its own log when one `BacnetClient` serves several devices. Broadcasts have no
+  remote device and get no scope. Sinks that ignore scopes see no change.
+
 ## 4.0.0
 
 The 4.0 release modernises the build, packaging and dependencies of the library.

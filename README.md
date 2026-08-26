@@ -125,6 +125,16 @@ BacnetLogging.Factory = LoggerFactory.Create(b => b.AddConsole());
 Console, Serilog, NLog, and log4net all work via their MEL providers. If you already use
 `Common.Logging`, add the `BACnet.Logging.CommonLogging` package and call `b.AddCommonLogging()`.
 
+Every entry about a request or an answer is written inside a logging scope carrying the address of
+the remote device as the `RemoteAddress` property (broadcasts have none). Structured sinks get it as
+a property, text sinks print it with `IncludeScopes`, and a client that talks to several devices can
+use it to route each device's traffic to its own log:
+
+```csharp
+BacnetLogging.Factory = LoggerFactory.Create(b => b.AddSimpleConsole(o => o.IncludeScopes = true));
+// => 10.0.0.2:47808 Sending ReadPropertyRequest OBJECT_ANALOG_VALUE:1 PROP_PRESENT_VALUE
+```
+
 ## Upgrading from 3.x to 4.0
 
 4.0 has a few breaking changes — see [`MIGRATION.md`](https://github.com/ela-compil/BACnet/blob/master/MIGRATION.md) for details:
