@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using Xunit;
 
@@ -77,11 +76,20 @@ public class BacnetClientRemoteScopeConventionTests
         }
     }
 
-    private static string ClientSourcePath([CallerFilePath] string testFile = "")
+    /// <summary>
+    /// The source file, found by walking up from the test output directory (Tests/bin/...). Not
+    /// through [CallerFilePath]: a ContinuousIntegrationBuild maps source paths to /_/.
+    /// </summary>
+    private static string ClientSourcePath()
     {
-        var path = Path.Combine(Path.GetDirectoryName(Path.GetDirectoryName(testFile)), "BACnetClient.cs");
-        Assert.True(File.Exists(path), $"BACnetClient.cs not found next to the Tests folder: {path}");
-        return path;
+        for (var directory = new DirectoryInfo(AppContext.BaseDirectory); directory != null; directory = directory.Parent)
+        {
+            var candidate = Path.Combine(directory.FullName, "BACnetClient.cs");
+            if (File.Exists(candidate))
+                return candidate;
+        }
+
+        throw new FileNotFoundException($"BACnetClient.cs not found above the test output directory {AppContext.BaseDirectory}");
     }
 
     private sealed record Member(string Name, string Signature, string Body, string FirstStatement);
