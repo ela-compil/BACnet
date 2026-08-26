@@ -171,6 +171,18 @@ public class BacnetClient : IDisposable
         return new EncodeBuffer(new byte[Transport.MaxBufferLength], startOffset);
     }
 
+    /// <summary>
+    /// Attaches the address of the remote device to every log entry written until the returned
+    /// scope is disposed. A client that talks to several devices logs all requests and answers
+    /// through the same <see cref="Log"/>; the scope is what lets a log sink tell them apart.
+    /// The state is a standard message-template scope with a single <c>RemoteAddress</c> property.
+    /// Broadcasts have no remote device and get no scope.
+    /// </summary>
+    private IDisposable BeginRemoteScope(BacnetAddress address)
+    {
+        return address == null ? null : Log.BeginScope("{RemoteAddress}", address);
+    }
+
     public void Start()
     {
         Transport.Start();
@@ -1030,6 +1042,7 @@ public class BacnetClient : IDisposable
 
     private void OnRecieve(IBacnetTransport sender, byte[] buffer, int offset, int msgLength, BacnetAddress remoteAddress)
     {
+        using var remoteScope = BeginRemoteScope(remoteAddress);
         try
         {
             if (Transport == null)
@@ -1145,6 +1158,7 @@ public class BacnetClient : IDisposable
 
     public void WhoIs(int lowLimit = -1, int highLimit = -1, BacnetAddress receiver = null, BacnetAddress source = null)
     {
+        using var remoteScope = BeginRemoteScope(receiver);
         BacnetAddress npduDestination;
         if (receiver == null)
         {
@@ -1172,6 +1186,7 @@ public class BacnetClient : IDisposable
 
     public void Iam(uint deviceId, BacnetSegmentations segmentation = BacnetSegmentations.SEGMENTATION_BOTH, BacnetAddress receiver = null, BacnetAddress source = null)
     {
+        using var remoteScope = BeginRemoteScope(receiver);
         BacnetAddress npduDestination;
         if (receiver == null)
         {
@@ -1209,6 +1224,7 @@ public class BacnetClient : IDisposable
 
     private void WhoHasCore(BacnetObjectId? objId, string objName, int lowLimit, int highLimit, BacnetAddress receiver, BacnetAddress source)
     {
+        using var remoteScope = BeginRemoteScope(receiver);
         BacnetAddress npduDestination;
         if (receiver == null)
         {
@@ -1238,6 +1254,7 @@ public class BacnetClient : IDisposable
     // meaning; harmonize the order in 5.0 alongside the namespace rename
     public void IHave(BacnetObjectId deviceId, BacnetObjectId objId, string objName, BacnetAddress source = null, BacnetAddress receiver = null)
     {
+        using var remoteScope = BeginRemoteScope(receiver);
         BacnetAddress npduDestination;
         if (receiver == null)
         {
@@ -1264,6 +1281,7 @@ public class BacnetClient : IDisposable
 
     public void SendUnconfirmedEventNotification(BacnetAddress adr, BacnetEventNotificationData eventData, BacnetAddress source = null)
     {
+        using var remoteScope = BeginRemoteScope(adr);
         Log.LogDebug($"Sending Event Notification {eventData.eventType} {eventData.eventObjectIdentifier}");
 
         var b = GetEncodeBuffer(Transport.HeaderLength);
@@ -1277,6 +1295,7 @@ public class BacnetClient : IDisposable
 
     public void SendUnconfirmedPrivateTransfer(BacnetAddress adr, uint vendorId, uint serviceNumber, byte[] serviceParameters = null, BacnetAddress source = null)
     {
+        using var remoteScope = BeginRemoteScope(adr);
         Log.LogDebug($"Sending UnconfirmedPrivateTransfer vendor {vendorId} service {serviceNumber}");
 
         var b = GetEncodeBuffer(Transport.HeaderLength);
@@ -1288,6 +1307,7 @@ public class BacnetClient : IDisposable
 
     public void SendConfirmedServiceReject(BacnetAddress adr, byte invokeId, BacnetRejectReason reason)
     {
+        using var remoteScope = BeginRemoteScope(adr);
         Log.LogDebug($"Sending Service reject: {reason}");
 
         var b = GetEncodeBuffer(Transport.HeaderLength);
@@ -1299,6 +1319,7 @@ public class BacnetClient : IDisposable
 
     public void SendAbort(BacnetAddress adr, byte invokeId, BacnetAbortReason reason)
     {
+        using var remoteScope = BeginRemoteScope(adr);
         // DAL
         Log.LogDebug($"Sending Service reject: {reason}");
 
@@ -1311,6 +1332,7 @@ public class BacnetClient : IDisposable
 
     public void SynchronizeTime(BacnetAddress adr, DateTime dateTime, BacnetAddress source = null)
     {
+        using var remoteScope = BeginRemoteScope(adr);
         Log.LogDebug($"Sending Time Synchronize: {dateTime} {dateTime.Kind.ToString().ToUpper()}");
 
         var buffer = GetEncodeBuffer(Transport.HeaderLength);
@@ -1390,6 +1412,7 @@ public class BacnetClient : IDisposable
 
     public IAsyncResult BeginWriteFileRequest(BacnetAddress adr, BacnetObjectId objectId, int position, int count, byte[] fileBuffer, bool waitForTransmit, byte invokeId = 0)
     {
+        using var remoteScope = BeginRemoteScope(adr);
         Log.LogDebug("Sending AtomicWriteFileRequest");
         if (invokeId == 0)
             invokeId = (byte)Interlocked.Increment(ref _invokeId);
@@ -1429,6 +1452,7 @@ public class BacnetClient : IDisposable
 
     public IAsyncResult BeginReadFileRequest(BacnetAddress adr, BacnetObjectId objectId, int position, uint count, bool waitForTransmit, byte invokeId = 0)
     {
+        using var remoteScope = BeginRemoteScope(adr);
         Log.LogDebug("Sending AtomicReadFileRequest");
         if (invokeId == 0)
             invokeId = (byte)Interlocked.Increment(ref _invokeId);
@@ -1510,6 +1534,7 @@ public class BacnetClient : IDisposable
 
     private IAsyncResult BeginReadRangeRequestCore(BacnetAddress adr, BacnetObjectId objectId, BacnetReadRangeRequestTypes bacnetReadRangeRequestTypes, DateTime readFrom, uint idxBegin, uint quantity, bool waitForTransmit, byte invokeId = 0)
     {
+        using var remoteScope = BeginRemoteScope(adr);
         Log.LogDebug("Sending ReadRangeRequest");
         if (invokeId == 0)
             invokeId = (byte)Interlocked.Increment(ref _invokeId);
@@ -1616,6 +1641,7 @@ public class BacnetClient : IDisposable
 
     public IAsyncResult BeginSubscribeCOVRequest(BacnetAddress adr, BacnetObjectId objectId, uint subscribeId, bool cancel, bool issueConfirmedNotifications, uint lifetime, bool waitForTransmit, byte invokeId = 0)
     {
+        using var remoteScope = BeginRemoteScope(adr);
         Log.LogDebug($"Sending SubscribeCOVRequest {objectId}");
         if (invokeId == 0)
             invokeId = (byte)Interlocked.Increment(ref _invokeId);
@@ -1663,6 +1689,7 @@ public class BacnetClient : IDisposable
     // DAL
     public IAsyncResult BeginSendConfirmedEventNotificationRequest(BacnetAddress adr, BacnetEventNotificationData eventData, bool waitForTransmit, byte invokeId = 0, BacnetAddress source = null)
     {
+        using var remoteScope = BeginRemoteScope(adr);
         Log.LogDebug($"Sending Confirmed Event Notification {eventData.eventType} {eventData.eventObjectIdentifier}");
         if (invokeId == 0)
             invokeId = (byte)Interlocked.Increment(ref _invokeId);
@@ -1712,6 +1739,7 @@ public class BacnetClient : IDisposable
 
     public IAsyncResult BeginSubscribePropertyRequest(BacnetAddress adr, BacnetObjectId objectId, BacnetPropertyReference monitoredProperty, uint subscribeId, bool cancel, bool issueConfirmedNotifications, bool waitForTransmit, byte invokeId = 0)
     {
+        using var remoteScope = BeginRemoteScope(adr);
         Log.LogDebug($"Sending SubscribePropertyRequest {objectId}.{monitoredProperty}");
         if (invokeId == 0)
             invokeId = (byte)Interlocked.Increment(ref _invokeId);
@@ -1797,6 +1825,7 @@ public class BacnetClient : IDisposable
 
     public IAsyncResult BeginReadPropertyRequest(BacnetAddress address, BacnetObjectId objectId, BacnetPropertyIds propertyId, bool waitForTransmit, byte invokeId = 0, uint arrayIndex = ASN1.BACNET_ARRAY_ALL)
     {
+        using var remoteScope = BeginRemoteScope(address);
         Log.LogDebug($"Sending ReadPropertyRequest {objectId} {propertyId}");
         if (invokeId == 0)
             invokeId = (byte)Interlocked.Increment(ref _invokeId);
@@ -1880,6 +1909,7 @@ public class BacnetClient : IDisposable
 
     public IAsyncResult BeginWritePropertyRequest(BacnetAddress adr, BacnetObjectId objectId, BacnetPropertyIds propertyId, IEnumerable<BacnetValue> valueList, bool waitForTransmit, byte invokeId = 0, byte? priority = null, uint arrayIndex = ASN1.BACNET_ARRAY_ALL)
     {
+        using var remoteScope = BeginRemoteScope(adr);
         if (priority.HasValue && (priority < 1 || priority > 16))
             throw new ArgumentOutOfRangeException(nameof(priority), "WritePropertyRequest priority must be between 1 and 16");
 
@@ -1901,6 +1931,7 @@ public class BacnetClient : IDisposable
 
     public IAsyncResult BeginWritePropertyMultipleRequest(BacnetAddress adr, BacnetObjectId objectId, ICollection<BacnetPropertyValue> valueList, bool waitForTransmit, byte invokeId = 0)
     {
+        using var remoteScope = BeginRemoteScope(adr);
         Log.LogDebug($"Sending WritePropertyMultipleRequest {objectId}");
         if (invokeId == 0) invokeId = (byte)Interlocked.Increment(ref _invokeId);
 
@@ -1951,6 +1982,7 @@ public class BacnetClient : IDisposable
 
     public IAsyncResult BeginWritePropertyMultipleRequest(BacnetAddress adr, ICollection<BacnetReadAccessResult> valueList, bool waitForTransmit, byte invokeId = 0)
     {
+        using var remoteScope = BeginRemoteScope(adr);
         var objectIds = string.Join(", ", valueList.Select(v => v.objectIdentifier));
         Log.LogDebug($"Sending WritePropertyMultipleRequest {objectIds}");
 
@@ -2019,6 +2051,7 @@ public class BacnetClient : IDisposable
 
     public IAsyncResult BeginReadPropertyMultipleRequest(BacnetAddress adr, BacnetObjectId objectId, IList<BacnetPropertyReference> propertyIdAndArrayIndex, bool waitForTransmit, byte invokeId = 0)
     {
+        using var remoteScope = BeginRemoteScope(adr);
         var propertyIds = string.Join(", ", propertyIdAndArrayIndex.Select(v => (BacnetPropertyIds)v.propertyIdentifier));
         Log.LogDebug($"Sending ReadPropertyMultipleRequest {objectId} {propertyIds}");
         if (invokeId == 0)
@@ -2060,6 +2093,7 @@ public class BacnetClient : IDisposable
 
     public IAsyncResult BeginReadPropertyMultipleRequest(BacnetAddress adr, IList<BacnetReadAccessSpecification> properties, bool waitForTransmit, byte invokeId = 0)
     {
+        using var remoteScope = BeginRemoteScope(adr);
         var objectIds = string.Join(", ", properties.Select(v => v.objectIdentifier));
         Log.LogDebug($"Sending ReadPropertyMultipleRequest {objectIds}");
         if (invokeId == 0)
@@ -2128,6 +2162,7 @@ public class BacnetClient : IDisposable
 
     public IAsyncResult BeginCreateObjectRequest(BacnetAddress adr, BacnetObjectId objectId, ICollection<BacnetPropertyValue> valueList, bool waitForTransmit, byte invokeId = 0)
     {
+        using var remoteScope = BeginRemoteScope(adr);
         Log.LogDebug("Sending CreateObjectRequest");
         if (invokeId == 0) invokeId = (byte)Interlocked.Increment(ref _invokeId);
 
@@ -2177,6 +2212,7 @@ public class BacnetClient : IDisposable
 
     public IAsyncResult BeginDeleteObjectRequest(BacnetAddress adr, BacnetObjectId objectId, bool waitForTransmit, byte invokeId = 0)
     {
+        using var remoteScope = BeginRemoteScope(adr);
         Log.LogDebug("Sending DeleteObjectRequest");
         if (invokeId == 0) invokeId = (byte)Interlocked.Increment(ref _invokeId);
 
@@ -2250,6 +2286,7 @@ public class BacnetClient : IDisposable
 
     public IAsyncResult BeginRemoveListElementRequest(BacnetAddress adr, BacnetObjectId objectId, BacnetPropertyReference reference, IList<BacnetValue> valueList, bool waitForTransmit, byte invokeId = 0)
     {
+        using var remoteScope = BeginRemoteScope(adr);
         Log.LogDebug("Sending RemoveListElementRequest");
         if (invokeId == 0)
             invokeId = (byte)Interlocked.Increment(ref _invokeId);
@@ -2268,6 +2305,7 @@ public class BacnetClient : IDisposable
 
     public IAsyncResult BeginAddListElementRequest(BacnetAddress adr, BacnetObjectId objectId, BacnetPropertyReference reference, IList<BacnetValue> valueList, bool waitForTransmit, byte invokeId = 0)
     {
+        using var remoteScope = BeginRemoteScope(adr);
         Log.LogDebug($"Sending AddListElementRequest {objectId} {(BacnetPropertyIds)reference.propertyIdentifier}");
         if (invokeId == 0)
             invokeId = (byte)Interlocked.Increment(ref _invokeId);
@@ -2322,6 +2360,7 @@ public class BacnetClient : IDisposable
     // Fc
     public IAsyncResult BeginRawEncodedDecodedPropertyConfirmedRequest(BacnetAddress adr, BacnetObjectId objectId, BacnetPropertyIds propertyId, BacnetConfirmedServices serviceId, byte[] inOutBuffer, bool waitForTransmit, byte invokeId = 0)
     {
+        using var remoteScope = BeginRemoteScope(adr);
         Log.LogDebug("Sending RawEncodedRequest");
         if (invokeId == 0)
             invokeId = (byte)Interlocked.Increment(ref _invokeId);
@@ -2404,6 +2443,7 @@ public class BacnetClient : IDisposable
 
     public IAsyncResult BeginDeviceCommunicationControlRequest(BacnetAddress adr, uint timeDuration, uint enableDisable, string password, bool waitForTransmit, byte invokeId = 0)
     {
+        using var remoteScope = BeginRemoteScope(adr);
         Log.LogDebug("Sending DeviceCommunicationControlRequest");
         if (invokeId == 0)
             invokeId = (byte)Interlocked.Increment(ref _invokeId);
@@ -2453,6 +2493,7 @@ public class BacnetClient : IDisposable
 
     public IAsyncResult BeginPrivateTransferRequest(BacnetAddress adr, uint vendorId, uint serviceNumber, byte[] serviceParameters, bool waitForTransmit, byte invokeId = 0)
     {
+        using var remoteScope = BeginRemoteScope(adr);
         Log.LogDebug($"Sending PrivateTransferRequest vendor {vendorId} service {serviceNumber}");
         if (invokeId == 0)
             invokeId = (byte)Interlocked.Increment(ref _invokeId);
@@ -2521,6 +2562,7 @@ public class BacnetClient : IDisposable
 
     public IAsyncResult BeginGetAlarmSummaryOrEventRequest(BacnetAddress adr, bool getEvent, IList<BacnetGetEventInformationData> alarms, bool waitForTransmit, byte invokeId = 0)
     {
+        using var remoteScope = BeginRemoteScope(adr);
         Log.LogDebug("Sending Alarm summary request");
         if (invokeId == 0)
             invokeId = (byte)Interlocked.Increment(ref _invokeId);
@@ -2603,6 +2645,7 @@ public class BacnetClient : IDisposable
 
     public IAsyncResult BeginAlarmAcknowledgement(BacnetAddress adr, BacnetObjectId objId, BacnetEventStates eventState, string ackText, BacnetGenericTime evTimeStamp, BacnetGenericTime ackTimeStamp, bool waitForTransmit, byte invokeId = 0)
     {
+        using var remoteScope = BeginRemoteScope(adr);
         Log.LogDebug("Sending AlarmAcknowledgement");
         if (invokeId == 0)
             invokeId = (byte)Interlocked.Increment(ref _invokeId);
@@ -2647,6 +2690,7 @@ public class BacnetClient : IDisposable
 
     public IAsyncResult BeginReinitializeRequest(BacnetAddress adr, BacnetReinitializedStates state, string password, bool waitForTransmit, byte invokeId = 0)
     {
+        using var remoteScope = BeginRemoteScope(adr);
         Log.LogDebug("Sending ReinitializeRequest");
         if (invokeId == 0)
             invokeId = (byte)Interlocked.Increment(ref _invokeId);
@@ -2675,6 +2719,7 @@ public class BacnetClient : IDisposable
 
     public IAsyncResult BeginConfirmedNotify(BacnetAddress adr, uint subscriberProcessIdentifier, uint initiatingDeviceIdentifier, BacnetObjectId monitoredObjectIdentifier, uint timeRemaining, IList<BacnetPropertyValue> values, bool waitForTransmit, byte invokeId = 0)
     {
+        using var remoteScope = BeginRemoteScope(adr);
         Log.LogDebug("Sending Notify (confirmed)");
         if (invokeId == 0) invokeId = (byte)Interlocked.Increment(ref _invokeId);
 
@@ -2700,6 +2745,7 @@ public class BacnetClient : IDisposable
 
     public bool Notify(BacnetAddress adr, uint subscriberProcessIdentifier, uint initiatingDeviceIdentifier, BacnetObjectId monitoredObjectIdentifier, uint timeRemaining, bool issueConfirmedNotifications, IList<BacnetPropertyValue> values)
     {
+        using var remoteScope = BeginRemoteScope(adr);
         if (!issueConfirmedNotifications)
         {
             Log.LogDebug("Sending Notify (unconfirmed)");
@@ -2752,6 +2798,7 @@ public class BacnetClient : IDisposable
 
     public IAsyncResult BeginLifeSafetyOperationRequest(BacnetAddress address, BacnetObjectId objectId, uint processId, string requestingSrc, BacnetLifeSafetyOperations operation, bool waitForTransmit, byte invokeId = 0)
     {
+        using var remoteScope = BeginRemoteScope(address);
         Log.LogDebug($"Sending {ToTitleCase(operation)} {objectId}");
         if (invokeId == 0)
             invokeId = (byte)Interlocked.Increment(ref _invokeId);
@@ -3358,6 +3405,7 @@ public class BacnetClient : IDisposable
 
     private void SendComplexAck(BacnetAddress adr, byte invokeId, Segmentation segmentation, BacnetConfirmedServices service, Action<EncodeBuffer> apduContentEncode)
     {
+        using var remoteScope = BeginRemoteScope(adr);
         Log.LogDebug($"Sending {ToTitleCase(service)}");
 
         //encode
@@ -3473,6 +3521,7 @@ public class BacnetClient : IDisposable
 
     public void ErrorResponse(BacnetAddress adr, BacnetConfirmedServices service, byte invokeId, BacnetErrorClasses errorClass, BacnetErrorCodes errorCode)
     {
+        using var remoteScope = BeginRemoteScope(adr);
         Log.LogDebug($"Sending ErrorResponse for {service}: {errorCode}");
         var buffer = GetEncodeBuffer(Transport.HeaderLength);
         NPDU.Encode(buffer, BacnetNpduControls.PriorityNormalMessage, adr.RoutedSource, adr.RoutedDestination);
@@ -3483,6 +3532,7 @@ public class BacnetClient : IDisposable
 
     public void PrivateTransferErrorResponse(BacnetAddress adr, byte invokeId, BacnetErrorClasses errorClass, BacnetErrorCodes errorCode, uint vendorId, uint serviceNumber, byte[] errorParameters = null)
     {
+        using var remoteScope = BeginRemoteScope(adr);
         Log.LogDebug($"Sending PrivateTransferErrorResponse: {errorCode}");
         var buffer = GetEncodeBuffer(Transport.HeaderLength);
         NPDU.Encode(buffer, BacnetNpduControls.PriorityNormalMessage, adr.RoutedSource, adr.RoutedDestination);
@@ -3493,6 +3543,7 @@ public class BacnetClient : IDisposable
 
     public void SimpleAckResponse(BacnetAddress adr, BacnetConfirmedServices service, byte invokeId)
     {
+        using var remoteScope = BeginRemoteScope(adr);
         Log.LogDebug($"Sending SimpleAckResponse for {service}");
         var buffer = GetEncodeBuffer(Transport.HeaderLength);
         NPDU.Encode(buffer, BacnetNpduControls.PriorityNormalMessage, adr.RoutedSource, adr.RoutedDestination);
@@ -3502,6 +3553,7 @@ public class BacnetClient : IDisposable
 
     public void SegmentAckResponse(BacnetAddress adr, bool negative, bool server, byte originalInvokeId, byte sequenceNumber, byte actualWindowSize)
     {
+        using var remoteScope = BeginRemoteScope(adr);
         Log.LogDebug("Sending SegmentAckResponse");
         var buffer = GetEncodeBuffer(Transport.HeaderLength);
         NPDU.Encode(buffer, BacnetNpduControls.PriorityNormalMessage, adr.RoutedSource, adr.RoutedDestination);
