@@ -14,6 +14,12 @@ All notable changes to this project are documented here. The format is based on
   remote device and get no scope. Sinks that ignore scopes see no change.
 
 ### Fixed
+- **Segmentation** state is kept per transfer - the remote device plus the invoke-id - instead of per
+  invoke-id alone. An invoke-id is unique per device (135 §20.1.2.6), so two devices answering at the
+  same time both number a transfer 1: the segments of one were assembled into the transfer of the
+  other, and the single segment-ack slot let the ack of one device discard the ack of another. Every
+  transfer has a lock of its own now, which concurrently processed frames need - the IP transport
+  re-arms its receive before it handles the datagram it just took.
 - SIGNED_INT property values serialize with the invariant culture, like the other numeric tags. They
   fell through to the default branch of `Property.SerializeValue` and used the current culture, so a
   host whose culture spells the negative sign U+2212 (sv-SE and friends, under ICU) wrote `−5` into

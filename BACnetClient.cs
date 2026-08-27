@@ -37,16 +37,16 @@ public class BacnetClient : IDisposable
     private int _retries;
     private int _invokeId;
 
-    private readonly LastSegmentAck _lastSegmentAck = new();
     private uint _writepriority;
 
     /// <summary>
-    /// Dictionary of List of Tuples with sequence-number and byte[] per invoke-id
-    /// TODO: invoke-id should be PER (remote) DEVICE!
+    /// The segments received for a transfer, and the segment ack received for one this client is
+    /// sending. Both are keyed by the transfer rather than by the invoke-id alone: an invoke-id is
+    /// unique per device (135 §20.1.2.6), so two devices talking to this client at the same time
+    /// number their transfers with the same ones.
     /// </summary>
-    private Dictionary<byte, List<Tuple<byte, byte[]>>> _segmentsPerInvokeId = new();
-    private ConcurrentDictionary<byte, object> _locksPerInvokeId = new();
-    private Dictionary<byte, byte> _expectedSegmentsPerInvokeId = new();
+    private readonly ConcurrentDictionary<TransferId, SegmentAssembly> _assemblies = new();
+    private readonly ConcurrentDictionary<TransferId, LastSegmentAck> _segmentAcks = new();
 
     public const int DEFAULT_UDP_PORT = 0xBAC0;
     public const int DEFAULT_TIMEOUT = 1000;
@@ -101,41 +101,96 @@ public class BacnetClient : IDisposable
         public BacnetMaxAdpu? RequesterMaxAdpu { get; set; }
     }
 
-    private class LastSegmentAck
+    /// <summary>
+    /// One transfer: the device it runs with and the invoke-id it runs under. Hashed on the
+    /// invoke-id alone - an address without a MAC has no usable hash code, and the few devices that
+    /// share an invoke-id are nothing for a single bucket.
+    /// </summary>
+    private readonly struct TransferId : IEquatable<TransferId>
     {
-        private readonly ManualResetEvent _wait = new(false);
+        private readonly BacnetAddress _device;
+        private readonly byte _invokeId;
+
+        public TransferId(BacnetAddress device, byte invokeId)
+        {
+            _device = device;
+            _invokeId = invokeId;
+        }
+
+        public bool Equals(TransferId other)
+        {
+            return _invokeId == other._invokeId && (_device?.Equals(other._device) ?? other._device == null);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is TransferId other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return _invokeId;
+        }
+    }
+
+    /// <summary>
+    /// The segments received so far for one transfer. <see cref="Lock"/> guards them: frames are
+    /// processed concurrently (the IP transport re-arms its receive before handling the datagram it
+    /// took), so the segments of a transfer can arrive on different threads.
+    /// </summary>
+    private sealed class SegmentAssembly
+    {
+        public readonly object Lock = new();
+        public readonly List<Tuple<byte, byte[]>> Segments = new();
+        public byte ExpectedSegments = byte.MaxValue;
+    }
+
+    /// <summary>
+    /// The last segment ack received for one transfer: the sequence number the device acknowledged
+    /// and the window size it granted. One instance per transfer - a single slot for the whole
+    /// client let the ack of one device overwrite the ack of another before the thread sending to
+    /// that other device had read it.
+    /// </summary>
+    private sealed class LastSegmentAck
+    {
         private readonly object _lockObject = new();
-        private BacnetAddress _address;
-        private byte _invokeId;
+        private bool _received;
+        private byte _sequenceNumber;
+        private byte _windowSize;
 
-        public byte SequenceNumber;
-        public byte WindowSize;
-
-        public void Set(BacnetAddress adr, byte invokeId, byte sequenceNumber, byte windowSize)
+        public void Set(byte sequenceNumber, byte windowSize)
         {
             lock (_lockObject)
             {
-                _address = adr;
-                _invokeId = invokeId;
-                SequenceNumber = sequenceNumber;
-                WindowSize = windowSize;
-                _wait.Set();
+                _sequenceNumber = sequenceNumber;
+                _windowSize = windowSize;
+                _received = true;
+                Monitor.PulseAll(_lockObject);
             }
         }
 
-        public bool Wait(BacnetAddress adr, byte invokeId, int timeout)
+        /// <summary>
+        /// Takes the ack out, waiting up to <paramref name="timeout"/> for one to arrive. The values
+        /// leave under the lock: the ack of the next window must not overwrite them between the wait
+        /// and the reading. Waited for with a monitor rather than an event, so that keeping an
+        /// instance per transfer costs an object and no operating system handle.
+        /// </summary>
+        public bool Wait(int timeout, out byte sequenceNumber, out byte windowSize)
         {
-            Monitor.Enter(_lockObject);
-            while (!adr.Equals(this._address) || this._invokeId != invokeId)
+            lock (_lockObject)
             {
-                _wait.Reset();
-                Monitor.Exit(_lockObject);
-                if (!_wait.WaitOne(timeout)) return false;
-                Monitor.Enter(_lockObject);
+                if (!_received && !Monitor.Wait(_lockObject, timeout))
+                {
+                    sequenceNumber = 0;
+                    windowSize = 0;
+                    return false;
+                }
+
+                _received = false;
+                sequenceNumber = _sequenceNumber;
+                windowSize = _windowSize;
+                return true;
             }
-            Monitor.Exit(_lockObject);
-            _address = null;
-            return true;
         }
     }
 
@@ -737,29 +792,27 @@ public class BacnetClient : IDisposable
 
     private void ProcessSegment(BacnetAddress address, BacnetPduTypes type, BacnetConfirmedServices service, byte invokeId, BacnetMaxSegments maxSegments, BacnetMaxAdpu maxAdpu, bool server, byte sequenceNumber, byte proposedWindowNumber, byte[] buffer, int offset, int length)
     {
-        lock (_locksPerInvokeId.GetOrAdd(invokeId, () => new object()))
+        var transfer = new TransferId(address, invokeId);
+        var assembly = _assemblies.GetOrAdd(transfer, _ => new SegmentAssembly());
+
+        lock (assembly.Lock)
         {
-            ProcessSegmentLocked(address, type, service, invokeId, maxSegments, maxAdpu, server, sequenceNumber,
-                proposedWindowNumber, buffer, offset, length);
+            ProcessSegmentLocked(transfer, assembly, address, type, service, invokeId, maxSegments, maxAdpu, server,
+                sequenceNumber, proposedWindowNumber, buffer, offset, length);
         }
     }
 
-    private void ProcessSegmentLocked(BacnetAddress adr, BacnetPduTypes type, BacnetConfirmedServices service,
-        byte invokeId, BacnetMaxSegments maxSegments, BacnetMaxAdpu maxAdpu, bool server, byte sequenceNumber,
-        byte proposedWindowNumber, byte[] buffer, int offset, int length)
+    private void ProcessSegmentLocked(TransferId transfer, SegmentAssembly assembly, BacnetAddress adr,
+        BacnetPduTypes type, BacnetConfirmedServices service, byte invokeId, BacnetMaxSegments maxSegments,
+        BacnetMaxAdpu maxAdpu, bool server, byte sequenceNumber, byte proposedWindowNumber, byte[] buffer, int offset,
+        int length)
     {
         Log.LogTrace($@"Processing Segment #{sequenceNumber} of invoke-id #{invokeId}");
-
-        if (!_segmentsPerInvokeId.ContainsKey(invokeId))
-            _segmentsPerInvokeId[invokeId] = new List<Tuple<byte, byte[]>>();
-
-        if (!_expectedSegmentsPerInvokeId.ContainsKey(invokeId))
-            _expectedSegmentsPerInvokeId[invokeId] = byte.MaxValue;
 
         var moreFollows = (type & BacnetPduTypes.MORE_FOLLOWS) == BacnetPduTypes.MORE_FOLLOWS;
 
         if (!moreFollows)
-            _expectedSegmentsPerInvokeId[invokeId] = (byte)(sequenceNumber + 1);
+            assembly.ExpectedSegments = (byte)(sequenceNumber + 1);
 
         //send ACK
         if (sequenceNumber % proposedWindowNumber == 0 || !moreFollows)
@@ -775,15 +828,15 @@ public class BacnetClient : IDisposable
 
         //default segment assembly. We run this seperately from the above handler, to make sure that it comes after!
         if (DefaultSegmentationHandling)
-            PerformDefaultSegmentHandling(adr, type, service, invokeId, maxSegments, maxAdpu, sequenceNumber, buffer, offset, length);
+            PerformDefaultSegmentHandling(transfer, assembly, adr, type, service, invokeId, maxSegments, maxAdpu, sequenceNumber, buffer, offset, length);
     }
 
     /// <summary>
     /// This is a simple handling that stores all segments in memory and assembles them when done
     /// </summary>
-    private void PerformDefaultSegmentHandling(BacnetAddress adr, BacnetPduTypes type, BacnetConfirmedServices service, byte invokeId, BacnetMaxSegments maxSegments, BacnetMaxAdpu maxAdpu, byte sequenceNumber, byte[] buffer, int offset, int length)
+    private void PerformDefaultSegmentHandling(TransferId transfer, SegmentAssembly assembly, BacnetAddress adr, BacnetPduTypes type, BacnetConfirmedServices service, byte invokeId, BacnetMaxSegments maxSegments, BacnetMaxAdpu maxAdpu, byte sequenceNumber, byte[] buffer, int offset, int length)
     {
-        var segments = _segmentsPerInvokeId[invokeId];
+        var segments = assembly.Segments;
 
         if (sequenceNumber == 0)
         {
@@ -810,13 +863,15 @@ public class BacnetClient : IDisposable
         }
 
         //process when finished
-        if (segments.Count < _expectedSegmentsPerInvokeId[invokeId])
+        if (segments.Count < assembly.ExpectedSegments)
             return;
 
         //assemble whole part
         var apduBuffer = segments.OrderBy(s => s.Item1).SelectMany(s => s.Item2).ToArray();
-        segments.Clear();
-        _expectedSegmentsPerInvokeId[invokeId] = byte.MaxValue;
+
+        // the transfer is over: drop its state instead of leaving an entry per invoke-id per device
+        // behind. A segment arriving late starts a new one, as it did with the cleared list before.
+        _assemblies.TryRemove(transfer, out _);
 
         //process
         ProcessApdu(adr, type, apduBuffer, 0, apduBuffer.Length);
@@ -870,7 +925,8 @@ public class BacnetClient : IDisposable
 
                     offset += apduHeaderLen;
                     length -= apduHeaderLen;
-                    _lastSegmentAck.Set(adr, originalInvokeId, sequenceNumber, actualWindowSize);
+                    _segmentAcks.GetOrAdd(new TransferId(adr, originalInvokeId), _ => new LastSegmentAck())
+                        .Set(sequenceNumber, actualWindowSize);
                     ProcessSegmentAck(adr, type, originalInvokeId, sequenceNumber, actualWindowSize, buffer, offset, length);
                 }
                 break;
@@ -3568,11 +3624,17 @@ public class BacnetClient : IDisposable
 
     public bool WaitForSegmentAck(BacnetAddress adr, byte invokeId, Segmentation segmentation, int timeout)
     {
-        if (!_lastSegmentAck.Wait(adr, invokeId, timeout))
-            return false;
+        var transfer = new TransferId(adr, invokeId);
 
-        segmentation.sequence_number = (byte)((_lastSegmentAck.SequenceNumber + 1) % 256);
-        segmentation.window_size = _lastSegmentAck.WindowSize;
+        if (!_segmentAcks.GetOrAdd(transfer, _ => new LastSegmentAck()).Wait(timeout, out var sequenceNumber, out var windowSize))
+        {
+            // nothing is going to consume an ack of a transfer that gave up waiting for one
+            _segmentAcks.TryRemove(transfer, out _);
+            return false;
+        }
+
+        segmentation.sequence_number = (byte)((sequenceNumber + 1) % 256);
+        segmentation.window_size = windowSize;
         return true;
     }
 
