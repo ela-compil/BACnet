@@ -18,7 +18,7 @@ All notable changes to this project are documented here. The format is based on
   fell through to the default branch of `Property.SerializeValue` and used the current culture, so a
   host whose culture spells the negative sign U+2212 (sv-SE and friends, under ICU) wrote `−5` into
   the device storage XML - a value neither bacnet-stack, nor YABE, nor this library on an
-  ASCII-hyphen host can read back. The SIGNED_INT and UNSIGNED_INT parsers in
+  ASCII-hyphen host can read back. The SIGNED_INT, UNSIGNED_INT and ENUMERATED parsers in
   `Property.DeserializeValue` take the invariant culture too, so both directions state the same
   format instead of relying on `int.Parse` accepting the ASCII hyphen under any culture.
 

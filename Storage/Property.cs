@@ -66,7 +66,7 @@ public class Property
             case BacnetApplicationTags.BACNET_APPLICATION_TAG_BIT_STRING:
                 return new BacnetValue(type, BacnetBitString.Parse(value));
             case BacnetApplicationTags.BACNET_APPLICATION_TAG_ENUMERATED:
-                return new BacnetValue(type, uint.Parse(value));
+                return new BacnetValue(type, uint.Parse(value, CultureInfo.InvariantCulture));
             case BacnetApplicationTags.BACNET_APPLICATION_TAG_DATE:
                 // Format: yyyy/MM/dd (bacnet-stack compatible); date patterns are stored as base64
                 try
