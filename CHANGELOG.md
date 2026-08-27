@@ -4,7 +4,7 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/), and the project follows tag-driven
 [MinVer](https://github.com/adamralph/minver) versioning.
 
-## Unreleased
+## 4.1.0
 
 ### Added
 - **Logging scopes**: every log entry about a request or an answer is written inside a
@@ -12,6 +12,15 @@ All notable changes to this project are documented here. The format is based on
   `RemoteAddress` property. Sinks can print it (`IncludeScopes`) or use it to route the traffic of
   each device to its own log when one `BacnetClient` serves several devices. Broadcasts have no
   remote device and get no scope. Sinks that ignore scopes see no change.
+
+### Fixed
+- SIGNED_INT property values serialize with the invariant culture, like the other numeric tags. They
+  fell through to the default branch of `Property.SerializeValue` and used the current culture, so a
+  host whose culture spells the negative sign U+2212 (sv-SE and friends, under ICU) wrote `−5` into
+  the device storage XML - a value neither bacnet-stack, nor YABE, nor this library on an
+  ASCII-hyphen host can read back. The SIGNED_INT, UNSIGNED_INT and ENUMERATED parsers in
+  `Property.DeserializeValue` take the invariant culture too, so both directions state the same
+  format instead of relying on `int.Parse` accepting the ASCII hyphen under any culture.
 
 ## 4.0.0
 
