@@ -47,9 +47,13 @@
     <PackageVersion Include="System.IO.Ports" Version="10.0.0" />
   </ItemGroup>
 
-  <!-- Test dependencies -->
+  <!-- Test dependencies. xunit.v3 4.x runs only on Microsoft.Testing.Platform - the VSTest bridge
+       it used to ship is gone, and the .NET 10 SDK errors out rather than falling back - so the
+       repo opts into the MTP-based `dotnet test` in global.json. Coverage comes from MTP's own
+       collector; coverlet.collector was a VSTest data collector and does not run under MTP.
+       Microsoft.NET.Test.Sdk and xunit.runner.visualstudio stay for IDE test discovery. -->
   <ItemGroup>
-    <PackageVersion Include="coverlet.collector" Version="10.0.1" />
+    <PackageVersion Include="Microsoft.Testing.Extensions.CodeCoverage" Version="18.10.0" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.9.0" />
     <PackageVersion Include="xunit.runner.visualstudio" Version="4.0.0" />
     <PackageVersion Include="xunit.v3" Version="4.0.0" />
