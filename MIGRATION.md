@@ -114,8 +114,10 @@ had more than one. That guess was frequently wrong — binding the BACnet/IP bro
 adapter (Hyper-V, WSL, Docker, a VPN) instead of the real LAN — and the failure was easy to miss.
 
 4.0 stops guessing. When several candidate IPv4 interfaces are present and you have not said which to
-use, `Start()` now throws an `InvalidOperationException` listing the candidates rather than binding to
-the wrong one. Hosts with a single interface are unaffected.
+use, the first broadcast (`WhoIs()`, `Iam()`, …) now throws an `InvalidOperationException` listing the
+candidates rather than binding to the wrong one. Hosts with a single interface are unaffected, and so
+is a client that only sends unicast requests. (In 4.0.0 already `Start()` threw, whether the client
+broadcast or not.)
 
 Select the interface by passing its local IP to the constructor:
 

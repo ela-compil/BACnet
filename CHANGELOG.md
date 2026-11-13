@@ -14,6 +14,10 @@ All notable changes to this project are documented here. The format is based on
   remote device and get no scope. Sinks that ignore scopes see no change.
 
 ### Fixed
+- A `BacnetIpUdpProtocolTransport` without `localEndpointIp` on a host with several IPv4 interfaces
+  threw from `Start()` (#236), so a client that only sends unicast requests could not run there at
+  all. The BVLC layer resolved the broadcast address in its constructor, though only a BBMD forwarding
+  a broadcast needs it; it is resolved at the first broadcast now, and the error surfaces there.
 - **Segmentation** state is kept per transfer - the remote device plus the invoke-id - instead of per
   invoke-id alone. An invoke-id is unique per device (135 §20.1.2.6), so two devices answering at the
   same time both number a transfer 1: the segments of one were assembled into the transfer of the

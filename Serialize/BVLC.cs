@@ -7,7 +7,7 @@ public class BVLC
     public event BVLCMessageReceiveHandler MessageReceived;
 
     private readonly BacnetIpUdpProtocolTransport _myBbmdTransport;
-    readonly string _broadcastAdd;
+    private string _broadcastAdd;
     private bool _bbmdFdServiceActivated;
 
     public const byte BVLL_TYPE_BACNET_IP = 0x81;
@@ -27,8 +27,14 @@ public class BVLC
     public BVLC(BacnetIpUdpProtocolTransport transport)
     {
         _myBbmdTransport = transport;
-        _broadcastAdd = _myBbmdTransport.GetBroadcastAddress().ToString().Split(':')[0];
     }
+
+    /// <summary>
+    /// The local broadcast IP, resolved when a BBMD first forwards a broadcast rather than when the
+    /// transport starts: resolving it can throw on a host with several interfaces, and a client that
+    /// never broadcasts must still start there.
+    /// </summary>
+    private string BroadcastAdd => _broadcastAdd ??= _myBbmdTransport.GetBroadcastAddress().ToString().Split(':')[0];
 
     public string FDList()
     {
@@ -177,7 +183,7 @@ public class BVLC
         SendToFDs(b, msgLength + 6, ePsender);
         // Broadcast if required
         if (toGlobalBroadcast)
-            _myBbmdTransport.Send(b, msgLength + 6, new IPEndPoint(IPAddress.Parse(_broadcastAdd), _myBbmdTransport.SharedPort));
+            _myBbmdTransport.Send(b, msgLength + 6, new IPEndPoint(IPAddress.Parse(BroadcastAdd), _myBbmdTransport.SharedPort));
     }
 
     // Send ack or nack
@@ -310,7 +316,7 @@ public class BVLC
                         // ie my mask must be 255.255.255.255 in the others BBMD tables
                         // If not, it's not really a big problem, devices on the local net will 
                         // receive two times the message (after all it's just WhoIs, Iam, ...)
-                        _myBbmdTransport.Send(buffer, msgLength, new IPEndPoint(IPAddress.Parse(_broadcastAdd), _myBbmdTransport.SharedPort));
+                        _myBbmdTransport.Send(buffer, msgLength, new IPEndPoint(IPAddress.Parse(BroadcastAdd), _myBbmdTransport.SharedPort));
                     }
                 }
 
