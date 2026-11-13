@@ -14,6 +14,12 @@ All notable changes to this project are documented here. The format is based on
   remote device and get no scope. Sinks that ignore scopes see no change.
 
 ### Fixed
+- Trend-log records whose datum is an **any-value** [10] decode instead of throwing a
+  `NotImplementedException` (#240). `DecodeLogRecord` reads the application-tagged value(s) between
+  the opening and closing tag [10]: a single value - typically a Double - comes back unwrapped as
+  `BacnetLogRecord.Value`, several as a `BacnetValue[]`, none as null; context-tagged content has no
+  type to decode it by and is rejected (-1). Before, nothing after the first such record of a
+  ReadRange answer could be read. `EncodeLogRecord` writes any-value the same way.
 - **Segmentation** state is kept per transfer - the remote device plus the invoke-id - instead of per
   invoke-id alone. An invoke-id is unique per device (135 §20.1.2.6), so two devices answering at the
   same time both number a transfer 1: the segments of one were assembled into the transfer of the
