@@ -2671,46 +2671,54 @@ public class Services
             }
 
             ASN1.encode_opening_tag(buffer, 1);
-            var tmp1 = new EncodeBuffer();
-            switch (record.type)
+
+            if (record.type == BacnetTrendLogValueType.TL_TYPE_ANY)
             {
-                case BacnetTrendLogValueType.TL_TYPE_ANY:
-                    throw new NotImplementedException();
-                case BacnetTrendLogValueType.TL_TYPE_BITS:
-                    ASN1.encode_bitstring(tmp1, record.GetValue<BacnetBitString>());
-                    break;
-
-                case BacnetTrendLogValueType.TL_TYPE_BOOL:
-                    tmp1.Add(record.GetValue<bool>() ? (byte)1 : (byte)0);
-                    break;
-
-                case BacnetTrendLogValueType.TL_TYPE_DELTA:
-                    ASN1.encode_bacnet_real(tmp1, record.GetValue<float>());
-                    break;
-
-                case BacnetTrendLogValueType.TL_TYPE_ENUM:
-                    ASN1.encode_application_enumerated(tmp1, record.GetValue<uint>());
-                    break;
-
-                case BacnetTrendLogValueType.TL_TYPE_REAL:
-                    ASN1.encode_bacnet_real(tmp1, record.GetValue<float>());
-                    break;
-
-                case BacnetTrendLogValueType.TL_TYPE_SIGN:
-                    ASN1.encode_bacnet_signed(tmp1, record.GetValue<int>());
-                    break;
-
-                case BacnetTrendLogValueType.TL_TYPE_STATUS:
-                    ASN1.encode_bitstring(tmp1, record.GetValue<BacnetBitString>());
-                    break;
-
-                case BacnetTrendLogValueType.TL_TYPE_UNSIGN:
-                    ASN1.encode_bacnet_unsigned(tmp1, record.GetValue<uint>());
-                    break;
+                // any-value is constructed: opening tag [10], the value(s), closing tag [10]
+                EncodeLogRecordAnyValue(buffer, record.Value);
+                ASN1.encode_closing_tag(buffer, 1);
             }
-            ASN1.encode_tag(buffer, (byte)record.type, true, (uint)tmp1.offset);
-            buffer.Add(tmp1.buffer, tmp1.offset);
-            ASN1.encode_closing_tag(buffer, 1);
+            else
+            {
+                var tmp1 = new EncodeBuffer();
+                switch (record.type)
+                {
+                    case BacnetTrendLogValueType.TL_TYPE_BITS:
+                        ASN1.encode_bitstring(tmp1, record.GetValue<BacnetBitString>());
+                        break;
+
+                    case BacnetTrendLogValueType.TL_TYPE_BOOL:
+                        tmp1.Add(record.GetValue<bool>() ? (byte)1 : (byte)0);
+                        break;
+
+                    case BacnetTrendLogValueType.TL_TYPE_DELTA:
+                        ASN1.encode_bacnet_real(tmp1, record.GetValue<float>());
+                        break;
+
+                    case BacnetTrendLogValueType.TL_TYPE_ENUM:
+                        ASN1.encode_application_enumerated(tmp1, record.GetValue<uint>());
+                        break;
+
+                    case BacnetTrendLogValueType.TL_TYPE_REAL:
+                        ASN1.encode_bacnet_real(tmp1, record.GetValue<float>());
+                        break;
+
+                    case BacnetTrendLogValueType.TL_TYPE_SIGN:
+                        ASN1.encode_bacnet_signed(tmp1, record.GetValue<int>());
+                        break;
+
+                    case BacnetTrendLogValueType.TL_TYPE_STATUS:
+                        ASN1.encode_bitstring(tmp1, record.GetValue<BacnetBitString>());
+                        break;
+
+                    case BacnetTrendLogValueType.TL_TYPE_UNSIGN:
+                        ASN1.encode_bacnet_unsigned(tmp1, record.GetValue<uint>());
+                        break;
+                }
+                ASN1.encode_tag(buffer, (byte)record.type, true, (uint)tmp1.offset);
+                buffer.Add(tmp1.buffer, tmp1.offset);
+                ASN1.encode_closing_tag(buffer, 1);
+            }
         }
 
         /* Tag 2: status - a fixed 4-bit context-tagged BACnetStatusFlags bitstring (matches the
@@ -2800,9 +2808,13 @@ public class Services
                     len += ASN1.decode_real(buffer, offset + len, out var dval);
                     records[curveNumber].Value = dval;
                     break;
-                // No way to handle these data types, sure it's the end of this download !
                 case BacnetTrendLogValueType.TL_TYPE_ANY:
-                    throw new NotImplementedException();
+                    var anyLen = DecodeLogRecordAnyValue(buffer, offset + len, offset + length, out var anyValue);
+                    if (anyLen < 0) return -1;
+                    len += anyLen;
+                    records[curveNumber].Value = anyValue;
+                    break;
+
                 case BacnetTrendLogValueType.TL_TYPE_BITS:
                     len += ASN1.decode_bitstring(buffer, offset + len, lenValue, out var bval);
                     records[curveNumber].Value = bval;
@@ -2836,5 +2848,79 @@ public class Services
             records[curveNumber].statusFlags = statusFlags;
 
         return len;
+    }
+
+    /// <summary>
+    /// The content of an any-value [10] log datum, after its opening tag up to and including its
+    /// closing tag (the any-value choice of BACnetLogRecord). The standard leaves the content open
+    /// (ABSTRACT-SYNTAX.&amp;Type); devices log application-tagged values there, typically a single
+    /// one such as a Double. A single value comes back unwrapped - its <see cref="BacnetValue.Value"/> -
+    /// several as a <see cref="BacnetValue"/> array, none as null. Context-tagged content has no
+    /// type to decode it by and is rejected.
+    /// </summary>
+    private static int DecodeLogRecordAnyValue(byte[] buffer, int offset, int maxOffset, out object value)
+    {
+        value = null;
+        var len = 0;
+        var values = new List<BacnetValue>();
+
+        while (offset + len < maxOffset && !ASN1.decode_is_closing_tag_number(buffer, offset + len, 10))
+        {
+            if (ASN1.IS_CONTEXT_SPECIFIC(buffer[offset + len]))
+                return -1;
+
+            var valueLen = ASN1.bacapp_decode_application_data(null, buffer, offset + len, maxOffset,
+                BacnetObjectTypes.OBJECT_TRENDLOG, BacnetPropertyIds.PROP_LOG_BUFFER, out var item);
+            if (valueLen <= 0)
+                return -1;
+
+            values.Add(item);
+            len += valueLen;
+        }
+
+        if (offset + len >= maxOffset)
+            return -1; // no closing tag [10]
+
+        len += ASN1.decode_tag_number(buffer, offset + len, out _);
+
+        value = values.Count switch
+        {
+            0 => null,
+            1 => values[0].Value,
+            _ => values.ToArray()
+        };
+
+        return len;
+    }
+
+    /// <summary>
+    /// Encodes the value of an any-value [10] log datum the way <see cref="DecodeLogRecordAnyValue"/>
+    /// reads it: a <see cref="BacnetValue"/> or a plain value (its tag guessed from its type) as one
+    /// application-tagged value, a sequence of <see cref="BacnetValue"/>s as several, null as none.
+    /// </summary>
+    private static void EncodeLogRecordAnyValue(EncodeBuffer buffer, object value)
+    {
+        ASN1.encode_opening_tag(buffer, 10);
+
+        switch (value)
+        {
+            case null:
+                break;
+
+            case BacnetValue single:
+                ASN1.bacapp_encode_application_data(buffer, single);
+                break;
+
+            case IEnumerable<BacnetValue> several:
+                foreach (var item in several)
+                    ASN1.bacapp_encode_application_data(buffer, item);
+                break;
+
+            default:
+                ASN1.bacapp_encode_application_data(buffer, new BacnetValue(value));
+                break;
+        }
+
+        ASN1.encode_closing_tag(buffer, 10);
     }
 }
