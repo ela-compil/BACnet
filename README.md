@@ -77,7 +77,8 @@ Console.ReadLine();
 ```
 
 > On a host with several network interfaces (e.g. Hyper-V/WSL/Docker virtual adapters), tell the
-> transport which one to bind by passing its IP — otherwise it throws an error listing the candidates:
+> transport which one to bind by passing its IP — otherwise the first broadcast (`WhoIs()`, `Iam()`, …)
+> throws an error listing the candidates:
 > `new BacnetIpUdpProtocolTransport(0xBAC0, localEndpointIp: "192.168.1.50")`.
 
 The [`Examples/`](https://github.com/ela-compil/BACnet/tree/master/Examples) folder has runnable samples — basic read/write, a device/server,
@@ -133,8 +134,8 @@ Console, Serilog, NLog, and log4net all work via their MEL providers. If you alr
 - **Native transports** split into optional packages: pcap → `BACnet.Ethernet`, serial → `BACnet.Serial`.
   The MS/TP and PTP protocols stay in the core; use `SerialTransport.Mstp(...)` / `.Ptp(...)` from `BACnet.Serial`.
 - **Interface selection is explicit when the host has multiple network interfaces.** In that case
-  `BacnetIpUdpProtocolTransport` no longer picks one for you — `Start()` throws and lists the
-  candidates. Pass the interface IP: `new BacnetIpUdpProtocolTransport(0xBAC0, localEndpointIp: "192.168.1.50")`.
+  `BacnetIpUdpProtocolTransport` no longer picks one for you — the first broadcast throws and lists
+  the candidates (in 4.0.0 already `Start()` did). Pass the interface IP: `new BacnetIpUdpProtocolTransport(0xBAC0, localEndpointIp: "192.168.1.50")`.
 - **Renamed** the misspelled enum member `BacnetRejectReason.RECOGNIZED_SERVICE` to `UNRECOGNIZED_SERVICE` (value unchanged).
 - **Scheduling types are spec-shaped now**: the old `BACnetCalendarEntry` and `BacnetweekNDay` are replaced by
   `BacnetCalendarEntry` / `BacnetWeekNDay`, and schedule properties decode into typed values
